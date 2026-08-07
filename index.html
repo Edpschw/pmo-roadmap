@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Roadmap PMO</title>
+<link rel="stylesheet" href="style.css?v=12" />
+</head>
+<body>
+
+<header class="toolbar">
+  <div class="toolbar-left">
+    <h1>Roadmap de Projetos</h1>
+    <span class="subtitle" id="rangeLabel"></span>
+  </div>
+  <div class="toolbar-right">
+    <div class="scale-switch" id="scaleSwitch">
+      <button data-scale="month" class="scale-btn active">Mês</button>
+      <button data-scale="quarter" class="scale-btn">Trimestre</button>
+      <button data-scale="year" class="scale-btn">Ano</button>
+    </div>
+    <button class="btn-ghost" id="todayBtn">Hoje</button>
+    <button class="btn-ghost" id="importBtn">Importar</button>
+    <button class="btn-ghost" id="exportBtn">Exportar</button>
+    <button class="btn-primary" id="addProjectBtn">+ Novo Projeto</button>
+    <input type="file" id="importFile" accept="application/json" hidden />
+  </div>
+</header>
+
+<main class="roadmap-wrapper">
+  <div class="roadmap-scroll" id="scrollContainer">
+    <div class="roadmap-grid" id="grid"></div>
+  </div>
+  <div class="empty-state" id="emptyState" hidden>
+    <p>Nenhum projeto ainda.</p>
+    <button class="btn-primary" id="emptyAddProjectBtn">+ Criar primeiro projeto</button>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="popover" id="popover" hidden></div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="app.js?v=12"></script>
+</body>
+</html>

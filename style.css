@@ -1,0 +1,321 @@
+:root {
+  --bg: #f4f6f9;
+  --panel: #ffffff;
+  --border: #e2e6ec;
+  --border-strong: #d3d9e2;
+  --text: #1c2530;
+  --text-muted: #6b7686;
+  --text-faint: #9aa4b2;
+  --accent: #3457d5;
+  --accent-soft: #eaefff;
+  --danger: #d64545;
+  --today: #e0522f;
+  --row-h: 44px;
+  --sidebar-w: 300px;
+  --radius: 8px;
+  --shadow: 0 4px 20px rgba(20, 30, 50, 0.10);
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13.5px;
+  overflow: hidden;
+}
+
+body { display: flex; flex-direction: column; height: 100vh; }
+
+/* ---------- Toolbar ---------- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+  gap: 16px;
+}
+.toolbar-left { display: flex; flex-direction: column; gap: 2px; }
+.toolbar-left h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+.subtitle { font-size: 11.5px; color: var(--text-muted); }
+.toolbar-right { display: flex; align-items: center; gap: 8px; }
+
+.scale-switch {
+  display: flex;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 2px;
+  margin-right: 6px;
+}
+.scale-btn {
+  border: none;
+  background: transparent;
+  padding: 5px 11px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.scale-btn.active { background: var(--panel); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+
+.btn-primary, .btn-ghost, .btn-icon {
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 7px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  padding: 7px 13px;
+  transition: background .12s, border-color .12s;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #2a45b8; }
+.btn-ghost { background: var(--panel); color: var(--text); border-color: var(--border-strong); }
+.btn-ghost:hover { background: var(--bg); }
+.btn-icon {
+  background: transparent; border: none; color: var(--text-muted);
+  width: 24px; height: 24px; padding: 0; border-radius: 5px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 15px; line-height: 1;
+}
+.btn-icon:hover { background: var(--bg); color: var(--text); }
+
+/* ---------- Layout ---------- */
+.roadmap-wrapper { flex: 1 1 auto; position: relative; overflow: hidden; }
+.roadmap-scroll { width: 100%; height: 100%; overflow: auto; cursor: grab; }
+.roadmap-scroll.panning { cursor: grabbing; user-select: none; }
+.roadmap-scroll.panning * { cursor: grabbing !important; user-select: none; }
+.roadmap-grid { position: relative; display: block; }
+
+.empty-state {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px; color: var(--text-muted);
+}
+.empty-state[hidden] { display: none; }
+
+/* ---------- Rows ---------- */
+.row {
+  display: flex;
+  height: var(--row-h);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.row.header-row {
+  position: sticky; top: 0; z-index: 30; background: var(--panel);
+  border-bottom: 1px solid var(--border-strong);
+  height: 46px;
+}
+.row.project-row { background: #fbfcfe; }
+.row.project-row:hover { background: #f4f7ff; }
+.row.workstream-row:hover .label-cell { background: #fafbfd; }
+
+.label-cell {
+  flex: 0 0 var(--sidebar-w);
+  width: var(--sidebar-w);
+  position: sticky; left: 0; z-index: 20;
+  background: inherit;
+  display: flex; align-items: center;
+  padding: 0 8px 0 10px;
+  border-right: 1px solid var(--border-strong);
+  gap: 6px;
+  overflow: hidden;
+}
+.row.header-row .label-cell { background: var(--panel); z-index: 40; height: 46px; }
+.row.workstream-row .label-cell { background: var(--panel); padding-left: 30px; }
+
+.corner-title { font-size: 11px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: .04em; }
+
+.chevron {
+  width: 16px; height: 16px; flex: 0 0 16px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-muted); font-size: 10px; transition: transform .15s;
+  user-select: none;
+}
+.chevron.collapsed { transform: rotate(-90deg); }
+
+.color-dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 9px; }
+
+.label-text {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 auto;
+  font-weight: 600; font-size: 13px; cursor: default;
+}
+.row.workstream-row .label-text { font-weight: 500; color: var(--text-muted); font-size: 12.5px; }
+.label-text:hover { text-decoration: underline dotted; }
+
+.row-actions { display: none; align-items: center; gap: 2px; flex: 0 0 auto; }
+.row:hover .row-actions { display: flex; }
+
+.timeline-cell {
+  position: relative;
+  flex: 1 1 auto;
+}
+
+.project-overview-bar {
+  position: absolute; height: 6px; border-radius: 3px; top: 50%; transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* linhas de grade + destaque de fim de semana, via overlay atrás das linhas */
+.gridline {
+  position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border);
+}
+.gridline.month-start { background: var(--border-strong); }
+
+.weekend-shade {
+  position: absolute; top: 0; background: rgba(28, 37, 48, 0.035); pointer-events: none;
+}
+
+/* Cabeçalho em duas camadas: "coarse" (contexto: ano/mês/semana) e "fine"
+   (detalhe: mês/semana/dia), trocadas dinamicamente conforme o zoom. */
+.header-tier-label {
+  position: absolute; display: flex; align-items: center;
+  padding-left: 8px; border-left: 1px solid var(--border-strong);
+  box-sizing: border-box; text-transform: capitalize;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.header-tier-label.coarse {
+  font-size: 10px; font-weight: 700; color: var(--text-faint);
+  letter-spacing: .04em; text-transform: uppercase;
+  background: #fafbfd; border-bottom: 1px solid var(--border);
+}
+.header-tier-label.fine {
+  font-size: 11.5px; font-weight: 600; color: var(--text-muted);
+}
+.header-tier-label.fine.weekend { color: var(--today); opacity: 0.85; }
+.header-tier-label.unit-day {
+  padding-left: 0; justify-content: center; text-align: center;
+  font-size: 10.5px; font-weight: 600;
+}
+
+.today-line {
+  position: absolute; top: 46px; bottom: 0; width: 2px; background: var(--today);
+  z-index: 15; pointer-events: none;
+}
+.today-flag {
+  position: absolute; top: 46px; transform: translate(-50%, -100%);
+  background: var(--today); color: #fff; font-size: 10px; font-weight: 700;
+  padding: 1px 5px; border-radius: 4px; z-index: 31; pointer-events: none;
+}
+
+/* ---------- Task bars ---------- */
+.task-lane { position: absolute; left: 0; right: 0; }
+
+.task-bar {
+  position: absolute;
+  height: 22px;
+  border-radius: 6px;
+  cursor: grab;
+  box-shadow: 0 1px 2px rgba(20,30,50,0.15);
+  user-select: none;
+}
+.task-bar:active { cursor: grabbing; }
+.task-bar .progress-fill {
+  position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px 0 0 6px;
+  background: rgba(255,255,255,0.35);
+}
+/* left é recalculado via JS para acompanhar a porção visível da barra na
+   tela (rolagem/zoom), mantendo o nome sempre legível e centralizado. */
+.task-bar .bar-label {
+  position: absolute; top: 0; bottom: 0; left: 8px;
+  display: flex; align-items: center;
+  font-size: 11.5px; font-weight: 600; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
+}
+.task-bar .handle {
+  position: absolute; top: 0; bottom: 0; width: 7px; cursor: ew-resize; z-index: 2;
+}
+.task-bar .handle.left { left: -2px; }
+.task-bar .handle.right { right: -2px; }
+.task-bar.dragging { opacity: 0.85; box-shadow: 0 4px 14px rgba(20,30,50,0.30); z-index: 5; }
+
+.milestone {
+  position: absolute; width: 15px; height: 15px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  border-radius: 3px;
+  cursor: grab;
+  box-shadow: 0 1px 3px rgba(20,30,50,0.3);
+  z-index: 12;
+}
+.milestone:active { cursor: grabbing; }
+.milestone.dragging { z-index: 16; box-shadow: 0 4px 10px rgba(20,30,50,0.35); }
+.milestone-label {
+  position: absolute; transform: translateY(-100%);
+  font-size: 11px; font-weight: 600; color: var(--text);
+  text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  pointer-events: none; background: rgba(255,255,255,0.92);
+  padding: 1px 4px; border-radius: 4px; z-index: 13;
+  box-shadow: 0 1px 2px rgba(20,30,50,0.12);
+}
+.milestone-label.below { transform: translateY(0); }
+
+/* Dois números centralizados abaixo da barra: progresso real e esperado */
+.progress-numbers {
+  position: absolute; text-align: center;
+  font-size: 10.5px; white-space: nowrap; pointer-events: none;
+}
+.progress-numbers .actual { font-weight: 700; }
+.progress-numbers .actual.on-track { color: #1c9e6b; }
+.progress-numbers .actual.slightly-behind { color: #e0762f; }
+.progress-numbers .actual.behind { color: #d64545; }
+.progress-numbers .actual.complete { color: var(--text-faint); }
+.progress-numbers .sep { color: var(--text-faint); font-weight: 400; margin: 0 2px; }
+.progress-numbers .expected { color: var(--text-faint); font-weight: 600; }
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(15, 20, 30, 0.35);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+}
+.modal-overlay[hidden] { display: none; }
+.modal {
+  background: var(--panel); border-radius: 12px; box-shadow: var(--shadow);
+  width: 380px; max-width: calc(100vw - 40px); padding: 20px;
+}
+.modal h2 { margin: 0 0 14px; font-size: 15.5px; font-weight: 700; }
+.field { margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.field input[type="text"], .field input[type="date"], .field select {
+  border: 1px solid var(--border-strong); border-radius: 6px; padding: 7px 9px;
+  font-size: 13px; font-family: inherit; color: var(--text); background: var(--panel);
+  width: 100%;
+}
+.field input[type="color"] { width: 44px; height: 30px; padding: 2px; border: 1px solid var(--border-strong); border-radius: 6px; cursor: pointer; }
+.field-row { display: flex; gap: 10px; }
+.field-row .field { flex: 1; }
+.field input[type="range"] { width: 100%; }
+.progress-value { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+.modal-actions-right { display: flex; gap: 8px; }
+.btn-danger { background: none; border: none; color: var(--danger); font-weight: 600; font-size: 12.5px; cursor: pointer; padding: 6px 4px; }
+.btn-danger:hover { text-decoration: underline; }
+
+/* ---------- Popover (quick color / small pickers) ---------- */
+.popover {
+  position: absolute; z-index: 90; background: var(--panel); border: 1px solid var(--border-strong);
+  border-radius: 8px; box-shadow: var(--shadow); padding: 8px;
+}
+.color-grid { display: grid; grid-template-columns: repeat(6, 20px); gap: 6px; }
+.color-swatch { width: 20px; height: 20px; border-radius: 5px; cursor: pointer; border: 2px solid transparent; }
+.color-swatch.selected { border-color: var(--text); }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+  background: #1c2530; color: #fff; padding: 9px 16px; border-radius: 8px;
+  font-size: 12.5px; font-weight: 500; z-index: 200; box-shadow: var(--shadow);
+}
+
+/* scrollbars */
+.roadmap-scroll::-webkit-scrollbar { width: 11px; height: 11px; }
+.roadmap-scroll::-webkit-scrollbar-track { background: transparent; }
+.roadmap-scroll::-webkit-scrollbar-thumb { background: #c7cfda; border-radius: 6px; border: 3px solid var(--bg); }
+.roadmap-scroll::-webkit-scrollbar-thumb:hover { background: #aab4c3; }
