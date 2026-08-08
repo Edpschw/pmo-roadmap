@@ -429,9 +429,15 @@ body { display: flex; flex-direction: column; height: 100vh; }
   .scale-switch, .btn-primary, .btn-ghost { flex: 0 0 auto; }
   .btn-primary, .btn-ghost { padding: 7px 10px; font-size: 12px; }
 
-  .label-cell { padding: 0 4px 0 6px; gap: 4px; }
+  .label-cell { padding: 0 4px 0 6px; gap: 4px; align-items: center; }
   .row.workstream-row .label-cell { padding-left: 16px; }
-  .label-text { font-size: 12px; }
+  /* Nome do projeto/workstream nunca é cortado no mobile: quebra em várias
+     linhas em vez de truncar com reticências (altura da linha calculada em
+     JS via measureLabelCellHeight, para não sobrepor a linha seguinte). */
+  .label-text {
+    font-size: 12px; white-space: normal; overflow: visible;
+    text-overflow: clip; line-height: 1.25;
+  }
   .row.workstream-row .label-text { font-size: 11.5px; }
   .corner-title { font-size: 9.5px; }
 

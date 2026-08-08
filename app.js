@@ -466,6 +466,24 @@ function renderHeaderTier(container, unit, rangeStart, rangeEnd, top, height, ti
   }
 }
 
+// No mobile o nome do projeto/workstream pode quebrar em várias linhas (ver
+// .label-text em style.css) para nunca ser cortado. Como a altura da linha é
+// definida via JS em pixels (para posicionar as barras/marcos da timeline),
+// medimos a altura natural do rótulo já quebrado — fora da árvore visível —
+// e usamos o maior valor entre ela e a altura calculada pelas raias.
+let _labelMeasureContainer = null;
+function measureLabelCellHeight(labelCellEl) {
+  if (!_labelMeasureContainer) {
+    _labelMeasureContainer = document.createElement('div');
+    _labelMeasureContainer.style.cssText = 'position:absolute; visibility:hidden; pointer-events:none; left:-9999px; top:-9999px;';
+    document.body.appendChild(_labelMeasureContainer);
+  }
+  _labelMeasureContainer.appendChild(labelCellEl);
+  const height = labelCellEl.scrollHeight;
+  _labelMeasureContainer.removeChild(labelCellEl);
+  return height;
+}
+
 function renderProjectRow(project, rangeStart) {
   const row = document.createElement('div');
   row.className = 'row project-row';
@@ -507,6 +525,7 @@ function renderProjectRow(project, rangeStart) {
   actions.appendChild(iconButton('✕', 'Excluir projeto', () => confirmDeleteProject(project), 'secondary-action'));
   labelCell.appendChild(actions);
 
+  const mobileLabelHeight = isMobileLayout() ? measureLabelCellHeight(labelCell) : 0;
   row.appendChild(labelCell);
 
   const timelineCell = document.createElement('div');
@@ -516,7 +535,7 @@ function renderProjectRow(project, rangeStart) {
   // resumo (só as barras de tarefa somem) — assim os prazos-chave não se
   // perdem ao recolher. A altura da linha é calculada primeiro para que a
   // barra-resumo abaixo saiba onde posicionar os números de progresso.
-  let rowHeight = PROJECT_ROW_H;
+  let rowHeight = Math.max(PROJECT_ROW_H, mobileLabelHeight);
   let milestonePlacements = [];
   const ownerByItem = new Map();
   if (project.collapsed) {
@@ -532,7 +551,7 @@ function renderProjectRow(project, rangeStart) {
     if (milestones.length) {
       const { placements, laneCount } = packLanes(milestones);
       milestonePlacements = placements;
-      rowHeight = Math.max(PROJECT_ROW_H, laneCount * LANE_H + LANE_PAD);
+      rowHeight = Math.max(PROJECT_ROW_H, mobileLabelHeight, laneCount * LANE_H + LANE_PAD);
     }
   }
   row.style.height = rowHeight + 'px';
@@ -585,11 +604,6 @@ function renderProjectRow(project, rangeStart) {
 
 function renderWorkstreamRow(project, ws, rangeStart) {
   const { placements, laneCount } = packLanes(ws.items);
-  const rowHeight = Math.max(PROJECT_ROW_H, laneCount * LANE_H + LANE_PAD);
-
-  const row = document.createElement('div');
-  row.className = 'row workstream-row';
-  row.style.height = rowHeight + 'px';
 
   const labelCell = document.createElement('div');
   labelCell.className = 'label-cell';
@@ -612,6 +626,12 @@ function renderWorkstreamRow(project, ws, rangeStart) {
   actions.appendChild(iconButton('✕', 'Excluir workstream', () => confirmDeleteWorkstream(project, ws), 'secondary-action'));
   labelCell.appendChild(actions);
 
+  const mobileLabelHeight = isMobileLayout() ? measureLabelCellHeight(labelCell) : 0;
+  const rowHeight = Math.max(PROJECT_ROW_H, mobileLabelHeight, laneCount * LANE_H + LANE_PAD);
+
+  const row = document.createElement('div');
+  row.className = 'row workstream-row';
+  row.style.height = rowHeight + 'px';
   row.appendChild(labelCell);
 
   const timelineCell = document.createElement('div');
