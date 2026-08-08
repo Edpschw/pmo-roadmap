@@ -92,13 +92,6 @@ function computeExpectedProgress(item) {
   if (span <= 0) return 100;
   return Math.round((diffDays(start, today) / span) * 100);
 }
-// Cor do texto do rótulo do marco: cinza (mesmo padrão de tarefa concluída)
-// se já passou, ou null para manter a cor padrão (preta) de marcos futuros.
-function computeMilestoneLabelColor(dateISO) {
-  const date = parseDate(dateISO);
-  const today = parseDate(todayISO());
-  return date < today ? MILESTONE_PAST_LABEL_COLOR : null;
-}
 function startOfMonth(date) {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
 }
@@ -789,6 +782,7 @@ function renderTaskBar(project, ws, item, lane, rangeStart) {
 
 function renderMilestone(project, ws, item, lane, rangeStart) {
   const date = parseDate(item.date);
+  const isPast = date < parseDate(todayISO());
   const left = diffDays(rangeStart, date) * currentPxPerDay;
   // Mesmo centro vertical usado pelas barras de tarefa na mesma raia.
   const top = LANE_PAD / 2 + lane * LANE_H + LANE_CONTENT_TOP + BAR_H / 2;
@@ -803,6 +797,9 @@ function renderMilestone(project, ws, item, lane, rangeStart) {
   dia.style.left = left + 'px';
   dia.style.top = top + 'px';
   dia.style.background = project.color;
+  // Marco já passado: losango esmaecido, mesmo padrão de opacidade usado na
+  // barra-resumo de projeto colapsado (project-overview-bar).
+  if (isPast) dia.style.opacity = '0.30';
   dia.title = `${item.name}\n${formatBR(item.date)}`;
 
   // Rótulo centralizado acima do losango (não ao lado), para não sobrepor
@@ -812,8 +809,7 @@ function renderMilestone(project, ws, item, lane, rangeStart) {
   const labelEl = document.createElement('span');
   labelEl.className = 'milestone-label';
   labelEl.textContent = item.name;
-  const labelColor = computeMilestoneLabelColor(item.date);
-  if (labelColor) labelEl.style.color = labelColor;
+  if (isPast) labelEl.style.color = MILESTONE_PAST_LABEL_COLOR;
 
   const textWidth = measureTextWidth(item.name, MILESTONE_LABEL_FONT);
   const labelBoxWidth = textWidth + 10;
