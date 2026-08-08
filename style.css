@@ -218,10 +218,13 @@ body { display: flex; flex-direction: column; height: 100vh; }
   user-select: none;
 }
 .task-bar:active { cursor: grabbing; }
-.task-bar .progress-fill {
-  position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px 0 0 6px;
+/* Realce translúcido cobrindo a fração já concluída de uma barra colorida
+   (tarefa ou barra-resumo de projeto) — mesma lógica visual nos dois casos. */
+.progress-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
   background: rgba(255,255,255,0.35);
 }
+.task-bar .progress-fill { border-radius: 6px 0 0 6px; }
 /* left é recalculado via JS para acompanhar a porção visível da barra na
    tela (rolagem/zoom), mantendo o nome sempre legível e centralizado. */
 .task-bar .bar-label {
