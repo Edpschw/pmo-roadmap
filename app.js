@@ -225,36 +225,70 @@ function packLanes(items) {
   return { placements, laneCount: Math.max(1, lanes.length) };
 }
 
+// Largura da caixa do rótulo de um marco, usada tanto para desenhá-la
+// (renderMilestone) quanto para o cálculo de colisão (resolveMilestoneLabelLayout)
+// — se as duas contas divergissem, a colisão poderia ser calculada para uma
+// largura diferente da realmente renderizada. Inclui uma margem extra (~10%)
+// além do texto medido via canvas, já que a métrica real da fonte pode variar
+// um pouco entre navegador/dispositivo em relação à medição.
+function milestoneLabelBoxWidth(name) {
+  return Math.ceil(measureTextWidth(name, MILESTONE_LABEL_FONT) * 1.1) + 12;
+}
+
 // Quando dois ou mais marcos caem na mesma raia com datas próximas o
 // bastante para o nome de um sobrepor o do outro, resolve primeiro alternando
 // o rótulo entre acima/abaixo do losango (cada marco tenta ficar na sua
 // posição horizontal natural, só trocando de lado quando colidiria com o
 // anterior do mesmo lado) e, apenas se nem isso bastar, desloca o rótulo
-// horizontalmente. O losango continua exatamente na data real; só a posição
-// do texto muda. Recebe os `placements` já calculados por packLanes() e
-// devolve um Map item -> { left, below } do rótulo (left em px).
+// horizontalmente. Barras de tarefa da mesma raia também contam como
+// obstáculo (empurram o rótulo para fora delas, dos dois lados, já que o
+// rótulo acima ou abaixo fica bem colado na borda superior/inferior da
+// barra). O losango continua exatamente na data real; só a posição do texto
+// muda. Recebe os `placements` já calculados por packLanes() e devolve um
+// Map item -> { left, below } do rótulo (left em px).
 function resolveMilestoneLabelLayout(placements, rangeStart) {
-  const GAP = 6;
+  const GAP = 10;
   const byLane = new Map();
   for (const { item, lane } of placements) {
-    if (item.type !== 'milestone') continue;
     if (!byLane.has(lane)) byLane.set(lane, []);
     byLane.get(lane).push(item);
   }
 
   const result = new Map();
   for (const laneItems of byLane.values()) {
-    const withPos = laneItems.map((item) => {
-      const left = diffDays(rangeStart, parseDate(item.date)) * currentPxPerDay;
-      const labelBoxWidth = measureTextWidth(item.name, MILESTONE_LABEL_FONT) + 10;
-      return { item, labelBoxWidth, naturalLeft: left - labelBoxWidth / 2 };
-    }).sort((a, b) => a.naturalLeft - b.naturalLeft);
+    const milestones = [];
+    const bars = [];
+    for (const item of laneItems) {
+      if (item.type === 'milestone') {
+        const left = diffDays(rangeStart, parseDate(item.date)) * currentPxPerDay;
+        const labelBoxWidth = milestoneLabelBoxWidth(item.name);
+        milestones.push({ item, labelBoxWidth, naturalLeft: left - labelBoxWidth / 2 });
+      } else {
+        const barLeft = diffDays(rangeStart, parseDate(item.start)) * currentPxPerDay;
+        const barWidth = Math.max(14, (diffDays(parseDate(item.start), parseDate(item.end)) + 1) * currentPxPerDay);
+        bars.push({ left: barLeft, right: barLeft + barWidth });
+      }
+    }
+    milestones.sort((a, b) => a.naturalLeft - b.naturalLeft);
+
+    // Empurra `left` para depois de qualquer barra que ele invada, repetindo
+    // até estabilizar (cobre o caso raro de duas barras próximas na raia).
+    const pushPastBars = (left, width) => {
+      for (let i = 0; i < bars.length + 1; i++) {
+        const collide = bars.find((b) => left < b.right + GAP && b.left < left + width + GAP);
+        if (!collide) return left;
+        left = collide.right + GAP;
+      }
+      return left;
+    };
 
     let prevRightAbove = -Infinity;
     let prevRightBelow = -Infinity;
-    for (const entry of withPos) {
-      const fitsAbove = entry.naturalLeft >= prevRightAbove + GAP;
-      const fitsBelow = entry.naturalLeft >= prevRightBelow + GAP;
+    for (const entry of milestones) {
+      const fitsAbove = entry.naturalLeft >= prevRightAbove + GAP
+        && !bars.some((b) => entry.naturalLeft < b.right + GAP && b.left < entry.naturalLeft + entry.labelBoxWidth + GAP);
+      const fitsBelow = entry.naturalLeft >= prevRightBelow + GAP
+        && !bars.some((b) => entry.naturalLeft < b.right + GAP && b.left < entry.naturalLeft + entry.labelBoxWidth + GAP);
       let below, labelLeft;
       if (fitsAbove) {
         below = false;
@@ -263,10 +297,12 @@ function resolveMilestoneLabelLayout(placements, rangeStart) {
         below = true;
         labelLeft = entry.naturalLeft;
       } else {
-        // Não coube na posição natural nem acima nem abaixo: usa o lado que
-        // precisar empurrar menos o texto para a direita.
-        const pushAbove = prevRightAbove + GAP;
-        const pushBelow = prevRightBelow + GAP;
+        // Não coube na posição natural (por causa de outro rótulo ou de uma
+        // barra) nem acima nem abaixo: usa o lado que precisar empurrar
+        // menos o texto para a direita, e ainda garante que o resultado
+        // final também não invada nenhuma barra.
+        const pushAbove = pushPastBars(Math.max(entry.naturalLeft, prevRightAbove + GAP), entry.labelBoxWidth);
+        const pushBelow = pushPastBars(Math.max(entry.naturalLeft, prevRightBelow + GAP), entry.labelBoxWidth);
         below = pushBelow < pushAbove;
         labelLeft = below ? pushBelow : pushAbove;
       }
@@ -862,8 +898,7 @@ function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverrid
   labelEl.textContent = item.name;
   if (isPast) labelEl.style.color = item.done ? MILESTONE_PAST_LABEL_COLOR : MILESTONE_OVERDUE_LABEL_COLOR;
 
-  const textWidth = measureTextWidth(item.name, MILESTONE_LABEL_FONT);
-  const labelBoxWidth = textWidth + 10;
+  const labelBoxWidth = milestoneLabelBoxWidth(item.name);
   const labelLeft = labelLayoutOverride
     ? labelLayoutOverride.left
     : Math.max(2, Math.min(left - labelBoxWidth / 2, currentTimelineWidth - labelBoxWidth - 2));
