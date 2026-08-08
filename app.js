@@ -1307,6 +1307,151 @@ document.getElementById('importFile').addEventListener('change', (e) => {
   e.target.value = '';
 });
 
+/* ------------------------------ Importar Excel ----------------------------- */
+// Formato esperado: uma linha por tarefa/marco, agrupados repetindo o nome
+// do Projeto e da Workstream. Colunas (nomes flexíveis quanto a acento/caixa):
+// Projeto | Cor | Workstream | Tipo (Tarefa/Marco) | Item | Início | Fim | Progresso | Data
+
+const EXCEL_HEADER_ALIASES = {
+  'projeto': 'projeto',
+  'cor': 'cor',
+  'workstream': 'workstream',
+  'tipo': 'tipo',
+  'item': 'item',
+  'nome': 'item',
+  'tarefa': 'item',
+  'inicio': 'inicio',
+  'data inicio': 'inicio',
+  'data de inicio': 'inicio',
+  'fim': 'fim',
+  'data fim': 'fim',
+  'data de fim': 'fim',
+  'progresso': 'progresso',
+  'progresso (%)': 'progresso',
+  'data': 'data',
+};
+
+function normalizeHeaderKey(h) {
+  return String(h).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+function normalizeExcelRow(row) {
+  const out = {};
+  for (const [key, value] of Object.entries(row)) {
+    const norm = normalizeHeaderKey(key);
+    const field = EXCEL_HEADER_ALIASES[norm] || norm;
+    out[field] = value;
+  }
+  return out;
+}
+
+// Aceita células já convertidas em Date (SheetJS com cellDates:true), datas em
+// texto "AAAA-MM-DD" ou no formato brasileiro "DD/MM/AAAA".
+function excelValueToISO(value) {
+  if (value instanceof Date) {
+    return toISO(new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate())));
+  }
+  const s = String(value == null ? '' : value).trim();
+  if (!s) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (br) return `${br[3]}-${br[2].padStart(2, '0')}-${br[1].padStart(2, '0')}`;
+  return null;
+}
+
+// Agrupa as linhas planas da planilha em projetos > workstreams > itens,
+// criando projetos/workstreams na primeira vez que seus nomes aparecem.
+function excelRowsToProjects(rawRows) {
+  const rows = rawRows.map(normalizeExcelRow);
+  const projectsByName = new Map();
+  const projects = [];
+  let colorCursor = 0;
+  let skipped = 0;
+
+  for (const row of rows) {
+    const projectName = String(row.projeto || '').trim();
+    const wsName = String(row.workstream || '').trim();
+    const itemName = String(row.item || '').trim();
+    if (!projectName || !wsName || !itemName) { skipped++; continue; }
+
+    let project = projectsByName.get(projectName);
+    if (!project) {
+      const colorCell = String(row.cor || '').trim();
+      const color = /^#[0-9a-fA-F]{6}$/.test(colorCell) ? colorCell : PALETTE[colorCursor % PALETTE.length];
+      colorCursor++;
+      project = { id: uid('p'), name: projectName, color, collapsed: false, workstreams: [] };
+      projectsByName.set(projectName, project);
+      projects.push(project);
+    }
+    let ws = project.workstreams.find((w) => w.name === wsName);
+    if (!ws) {
+      ws = { id: uid('ws'), name: wsName, items: [] };
+      project.workstreams.push(ws);
+    }
+
+    const tipo = normalizeHeaderKey(row.tipo || '');
+    if (tipo.startsWith('marco') || tipo === 'milestone') {
+      const date = excelValueToISO(row.data);
+      if (!date) { skipped++; continue; }
+      ws.items.push({ id: uid('m'), type: 'milestone', name: itemName, date });
+    } else {
+      const start = excelValueToISO(row.inicio);
+      const end = excelValueToISO(row.fim);
+      if (!start || !end || end < start) { skipped++; continue; }
+      const progress = Math.min(100, Math.max(0, Math.round(Number(row.progresso) || 0)));
+      ws.items.push({ id: uid('t'), type: 'task', name: itemName, start, end, progress });
+    }
+  }
+  return { projects, skipped };
+}
+
+document.getElementById('importExcelBtn').addEventListener('click', () => {
+  document.getElementById('importExcelFile').click();
+});
+document.getElementById('importExcelFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const workbook = XLSX.read(new Uint8Array(reader.result), { type: 'array', cellDates: true });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rawRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      const { projects, skipped } = excelRowsToProjects(rawRows);
+      if (!projects.length) {
+        showToast('Nenhuma linha válida encontrada. Baixe o "Modelo Excel" para ver o formato esperado.');
+        return;
+      }
+      if (!confirm(`Importar substituirá o roadmap atual por ${projects.length} projeto(s) da planilha. Continuar?`)) return;
+      state = { scale: state.scale || 'month', pxPerDay: state.pxPerDay || SCALE_PX_PER_DAY.month, projects };
+      saveState();
+      render();
+      showToast(skipped ? `Roadmap importado (${skipped} linha(s) ignorada(s) por dados incompletos).` : 'Roadmap importado do Excel.');
+    } catch (err) {
+      console.warn('Falha ao importar Excel.', err);
+      showToast('Não foi possível ler a planilha. Verifique se é um .xlsx válido.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+});
+
+document.getElementById('templateExcelBtn').addEventListener('click', () => {
+  const sampleRows = [
+    { Projeto: 'Transformação Digital', Cor: '#3457d5', Workstream: 'Arquitetura & Plataforma', Tipo: 'Tarefa', Item: 'Levantamento de requisitos', 'Início': '2026-05-04', Fim: '2026-05-29', Progresso: 100, Data: '' },
+    { Projeto: 'Transformação Digital', Cor: '#3457d5', Workstream: 'Arquitetura & Plataforma', Tipo: 'Marco', Item: 'Aprovação do comitê', 'Início': '', Fim: '', Progresso: '', Data: '2026-07-15' },
+    { Projeto: 'Expansão Comercial', Cor: '#1c9e6b', Workstream: 'Novos Mercados', Tipo: 'Tarefa', Item: 'Estudo de viabilidade', 'Início': '2026-04-06', Fim: '2026-05-15', Progresso: 40, Data: '' },
+  ];
+  const sheet = XLSX.utils.json_to_sheet(sampleRows, {
+    header: ['Projeto', 'Cor', 'Workstream', 'Tipo', 'Item', 'Início', 'Fim', 'Progresso', 'Data'],
+  });
+  sheet['!cols'] = [{ wch: 22 }, { wch: 9 }, { wch: 26 }, { wch: 9 }, { wch: 30 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 12 }];
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, sheet, 'Roadmap');
+  XLSX.writeFile(workbook, 'modelo-roadmap-pmo.xlsx');
+  showToast('Modelo baixado. Preencha uma linha por tarefa ou marco.');
+});
+
 /* ---------------------------------- Init ------------------------------------ */
 
 render();
