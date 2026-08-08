@@ -205,9 +205,20 @@ function computeRange() {
 // linha de uma workstream, para que não fiquem desenhados um sobre o outro.
 function packLanes(items) {
   const withRange = items.map((it) => {
-    const s = parseDate(it.type === 'milestone' ? it.date : it.start);
-    const e = it.type === 'milestone' ? s : parseDate(it.end);
-    return { item: it, s, e };
+    if (it.type === 'milestone') {
+      // O rótulo de um marco fica centralizado sobre a data, se estendendo
+      // para os dois lados (ver labelBoxWidth em renderMilestone). Para dois
+      // marcos não terem o nome sobreposto quando ficam próximos na
+      // timeline, reservamos aqui essa mesma largura (convertida em dias
+      // conforme o zoom atual) como "ocupação" do marco, e não só o ponto
+      // exato da data — assim marcos que colidiriam visualmente caem em
+      // raias diferentes, do mesmo jeito que tarefas com datas sobrepostas.
+      const date = parseDate(it.date);
+      const labelHalfWidthPx = (measureTextWidth(it.name, MILESTONE_LABEL_FONT) + 10 + 6) / 2;
+      const paddingDays = Math.ceil(labelHalfWidthPx / Math.max(currentPxPerDay, 0.01));
+      return { item: it, s: addDays(date, -paddingDays), e: addDays(date, paddingDays) };
+    }
+    return { item: it, s: parseDate(it.start), e: parseDate(it.end) };
   }).sort((a, b) => a.s - b.s);
 
   const lanes = []; // cada lane = data do último "e" ocupado
