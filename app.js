@@ -225,6 +225,60 @@ function packLanes(items) {
   return { placements, laneCount: Math.max(1, lanes.length) };
 }
 
+// Quando dois ou mais marcos caem na mesma raia com datas próximas o
+// bastante para o nome de um sobrepor o do outro, resolve primeiro alternando
+// o rótulo entre acima/abaixo do losango (cada marco tenta ficar na sua
+// posição horizontal natural, só trocando de lado quando colidiria com o
+// anterior do mesmo lado) e, apenas se nem isso bastar, desloca o rótulo
+// horizontalmente. O losango continua exatamente na data real; só a posição
+// do texto muda. Recebe os `placements` já calculados por packLanes() e
+// devolve um Map item -> { left, below } do rótulo (left em px).
+function resolveMilestoneLabelLayout(placements, rangeStart) {
+  const GAP = 6;
+  const byLane = new Map();
+  for (const { item, lane } of placements) {
+    if (item.type !== 'milestone') continue;
+    if (!byLane.has(lane)) byLane.set(lane, []);
+    byLane.get(lane).push(item);
+  }
+
+  const result = new Map();
+  for (const laneItems of byLane.values()) {
+    const withPos = laneItems.map((item) => {
+      const left = diffDays(rangeStart, parseDate(item.date)) * currentPxPerDay;
+      const labelBoxWidth = measureTextWidth(item.name, MILESTONE_LABEL_FONT) + 10;
+      return { item, labelBoxWidth, naturalLeft: left - labelBoxWidth / 2 };
+    }).sort((a, b) => a.naturalLeft - b.naturalLeft);
+
+    let prevRightAbove = -Infinity;
+    let prevRightBelow = -Infinity;
+    for (const entry of withPos) {
+      const fitsAbove = entry.naturalLeft >= prevRightAbove + GAP;
+      const fitsBelow = entry.naturalLeft >= prevRightBelow + GAP;
+      let below, labelLeft;
+      if (fitsAbove) {
+        below = false;
+        labelLeft = entry.naturalLeft;
+      } else if (fitsBelow) {
+        below = true;
+        labelLeft = entry.naturalLeft;
+      } else {
+        // Não coube na posição natural nem acima nem abaixo: usa o lado que
+        // precisar empurrar menos o texto para a direita.
+        const pushAbove = prevRightAbove + GAP;
+        const pushBelow = prevRightBelow + GAP;
+        below = pushBelow < pushAbove;
+        labelLeft = below ? pushBelow : pushAbove;
+      }
+      labelLeft = Math.max(2, Math.min(labelLeft, currentTimelineWidth - entry.labelBoxWidth - 2));
+      if (below) prevRightBelow = labelLeft + entry.labelBoxWidth;
+      else prevRightAbove = labelLeft + entry.labelBoxWidth;
+      result.set(entry.item, { left: labelLeft, below });
+    }
+  }
+  return result;
+}
+
 /* -------------------------------- Render ---------------------------------- */
 
 const SIDEBAR_WIDTH_DESKTOP = 300;
@@ -639,8 +693,9 @@ function renderProjectRow(project, rangeStart) {
     }
   }
 
+  const milestoneLabelLayout = resolveMilestoneLabelLayout(milestonePlacements, rangeStart);
   for (const { item, lane } of milestonePlacements) {
-    timelineCell.appendChild(renderMilestone(project, ownerByItem.get(item), item, lane, rangeStart));
+    timelineCell.appendChild(renderMilestone(project, ownerByItem.get(item), item, lane, rangeStart, milestoneLabelLayout.get(item)));
   }
 
   row.appendChild(timelineCell);
@@ -683,11 +738,12 @@ function renderWorkstreamRow(project, ws, rangeStart) {
   const timelineCell = document.createElement('div');
   timelineCell.className = 'timeline-cell';
 
+  const milestoneLabelLayout = resolveMilestoneLabelLayout(placements, rangeStart);
   for (const { item, lane } of placements) {
     if (item.type === 'task') {
       timelineCell.appendChild(renderTaskBar(project, ws, item, lane, rangeStart));
     } else {
-      timelineCell.appendChild(renderMilestone(project, ws, item, lane, rangeStart));
+      timelineCell.appendChild(renderMilestone(project, ws, item, lane, rangeStart, milestoneLabelLayout.get(item)));
     }
   }
 
@@ -763,7 +819,7 @@ function renderTaskBar(project, ws, item, lane, rangeStart) {
   return wrapper;
 }
 
-function renderMilestone(project, ws, item, lane, rangeStart) {
+function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverride) {
   const date = parseDate(item.date);
   const isPast = date < parseDate(todayISO());
   const left = diffDays(rangeStart, date) * currentPxPerDay;
@@ -792,11 +848,15 @@ function renderMilestone(project, ws, item, lane, rangeStart) {
   dia.title = `${item.name}\n${formatBR(item.date)}` +
     (isPast ? (item.done ? '\nRealizado' : '\nAtrasado (não realizado)') : '');
 
-  // Rótulo centralizado acima do losango (não ao lado), para não sobrepor
-  // barras de tarefa que estejam na mesma raia ou em raias vizinhas. Marcos
-  // já passados e realizados ficam acinzentados (padrão de tarefa
-  // concluída); já passados e NÃO realizados ficam em vermelho; marcos
-  // futuros mantêm a cor padrão (preta) do CSS.
+  // Rótulo centralizado acima do losango por padrão (não ao lado), para não
+  // sobrepor barras de tarefa que estejam na mesma raia ou em raias
+  // vizinhas. Marcos já passados e realizados ficam acinzentados (padrão de
+  // tarefa concluída); já passados e NÃO realizados ficam em vermelho;
+  // marcos futuros mantêm a cor padrão (preta) do CSS. Quando um marco
+  // vizinho na mesma raia está perto o bastante para colidir,
+  // labelLayoutOverride (vindo de resolveMilestoneLabelLayout) alterna o
+  // rótulo para abaixo do losango e/ou desloca o texto horizontalmente,
+  // sem mudar a posição do losango.
   const labelEl = document.createElement('span');
   labelEl.className = 'milestone-label';
   labelEl.textContent = item.name;
@@ -804,10 +864,17 @@ function renderMilestone(project, ws, item, lane, rangeStart) {
 
   const textWidth = measureTextWidth(item.name, MILESTONE_LABEL_FONT);
   const labelBoxWidth = textWidth + 10;
-  const labelLeft = Math.max(2, Math.min(left - labelBoxWidth / 2, currentTimelineWidth - labelBoxWidth - 2));
+  const labelLeft = labelLayoutOverride
+    ? labelLayoutOverride.left
+    : Math.max(2, Math.min(left - labelBoxWidth / 2, currentTimelineWidth - labelBoxWidth - 2));
   labelEl.style.left = labelLeft + 'px';
   labelEl.style.width = labelBoxWidth + 'px';
-  labelEl.style.top = (top - 8) + 'px';
+  if (labelLayoutOverride && labelLayoutOverride.below) {
+    labelEl.classList.add('below');
+    labelEl.style.top = (top + 8) + 'px';
+  } else {
+    labelEl.style.top = (top - 8) + 'px';
+  }
 
   attachMilestoneDrag(dia, project, ws, item);
 
