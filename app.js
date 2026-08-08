@@ -95,6 +95,56 @@ function computeExpectedProgress(item) {
   if (span <= 0) return 100;
   return Math.round((diffDays(start, today) / span) * 100);
 }
+// Progresso do projeto como um todo: média do progresso real e do esperado
+// de todas as suas tarefas, ponderada pela duração de cada uma (tarefas mais
+// longas pesam mais). Marcos não entram, pois não têm campo de progresso.
+// Retorna null se o projeto não tiver nenhuma tarefa.
+function computeProjectProgress(project) {
+  let weightedActual = 0;
+  let weightedExpected = 0;
+  let totalDays = 0;
+  for (const w of project.workstreams) {
+    for (const it of w.items) {
+      if (it.type !== 'task') continue;
+      const days = Math.max(1, diffDays(parseDate(it.start), parseDate(it.end)) + 1);
+      weightedActual += Math.min(100, Math.max(0, it.progress || 0)) * days;
+      weightedExpected += computeExpectedProgress(it) * days;
+      totalDays += days;
+    }
+  }
+  if (totalDays === 0) return null;
+  return {
+    actual: Math.round(weightedActual / totalDays),
+    expected: Math.round(weightedExpected / totalDays),
+  };
+}
+// Classificação usada para colorir o número de progresso real: verde (em
+// dia/adiantado), laranja (até 10% atrasado), vermelho (mais atrasado) ou
+// cinza claro quando já está 100% concluído.
+function progressStatusClass(actualProgress, expectedProgress) {
+  if (actualProgress === 100) return 'complete';
+  if (actualProgress >= expectedProgress) return 'on-track';
+  if (expectedProgress - actualProgress <= 10) return 'slightly-behind';
+  return 'behind';
+}
+// Elemento com os dois números centralizados (real / esperado), reutilizado
+// tanto pelas barras de tarefa quanto pela linha-resumo de projeto colapsado.
+function buildProgressNumbersEl(actualProgress, expectedProgress, centerX, top) {
+  const actualClass = progressStatusClass(actualProgress, expectedProgress);
+  const numbers = document.createElement('div');
+  numbers.className = 'progress-numbers';
+  numbers.innerHTML =
+    `<span class="actual ${actualClass}">${actualProgress}%</span>` +
+    `<span class="sep">/</span>` +
+    `<span class="expected">${expectedProgress}%</span>`;
+  const numbersText = `${actualProgress}% / ${expectedProgress}%`;
+  const numbersWidth = measureTextWidth(numbersText, PROGRESS_BADGE_FONT) + 6;
+  const numbersLeft = Math.max(2, Math.min(centerX - numbersWidth / 2, currentTimelineWidth - numbersWidth - 2));
+  numbers.style.left = numbersLeft + 'px';
+  numbers.style.width = numbersWidth + 'px';
+  numbers.style.top = top + 'px';
+  return numbers;
+}
 function startOfMonth(date) {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
 }
@@ -595,32 +645,15 @@ function renderProjectRow(project, rangeStart) {
   const timelineCell = document.createElement('div');
   timelineCell.className = 'timeline-cell';
 
-  // barra-resumo (span do projeto inteiro), meramente ilustrativa
-  const allItems = project.workstreams.flatMap((w) => w.items);
-  if (allItems.length) {
-    let min = null, max = null;
-    for (const it of allItems) {
-      const s = parseDate(it.type === 'milestone' ? it.date : it.start);
-      const e = parseDate(it.type === 'milestone' ? it.date : it.end);
-      if (!min || s < min) min = s;
-      if (!max || e > max) max = e;
-    }
-    const bar = document.createElement('div');
-    bar.className = 'project-overview-bar';
-    bar.style.left = (diffDays(rangeStart, min) * currentPxPerDay) + 'px';
-    bar.style.width = Math.max(4, (diffDays(min, max) + 1) * currentPxPerDay) + 'px';
-    bar.style.background = project.color;
-    bar.style.opacity = '0.30';
-    timelineCell.appendChild(bar);
-  }
-
   // Quando o projeto está colapsado, os marcos continuam visíveis na linha
   // resumo (só as barras de tarefa somem) — assim os prazos-chave não se
-  // perdem ao recolher.
+  // perdem ao recolher. A altura da linha é calculada primeiro para que a
+  // barra-resumo abaixo saiba onde posicionar os números de progresso.
   let rowHeight = PROJECT_ROW_H;
+  let milestonePlacements = [];
+  const ownerByItem = new Map();
   if (project.collapsed) {
     const milestones = [];
-    const ownerByItem = new Map();
     for (const w of project.workstreams) {
       for (const it of w.items) {
         if (it.type === 'milestone') {
@@ -631,13 +664,54 @@ function renderProjectRow(project, rangeStart) {
     }
     if (milestones.length) {
       const { placements, laneCount } = packLanes(milestones);
+      milestonePlacements = placements;
       rowHeight = Math.max(PROJECT_ROW_H, laneCount * LANE_H + LANE_PAD);
-      for (const { item, lane } of placements) {
-        timelineCell.appendChild(renderMilestone(project, ownerByItem.get(item), item, lane, rangeStart));
-      }
     }
   }
   row.style.height = rowHeight + 'px';
+
+  // Barra-resumo (span do projeto inteiro). Expandido, é só ilustrativa.
+  // Colapsado, funciona como o progresso do projeto como um todo: a parte
+  // já realizada fica cinza (mesma lógica usada para tarefas/marcos
+  // concluídos) e a parte restante mantém a cor do projeto, com os mesmos
+  // números real/esperado usados nas barras de tarefa.
+  const allItems = project.workstreams.flatMap((w) => w.items);
+  if (allItems.length) {
+    let min = null, max = null;
+    for (const it of allItems) {
+      const s = parseDate(it.type === 'milestone' ? it.date : it.start);
+      const e = parseDate(it.type === 'milestone' ? it.date : it.end);
+      if (!min || s < min) min = s;
+      if (!max || e > max) max = e;
+    }
+    const barLeft = diffDays(rangeStart, min) * currentPxPerDay;
+    const barWidth = Math.max(4, (diffDays(min, max) + 1) * currentPxPerDay);
+    const bar = document.createElement('div');
+    bar.className = 'project-overview-bar';
+    bar.style.left = barLeft + 'px';
+    bar.style.width = barWidth + 'px';
+
+    const progress = project.collapsed ? computeProjectProgress(project) : null;
+    if (progress) {
+      bar.style.overflow = 'hidden';
+      const doneFill = document.createElement('div');
+      doneFill.style.cssText = `position:absolute; left:0; top:0; bottom:0; width:${progress.actual}%; background:${MILESTONE_PAST_LABEL_COLOR};`;
+      const remainingFill = document.createElement('div');
+      remainingFill.style.cssText = `position:absolute; left:${progress.actual}%; right:0; top:0; bottom:0; background:${project.color};`;
+      bar.appendChild(doneFill);
+      bar.appendChild(remainingFill);
+      timelineCell.appendChild(bar);
+      timelineCell.appendChild(buildProgressNumbersEl(progress.actual, progress.expected, barLeft + barWidth / 2, rowHeight / 2 + 6));
+    } else {
+      bar.style.background = project.color;
+      bar.style.opacity = '0.30';
+      timelineCell.appendChild(bar);
+    }
+  }
+
+  for (const { item, lane } of milestonePlacements) {
+    timelineCell.appendChild(renderMilestone(project, ownerByItem.get(item), item, lane, rangeStart));
+  }
 
   row.appendChild(timelineCell);
   gridEl.appendChild(row);
@@ -751,34 +825,8 @@ function renderTaskBar(project, ws, item, lane, rangeStart) {
   wrapper.appendChild(bar);
 
   // Dois números centralizados logo abaixo da barra: progresso real e o
-  // progresso esperado hoje (com base no início/fim da tarefa). A cor do
-  // número real sinaliza a situação frente ao esperado: verde (em dia ou
-  // adiantado), laranja (até 10% atrasado), vermelho (mais de 10% atrasado)
-  // ou cinza claro quando a tarefa já está 100% concluída.
-  let actualClass;
-  if (actualProgress === 100) {
-    actualClass = 'complete';
-  } else if (actualProgress >= expectedProgress) {
-    actualClass = 'on-track';
-  } else if (expectedProgress - actualProgress <= 10) {
-    actualClass = 'slightly-behind';
-  } else {
-    actualClass = 'behind';
-  }
-  const numbers = document.createElement('div');
-  numbers.className = 'progress-numbers';
-  numbers.innerHTML =
-    `<span class="actual ${actualClass}">${actualProgress}%</span>` +
-    `<span class="sep">/</span>` +
-    `<span class="expected">${expectedProgress}%</span>`;
-  const numbersText = `${actualProgress}% / ${expectedProgress}%`;
-  const numbersWidth = measureTextWidth(numbersText, PROGRESS_BADGE_FONT) + 6;
-  const barCenter = left + width / 2;
-  const numbersLeft = Math.max(2, Math.min(barCenter - numbersWidth / 2, currentTimelineWidth - numbersWidth - 2));
-  numbers.style.left = numbersLeft + 'px';
-  numbers.style.width = numbersWidth + 'px';
-  numbers.style.top = (top + BAR_H + 2) + 'px';
-  wrapper.appendChild(numbers);
+  // progresso esperado hoje (com base no início/fim da tarefa).
+  wrapper.appendChild(buildProgressNumbersEl(actualProgress, expectedProgress, left + width / 2, top + BAR_H + 2));
 
   return wrapper;
 }
