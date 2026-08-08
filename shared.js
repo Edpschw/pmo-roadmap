@@ -77,9 +77,13 @@ function progressStatusClass(actualProgress, expectedProgress) {
 
 /* ------------------------------- Seed data ------------------------------ */
 
+// Exemplo temático de E&P (exploração e produção de petróleo e gás),
+// inspirado no vocabulário de rodadas da ANP — blocos em regime de partilha
+// de produção (polígono do pré-sal) e de concessão (bacias maduras). Nomes
+// de blocos/campos são ilustrativos, não correspondem a contratos reais.
 function seedState() {
   const t = (name, start, end, progress) => ({ id: uid('t'), type: 'task', name, start, end, progress });
-  const m = (name, date) => ({ id: uid('m'), type: 'milestone', name, date });
+  const m = (name, date, done) => ({ id: uid('m'), type: 'milestone', name, date, done: !!done });
   const ws = (name, items) => ({ id: uid('ws'), name, items });
   const proj = (name, color, workstreams) => ({ id: uid('p'), name, color, collapsed: false, workstreams });
 
@@ -87,45 +91,57 @@ function seedState() {
     scale: 'month',
     pxPerDay: SCALE_PX_PER_DAY.month,
     projects: [
-      proj('Transformação Digital', PALETTE[0], [
-        ws('Arquitetura & Plataforma', [
-          t('Levantamento de requisitos', '2026-05-04', '2026-05-29', 100),
-          t('Desenho da arquitetura alvo', '2026-06-01', '2026-07-10', 80),
-          m('Aprovação do comitê', '2026-07-15'),
-          t('Migração para nuvem', '2026-07-16', '2026-10-30', 25),
+      proj('Búzios Norte — Partilha de Produção', PALETTE[0], [
+        ws('Licitação & Contratos', [
+          t('Estudos de viabilidade geológica', '2024-01-10', '2024-04-30', 100),
+          m('Leilão ANP — Rodada de Partilha', '2024-06-12', true),
+          t('Assinatura do contrato de partilha', '2024-06-20', '2024-08-15', 100),
         ]),
-        ws('Dados & Integrações', [
-          t('Mapeamento de fontes de dados', '2026-05-18', '2026-06-26', 100),
-          t('Construção de pipelines ETL', '2026-06-29', '2026-09-18', 40),
-          m('Go-live do data lake', '2026-09-25'),
+        ws('Exploração & Avaliação', [
+          t('Perfuração de poços pioneiros', '2024-09-01', '2025-03-20', 100),
+          t('Testes de formação (DST)', '2025-01-15', '2025-04-10', 100),
+          m('Declaração de comercialidade', '2025-05-30', true),
         ]),
-        ws('Change Management', [
-          t('Plano de comunicação', '2026-06-08', '2026-07-03', 60),
-          t('Treinamento de usuários-chave', '2026-09-01', '2026-10-16', 0),
-        ]),
-      ]),
-      proj('Expansão Comercial', PALETTE[1], [
-        ws('Novos Mercados', [
-          t('Estudo de viabilidade — LATAM', '2026-04-06', '2026-05-15', 100),
-          m('Decisão go/no-go', '2026-05-20'),
-          t('Registro legal e fiscal', '2026-05-21', '2026-07-31', 55),
-          t('Contratação de time local', '2026-07-01', '2026-09-11', 20),
-        ]),
-        ws('Parcerias Estratégicas', [
-          t('Negociação com distribuidores', '2026-06-15', '2026-08-28', 45),
-          m('Assinatura de contrato-âncora', '2026-09-02'),
+        ws('Desenvolvimento da Produção', [
+          m('Início do Desenvolvimento', '2025-07-01', true),
+          t('Contratação e construção do FPSO', '2025-07-15', '2027-02-28', 55),
+          t('Perfuração de poços produtores e injetores', '2026-03-01', '2027-06-30', 30),
+          m('Primeiro Óleo', '2027-03-15'),
+          m('Platô de Produção', '2028-06-01'),
         ]),
       ]),
-      proj('Eficiência Operacional', PALETTE[2], [
-        ws('Automação de Processos', [
-          t('Mapeamento AS-IS', '2026-05-11', '2026-06-05', 100),
-          t('Implantação de RPA — Financeiro', '2026-06-08', '2026-08-14', 65),
-          t('Implantação de RPA — Suprimentos', '2026-08-17', '2026-10-23', 5),
+      proj('Marlim Sul — Concessão (Bacia de Campos)', PALETTE[1], [
+        ws('Revitalização de Campo Maduro', [
+          t('Reprocessamento sísmico 4D', '2025-02-01', '2025-07-15', 100),
+          m('Aprovação do Plano de Desenvolvimento (PD)', '2025-08-20', true),
+          t('Workover de poços existentes', '2025-09-01', '2026-10-30', 60),
         ]),
-        ws('Qualidade & Governança', [
-          m('Auditoria interna', '2026-07-10'),
-          t('Padronização de KPIs', '2026-07-13', '2026-08-21', 30),
-          t('Revisão de políticas de compliance', '2026-09-07', '2026-10-30', 0),
+        ws('Infraestrutura de Produção', [
+          t('Instalação de novo FPSO (revitalização)', '2026-01-10', '2027-05-31', 25),
+          m('Primeiro Óleo', '2027-06-15'),
+          m('Platô de Produção', '2028-01-20'),
+        ]),
+        ws('HSE & Licenciamento', [
+          t('Licenciamento ambiental IBAMA', '2025-03-01', '2025-12-15', 100),
+          m('Licença de Operação', '2025-12-20', true),
+        ]),
+      ]),
+      proj('Sépia Sul — Partilha de Produção', PALETTE[2], [
+        ws('Rodada de Licitação ANP', [
+          t('Due diligence técnica do bloco', '2026-06-01', '2026-09-05', 80),
+          m('Leilão ANP — Rodada de Partilha', '2026-09-10'),
+          m('Assinatura do Contrato de Partilha', '2026-10-15'),
+        ]),
+        ws('Exploração', [
+          t('Aquisição sísmica 3D', '2026-11-01', '2027-04-30', 0),
+          t('Perfuração do poço pioneiro', '2027-05-01', '2027-11-30', 0),
+          m('Declaração de comercialidade', '2028-01-15'),
+        ]),
+        ws('Desenvolvimento', [
+          m('Início do Desenvolvimento', '2028-03-01'),
+          t('FEED do sistema de produção', '2028-03-15', '2028-12-31', 0),
+          m('Primeiro Óleo', '2029-06-01'),
+          m('Platô de Produção', '2030-01-15'),
         ]),
       ]),
     ],
