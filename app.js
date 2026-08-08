@@ -15,8 +15,6 @@ const MIN_PX_PER_DAY = 0.35;
 const MAX_PX_PER_DAY = 32;
 
 const FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif';
-const MILESTONE_LABEL_FONT = '600 11px ' + FONT_STACK;
-const PROGRESS_BADGE_FONT = '700 10.5px ' + FONT_STACK;
 
 const _measureCanvas = document.createElement('canvas');
 const _measureCtx = _measureCanvas.getContext('2d');
@@ -232,23 +230,47 @@ function packLanes(items) {
 const SIDEBAR_WIDTH_DESKTOP = 300;
 const SIDEBAR_WIDTH_MOBILE = 150;
 const MOBILE_BREAKPOINT = 640;
+function isMobileLayout() {
+  return window.innerWidth <= MOBILE_BREAKPOINT;
+}
 function getSidebarWidth() {
-  return window.innerWidth <= MOBILE_BREAKPOINT ? SIDEBAR_WIDTH_MOBILE : SIDEBAR_WIDTH_DESKTOP;
+  return isMobileLayout() ? SIDEBAR_WIDTH_MOBILE : SIDEBAR_WIDTH_DESKTOP;
 }
 let currentSidebarWidth = getSidebarWidth();
 
-const HEADER_H = 46;
-const HEADER_TOP_TIER_H = 18;
-const HEADER_BOTTOM_TIER_H = HEADER_H - HEADER_TOP_TIER_H;
-const PROJECT_ROW_H = 44;
-const BAR_H = 22;
-// LANE_H acomoda a barra (topo da raia) + os dois números de progresso
-// logo abaixo dela, sem invadir a raia seguinte.
-const LANE_H = 40;
-const LANE_CONTENT_TOP = 3;
-// LANE_PAD reserva espaço extra acima da 1ª raia para caber o rótulo do
-// marco (que fica acima do losango) sem invadir a linha anterior.
-const LANE_PAD = 24;
+// Dimensões do Gantt em pixels. No celular, tudo encolhe (linhas, barras,
+// cabeçalho, fontes) para caber mais informação na tela sem exigir zoom.
+// Recalculadas a cada render() via applyResponsiveMetrics().
+const METRICS_DESKTOP = {
+  headerH: 46, headerTopTierH: 18, projectRowH: 44, barH: 22,
+  laneH: 40, laneContentTop: 3, lanePad: 24,
+  milestoneLabelFont: '600 11px ' + FONT_STACK,
+  progressBadgeFont: '700 10.5px ' + FONT_STACK,
+};
+const METRICS_MOBILE = {
+  headerH: 34, headerTopTierH: 14, projectRowH: 36, barH: 16,
+  laneH: 28, laneContentTop: 2, lanePad: 16,
+  milestoneLabelFont: '600 9.5px ' + FONT_STACK,
+  progressBadgeFont: '700 9px ' + FONT_STACK,
+};
+
+let HEADER_H, HEADER_TOP_TIER_H, HEADER_BOTTOM_TIER_H, PROJECT_ROW_H, BAR_H,
+  LANE_H, LANE_CONTENT_TOP, LANE_PAD, MILESTONE_LABEL_FONT, PROGRESS_BADGE_FONT;
+
+function applyResponsiveMetrics() {
+  const m = isMobileLayout() ? METRICS_MOBILE : METRICS_DESKTOP;
+  HEADER_H = m.headerH;
+  HEADER_TOP_TIER_H = m.headerTopTierH;
+  HEADER_BOTTOM_TIER_H = HEADER_H - HEADER_TOP_TIER_H;
+  PROJECT_ROW_H = m.projectRowH;
+  BAR_H = m.barH;
+  LANE_H = m.laneH;
+  LANE_CONTENT_TOP = m.laneContentTop;
+  LANE_PAD = m.lanePad;
+  MILESTONE_LABEL_FONT = m.milestoneLabelFont;
+  PROGRESS_BADGE_FONT = m.progressBadgeFont;
+}
+applyResponsiveMetrics();
 
 let currentPxPerDay = SCALE_PX_PER_DAY.month;
 let currentRangeStart = null;
@@ -279,6 +301,8 @@ function render() {
   currentTimelineWidth = timelineWidth;
   currentSidebarWidth = getSidebarWidth();
   document.documentElement.style.setProperty('--sidebar-w', currentSidebarWidth + 'px');
+  applyResponsiveMetrics();
+  document.documentElement.style.setProperty('--header-h', HEADER_H + 'px');
   const sidebarWidth = currentSidebarWidth;
   const totalWidth = sidebarWidth + timelineWidth;
 
@@ -636,6 +660,7 @@ function renderTaskBar(project, ws, item, lane, rangeStart) {
   bar.style.left = left + 'px';
   bar.style.width = width + 'px';
   bar.style.top = top + 'px';
+  bar.style.height = BAR_H + 'px';
   bar.style.background = project.color;
 
   const fill = document.createElement('div');
