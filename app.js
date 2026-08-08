@@ -205,20 +205,9 @@ function computeRange() {
 // linha de uma workstream, para que não fiquem desenhados um sobre o outro.
 function packLanes(items) {
   const withRange = items.map((it) => {
-    if (it.type === 'milestone') {
-      // O rótulo de um marco fica centralizado sobre a data, se estendendo
-      // para os dois lados (ver labelBoxWidth em renderMilestone). Para dois
-      // marcos não terem o nome sobreposto quando ficam próximos na
-      // timeline, reservamos aqui essa mesma largura (convertida em dias
-      // conforme o zoom atual) como "ocupação" do marco, e não só o ponto
-      // exato da data — assim marcos que colidiriam visualmente caem em
-      // raias diferentes, do mesmo jeito que tarefas com datas sobrepostas.
-      const date = parseDate(it.date);
-      const labelHalfWidthPx = (measureTextWidth(it.name, MILESTONE_LABEL_FONT) + 10 + 6) / 2;
-      const paddingDays = Math.ceil(labelHalfWidthPx / Math.max(currentPxPerDay, 0.01));
-      return { item: it, s: addDays(date, -paddingDays), e: addDays(date, paddingDays) };
-    }
-    return { item: it, s: parseDate(it.start), e: parseDate(it.end) };
+    const s = parseDate(it.type === 'milestone' ? it.date : it.start);
+    const e = it.type === 'milestone' ? s : parseDate(it.end);
+    return { item: it, s, e };
   }).sort((a, b) => a.s - b.s);
 
   const lanes = []; // cada lane = data do último "e" ocupado
@@ -234,6 +223,40 @@ function packLanes(items) {
     placements.push({ item: entry.item, lane: laneIndex });
   }
   return { placements, laneCount: Math.max(1, lanes.length) };
+}
+
+// Quando dois ou mais marcos caem na mesma raia com datas próximas o
+// bastante para o nome de um sobrepor o do outro, desloca os rótulos
+// horizontalmente (varrendo da esquerda para a direita) até caberem lado a
+// lado, sem mudar o losango de raia — ele continua exatamente na data real,
+// só o texto se move. Recebe os `placements` já calculados por packLanes()
+// e devolve um Map item -> left final do rótulo (em px).
+function resolveMilestoneLabelLefts(placements, rangeStart) {
+  const GAP = 6;
+  const byLane = new Map();
+  for (const { item, lane } of placements) {
+    if (item.type !== 'milestone') continue;
+    if (!byLane.has(lane)) byLane.set(lane, []);
+    byLane.get(lane).push(item);
+  }
+
+  const result = new Map();
+  for (const laneItems of byLane.values()) {
+    const withPos = laneItems.map((item) => {
+      const left = diffDays(rangeStart, parseDate(item.date)) * currentPxPerDay;
+      const labelBoxWidth = measureTextWidth(item.name, MILESTONE_LABEL_FONT) + 10;
+      return { item, labelBoxWidth, naturalLeft: left - labelBoxWidth / 2 };
+    }).sort((a, b) => a.naturalLeft - b.naturalLeft);
+
+    let prevRight = -Infinity;
+    for (const entry of withPos) {
+      let labelLeft = Math.max(entry.naturalLeft, prevRight + GAP);
+      labelLeft = Math.max(2, Math.min(labelLeft, currentTimelineWidth - entry.labelBoxWidth - 2));
+      result.set(entry.item, labelLeft);
+      prevRight = labelLeft + entry.labelBoxWidth;
+    }
+  }
+  return result;
 }
 
 /* -------------------------------- Render ---------------------------------- */
@@ -650,8 +673,9 @@ function renderProjectRow(project, rangeStart) {
     }
   }
 
+  const milestoneLabelLefts = resolveMilestoneLabelLefts(milestonePlacements, rangeStart);
   for (const { item, lane } of milestonePlacements) {
-    timelineCell.appendChild(renderMilestone(project, ownerByItem.get(item), item, lane, rangeStart));
+    timelineCell.appendChild(renderMilestone(project, ownerByItem.get(item), item, lane, rangeStart, milestoneLabelLefts.get(item)));
   }
 
   row.appendChild(timelineCell);
@@ -694,11 +718,12 @@ function renderWorkstreamRow(project, ws, rangeStart) {
   const timelineCell = document.createElement('div');
   timelineCell.className = 'timeline-cell';
 
+  const milestoneLabelLefts = resolveMilestoneLabelLefts(placements, rangeStart);
   for (const { item, lane } of placements) {
     if (item.type === 'task') {
       timelineCell.appendChild(renderTaskBar(project, ws, item, lane, rangeStart));
     } else {
-      timelineCell.appendChild(renderMilestone(project, ws, item, lane, rangeStart));
+      timelineCell.appendChild(renderMilestone(project, ws, item, lane, rangeStart, milestoneLabelLefts.get(item)));
     }
   }
 
@@ -774,7 +799,7 @@ function renderTaskBar(project, ws, item, lane, rangeStart) {
   return wrapper;
 }
 
-function renderMilestone(project, ws, item, lane, rangeStart) {
+function renderMilestone(project, ws, item, lane, rangeStart, labelLeftOverride) {
   const date = parseDate(item.date);
   const isPast = date < parseDate(todayISO());
   const left = diffDays(rangeStart, date) * currentPxPerDay;
@@ -807,7 +832,10 @@ function renderMilestone(project, ws, item, lane, rangeStart) {
   // barras de tarefa que estejam na mesma raia ou em raias vizinhas. Marcos
   // já passados e realizados ficam acinzentados (padrão de tarefa
   // concluída); já passados e NÃO realizados ficam em vermelho; marcos
-  // futuros mantêm a cor padrão (preta) do CSS.
+  // futuros mantêm a cor padrão (preta) do CSS. Quando um marco vizinho na
+  // mesma raia está perto o bastante para colidir, labelLeftOverride (vindo
+  // de resolveMilestoneLabelLefts) desloca o texto para não sobrepor, sem
+  // mudar a posição do losango.
   const labelEl = document.createElement('span');
   labelEl.className = 'milestone-label';
   labelEl.textContent = item.name;
@@ -815,7 +843,9 @@ function renderMilestone(project, ws, item, lane, rangeStart) {
 
   const textWidth = measureTextWidth(item.name, MILESTONE_LABEL_FONT);
   const labelBoxWidth = textWidth + 10;
-  const labelLeft = Math.max(2, Math.min(left - labelBoxWidth / 2, currentTimelineWidth - labelBoxWidth - 2));
+  const labelLeft = labelLeftOverride !== undefined
+    ? labelLeftOverride
+    : Math.max(2, Math.min(left - labelBoxWidth / 2, currentTimelineWidth - labelBoxWidth - 2));
   labelEl.style.left = labelLeft + 'px';
   labelEl.style.width = labelBoxWidth + 'px';
   labelEl.style.top = (top - 8) + 'px';
