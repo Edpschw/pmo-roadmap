@@ -813,14 +813,16 @@ function renderMilestone(project, ws, item, lane, rangeStart) {
   dia.className = 'milestone';
   dia.style.left = left + 'px';
   dia.style.top = top + 'px';
-  dia.style.background = computeMilestoneColor(item.date);
+  dia.style.background = project.color;
   dia.title = `${item.name}\n${formatBR(item.date)}`;
 
   // Rótulo centralizado acima do losango (não ao lado), para não sobrepor
-  // barras de tarefa que estejam na mesma raia ou em raias vizinhas.
+  // barras de tarefa que estejam na mesma raia ou em raias vizinhas. A cor do
+  // texto (não do losango) sinaliza a urgência do marco.
   const labelEl = document.createElement('span');
   labelEl.className = 'milestone-label';
   labelEl.textContent = item.name;
+  labelEl.style.color = computeMilestoneColor(item.date);
 
   const textWidth = measureTextWidth(item.name, MILESTONE_LABEL_FONT);
   const labelBoxWidth = textWidth + 10;
