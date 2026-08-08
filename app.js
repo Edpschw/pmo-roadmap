@@ -230,8 +230,10 @@ function packLanes(items) {
 const SIDEBAR_WIDTH_DESKTOP = 300;
 const SIDEBAR_WIDTH_MOBILE = 150;
 const MOBILE_BREAKPOINT = 640;
+// Usa o menor dos dois lados da viewport para que um celular também caia no
+// modo compacto quando girado para paisagem (largura grande, altura curta).
 function isMobileLayout() {
-  return window.innerWidth <= MOBILE_BREAKPOINT;
+  return Math.min(window.innerWidth, window.innerHeight) <= MOBILE_BREAKPOINT;
 }
 function getSidebarWidth() {
   return isMobileLayout() ? SIDEBAR_WIDTH_MOBILE : SIDEBAR_WIDTH_DESKTOP;

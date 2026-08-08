@@ -402,8 +402,10 @@ body { display: flex; flex-direction: column; height: 100vh; }
   .scale-btn { padding: 7px 12px; }
 }
 
-/* ---------- Telas estreitas (celular) ---------- */
-@media (max-width: 640px) {
+/* ---------- Telas estreitas (celular), incluindo paisagem: usa a
+   condição de altura curta + orientação para pegar o celular deitado, que
+   tem largura grande mas continua sendo uma tela pequena. ---------- */
+@media (max-width: 640px), (max-height: 640px) and (orientation: landscape) {
   :root { --sidebar-w: 150px; }
   body { font-size: 12.5px; }
 
