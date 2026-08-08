@@ -14,9 +14,12 @@ const PALETTE = [
   '#0aa3a3', '#c9a227', '#5b6ee1', '#2f9ed6', '#c14f8a'
 ];
 
-// Cor do texto de marcos já passados — mesmo tom usado no número de
-// progresso de uma tarefa concluída (.progress-numbers .actual.complete).
+// Cor do texto de marcos já passados e marcados como realizados — mesmo tom
+// usado no número de progresso de uma tarefa concluída (.actual.complete).
 const MILESTONE_PAST_LABEL_COLOR = '#9aa4b2';
+// Cor do texto de marcos já passados e NÃO realizados — mesmo tom de
+// "atrasado" usado no número de progresso das tarefas (.actual.behind).
+const MILESTONE_OVERDUE_LABEL_COLOR = '#d64545';
 
 const MONTHS_PT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const WEEKDAYS_PT = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
@@ -797,19 +800,20 @@ function renderMilestone(project, ws, item, lane, rangeStart) {
   dia.style.left = left + 'px';
   dia.style.top = top + 'px';
   dia.style.background = project.color;
-  // Marco já passado: losango esmaecido, mesmo padrão de opacidade usado na
-  // barra-resumo de projeto colapsado (project-overview-bar).
-  if (isPast) dia.style.opacity = '0.30';
-  dia.title = `${item.name}\n${formatBR(item.date)}`;
+  // Marco já passado: losango esmaecido.
+  if (isPast) dia.style.opacity = '0.5';
+  dia.title = `${item.name}\n${formatBR(item.date)}` +
+    (isPast ? (item.done ? '\nRealizado' : '\nAtrasado (não realizado)') : '');
 
   // Rótulo centralizado acima do losango (não ao lado), para não sobrepor
   // barras de tarefa que estejam na mesma raia ou em raias vizinhas. Marcos
-  // já passados ficam com o texto acinzentado (padrão de tarefa concluída);
-  // marcos futuros mantêm a cor padrão (preta) do CSS.
+  // já passados e realizados ficam acinzentados (padrão de tarefa
+  // concluída); já passados e NÃO realizados ficam em vermelho; marcos
+  // futuros mantêm a cor padrão (preta) do CSS.
   const labelEl = document.createElement('span');
   labelEl.className = 'milestone-label';
   labelEl.textContent = item.name;
-  if (isPast) labelEl.style.color = MILESTONE_PAST_LABEL_COLOR;
+  if (isPast) labelEl.style.color = item.done ? MILESTONE_PAST_LABEL_COLOR : MILESTONE_OVERDUE_LABEL_COLOR;
 
   const textWidth = measureTextWidth(item.name, MILESTONE_LABEL_FONT);
   const labelBoxWidth = textWidth + 10;
@@ -1117,6 +1121,9 @@ function openMilestoneModal(project, ws, item) {
       <label>Data</label>
       <input type="date" id="f-date" value="${date}" />
     </div>
+    <div class="field field-checkbox">
+      <label><input type="checkbox" id="f-done" ${isEdit && item.done ? 'checked' : ''} /> Marco realizado</label>
+    </div>
     <div class="modal-actions">
       <div>${isEdit ? '<button class="btn-danger" id="f-delete">Excluir marco</button>' : ''}</div>
       <div class="modal-actions-right">
@@ -1135,12 +1142,13 @@ function openMilestoneModal(project, ws, item) {
     m.querySelector('#f-save').addEventListener('click', () => {
       const name = m.querySelector('#f-name').value.trim();
       const d = m.querySelector('#f-date').value;
+      const done = m.querySelector('#f-done').checked;
       if (!name) { showToast('Informe um nome para o marco.'); return; }
       if (!d) { showToast('Informe a data do marco.'); return; }
       if (isEdit) {
-        item.name = name; item.date = d;
+        item.name = name; item.date = d; item.done = done;
       } else {
-        ws.items.push({ id: uid('m'), type: 'milestone', name, date: d });
+        ws.items.push({ id: uid('m'), type: 'milestone', name, date: d, done });
       }
       saveState();
       render();

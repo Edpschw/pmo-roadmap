@@ -293,6 +293,11 @@ body { display: flex; flex-direction: column; height: 100vh; }
 .field-row .field { flex: 1; }
 .field input[type="range"] { width: 100%; }
 .progress-value { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.field-checkbox label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer;
+}
+.field-checkbox input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
 .modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
 .modal-actions-right { display: flex; gap: 8px; }
 .btn-danger { background: none; border: none; color: var(--danger); font-weight: 600; font-size: 12.5px; cursor: pointer; padding: 6px 4px; }
