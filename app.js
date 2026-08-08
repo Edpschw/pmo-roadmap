@@ -14,14 +14,9 @@ const PALETTE = [
   '#0aa3a3', '#c9a227', '#5b6ee1', '#2f9ed6', '#c14f8a'
 ];
 
-// Marcos são coloridos por urgência (não pela cor do projeto), no mesmo
-// espírito de "farol" usado nos números de progresso das tarefas.
-const MILESTONE_COLORS = {
-  past: '#b7bfcc',   // já passou — cinza claro
-  urgent: '#d64545',  // até 3 meses — vermelho
-  warning: '#e0762f', // até 6 meses — laranja
-  far: '#8fd6ae',     // depois de 6 meses — verde claro
-};
+// Cor do texto de marcos já passados — mesmo tom usado no número de
+// progresso de uma tarefa concluída (.progress-numbers .actual.complete).
+const MILESTONE_PAST_LABEL_COLOR = '#9aa4b2';
 
 const MONTHS_PT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const WEEKDAYS_PT = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
@@ -61,9 +56,6 @@ function addDays(date, n) {
   d.setUTCDate(d.getUTCDate() + n);
   return d;
 }
-function addMonths(date, n) {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + n, date.getUTCDate()));
-}
 function diffDays(a, b) {
   return Math.round((b.getTime() - a.getTime()) / 86400000);
 }
@@ -100,15 +92,12 @@ function computeExpectedProgress(item) {
   if (span <= 0) return 100;
   return Math.round((diffDays(start, today) / span) * 100);
 }
-// Cor do marco conforme a urgência: já passou (cinza), até 3 meses
-// (vermelho), até 6 meses (laranja), depois disso (verde claro).
-function computeMilestoneColor(dateISO) {
+// Cor do texto do rótulo do marco: cinza (mesmo padrão de tarefa concluída)
+// se já passou, ou null para manter a cor padrão (preta) de marcos futuros.
+function computeMilestoneLabelColor(dateISO) {
   const date = parseDate(dateISO);
   const today = parseDate(todayISO());
-  if (date < today) return MILESTONE_COLORS.past;
-  if (date <= addMonths(today, 3)) return MILESTONE_COLORS.urgent;
-  if (date <= addMonths(today, 6)) return MILESTONE_COLORS.warning;
-  return MILESTONE_COLORS.far;
+  return date < today ? MILESTONE_PAST_LABEL_COLOR : null;
 }
 function startOfMonth(date) {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
@@ -817,12 +806,14 @@ function renderMilestone(project, ws, item, lane, rangeStart) {
   dia.title = `${item.name}\n${formatBR(item.date)}`;
 
   // Rótulo centralizado acima do losango (não ao lado), para não sobrepor
-  // barras de tarefa que estejam na mesma raia ou em raias vizinhas. A cor do
-  // texto (não do losango) sinaliza a urgência do marco.
+  // barras de tarefa que estejam na mesma raia ou em raias vizinhas. Marcos
+  // já passados ficam com o texto acinzentado (padrão de tarefa concluída);
+  // marcos futuros mantêm a cor padrão (preta) do CSS.
   const labelEl = document.createElement('span');
   labelEl.className = 'milestone-label';
   labelEl.textContent = item.name;
-  labelEl.style.color = computeMilestoneColor(item.date);
+  const labelColor = computeMilestoneLabelColor(item.date);
+  if (labelColor) labelEl.style.color = labelColor;
 
   const textWidth = measureTextWidth(item.name, MILESTONE_LABEL_FONT);
   const labelBoxWidth = textWidth + 10;
