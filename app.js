@@ -228,15 +228,53 @@ function packLanes(items) {
 /* -------------------------------- Render ---------------------------------- */
 
 const SIDEBAR_WIDTH_DESKTOP = 300;
-const SIDEBAR_WIDTH_MOBILE = 150;
+const SIDEBAR_WIDTH_MOBILE_MIN = 150;
 const MOBILE_BREAKPOINT = 640;
+// Espaço reservado na label-cell além do texto do nome do projeto: padding +
+// chevron + bolinha de cor + ícone "+" + gaps (ver .label-cell no CSS mobile).
+const PROJECT_LABEL_CHROME_MOBILE = 85;
+const PROJECT_NAME_FONT_SIZE_MOBILE = 12;
+const PROJECT_NAME_FONT_WEIGHT_MOBILE = '600';
+const PROJECT_NAME_MIN_FONT_SIZE_MOBILE = 9;
+
 // Usa o menor dos dois lados da viewport para que um celular também caia no
 // modo compacto quando girado para paisagem (largura grande, altura curta).
 function isMobileLayout() {
   return Math.min(window.innerWidth, window.innerHeight) <= MOBILE_BREAKPOINT;
 }
+
+// No mobile, a sidebar cresce o suficiente para caber o nome do projeto mais
+// longo numa única linha, respeitando um mínimo compacto e um máximo que
+// ainda deixa espaço utilizável para a timeline ao lado. Nomes que mesmo
+// assim não couberem têm a fonte reduzida por linha em fitProjectLabelFont
+// (ver renderProjectRow), sem depender só da largura da sidebar.
+function computeMobileSidebarWidth() {
+  const font = `${PROJECT_NAME_FONT_WEIGHT_MOBILE} ${PROJECT_NAME_FONT_SIZE_MOBILE}px ${FONT_STACK}`;
+  let widestName = 0;
+  for (const project of state.projects) {
+    const w = measureTextWidth(project.name, font);
+    if (w > widestName) widestName = w;
+  }
+  const desired = Math.ceil(widestName + PROJECT_LABEL_CHROME_MOBILE);
+  const max = Math.max(SIDEBAR_WIDTH_MOBILE_MIN, window.innerWidth - 70);
+  return Math.min(max, Math.max(SIDEBAR_WIDTH_MOBILE_MIN, desired));
+}
+
+// Tamanho de fonte (px) para o nome do projeto caber em uma linha só dentro
+// da largura disponível: usa o tamanho padrão se couber, senão reduz aos
+// poucos até um piso legível (não trunca nem depende de quebrar linha).
+function fitProjectLabelFontSize(name, availableWidth) {
+  let size = PROJECT_NAME_FONT_SIZE_MOBILE;
+  while (size > PROJECT_NAME_MIN_FONT_SIZE_MOBILE) {
+    const font = `${PROJECT_NAME_FONT_WEIGHT_MOBILE} ${size}px ${FONT_STACK}`;
+    if (measureTextWidth(name, font) <= availableWidth) break;
+    size -= 0.5;
+  }
+  return size;
+}
+
 function getSidebarWidth() {
-  return isMobileLayout() ? SIDEBAR_WIDTH_MOBILE : SIDEBAR_WIDTH_DESKTOP;
+  return isMobileLayout() ? computeMobileSidebarWidth() : SIDEBAR_WIDTH_DESKTOP;
 }
 let currentSidebarWidth = getSidebarWidth();
 
@@ -524,6 +562,14 @@ function renderProjectRow(project, rangeStart) {
   actions.appendChild(iconButton('✎', 'Editar projeto', () => openProjectModal(project), 'secondary-action'));
   actions.appendChild(iconButton('✕', 'Excluir projeto', () => confirmDeleteProject(project), 'secondary-action'));
   labelCell.appendChild(actions);
+
+  // No mobile, o nome do projeto sempre cabe numa linha só: a sidebar já
+  // cresce para o nome mais longo (computeMobileSidebarWidth), e aqui a
+  // fonte reduz um pouco se ainda faltar espaço (ex.: nomes muito longos).
+  if (isMobileLayout()) {
+    const available = currentSidebarWidth - PROJECT_LABEL_CHROME_MOBILE;
+    label.style.fontSize = fitProjectLabelFontSize(project.name, available) + 'px';
+  }
 
   const mobileLabelHeight = isMobileLayout() ? measureLabelCellHeight(labelCell) : 0;
   row.appendChild(labelCell);
