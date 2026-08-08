@@ -670,11 +670,11 @@ function renderProjectRow(project, rangeStart) {
   }
   row.style.height = rowHeight + 'px';
 
-  // Barra-resumo (span do projeto inteiro). Expandido, é só ilustrativa.
-  // Colapsado, funciona como o progresso do projeto como um todo: a parte
-  // já realizada fica cinza (mesma lógica usada para tarefas/marcos
-  // concluídos) e a parte restante mantém a cor do projeto, com os mesmos
-  // números real/esperado usados nas barras de tarefa.
+  // Barra-resumo (span do projeto inteiro), colapsado ou não: mesma lógica
+  // visual das barras de tarefa — cor do projeto de ponta a ponta, com um
+  // realce translúcido cobrindo a fração já concluída (progress-fill) e os
+  // mesmos números real/esperado usados nas barras de tarefa abaixo dela.
+  // Sem nenhuma tarefa no projeto, cai de volta na linha fina ilustrativa.
   const allItems = project.workstreams.flatMap((w) => w.items);
   if (allItems.length) {
     let min = null, max = null;
@@ -690,20 +690,18 @@ function renderProjectRow(project, rangeStart) {
     bar.className = 'project-overview-bar';
     bar.style.left = barLeft + 'px';
     bar.style.width = barWidth + 'px';
+    bar.style.background = project.color;
 
-    const progress = project.collapsed ? computeProjectProgress(project) : null;
+    const progress = computeProjectProgress(project);
     if (progress) {
       bar.style.overflow = 'hidden';
-      const doneFill = document.createElement('div');
-      doneFill.style.cssText = `position:absolute; left:0; top:0; bottom:0; width:${progress.actual}%; background:${MILESTONE_PAST_LABEL_COLOR};`;
-      const remainingFill = document.createElement('div');
-      remainingFill.style.cssText = `position:absolute; left:${progress.actual}%; right:0; top:0; bottom:0; background:${project.color};`;
-      bar.appendChild(doneFill);
-      bar.appendChild(remainingFill);
+      const fill = document.createElement('div');
+      fill.className = 'progress-fill';
+      fill.style.width = progress.actual + '%';
+      bar.appendChild(fill);
       timelineCell.appendChild(bar);
       timelineCell.appendChild(buildProgressNumbersEl(progress.actual, progress.expected, barLeft + barWidth / 2, rowHeight / 2 + 6));
     } else {
-      bar.style.background = project.color;
       bar.style.opacity = '0.30';
       timelineCell.appendChild(bar);
     }
