@@ -331,6 +331,14 @@ function packLanes(items) {
 
 /* -------------------------------- Render ---------------------------------- */
 
+const SIDEBAR_WIDTH_DESKTOP = 300;
+const SIDEBAR_WIDTH_MOBILE = 150;
+const MOBILE_BREAKPOINT = 640;
+function getSidebarWidth() {
+  return window.innerWidth <= MOBILE_BREAKPOINT ? SIDEBAR_WIDTH_MOBILE : SIDEBAR_WIDTH_DESKTOP;
+}
+let currentSidebarWidth = getSidebarWidth();
+
 const HEADER_H = 46;
 const HEADER_TOP_TIER_H = 18;
 const HEADER_BOTTOM_TIER_H = HEADER_H - HEADER_TOP_TIER_H;
@@ -371,7 +379,9 @@ function render() {
   const totalDays = diffDays(rangeStart, rangeEnd);
   const timelineWidth = totalDays * currentPxPerDay;
   currentTimelineWidth = timelineWidth;
-  const sidebarWidth = 300;
+  currentSidebarWidth = getSidebarWidth();
+  document.documentElement.style.setProperty('--sidebar-w', currentSidebarWidth + 'px');
+  const sidebarWidth = currentSidebarWidth;
   const totalWidth = sidebarWidth + timelineWidth;
 
   rangeLabelEl.textContent = `Exibindo ${MONTHS_PT[rangeStart.getUTCMonth()]} ${rangeStart.getUTCFullYear()} — ${MONTHS_PT[rangeEnd.getUTCMonth()]} ${rangeEnd.getUTCFullYear()}`;
@@ -469,14 +479,12 @@ function render() {
   updateBarLabelPositions();
 }
 
-const SIDEBAR_WIDTH = 300;
-
 // Mantém o nome de cada tarefa centralizado na parte da barra que está
 // visível na tela: em barras longas, o texto "segue" a rolagem/zoom em vez
 // de ficar preso numa ponta que pode sair da área visível.
 function updateBarLabelPositions() {
   const containerRect = scrollContainer.getBoundingClientRect();
-  const visibleLeft = containerRect.left + SIDEBAR_WIDTH;
+  const visibleLeft = containerRect.left + currentSidebarWidth;
   const visibleRight = containerRect.right;
 
   document.querySelectorAll('.task-bar').forEach((bar) => {
@@ -571,8 +579,8 @@ function renderProjectRow(project, rangeStart) {
   const actions = document.createElement('div');
   actions.className = 'row-actions';
   actions.appendChild(iconButton('+', 'Nova workstream', () => openWorkstreamModal(project)));
-  actions.appendChild(iconButton('✎', 'Editar projeto', () => openProjectModal(project)));
-  actions.appendChild(iconButton('✕', 'Excluir projeto', () => confirmDeleteProject(project)));
+  actions.appendChild(iconButton('✎', 'Editar projeto', () => openProjectModal(project), 'secondary-action'));
+  actions.appendChild(iconButton('✕', 'Excluir projeto', () => confirmDeleteProject(project), 'secondary-action'));
   labelCell.appendChild(actions);
 
   row.appendChild(labelCell);
@@ -654,8 +662,8 @@ function renderWorkstreamRow(project, ws, rangeStart) {
   actions.className = 'row-actions';
   actions.appendChild(iconButton('T', 'Nova tarefa', () => openTaskModal(project, ws)));
   actions.appendChild(iconButton('◆', 'Novo marco', () => openMilestoneModal(project, ws)));
-  actions.appendChild(iconButton('✎', 'Editar workstream', () => openWorkstreamModal(project, ws)));
-  actions.appendChild(iconButton('✕', 'Excluir workstream', () => confirmDeleteWorkstream(project, ws)));
+  actions.appendChild(iconButton('✎', 'Editar workstream', () => openWorkstreamModal(project, ws), 'secondary-action'));
+  actions.appendChild(iconButton('✕', 'Excluir workstream', () => confirmDeleteWorkstream(project, ws), 'secondary-action'));
   labelCell.appendChild(actions);
 
   row.appendChild(labelCell);
@@ -676,9 +684,9 @@ function renderWorkstreamRow(project, ws, rangeStart) {
   return rowHeight;
 }
 
-function iconButton(symbol, title, onClick) {
+function iconButton(symbol, title, onClick, extraClass) {
   const btn = document.createElement('button');
-  btn.className = 'btn-icon';
+  btn.className = 'btn-icon' + (extraClass ? ' ' + extraClass : '');
   btn.textContent = symbol;
   btn.title = title;
   btn.type = 'button';
@@ -1187,7 +1195,7 @@ scrollContainer.addEventListener('wheel', (e) => {
 
   const containerRect = scrollContainer.getBoundingClientRect();
   const mouseXInContent = scrollContainer.scrollLeft + (e.clientX - containerRect.left);
-  const timelineX = mouseXInContent - 300; // 300 = largura da coluna de rótulos
+  const timelineX = mouseXInContent - currentSidebarWidth;
   const dayOffset = timelineX / currentPxPerDay;
 
   const zoomFactor = Math.exp(-e.deltaY * 0.0015);
@@ -1199,7 +1207,7 @@ scrollContainer.addEventListener('wheel', (e) => {
   render();
 
   const newTimelineX = dayOffset * currentPxPerDay;
-  scrollContainer.scrollLeft = newTimelineX + 300 - (e.clientX - containerRect.left);
+  scrollContainer.scrollLeft = newTimelineX + currentSidebarWidth - (e.clientX - containerRect.left);
 }, { passive: false });
 
 /* ---- Clicar e arrastar para navegar na linha do tempo ---- */
@@ -1239,7 +1247,14 @@ scrollContainer.addEventListener('pointerdown', (e) => {
 // Re-centraliza os nomes das barras visíveis ao rolar (inclui o pan por
 // clique-arrastar, que também dispara 'scroll') e ao redimensionar a janela.
 scrollContainer.addEventListener('scroll', scheduleBarLabelUpdate);
-window.addEventListener('resize', scheduleBarLabelUpdate);
+window.addEventListener('resize', () => {
+  // A largura da sidebar muda ao cruzar o breakpoint mobile/desktop, o que
+  // afeta o layout inteiro (não só as posições dos rótulos das barras).
+  if (getSidebarWidth() !== currentSidebarWidth) {
+    render();
+  }
+  scheduleBarLabelUpdate();
+});
 
 document.getElementById('todayBtn').addEventListener('click', () => {
   scrollToToday();
@@ -1248,7 +1263,7 @@ document.getElementById('todayBtn').addEventListener('click', () => {
 function scrollToToday() {
   if (!currentRangeStart) return;
   const today = parseDate(todayISO());
-  const x = 300 + diffDays(currentRangeStart, today) * currentPxPerDay;
+  const x = currentSidebarWidth + diffDays(currentRangeStart, today) * currentPxPerDay;
   scrollContainer.scrollTo({
     left: Math.max(0, x - scrollContainer.clientWidth / 2),
     behavior: 'smooth',
