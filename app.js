@@ -800,8 +800,15 @@ function renderMilestone(project, ws, item, lane, rangeStart) {
   dia.style.left = left + 'px';
   dia.style.top = top + 'px';
   dia.style.background = project.color;
-  // Marco já passado: losango esmaecido.
-  if (isPast) dia.style.opacity = '0.5';
+  // Marco já passado e realizado: losango esmaecido. Já passado e NÃO
+  // realizado (atrasado): mantém opacidade cheia, mas ganha borda vermelha.
+  if (isPast) {
+    if (item.done) {
+      dia.style.opacity = '0.5';
+    } else {
+      dia.style.border = `2px solid ${MILESTONE_OVERDUE_LABEL_COLOR}`;
+    }
+  }
   dia.title = `${item.name}\n${formatBR(item.date)}` +
     (isPast ? (item.done ? '\nRealizado' : '\nAtrasado (não realizado)') : '');
 
