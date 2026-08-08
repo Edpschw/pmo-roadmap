@@ -77,6 +77,9 @@ body { display: flex; flex-direction: column; height: 100vh; }
   padding: 7px 13px;
   transition: background .12s, border-color .12s;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
 }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:hover { background: #2a45b8; }
@@ -328,6 +331,61 @@ body { display: flex; flex-direction: column; height: 100vh; }
 .roadmap-scroll::-webkit-scrollbar-thumb { background: #c7cfda; border-radius: 6px; border: 3px solid var(--bg); }
 .roadmap-scroll::-webkit-scrollbar-thumb:hover { background: #aab4c3; }
 
+/* ---------- Visão em tabela (tabela.html) ---------- */
+.table-wrapper {
+  flex: 1 1 auto; overflow: auto; padding: 18px 20px 40px;
+}
+.data-table {
+  width: 100%; min-width: 900px; border-collapse: collapse;
+  background: var(--panel); border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.data-table th {
+  position: sticky; top: 0; z-index: 5; background: var(--panel);
+  text-align: left; font-size: 10.5px; font-weight: 700; color: var(--text-faint);
+  text-transform: uppercase; letter-spacing: .04em;
+  padding: 10px 10px; border-bottom: 1px solid var(--border-strong);
+}
+.data-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.data-table .indent-cell { width: 18px; padding: 0; }
+.data-table .item-row:hover { background: #f7f9fc; }
+.data-table .placeholder-row td { color: var(--text-faint); font-size: 12.5px; font-style: italic; padding: 8px 10px 8px 34px; }
+
+.group-header-content { display: flex; align-items: center; gap: 10px; }
+.project-header-row td { background: var(--bg); border-top: 2px solid var(--border-strong); padding: 10px; }
+.project-header-row .group-name-input { font-weight: 700; font-size: 13.5px; max-width: 320px; }
+.ws-header-row td { background: #fafbfd; padding: 7px 10px 7px 30px; }
+.ws-header-row .group-name-input { font-weight: 600; font-size: 12.5px; color: var(--text-muted); max-width: 300px; }
+.group-header-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.btn-small { padding: 5px 10px; font-size: 11.5px; }
+
+.color-input { width: 26px; height: 26px; padding: 0; border: 1px solid var(--border-strong); border-radius: 6px; cursor: pointer; flex: 0 0 auto; }
+
+.cell-input {
+  border: 1px solid transparent; background: transparent; border-radius: 5px;
+  padding: 5px 7px; font: inherit; color: var(--text); width: 100%;
+}
+.cell-input:hover, .cell-input:focus { border-color: var(--border-strong); background: var(--panel); }
+.cell-date { width: 140px; }
+.cell-number { width: 70px; }
+.type-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+}
+.type-badge.type-task { background: var(--accent-soft); color: var(--accent); }
+.type-badge.type-milestone { background: #fde9e2; color: #b8451f; }
+
+.expected-cell, .empty-cell { color: var(--text-faint); font-size: 12.5px; }
+.done-cell { display: flex; align-items: center; gap: 8px; }
+.done-checkbox-label { display: inline-flex; align-items: center; cursor: pointer; }
+.done-checkbox-label input { width: 16px; height: 16px; cursor: pointer; }
+.overdue-flag { font-size: 11px; font-weight: 700; color: var(--danger); }
+
+.cell-number.status-on-track { color: #1c9e6b; }
+.cell-number.status-slightly-behind { color: #e0762f; }
+.cell-number.status-behind { color: var(--danger); }
+.cell-number.status-complete { color: var(--text-faint); }
+
 /* ---------- Telas de toque: alvos maiores, ações sempre visíveis ---------- */
 @media (hover: none) {
   .row-actions { display: flex; }
@@ -377,4 +435,8 @@ body { display: flex; flex-direction: column; height: 100vh; }
 
   .modal { width: calc(100vw - 24px); max-width: calc(100vw - 24px); padding: 16px; }
   .field-row { flex-direction: column; gap: 12px; }
+
+  .table-wrapper { padding: 12px; }
+  .project-header-row .group-name-input, .ws-header-row .group-name-input { max-width: 140px; }
+  .cell-date { width: 118px; }
 }
