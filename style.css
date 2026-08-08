@@ -319,3 +319,54 @@ body { display: flex; flex-direction: column; height: 100vh; }
 .roadmap-scroll::-webkit-scrollbar-track { background: transparent; }
 .roadmap-scroll::-webkit-scrollbar-thumb { background: #c7cfda; border-radius: 6px; border: 3px solid var(--bg); }
 .roadmap-scroll::-webkit-scrollbar-thumb:hover { background: #aab4c3; }
+
+/* ---------- Telas de toque: alvos maiores, ações sempre visíveis ---------- */
+@media (hover: none) {
+  .row-actions { display: flex; }
+  /* Editar/excluir já são acessíveis tocando no nome (abre o modal, que tem
+     "excluir" embutido); esconder essas ações libera espaço para o texto. */
+  .btn-icon.secondary-action { display: none; }
+  .btn-icon { width: 30px; height: 30px; font-size: 15px; }
+  .chevron { flex: 0 0 22px; width: 22px; height: 22px; font-size: 11px; }
+  .task-bar .handle { width: 18px; }
+  .task-bar .handle.left { left: -9px; }
+  .task-bar .handle.right { right: -9px; }
+  .color-swatch { width: 26px; height: 26px; }
+  .color-grid { grid-template-columns: repeat(6, 26px); }
+  .scale-btn { padding: 7px 12px; }
+}
+
+/* ---------- Telas estreitas (celular) ---------- */
+@media (max-width: 640px) {
+  :root { --sidebar-w: 150px; }
+  body { font-size: 12.5px; }
+
+  .toolbar {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .toolbar-left { width: 100%; }
+  .toolbar-left h1 { font-size: 15px; }
+  .subtitle { font-size: 11px; }
+
+  .toolbar-right {
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 3px;
+  }
+  .toolbar-right::-webkit-scrollbar { height: 4px; }
+  .scale-switch, .btn-primary, .btn-ghost { flex: 0 0 auto; }
+  .btn-primary, .btn-ghost { padding: 7px 10px; font-size: 12px; }
+
+  .label-cell { padding: 0 4px 0 6px; gap: 4px; }
+  .row.workstream-row .label-cell { padding-left: 16px; }
+  .label-text { font-size: 12px; }
+  .row.workstream-row .label-text { font-size: 11.5px; }
+  .corner-title { font-size: 9.5px; }
+
+  .modal { width: calc(100vw - 24px); max-width: calc(100vw - 24px); padding: 16px; }
+  .field-row { flex-direction: column; gap: 12px; }
+}
