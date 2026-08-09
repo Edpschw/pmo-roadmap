@@ -262,7 +262,7 @@ function resolveMilestoneLabelLayout(placements, rangeStart) {
       if (item.type === 'milestone') {
         const left = diffDays(rangeStart, parseDate(item.date)) * currentPxPerDay;
         const labelBoxWidth = milestoneLabelBoxWidth(item.name);
-        milestones.push({ item, labelBoxWidth, naturalLeft: left - labelBoxWidth / 2 });
+        milestones.push({ item, labelBoxWidth, diamondX: left, naturalLeft: left - labelBoxWidth / 2 });
       } else {
         const barLeft = diffDays(rangeStart, parseDate(item.start)) * currentPxPerDay;
         const barWidth = Math.max(14, (diffDays(parseDate(item.start), parseDate(item.end)) + 1) * currentPxPerDay);
@@ -271,15 +271,23 @@ function resolveMilestoneLabelLayout(placements, rangeStart) {
     }
     milestones.sort((a, b) => a.naturalLeft - b.naturalLeft);
 
-    // Empurra `left` para depois de qualquer barra que ele invada, repetindo
-    // até estabilizar (cobre o caso raro de duas barras próximas na raia).
-    const pushPastBars = (left, width) => {
+    // Desvia de qualquer barra que o rótulo invada, passando para o lado
+    // dela (antes ou depois, o que for mais perto do losango do marco — uma
+    // barra pode ser bem mais longa que a folga precisada). Se ainda assim
+    // o desvio ficar longe demais da posição natural (ex.: raia com barras
+    // dos dois lados perto), desiste do desvio: um leve encontro com a cor
+    // da barra é preferível a um rótulo "teleportado" para longe do marco.
+    const MAX_PUSH = 220;
+    const pushPastBars = (naturalLeft, width, diamondX) => {
+      let left = naturalLeft;
       for (let i = 0; i < bars.length + 1; i++) {
         const collide = bars.find((b) => left < b.right + GAP && b.left < left + width + GAP);
-        if (!collide) return left;
-        left = collide.right + GAP;
+        if (!collide) break;
+        const before = collide.left - GAP - width;
+        const after = collide.right + GAP;
+        left = Math.abs(diamondX - collide.left) <= Math.abs(diamondX - collide.right) ? before : after;
       }
-      return left;
+      return Math.abs(left - naturalLeft) > MAX_PUSH ? naturalLeft : left;
     };
 
     let prevRightAbove = -Infinity;
@@ -298,12 +306,11 @@ function resolveMilestoneLabelLayout(placements, rangeStart) {
         labelLeft = entry.naturalLeft;
       } else {
         // Não coube na posição natural (por causa de outro rótulo ou de uma
-        // barra) nem acima nem abaixo: usa o lado que precisar empurrar
-        // menos o texto para a direita, e ainda garante que o resultado
-        // final também não invada nenhuma barra.
-        const pushAbove = pushPastBars(Math.max(entry.naturalLeft, prevRightAbove + GAP), entry.labelBoxWidth);
-        const pushBelow = pushPastBars(Math.max(entry.naturalLeft, prevRightBelow + GAP), entry.labelBoxWidth);
-        below = pushBelow < pushAbove;
+        // barra) nem acima nem abaixo: usa o lado que precisar desviar
+        // menos da posição natural.
+        const pushAbove = pushPastBars(Math.max(entry.naturalLeft, prevRightAbove + GAP), entry.labelBoxWidth, entry.diamondX);
+        const pushBelow = pushPastBars(Math.max(entry.naturalLeft, prevRightBelow + GAP), entry.labelBoxWidth, entry.diamondX);
+        below = Math.abs(pushBelow - entry.naturalLeft) < Math.abs(pushAbove - entry.naturalLeft);
         labelLeft = below ? pushBelow : pushAbove;
       }
       labelLeft = Math.max(2, Math.min(labelLeft, currentTimelineWidth - entry.labelBoxWidth - 2));
