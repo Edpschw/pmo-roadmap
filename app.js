@@ -32,9 +32,11 @@ function nowFractionalDayOffset(rangeStart) {
   const secondsIntoDay = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
   return wholeDays + secondsIntoDay / 86400;
 }
-function formatTimeBR() {
+function formatTodayFlagLabel() {
   const now = new Date();
-  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const dateLabel = `${pad2(now.getDate())} ${MONTHS_PT[now.getMonth()]}`;
+  const timeLabel = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  return `${dateLabel}, ${timeLabel}`;
 }
 // Progresso do projeto como um todo: média do progresso real e do esperado
 // de todas as suas tarefas, ponderada pela duração de cada uma (tarefas mais
@@ -480,7 +482,7 @@ function render() {
     const flag = document.createElement('div');
     flag.className = 'today-flag';
     flag.style.left = todayLeft + 'px';
-    flag.textContent = `Hoje ${formatTimeBR()}`;
+    flag.textContent = `Hoje ${formatTodayFlagLabel()}`;
     overlay.appendChild(flag);
     todayFlagEl = flag;
   }
