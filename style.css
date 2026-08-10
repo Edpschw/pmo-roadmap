@@ -206,7 +206,7 @@ body { display: flex; flex-direction: column; height: 100vh; }
 .today-flag {
   position: absolute; top: var(--header-h, 46px); transform: translate(-50%, -100%);
   background: var(--today); color: #fff; font-size: 10px; font-weight: 700;
-  padding: 1px 5px; border-radius: 4px; z-index: 31; pointer-events: none;
+  padding: 1px 5px; border-radius: 4px; z-index: 15; pointer-events: none;
 }
 
 /* ---------- Task bars ---------- */
