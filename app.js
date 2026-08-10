@@ -626,6 +626,7 @@ function renderProjectRow(project, rangeStart) {
   // barra-resumo abaixo saiba onde posicionar os números de progresso.
   let rowHeight = Math.max(PROJECT_ROW_H, mobileLabelHeight);
   let milestonePlacements = [];
+  let milestoneLaneCount = 1;
   const ownerByItem = new Map();
   if (project.collapsed) {
     const milestones = [];
@@ -640,6 +641,7 @@ function renderProjectRow(project, rangeStart) {
     if (milestones.length) {
       const { placements, laneCount } = packLanes(milestones);
       milestonePlacements = placements;
+      milestoneLaneCount = laneCount;
       rowHeight = Math.max(PROJECT_ROW_H, mobileLabelHeight, laneCount * LANE_H + LANE_PAD);
     }
   }
@@ -682,9 +684,15 @@ function renderProjectRow(project, rangeStart) {
     }
   }
 
+  // Colapsado não há barra de tarefa para alinhar (só a barra-resumo, que
+  // fica centralizada via CSS em 50% da linha) — os losangos usam esse
+  // centro da linha como referência, em vez do cálculo de raia normal, e
+  // as raias extras (quando há mais de um marco no mesmo instante) se
+  // distribuem simetricamente acima/abaixo desse centro.
   const milestoneLabelLayout = resolveMilestoneLabelLayout(milestonePlacements, rangeStart);
   for (const { item, lane } of milestonePlacements) {
-    timelineCell.appendChild(renderMilestone(project, ownerByItem.get(item), item, lane, rangeStart, milestoneLabelLayout.get(item)));
+    const milestoneTop = rowHeight / 2 + (lane - (milestoneLaneCount - 1) / 2) * LANE_H;
+    timelineCell.appendChild(renderMilestone(project, ownerByItem.get(item), item, lane, rangeStart, milestoneLabelLayout.get(item), milestoneTop));
   }
 
   row.appendChild(timelineCell);
@@ -808,12 +816,17 @@ function renderTaskBar(project, ws, item, lane, rangeStart) {
   return wrapper;
 }
 
-function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverride) {
+function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverride, topOverride) {
   const date = parseDate(item.date);
   const isPast = date < parseDate(todayISO());
   const left = diffDays(rangeStart, date) * currentPxPerDay;
-  // Mesmo centro vertical usado pelas barras de tarefa na mesma raia.
-  const top = LANE_PAD / 2 + lane * LANE_H + LANE_CONTENT_TOP + BAR_H / 2;
+  // Por padrão, mesmo centro vertical usado pelas barras de tarefa na mesma
+  // raia. topOverride (vindo da linha-resumo de projeto colapsado) centraliza
+  // o losango na barra-resumo (que fica em 50% da linha via CSS) em vez de
+  // usar o cálculo de raia, que não se aplica quando não há barra de tarefa.
+  const top = topOverride !== undefined
+    ? topOverride
+    : LANE_PAD / 2 + lane * LANE_H + LANE_CONTENT_TOP + BAR_H / 2;
 
   const wrapper = document.createElement('div');
   wrapper.style.position = 'absolute';
