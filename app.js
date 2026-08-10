@@ -1335,8 +1335,14 @@ function scrollToToday() {
   if (!currentRangeStart) return;
   const today = parseDate(todayISO());
   const x = currentSidebarWidth + diffDays(currentRangeStart, today) * currentPxPerDay;
+  // A sidebar fica fixa (sticky) sobre a área visível, então o centro de
+  // referência é o meio do espaço de timeline realmente visível (descontando
+  // a sidebar), não o meio do container inteiro — senão "hoje" pode acabar
+  // posicionado atrás da própria sidebar.
+  const visibleTimelineWidth = scrollContainer.clientWidth - currentSidebarWidth;
+  const targetScreenX = currentSidebarWidth + visibleTimelineWidth / 2;
   scrollContainer.scrollTo({
-    left: Math.max(0, x - scrollContainer.clientWidth / 2),
+    left: Math.max(0, x - targetScreenX),
     behavior: 'smooth',
   });
 }
