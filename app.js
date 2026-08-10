@@ -369,8 +369,7 @@ function clampPxPerDay(v) {
 
 function syncScaleButtons() {
   document.querySelectorAll('.scale-btn').forEach((b) => {
-    const preset = SCALE_PX_PER_DAY[b.dataset.scale];
-    b.classList.toggle('active', Math.abs(preset - currentPxPerDay) < 0.02);
+    b.classList.toggle('active', b.dataset.scale === state.scale);
   });
 }
 
@@ -1281,10 +1280,22 @@ document.getElementById('scaleSwitch').addEventListener('click', (e) => {
   const btn = e.target.closest('.scale-btn');
   if (!btn) return;
   state.scale = btn.dataset.scale;
-  state.pxPerDay = SCALE_PX_PER_DAY[btn.dataset.scale];
+  state.pxPerDay = btn.dataset.scale === 'all' ? pxPerDayToFitAll() : SCALE_PX_PER_DAY[btn.dataset.scale];
   saveState();
   render();
+  scrollContainer.scrollLeft = 0;
 });
+
+// Escala "Tudo": calcula o zoom mínimo necessário para que o intervalo
+// inteiro de dados (mesmo cálculo de computeRange usado no render) caiba na
+// largura de timeline realmente visível (descontando a sidebar), sem
+// depender de rolagem.
+function pxPerDayToFitAll() {
+  const { rangeStart, rangeEnd } = computeRange();
+  const totalDays = diffDays(rangeStart, rangeEnd);
+  const visibleTimelineWidth = scrollContainer.clientWidth - getSidebarWidth();
+  return clampPxPerDay(visibleTimelineWidth / totalDays);
+}
 
 /* ---- Zoom dinâmico com a roda do mouse, ancorado na posição do cursor ---- */
 scrollContainer.addEventListener('wheel', (e) => {
@@ -1301,6 +1312,10 @@ scrollContainer.addEventListener('wheel', (e) => {
   if (newPxPerDay === currentPxPerDay) return;
 
   state.pxPerDay = newPxPerDay;
+  // O zoom livre da roda do mouse deixa de corresponder a qualquer preset do
+  // seletor de escala (Mês/Trimestre/Ano/Tudo) — evita que um botão fique
+  // marcado como ativo indevidamente depois do zoom manual.
+  state.scale = null;
   saveState();
   render();
 
