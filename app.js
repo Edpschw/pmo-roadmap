@@ -235,88 +235,34 @@ function milestoneLabelBoxWidth(name) {
   return Math.ceil(measureTextWidth(name, MILESTONE_LABEL_FONT) * 1.1) + 12;
 }
 
-// Quando dois ou mais marcos caem na mesma raia com datas próximas o
-// bastante para o nome de um sobrepor o do outro, resolve primeiro alternando
-// o rótulo entre acima/abaixo do losango (cada marco tenta ficar na sua
-// posição horizontal natural, só trocando de lado quando colidiria com o
-// anterior do mesmo lado) e, apenas se nem isso bastar, desloca o rótulo
-// horizontalmente. Barras de tarefa da mesma raia também contam como
-// obstáculo (empurram o rótulo para fora delas, dos dois lados, já que o
-// rótulo acima ou abaixo fica bem colado na borda superior/inferior da
-// barra). O losango continua exatamente na data real; só a posição do texto
-// muda. Recebe os `placements` já calculados por packLanes() e devolve um
-// Map item -> { left, below } do rótulo (left em px).
+// O rótulo do marco fica sempre centralizado exatamente sobre o losango —
+// nunca desloca horizontalmente, nem para desviar de barras de tarefa (isso
+// já causou o rótulo "teleportando" para longe do marco). A única
+// otimização: se colidir com o rótulo do marco anterior na mesma raia,
+// alterna para abaixo do losango em vez de acima. Recebe os `placements` já
+// calculados por packLanes() e devolve um Map item -> { below }.
 function resolveMilestoneLabelLayout(placements, rangeStart) {
-  const GAP = 10;
+  const GAP = 6;
   const byLane = new Map();
   for (const { item, lane } of placements) {
+    if (item.type !== 'milestone') continue;
     if (!byLane.has(lane)) byLane.set(lane, []);
     byLane.get(lane).push(item);
   }
 
   const result = new Map();
   for (const laneItems of byLane.values()) {
-    const milestones = [];
-    const bars = [];
-    for (const item of laneItems) {
-      if (item.type === 'milestone') {
-        const left = diffDays(rangeStart, parseDate(item.date)) * currentPxPerDay;
-        const labelBoxWidth = milestoneLabelBoxWidth(item.name);
-        milestones.push({ item, labelBoxWidth, diamondX: left, naturalLeft: left - labelBoxWidth / 2 });
-      } else {
-        const barLeft = diffDays(rangeStart, parseDate(item.start)) * currentPxPerDay;
-        const barWidth = Math.max(14, (diffDays(parseDate(item.start), parseDate(item.end)) + 1) * currentPxPerDay);
-        bars.push({ left: barLeft, right: barLeft + barWidth });
-      }
-    }
-    milestones.sort((a, b) => a.naturalLeft - b.naturalLeft);
+    const withPos = laneItems.map((item) => {
+      const diamondX = diffDays(rangeStart, parseDate(item.date)) * currentPxPerDay;
+      const labelBoxWidth = milestoneLabelBoxWidth(item.name);
+      return { item, left: diamondX - labelBoxWidth / 2, right: diamondX + labelBoxWidth / 2 };
+    }).sort((a, b) => a.left - b.left);
 
-    // Desvia de qualquer barra que o rótulo invada, passando para o lado
-    // dela (antes ou depois, o que for mais perto do losango do marco — uma
-    // barra pode ser bem mais longa que a folga precisada). Se ainda assim
-    // o desvio ficar longe demais da posição natural (ex.: raia com barras
-    // dos dois lados perto), desiste do desvio: um leve encontro com a cor
-    // da barra é preferível a um rótulo "teleportado" para longe do marco.
-    const MAX_PUSH = 220;
-    const pushPastBars = (naturalLeft, width, diamondX) => {
-      let left = naturalLeft;
-      for (let i = 0; i < bars.length + 1; i++) {
-        const collide = bars.find((b) => left < b.right + GAP && b.left < left + width + GAP);
-        if (!collide) break;
-        const before = collide.left - GAP - width;
-        const after = collide.right + GAP;
-        left = Math.abs(diamondX - collide.left) <= Math.abs(diamondX - collide.right) ? before : after;
-      }
-      return Math.abs(left - naturalLeft) > MAX_PUSH ? naturalLeft : left;
-    };
-
-    let prevRightAbove = -Infinity;
-    let prevRightBelow = -Infinity;
-    for (const entry of milestones) {
-      const fitsAbove = entry.naturalLeft >= prevRightAbove + GAP
-        && !bars.some((b) => entry.naturalLeft < b.right + GAP && b.left < entry.naturalLeft + entry.labelBoxWidth + GAP);
-      const fitsBelow = entry.naturalLeft >= prevRightBelow + GAP
-        && !bars.some((b) => entry.naturalLeft < b.right + GAP && b.left < entry.naturalLeft + entry.labelBoxWidth + GAP);
-      let below, labelLeft;
-      if (fitsAbove) {
-        below = false;
-        labelLeft = entry.naturalLeft;
-      } else if (fitsBelow) {
-        below = true;
-        labelLeft = entry.naturalLeft;
-      } else {
-        // Não coube na posição natural (por causa de outro rótulo ou de uma
-        // barra) nem acima nem abaixo: usa o lado que precisar desviar
-        // menos da posição natural.
-        const pushAbove = pushPastBars(Math.max(entry.naturalLeft, prevRightAbove + GAP), entry.labelBoxWidth, entry.diamondX);
-        const pushBelow = pushPastBars(Math.max(entry.naturalLeft, prevRightBelow + GAP), entry.labelBoxWidth, entry.diamondX);
-        below = Math.abs(pushBelow - entry.naturalLeft) < Math.abs(pushAbove - entry.naturalLeft);
-        labelLeft = below ? pushBelow : pushAbove;
-      }
-      labelLeft = Math.max(2, Math.min(labelLeft, currentTimelineWidth - entry.labelBoxWidth - 2));
-      if (below) prevRightBelow = labelLeft + entry.labelBoxWidth;
-      else prevRightAbove = labelLeft + entry.labelBoxWidth;
-      result.set(entry.item, { left: labelLeft, below });
+    let prevAbove = null;
+    for (const entry of withPos) {
+      const below = !!(prevAbove && entry.left < prevAbove.right + GAP);
+      if (!below) prevAbove = entry;
+      result.set(entry.item, { below });
     }
   }
   return result;
@@ -891,24 +837,21 @@ function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverrid
   dia.title = `${item.name}\n${formatBR(item.date)}` +
     (isPast ? (item.done ? '\nRealizado' : '\nAtrasado (não realizado)') : '');
 
-  // Rótulo centralizado acima do losango por padrão (não ao lado), para não
-  // sobrepor barras de tarefa que estejam na mesma raia ou em raias
-  // vizinhas. Marcos já passados e realizados ficam acinzentados (padrão de
-  // tarefa concluída); já passados e NÃO realizados ficam em vermelho;
-  // marcos futuros mantêm a cor padrão (preta) do CSS. Quando um marco
-  // vizinho na mesma raia está perto o bastante para colidir,
-  // labelLayoutOverride (vindo de resolveMilestoneLabelLayout) alterna o
-  // rótulo para abaixo do losango e/ou desloca o texto horizontalmente,
-  // sem mudar a posição do losango.
+  // Rótulo sempre centralizado exatamente sobre o losango (não ao lado).
+  // Marcos já passados e realizados ficam acinzentados (padrão de tarefa
+  // concluída); já passados e NÃO realizados ficam em vermelho; marcos
+  // futuros mantêm a cor padrão (preta) do CSS. Por padrão o rótulo fica
+  // acima do losango; quando um marco vizinho na mesma raia está perto o
+  // bastante para colidir, labelLayoutOverride (vindo de
+  // resolveMilestoneLabelLayout) alterna esse marco para abaixo — a posição
+  // horizontal nunca muda, continua centralizada na data real.
   const labelEl = document.createElement('span');
   labelEl.className = 'milestone-label';
   labelEl.textContent = item.name;
   if (isPast) labelEl.style.color = item.done ? MILESTONE_PAST_LABEL_COLOR : MILESTONE_OVERDUE_LABEL_COLOR;
 
   const labelBoxWidth = milestoneLabelBoxWidth(item.name);
-  const labelLeft = labelLayoutOverride
-    ? labelLayoutOverride.left
-    : Math.max(2, Math.min(left - labelBoxWidth / 2, currentTimelineWidth - labelBoxWidth - 2));
+  const labelLeft = Math.max(2, Math.min(left - labelBoxWidth / 2, currentTimelineWidth - labelBoxWidth - 2));
   labelEl.style.left = labelLeft + 'px';
   labelEl.style.width = labelBoxWidth + 'px';
   if (labelLayoutOverride && labelLayoutOverride.below) {
