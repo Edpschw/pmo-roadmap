@@ -358,6 +358,8 @@ applyResponsiveMetrics();
 let currentPxPerDay = SCALE_PX_PER_DAY.month;
 let currentRangeStart = null;
 let currentTimelineWidth = 0;
+let todayLineEl = null;
+let todayFlagEl = null;
 
 function clampPxPerDay(v) {
   return Math.min(MAX_PX_PER_DAY, Math.max(MIN_PX_PER_DAY, v));
@@ -464,6 +466,8 @@ function render() {
   }
 
   const today = parseDate(todayISO());
+  todayLineEl = null;
+  todayFlagEl = null;
   if (today >= rangeStart && today <= rangeEnd) {
     const todayLeft = sidebarWidth + nowFractionalDayOffset(rangeStart) * currentPxPerDay;
     const todayLine = document.createElement('div');
@@ -471,17 +475,21 @@ function render() {
     todayLine.style.left = todayLeft + 'px';
     todayLine.style.height = (contentHeight - HEADER_H) + 'px';
     overlay.appendChild(todayLine);
+    todayLineEl = todayLine;
 
     const flag = document.createElement('div');
     flag.className = 'today-flag';
     flag.style.left = todayLeft + 'px';
     flag.textContent = `Hoje ${formatTimeBR()}`;
     overlay.appendChild(flag);
+    todayFlagEl = flag;
   }
 
   gridEl.insertBefore(overlay, gridEl.firstChild);
   syncScaleButtons();
+  syncToggleAllButton();
   updateBarLabelPositions();
+  updateTodayMarkerVisibility();
 }
 
 // Mantém o nome de cada tarefa centralizado na parte da barra que está
@@ -515,6 +523,22 @@ function updateBarLabelPositions() {
   });
 }
 
+// A sidebar (coluna de projeto/workstream) é sticky e fica sempre visível por
+// cima da timeline. A linha/flag de "hoje" tem posição fixa dentro do
+// conteúdo rolável, então, ao rolar, pode acabar caindo exatamente atrás da
+// sidebar — nesse caso, escondemos os dois em vez de deixá-los meio
+// cobertos/meio visíveis, o que pareceria um elemento "vazando" por trás da
+// coluna fixa.
+function updateTodayMarkerVisibility() {
+  if (!todayLineEl || !todayFlagEl) return;
+  const sidebarRight = scrollContainer.getBoundingClientRect().left + currentSidebarWidth;
+  const flagRect = todayFlagEl.getBoundingClientRect();
+  const lineRect = todayLineEl.getBoundingClientRect();
+  const hidden = flagRect.left < sidebarRight || lineRect.left < sidebarRight;
+  todayLineEl.style.visibility = hidden ? 'hidden' : '';
+  todayFlagEl.style.visibility = hidden ? 'hidden' : '';
+}
+
 let _labelUpdateScheduled = false;
 function scheduleBarLabelUpdate() {
   if (_labelUpdateScheduled) return;
@@ -522,6 +546,7 @@ function scheduleBarLabelUpdate() {
   requestAnimationFrame(() => {
     _labelUpdateScheduled = false;
     updateBarLabelPositions();
+    updateTodayMarkerVisibility();
   });
 }
 
@@ -1330,6 +1355,21 @@ window.addEventListener('resize', () => {
 document.getElementById('todayBtn').addEventListener('click', () => {
   scrollToToday();
 });
+
+document.getElementById('toggleAllBtn').addEventListener('click', () => {
+  const allCollapsed = state.projects.length > 0 && state.projects.every((p) => p.collapsed);
+  for (const project of state.projects) project.collapsed = !allCollapsed;
+  saveState();
+  render();
+});
+
+// Rótulo do botão reflete o estado atual: se tudo já está recolhido, oferece
+// "Expandir tudo"; caso contrário (tudo expandido ou misto), "Recolher tudo".
+function syncToggleAllButton() {
+  const btn = document.getElementById('toggleAllBtn');
+  const allCollapsed = state.projects.length > 0 && state.projects.every((p) => p.collapsed);
+  btn.textContent = allCollapsed ? 'Expandir tudo' : 'Recolher tudo';
+}
 
 function scrollToToday() {
   if (!currentRangeStart) return;
