@@ -144,6 +144,43 @@ function seedState() {
           m('Platô de Produção', '2030-01-15'),
         ]),
       ]),
+
+      // ---- Contratos reais de Partilha de Produção (CPP) do pré-sal ----
+      // Nomes verificados junto à ANP/PPSA (presalpetroleo.gov.br), por
+      // rodada de licitação. Adicionados sem tarefas/marcos/datas — cada um
+      // é um projeto vazio pronto para ser preenchido com o cronograma real.
+      // (Os 3 projetos acima são o exemplo ilustrativo original do app e
+      // não são contratos reais, apesar de reaproveitarem nomes de campos.)
+      proj('Libra — 1ª Rodada de Partilha (2013)', PALETTE[3], []),
+      proj('Gato do Mato — 2ª Rodada de Partilha (2017)', PALETTE[4], []),
+      proj('Carcará — 2ª Rodada de Partilha (2017)', PALETTE[5], []),
+      proj('Tartaruga Verde — 2ª Rodada de Partilha (2017)', PALETTE[6], []),
+      proj('Sapinhoá — 2ª Rodada de Partilha (2017)', PALETTE[7], []),
+      proj('Pau Brasil — 3ª Rodada de Partilha (2017)', PALETTE[8], []),
+      proj('Peroba — 3ª Rodada de Partilha (2017)', PALETTE[9], []),
+      proj('Alto de Cabo Frio Oeste — 3ª Rodada de Partilha (2017)', PALETTE[0], []),
+      proj('Alto de Cabo Frio Central — 3ª Rodada de Partilha (2017)', PALETTE[1], []),
+      proj('Uirapuru — 4ª Rodada de Partilha (2018)', PALETTE[2], []),
+      proj('Dois Irmãos — 4ª Rodada de Partilha (2018)', PALETTE[3], []),
+      proj('Três Marias — 4ª Rodada de Partilha (2018)', PALETTE[4], []),
+      proj('Saturno — 5ª Rodada de Partilha (2018)', PALETTE[5], []),
+      proj('Titã — 5ª Rodada de Partilha (2018)', PALETTE[6], []),
+      proj('Sudoeste de Tartaruga Verde — 5ª Rodada de Partilha (2018)', PALETTE[7], []),
+      proj('Aram — 6ª Rodada de Partilha (2019)', PALETTE[8], []),
+      proj('Búzios — Excedente da Cessão Onerosa (2019)', PALETTE[9], []),
+      proj('Itapu — Excedente da Cessão Onerosa (2019)', PALETTE[0], []),
+      proj('Sépia — Excedente da Cessão Onerosa (2021)', PALETTE[1], []),
+      proj('Atapu — Excedente da Cessão Onerosa (2021)', PALETTE[2], []),
+      proj('Água Marinha — Oferta Permanente (OPP)', PALETTE[3], []),
+      proj('Norte de Brava — Oferta Permanente (OPP)', PALETTE[4], []),
+      proj('Bumerangue — Oferta Permanente (OPP)', PALETTE[5], []),
+      proj('Sudoeste de Sagitário — Oferta Permanente (OPP)', PALETTE[6], []),
+      proj('Tupinambá — Oferta Permanente (OPP)', PALETTE[7], []),
+      proj('Esmeralda — Oferta Permanente (OPP)', PALETTE[8], []),
+      proj('Ametista — Oferta Permanente (OPP)', PALETTE[9], []),
+      proj('Citrino — Oferta Permanente (OPP)', PALETTE[0], []),
+      proj('Itaimbezinho — Oferta Permanente (OPP)', PALETTE[1], []),
+      proj('Jaspe — Oferta Permanente (OPP)', PALETTE[2], []),
     ],
   };
 }
