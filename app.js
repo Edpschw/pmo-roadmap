@@ -11,7 +11,12 @@
 const MONTHS_PT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const WEEKDAYS_PT = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
-const MIN_PX_PER_DAY = 0.35;
+// Piso bem baixo de propósito: serve só para evitar largura zero/negativa
+// em casos patológicos — quem realmente limita o zoom mínimo no dia a dia
+// é minPxPerDayToFillScreen() (a tela nunca fica com espaço vazio sobrando,
+// mas também nunca fica maior que a tela quando o intervalo de dados é
+// muito grande, como no roadmap de CPPs que cobre ~14 anos).
+const MIN_PX_PER_DAY = 0.02;
 const MAX_PX_PER_DAY = 32;
 
 const FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif';
