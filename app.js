@@ -277,7 +277,7 @@ const SIDEBAR_WIDTH_MOBILE_MIN = 150;
 const MOBILE_BREAKPOINT = 640;
 // Espaço reservado na label-cell além do texto do nome do projeto: padding +
 // chevron + bolinha de cor + ícone "+" + gaps (ver .label-cell no CSS mobile).
-const PROJECT_LABEL_CHROME_MOBILE = 85;
+const PROJECT_LABEL_CHROME_MOBILE = 95;
 const PROJECT_NAME_FONT_SIZE_MOBILE = 12;
 const PROJECT_NAME_FONT_WEIGHT_MOBILE = '600';
 const PROJECT_NAME_MIN_FONT_SIZE_MOBILE = 9;
@@ -432,14 +432,21 @@ function render() {
   headerRow.appendChild(headerTimelineCell);
   gridEl.appendChild(headerRow);
 
-  // ---- Linhas de projeto / workstream ----
+  // ---- Linhas de grupo / projeto / workstream ----
   let contentHeight = HEADER_H;
 
-  for (const project of state.projects) {
-    contentHeight += renderProjectRow(project, rangeStart);
-    if (!project.collapsed) {
-      for (const w of project.workstreams) {
-        contentHeight += renderWorkstreamRow(project, w, rangeStart);
+  for (const groupDef of GROUP_DEFS) {
+    const groupProjects = state.projects.filter((p) => (p.group || GROUP_FALLBACK) === groupDef.id);
+    if (!groupProjects.length) continue;
+    const isCollapsed = !!state.groupCollapsed[groupDef.id];
+    contentHeight += renderGroupRow(groupDef, groupProjects, isCollapsed);
+    if (isCollapsed) continue;
+    for (const project of groupProjects) {
+      contentHeight += renderProjectRow(project, rangeStart);
+      if (!project.collapsed) {
+        for (const w of project.workstreams) {
+          contentHeight += renderWorkstreamRow(project, w, rangeStart);
+        }
       }
     }
   }
@@ -599,6 +606,44 @@ function measureLabelCellHeight(labelCellEl) {
   const height = labelCellEl.scrollHeight;
   _labelMeasureContainer.removeChild(labelCellEl);
   return height;
+}
+
+// Linha de grupo (Exploração / Produção / Devolvidos): nível colapsável
+// acima dos projetos. Recolher esconde todos os projetos (e workstreams)
+// daquele grupo; não tem barra-resumo própria, só o cabeçalho.
+function renderGroupRow(groupDef, groupProjects, isCollapsed) {
+  const row = document.createElement('div');
+  row.className = 'row group-row';
+  row.style.height = PROJECT_ROW_H + 'px';
+
+  const labelCell = document.createElement('div');
+  labelCell.className = 'label-cell';
+
+  const chevron = document.createElement('span');
+  chevron.className = 'chevron' + (isCollapsed ? ' collapsed' : '');
+  chevron.textContent = '▾';
+  chevron.title = isCollapsed ? 'Expandir grupo' : 'Recolher grupo';
+  chevron.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.groupCollapsed[groupDef.id] = !isCollapsed;
+    saveState();
+    render();
+  });
+  labelCell.appendChild(chevron);
+
+  const label = document.createElement('span');
+  label.className = 'label-text';
+  label.textContent = `${groupDef.label} (${groupProjects.length})`;
+  labelCell.appendChild(label);
+
+  row.appendChild(labelCell);
+
+  const timelineCell = document.createElement('div');
+  timelineCell.className = 'timeline-cell';
+  row.appendChild(timelineCell);
+
+  gridEl.appendChild(row);
+  return PROJECT_ROW_H;
 }
 
 function renderProjectRow(project, rangeStart) {
@@ -1040,11 +1085,19 @@ function colorSwatchesHTML(selected) {
 function openProjectModal(project) {
   const isEdit = !!project;
   const color = project ? project.color : PALETTE[state.projects.length % PALETTE.length];
+  const currentGroup = (project && project.group) || GROUP_FALLBACK;
+  const groupOptionsHTML = GROUP_DEFS.map((g) =>
+    `<option value="${g.id}"${g.id === currentGroup ? ' selected' : ''}>${escapeAttr(g.label)}</option>`
+  ).join('');
   const html = `
     <h2>${isEdit ? 'Editar projeto' : 'Novo projeto'}</h2>
     <div class="field">
       <label>Nome do projeto</label>
       <input type="text" id="f-name" value="${isEdit ? escapeAttr(project.name) : ''}" placeholder="Ex: Transformação Digital" />
+    </div>
+    <div class="field">
+      <label>Grupo</label>
+      <select id="f-group">${groupOptionsHTML}</select>
     </div>
     <div class="field">
       <label>Cor</label>
@@ -1074,12 +1127,14 @@ function openProjectModal(project) {
     }
     m.querySelector('#f-save').addEventListener('click', () => {
       const name = m.querySelector('#f-name').value.trim();
+      const group = m.querySelector('#f-group').value;
       if (!name) { showToast('Informe um nome para o projeto.'); return; }
       if (isEdit) {
         project.name = name;
         project.color = selectedColor;
+        project.group = group;
       } else {
-        state.projects.push({ id: uid('p'), name, color: selectedColor, collapsed: false, workstreams: [] });
+        state.projects.push({ id: uid('p'), name, color: selectedColor, group, collapsed: false, workstreams: [] });
       }
       saveState();
       render();
@@ -1389,18 +1444,29 @@ document.getElementById('todayBtn').addEventListener('click', () => {
 });
 
 document.getElementById('toggleAllBtn').addEventListener('click', () => {
-  const allCollapsed = state.projects.length > 0 && state.projects.every((p) => p.collapsed);
+  const allCollapsed = isEverythingCollapsed();
   for (const project of state.projects) project.collapsed = !allCollapsed;
+  for (const groupDef of GROUP_DEFS) state.groupCollapsed[groupDef.id] = !allCollapsed;
   saveState();
   render();
 });
+
+// "Tudo" inclui os grupos e os projetos — só conta como recolhido se ambos
+// os níveis estiverem, para o botão "Expandir tudo" realmente abrir tudo.
+function isEverythingCollapsed() {
+  if (!state.projects.length) return false;
+  const groupsCollapsed = GROUP_DEFS.every((g) => {
+    const hasProjects = state.projects.some((p) => (p.group || GROUP_FALLBACK) === g.id);
+    return !hasProjects || state.groupCollapsed[g.id];
+  });
+  return groupsCollapsed && state.projects.every((p) => p.collapsed);
+}
 
 // Rótulo do botão reflete o estado atual: se tudo já está recolhido, oferece
 // "Expandir tudo"; caso contrário (tudo expandido ou misto), "Recolher tudo".
 function syncToggleAllButton() {
   const btn = document.getElementById('toggleAllBtn');
-  const allCollapsed = state.projects.length > 0 && state.projects.every((p) => p.collapsed);
-  btn.textContent = allCollapsed ? 'Expandir tudo' : 'Recolher tudo';
+  btn.textContent = isEverythingCollapsed() ? 'Expandir tudo' : 'Recolher tudo';
 }
 
 function scrollToToday() {

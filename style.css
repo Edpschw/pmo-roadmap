@@ -118,6 +118,8 @@ body { display: flex; flex-direction: column; height: 100vh; }
   border-bottom: 1px solid var(--border-strong);
   height: var(--header-h, 46px);
 }
+.row.group-row { background: #eef1f6; }
+.row.group-row:hover { background: #e6eaf1; }
 .row.project-row { background: #fbfcfe; }
 .row.project-row:hover { background: #f4f7ff; }
 .row.workstream-row:hover .label-cell { background: #fafbfd; }
@@ -134,7 +136,13 @@ body { display: flex; flex-direction: column; height: 100vh; }
   overflow: hidden;
 }
 .row.header-row .label-cell { background: var(--panel); z-index: 40; height: var(--header-h, 46px); }
-.row.workstream-row .label-cell { background: var(--panel); padding-left: 30px; }
+/* Indentação em cascata: grupo (nível 0) < projeto < workstream. */
+.row.project-row .label-cell { padding-left: 30px; }
+.row.workstream-row .label-cell { background: var(--panel); padding-left: 50px; }
+.row.group-row .label-text {
+  font-weight: 700; font-size: 11.5px; color: var(--text-faint);
+  text-transform: uppercase; letter-spacing: .04em;
+}
 
 .corner-title { font-size: 11px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: .04em; }
 
@@ -430,7 +438,8 @@ body { display: flex; flex-direction: column; height: 100vh; }
   .btn-primary, .btn-ghost { padding: 7px 10px; font-size: 12px; }
 
   .label-cell { padding: 0 4px 0 6px; gap: 4px; align-items: center; }
-  .row.workstream-row .label-cell { padding-left: 16px; }
+  .row.project-row .label-cell { padding-left: 16px; }
+  .row.workstream-row .label-cell { padding-left: 26px; }
   /* Nome do projeto/workstream nunca é cortado no mobile: quebra em várias
      linhas em vez de truncar com reticências (altura da linha calculada em
      JS via measureLabelCellHeight, para não sobrepor a linha seguinte). */
