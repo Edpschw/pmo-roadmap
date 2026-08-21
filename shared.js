@@ -77,10 +77,8 @@ function progressStatusClass(actualProgress, expectedProgress) {
 
 /* ------------------------------- Seed data ------------------------------ */
 
-// Exemplo temático de E&P (exploração e produção de petróleo e gás),
-// inspirado no vocabulário de rodadas da ANP — blocos em regime de partilha
-// de produção (polígono do pré-sal) e de concessão (bacias maduras). Nomes
-// de blocos/campos são ilustrativos, não correspondem a contratos reais.
+// Contratos reais de Partilha de Produção (CPP) do polígono do pré-sal,
+// administrados pela PPSA e licitados pela ANP.
 function seedState() {
   const t = (name, start, end, progress) => ({ id: uid('t'), type: 'task', name, start, end, progress });
   const m = (name, date, done) => ({ id: uid('m'), type: 'milestone', name, date, done: !!done });
@@ -91,96 +89,212 @@ function seedState() {
     scale: 'month',
     pxPerDay: SCALE_PX_PER_DAY.month,
     projects: [
-      proj('Búzios Norte — Partilha de Produção', PALETTE[0], [
-        ws('Licitação & Contratos', [
-          t('Estudos de viabilidade geológica', '2024-01-10', '2024-04-30', 100),
-          m('Leilão ANP — Rodada de Partilha', '2024-06-12', true),
-          t('Assinatura do contrato de partilha', '2024-06-20', '2024-08-15', 100),
-        ]),
-        ws('Exploração & Avaliação', [
-          t('Perfuração de poços pioneiros', '2024-09-01', '2025-03-20', 100),
-          t('Testes de formação (DST)', '2025-01-15', '2025-04-10', 100),
-          m('Declaração de comercialidade', '2025-05-30', true),
-        ]),
-        ws('Desenvolvimento da Produção', [
-          m('Início do Desenvolvimento', '2025-07-01', true),
-          t('Contratação e construção do FPSO', '2025-07-15', '2027-02-28', 55),
-          t('Perfuração de poços produtores e injetores', '2026-03-01', '2027-06-30', 30),
-          m('Primeiro Óleo', '2027-03-15'),
-          m('Platô de Produção', '2028-06-01'),
-        ]),
-      ]),
-      proj('Marlim Sul — Concessão (Bacia de Campos)', PALETTE[1], [
-        ws('Revitalização de Campo Maduro', [
-          t('Reprocessamento sísmico 4D', '2025-02-01', '2025-07-15', 100),
-          m('Aprovação do Plano de Desenvolvimento (PD)', '2025-08-20', true),
-          t('Workover de poços existentes', '2025-09-01', '2026-10-30', 60),
-        ]),
-        ws('Infraestrutura de Produção', [
-          t('Instalação de novo FPSO (revitalização)', '2026-01-10', '2027-05-31', 25),
-          m('Primeiro Óleo', '2027-06-15'),
-          m('Platô de Produção', '2028-01-20'),
-        ]),
-        ws('HSE & Licenciamento', [
-          t('Licenciamento ambiental IBAMA', '2025-03-01', '2025-12-15', 100),
-          m('Licença de Operação', '2025-12-20', true),
+      // Os 29 contratos de Partilha de Produção (CPP) em vigor no pré-sal,
+      // conforme presalpetroleo.gov.br/contratos-de-partilha-e-producao/
+      // contratos-em-vigor/ (consultado em 21/08/2026). Marcos de leilão,
+      // assinatura, FID, FPSO e primeiro óleo vêm de fontes oficiais
+      // (PPSA/ANP/MME) e de imprensa especializada (TN Petróleo,
+      // Petronotícias, epbr) — sem dado inventado: onde só o mês era
+      // conhecido (não o dia exato), o marco usa o dia 01 e diz isso no
+      // próprio nome. "Decisão de investimento" raramente é divulgada
+      // publicamente por bloco — a maioria não tem essa data.
+      // Em Búzios, Itapu, Sépia, Atapu e Entorno de Sapinhoá, o campo já
+      // produzia sob o regime anterior (Cessão Onerosa/unitização) antes da
+      // assinatura do próprio CPP — os dois marcos aparecem separados.
+      // Pau-Brasil, Saturno, Três Marias e Titã foram devolvidos à ANP.
+      proj('Libra — 1ª Rodada de Partilha (2013)', PALETTE[3], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 1ª Rodada de Partilha', '2013-10-21', true),
+          m('Assinatura do Contrato de Partilha', '2013-12-02', true),
+          m('Primeiro óleo — FPSO Pioneiro de Libra (teste de longa duração, campo de Mero)', '2017-11-26', true),
+          m('Primeiro óleo comercial — FPSO Guanabara (Mero-1)', '2022-04-30', true),
         ]),
       ]),
-      proj('Sépia Sul — Partilha de Produção', PALETTE[2], [
-        ws('Rodada de Licitação ANP', [
-          t('Due diligence técnica do bloco', '2026-06-01', '2026-09-05', 80),
-          m('Leilão ANP — Rodada de Partilha', '2026-09-10'),
-          m('Assinatura do Contrato de Partilha', '2026-10-15'),
-        ]),
-        ws('Exploração', [
-          t('Aquisição sísmica 3D', '2026-11-01', '2027-04-30', 0),
-          t('Perfuração do poço pioneiro', '2027-05-01', '2027-11-30', 0),
-          m('Declaração de comercialidade', '2028-01-15'),
-        ]),
-        ws('Desenvolvimento', [
-          m('Início do Desenvolvimento', '2028-03-01'),
-          t('FEED do sistema de produção', '2028-03-15', '2028-12-31', 0),
-          m('Primeiro Óleo', '2029-06-01'),
-          m('Platô de Produção', '2030-01-15'),
+      proj('Sul de Gato do Mato — 2ª Rodada de Partilha (2017)', PALETTE[4], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 2ª Rodada de Partilha', '2017-10-27', true),
+          m('Assinatura do Contrato de Partilha', '2018-01-31', true),
+          m('Decisão de Investimento (FID) — Shell', '2025-03-21', true),
         ]),
       ]),
-
-      // ---- Contratos reais de Partilha de Produção (CPP) do pré-sal ----
-      // Nomes verificados junto à ANP/PPSA (presalpetroleo.gov.br), por
-      // rodada de licitação. Adicionados sem tarefas/marcos/datas — cada um
-      // é um projeto vazio pronto para ser preenchido com o cronograma real.
-      // (Os 3 projetos acima são o exemplo ilustrativo original do app e
-      // não são contratos reais, apesar de reaproveitarem nomes de campos.)
-      proj('Libra — 1ª Rodada de Partilha (2013)', PALETTE[3], []),
-      proj('Gato do Mato — 2ª Rodada de Partilha (2017)', PALETTE[4], []),
-      proj('Carcará — 2ª Rodada de Partilha (2017)', PALETTE[5], []),
-      proj('Tartaruga Verde — 2ª Rodada de Partilha (2017)', PALETTE[6], []),
-      proj('Sapinhoá — 2ª Rodada de Partilha (2017)', PALETTE[7], []),
-      proj('Pau Brasil — 3ª Rodada de Partilha (2017)', PALETTE[8], []),
-      proj('Peroba — 3ª Rodada de Partilha (2017)', PALETTE[9], []),
-      proj('Alto de Cabo Frio Oeste — 3ª Rodada de Partilha (2017)', PALETTE[0], []),
-      proj('Alto de Cabo Frio Central — 3ª Rodada de Partilha (2017)', PALETTE[1], []),
-      proj('Uirapuru — 4ª Rodada de Partilha (2018)', PALETTE[2], []),
-      proj('Dois Irmãos — 4ª Rodada de Partilha (2018)', PALETTE[3], []),
-      proj('Três Marias — 4ª Rodada de Partilha (2018)', PALETTE[4], []),
-      proj('Saturno — 5ª Rodada de Partilha (2018)', PALETTE[5], []),
-      proj('Titã — 5ª Rodada de Partilha (2018)', PALETTE[6], []),
-      proj('Sudoeste de Tartaruga Verde — 5ª Rodada de Partilha (2018)', PALETTE[7], []),
-      proj('Aram — 6ª Rodada de Partilha (2019)', PALETTE[8], []),
-      proj('Búzios — Excedente da Cessão Onerosa (2019)', PALETTE[9], []),
-      proj('Itapu — Excedente da Cessão Onerosa (2019)', PALETTE[0], []),
-      proj('Sépia — Excedente da Cessão Onerosa (2021)', PALETTE[1], []),
-      proj('Atapu — Excedente da Cessão Onerosa (2021)', PALETTE[2], []),
-      proj('Água Marinha — Oferta Permanente (OPP)', PALETTE[3], []),
-      proj('Norte de Brava — Oferta Permanente (OPP)', PALETTE[4], []),
-      proj('Bumerangue — Oferta Permanente (OPP)', PALETTE[5], []),
-      proj('Sudoeste de Sagitário — Oferta Permanente (OPP)', PALETTE[6], []),
-      proj('Tupinambá — Oferta Permanente (OPP)', PALETTE[7], []),
-      proj('Esmeralda — Oferta Permanente (OPP)', PALETTE[8], []),
-      proj('Ametista — Oferta Permanente (OPP)', PALETTE[9], []),
-      proj('Citrino — Oferta Permanente (OPP)', PALETTE[0], []),
-      proj('Itaimbezinho — Oferta Permanente (OPP)', PALETTE[1], []),
-      proj('Jaspe — Oferta Permanente (OPP)', PALETTE[2], []),
+      proj('Norte de Carcará — 2ª Rodada de Partilha (2017)', PALETTE[5], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 2ª Rodada de Partilha', '2017-10-27', true),
+          m('Assinatura do Contrato de Partilha', '2018-01-31', true),
+          m('Decisão de Investimento (FID) — Bacalhau Fase 1, Equinor (mês aprox.)', '2021-06-01', true),
+          m('Primeiro óleo — FPSO Bacalhau', '2025-10-16', true),
+        ]),
+      ]),
+      proj('Entorno de Sapinhoá — 2ª Rodada de Partilha (2017)', PALETTE[7], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 2ª Rodada de Partilha', '2017-10-27', true),
+          m('Assinatura do Contrato de Partilha (unitização com Sapinhoá)', '2018-01-31', true),
+          m('Primeiro óleo do campo — FPSO Cidade de São Paulo (mês aprox., regime anterior)', '2013-01-01', true),
+        ]),
+      ]),
+      proj('Pau-Brasil — 5ª Rodada de Partilha (2018)', PALETTE[8], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 5ª Rodada de Partilha', '2018-09-28', true),
+          m('Assinatura do Contrato de Partilha', '2018-12-17', true),
+          m('Devolução do bloco à ANP — poço seco, BP (mês aprox.)', '2024-08-01', true),
+        ]),
+      ]),
+      proj('Peroba — 3ª Rodada de Partilha (2017)', PALETTE[9], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 3ª Rodada de Partilha', '2017-10-27', true),
+          m('Assinatura do Contrato de Partilha', '2018-01-31', true),
+          m('Status em aberto: PPSA lista como ativo (Petrobras 40% / BP 40% / CNODC 20%), mas imprensa (2021) reporta devolução à ANP — verificar antes de decidir', '2021-01-01', false),
+        ]),
+      ]),
+      proj('Alto de Cabo Frio Oeste — 3ª Rodada de Partilha (2017)', PALETTE[0], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 3ª Rodada de Partilha', '2017-10-27', true),
+          m('Assinatura do Contrato de Partilha', '2018-01-31', true),
+          m('Status em aberto: PPSA lista Shell 55% como ativo, mas imprensa (jul/2024) reporta devolução; ANP mostra prorrogação vencida em 30/10/2025 — verificar', '2024-07-01', false),
+        ]),
+      ]),
+      proj('Alto de Cabo Frio Central — 3ª Rodada de Partilha (2017)', PALETTE[1], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 3ª Rodada de Partilha', '2017-10-27', true),
+          m('Assinatura do Contrato de Partilha', '2018-01-31', true),
+        ]),
+      ]),
+      proj('Uirapuru — 4ª Rodada de Partilha (2018)', PALETTE[2], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 4ª Rodada de Partilha', '2018-06-07', true),
+          m('Assinatura do Contrato de Partilha', '2018-12-17', true),
+        ]),
+      ]),
+      proj('Dois Irmãos — 4ª Rodada de Partilha (2018)', PALETTE[3], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 4ª Rodada de Partilha', '2018-06-07', true),
+          m('Assinatura do Contrato de Partilha', '2018-12-17', true),
+        ]),
+      ]),
+      proj('Três Marias — 4ª Rodada de Partilha (2018)', PALETTE[4], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 4ª Rodada de Partilha', '2018-06-07', true),
+          m('Assinatura do Contrato de Partilha', '2018-12-17', true),
+          m('Devolução do bloco à ANP — Petrobras (mês aprox.)', '2023-10-01', true),
+        ]),
+      ]),
+      proj('Saturno — 5ª Rodada de Partilha (2018)', PALETTE[5], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 5ª Rodada de Partilha', '2018-09-28', true),
+          m('Assinatura do Contrato de Partilha', '2018-12-17', true),
+          m('Devolução do bloco à ANP — poço seco, Shell (mês aprox.)', '2020-05-01', true),
+        ]),
+      ]),
+      proj('Titã — 5ª Rodada de Partilha (2018)', PALETTE[6], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 5ª Rodada de Partilha', '2018-09-28', true),
+          m('Assinatura do Contrato de Partilha', '2018-12-17', true),
+          m('Devolução formal do bloco à ANP — ExxonMobil', '2025-09-30', true),
+        ]),
+      ]),
+      proj('Sudoeste de Tartaruga Verde — 5ª Rodada de Partilha (2018)', PALETTE[7], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 5ª Rodada de Partilha', '2018-09-28', true),
+          m('Assinatura do Contrato de Partilha', '2018-12-17', true),
+        ]),
+      ]),
+      proj('Aram — 6ª Rodada de Partilha (2019)', PALETTE[8], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 6ª Rodada de Partilha', '2019-11-07', true),
+          m('Assinatura do Contrato de Partilha', '2020-03-30', true),
+        ]),
+      ]),
+      proj('Búzios — Excedente da Cessão Onerosa (2019)', PALETTE[9], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 1ª Rodada de Excedente da Cessão Onerosa', '2019-11-06', true),
+          m('Assinatura do Contrato de Partilha', '2020-03-30', true),
+          m('Primeiro óleo do campo — FPSO P-74 (mês aprox., regime anterior)', '2018-04-01', true),
+          m('Primeiro óleo — FPSO Almirante Tamandaré (Búzios 7)', '2025-02-15', true),
+        ]),
+      ]),
+      proj('Itapu — Excedente da Cessão Onerosa (2019)', PALETTE[0], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 1ª Rodada de Excedente da Cessão Onerosa', '2019-11-06', true),
+          m('Assinatura do Contrato de Partilha', '2020-03-30', true),
+          m('Primeiro óleo — FPSO P-71', '2022-12-21', true),
+        ]),
+      ]),
+      proj('Sépia — Excedente da Cessão Onerosa (2021)', PALETTE[1], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 2ª Rodada de Excedente da Cessão Onerosa', '2021-12-17', true),
+          m('Assinatura do Contrato de Partilha', '2022-04-27', true),
+          m('Primeiro óleo do campo — FPSO Carioca (regime anterior)', '2021-08-23', true),
+        ]),
+      ]),
+      proj('Atapu — Excedente da Cessão Onerosa (2021)', PALETTE[2], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 2ª Rodada de Excedente da Cessão Onerosa', '2021-12-17', true),
+          m('Assinatura do Contrato de Partilha', '2022-04-27', true),
+          m('Primeiro óleo do campo — FPSO P-70 (regime anterior)', '2020-06-25', true),
+        ]),
+      ]),
+      proj('Água Marinha — Oferta Permanente (OPP), 1º Ciclo', PALETTE[3], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 1º Ciclo da Oferta Permanente', '2022-12-16', true),
+          m('Assinatura do Contrato de Partilha', '2023-05-31', true),
+        ]),
+      ]),
+      proj('Norte de Brava — Oferta Permanente (OPP), 1º Ciclo', PALETTE[4], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 1º Ciclo da Oferta Permanente', '2022-12-16', true),
+          m('Assinatura do Contrato de Partilha', '2023-07-05', true),
+          m('Primeiro óleo — FPSO Anita Garibaldi', '2023-08-16', true),
+        ]),
+      ]),
+      proj('Bumerangue — Oferta Permanente (OPP), 1º Ciclo', PALETTE[5], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 1º Ciclo da Oferta Permanente', '2022-12-16', true),
+          m('Assinatura do Contrato de Partilha', '2023-07-05', true),
+        ]),
+      ]),
+      proj('Sudoeste de Sagitário — Oferta Permanente (OPP), 1º Ciclo', PALETTE[6], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 1º Ciclo da Oferta Permanente', '2022-12-16', true),
+          m('Assinatura do Contrato de Partilha', '2023-07-05', true),
+        ]),
+      ]),
+      proj('Tupinambá — Oferta Permanente (OPP), 2º Ciclo', PALETTE[7], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 2º Ciclo da Oferta Permanente', '2023-12-13', true),
+          m('Assinatura do Contrato de Partilha (data prevista, não confirmada em fonte)', '2024-05-31', false),
+        ]),
+      ]),
+      proj('Esmeralda — Oferta Permanente (OPP), 3º Ciclo', PALETTE[8], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 3º Ciclo da Oferta Permanente', '2025-10-22', true),
+          m('Assinatura do Contrato de Partilha', '2026-08-05', true),
+        ]),
+      ]),
+      proj('Ametista — Oferta Permanente (OPP), 3º Ciclo', PALETTE[9], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 3º Ciclo da Oferta Permanente', '2025-10-22', true),
+          m('Assinatura do Contrato de Partilha', '2026-08-05', true),
+        ]),
+      ]),
+      proj('Citrino — Oferta Permanente (OPP), 3º Ciclo', PALETTE[0], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 3º Ciclo da Oferta Permanente', '2025-10-22', true),
+          m('Assinatura do Contrato de Partilha', '2026-08-05', true),
+        ]),
+      ]),
+      proj('Itaimbezinho — Oferta Permanente (OPP), 3º Ciclo', PALETTE[1], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 3º Ciclo da Oferta Permanente', '2025-10-22', true),
+          m('Assinatura do Contrato de Partilha', '2026-08-05', true),
+          m('Petrobras adquire 50% do bloco da Equinor', '2026-06-01', true),
+        ]),
+      ]),
+      proj('Jaspe — Oferta Permanente (OPP), 3º Ciclo', PALETTE[2], [
+        ws('Marcos do Contrato', [
+          m('Leilão ANP — 3º Ciclo da Oferta Permanente', '2025-10-22', true),
+          m('Assinatura do Contrato de Partilha', '2026-08-05', true),
+        ]),
+      ]),
     ],
   };
 }
