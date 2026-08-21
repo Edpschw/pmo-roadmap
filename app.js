@@ -769,10 +769,13 @@ function renderProjectRow(project, rangeStart) {
   // fica centralizada via CSS em 50% da linha) — os losangos usam esse
   // centro da linha como referência, em vez do cálculo de raia normal, e
   // as raias extras (quando há mais de um marco no mesmo instante) se
-  // distribuem simetricamente acima/abaixo desse centro.
+  // distribuem simetricamente acima/abaixo desse centro. Um deslocamento
+  // fixo sobe todos um pouco para não ficarem em cima da barra-resumo,
+  // que agora é bem mais fina.
+  const COLLAPSED_MILESTONE_LIFT = 8;
   const milestoneLabelLayout = resolveMilestoneLabelLayout(milestonePlacements, rangeStart);
   for (const { item, lane } of milestonePlacements) {
-    const milestoneTop = rowHeight / 2 + (lane - (milestoneLaneCount - 1) / 2) * LANE_H;
+    const milestoneTop = rowHeight / 2 - COLLAPSED_MILESTONE_LIFT + (lane - (milestoneLaneCount - 1) / 2) * LANE_H;
     timelineCell.appendChild(renderMilestone(project, ownerByItem.get(item), item, lane, rangeStart, milestoneLabelLayout.get(item), milestoneTop));
   }
 
@@ -902,7 +905,7 @@ function renderTaskBar(project, ws, item, lane, rangeStart) {
 // padrão para deixar visualmente óbvio o que aquele marco representa. Sem
 // tipo definido (marco genérico), mantém o losango de sempre (via CSS).
 function contractIconSVG(color) {
-  return `<svg viewBox="0 0 16 16" width="15" height="15">
+  return `<svg viewBox="0 0 16 16">
     <path d="M3 1h6l4 4v9.3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" fill="${color}"/>
     <path d="M9 1v4h4" fill="none" stroke="#fff" stroke-opacity="0.6" stroke-width="1" stroke-linejoin="round"/>
     <line x1="4" y1="9" x2="10" y2="9" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2" stroke-linecap="round"/>
@@ -910,7 +913,7 @@ function contractIconSVG(color) {
   </svg>`;
 }
 function fpsoIconSVG(color) {
-  return `<svg viewBox="0 0 16 16" width="15" height="15">
+  return `<svg viewBox="0 0 16 16">
     <path d="M1 10.5h14l-2.3 4H3.3z" fill="${color}"/>
     <rect x="8.3" y="5.3" width="4.2" height="5.2" rx="0.6" fill="${color}"/>
     <rect x="9.9" y="2.8" width="1.2" height="2.8" fill="${color}"/>
@@ -938,7 +941,7 @@ function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverrid
 
   const iconBuilder = MILESTONE_ICON_BUILDERS[item.icon];
   const dia = document.createElement('div');
-  dia.className = 'milestone' + (iconBuilder ? ' milestone-icon' : '');
+  dia.className = 'milestone' + (iconBuilder ? ` milestone-icon milestone-${item.icon}` : '');
   dia.style.left = left + 'px';
   dia.style.top = top + 'px';
   if (iconBuilder) {
