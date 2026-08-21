@@ -32,6 +32,46 @@ const GROUP_DEFS = [
 ];
 const GROUP_FALLBACK = 'exploracao';
 
+// Mesma classificação usada no seed (por prefixo do nome oficial do
+// contrato), reaproveitada no preenchimento retroativo de estados salvos
+// antes deste agrupamento existir — sem isso, todo projeto antigo cairia
+// sempre em GROUP_FALLBACK em vez do grupo real do contrato.
+const KNOWN_PROJECT_GROUPS = {
+  'Libra': 'producao',
+  'Sul de Gato do Mato': 'exploracao',
+  'Norte de Carcará': 'producao',
+  'Entorno de Sapinhoá': 'producao',
+  'Pau-Brasil': 'devolvidos',
+  'Peroba': 'exploracao',
+  'Alto de Cabo Frio Oeste': 'exploracao',
+  'Alto de Cabo Frio Central': 'exploracao',
+  'Uirapuru': 'exploracao',
+  'Dois Irmãos': 'exploracao',
+  'Três Marias': 'devolvidos',
+  'Saturno': 'devolvidos',
+  'Titã': 'devolvidos',
+  'Sudoeste de Tartaruga Verde': 'exploracao',
+  'Aram': 'exploracao',
+  'Búzios': 'producao',
+  'Itapu': 'producao',
+  'Sépia': 'producao',
+  'Atapu': 'producao',
+  'Água Marinha': 'exploracao',
+  'Norte de Brava': 'producao',
+  'Bumerangue': 'exploracao',
+  'Sudoeste de Sagitário': 'exploracao',
+  'Tupinambá': 'exploracao',
+  'Esmeralda': 'exploracao',
+  'Ametista': 'exploracao',
+  'Citrino': 'exploracao',
+  'Itaimbezinho': 'exploracao',
+  'Jaspe': 'exploracao',
+};
+function inferProjectGroup(name) {
+  const key = Object.keys(KNOWN_PROJECT_GROUPS).find((k) => name.startsWith(k));
+  return key ? KNOWN_PROJECT_GROUPS[key] : GROUP_FALLBACK;
+}
+
 let uidCounter = 0;
 function uid(prefix) {
   uidCounter += 1;
@@ -322,8 +362,10 @@ function loadState() {
         if (!parsed.groupCollapsed) parsed.groupCollapsed = {};
         // Compatibilidade: projetos salvos antes do agrupamento por
         // fase/situação (Exploração/Produção/Devolvidos) não têm "group".
+        // Se o nome bater com um dos 29 contratos oficiais, usa o grupo
+        // real dele (inferProjectGroup) em vez de cair sempre no fallback.
         for (const p of parsed.projects) {
-          if (!p.group) p.group = GROUP_FALLBACK;
+          if (!p.group) p.group = inferProjectGroup(p.name);
         }
         return parsed;
       }
