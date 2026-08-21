@@ -157,8 +157,13 @@ function seedState() {
         ws('Marcos do Contrato', [
           m('Leilão ANP — 1ª Rodada de Partilha', '2013-10-21', true),
           m('Assinatura do Contrato de Partilha', '2013-12-02', true),
-          m('Primeiro óleo — FPSO Pioneiro de Libra (teste de longa duração, campo de Mero)', '2017-11-26', true),
-          m('Primeiro óleo comercial — FPSO Guanabara (Mero-1)', '2022-04-30', true),
+        ]),
+        ws('Primeiro Óleo por FPSO (campo de Mero)', [
+          m('Pioneiro de Libra (teste de longa duração — EWT)', '2017-11-26', true),
+          m('Guanabara (Mero-1)', '2022-04-30', true),
+          m('Sepetiba (Mero-2)', '2023-12-31', true),
+          m('Marechal Duque de Caxias (Mero-3)', '2024-10-30', true),
+          m('Alexandre de Gusmão (Mero-4)', '2025-05-26', true),
         ]),
       ]),
       proj('Sul de Gato do Mato — 2ª Rodada de Partilha (2017)', PALETTE[4], 'exploracao', [
@@ -259,8 +264,16 @@ function seedState() {
         ws('Marcos do Contrato', [
           m('Leilão ANP — 1ª Rodada de Excedente da Cessão Onerosa', '2019-11-06', true),
           m('Assinatura do Contrato de Partilha', '2020-03-30', true),
-          m('Primeiro óleo do campo — FPSO P-74 (mês aprox., regime anterior)', '2018-04-01', true),
-          m('Primeiro óleo — FPSO Almirante Tamandaré (Búzios 7)', '2025-02-15', true),
+        ]),
+        ws('Primeiro Óleo por FPSO', [
+          m('P-74 (regime anterior)', '2018-04-24', true),
+          m('P-75 (regime anterior)', '2018-11-11', true),
+          m('P-76 (regime anterior)', '2019-02-20', true),
+          m('P-77 (regime anterior)', '2019-03-19', true),
+          m('Almirante Barroso — Búzios 5', '2023-05-31', true),
+          m('Almirante Tamandaré — Búzios 7', '2025-02-15', true),
+          m('P-78 — Búzios 6', '2025-12-31', true),
+          m('P-79 — Búzios 8', '2026-05-01', true),
         ]),
       ]),
       proj('Itapu — Excedente da Cessão Onerosa (2019)', PALETTE[0], 'producao', [
