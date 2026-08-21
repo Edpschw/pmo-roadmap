@@ -363,8 +363,18 @@ let currentTimelineWidth = 0;
 let todayLineEl = null;
 let todayFlagEl = null;
 
-function clampPxPerDay(v) {
-  return Math.min(MAX_PX_PER_DAY, Math.max(MIN_PX_PER_DAY, v));
+function clampPxPerDay(v, minOverride) {
+  const min = Math.max(MIN_PX_PER_DAY, minOverride || 0);
+  return Math.min(MAX_PX_PER_DAY, Math.max(min, v));
+}
+
+// Zoom mínimo dinâmico: mesma conta de pxPerDayToFitAll(), mas aplicada como
+// piso permanente do zoom (não só quando se clica em "Tudo"), para que
+// afastar o zoom livremente nunca deixe espaço vazio sobrando na tela.
+function minPxPerDayToFillScreen(totalDays) {
+  if (totalDays <= 0) return MIN_PX_PER_DAY;
+  const visibleTimelineWidth = scrollContainer.clientWidth - getSidebarWidth();
+  return visibleTimelineWidth / totalDays;
 }
 
 function syncScaleButtons() {
@@ -381,14 +391,14 @@ function render() {
 
   const { rangeStart, rangeEnd } = computeRange();
   currentRangeStart = rangeStart;
-  currentPxPerDay = clampPxPerDay(state.pxPerDay || SCALE_PX_PER_DAY.month);
   const totalDays = diffDays(rangeStart, rangeEnd);
-  const timelineWidth = totalDays * currentPxPerDay;
-  currentTimelineWidth = timelineWidth;
   currentSidebarWidth = getSidebarWidth();
   document.documentElement.style.setProperty('--sidebar-w', currentSidebarWidth + 'px');
   applyResponsiveMetrics();
   document.documentElement.style.setProperty('--header-h', HEADER_H + 'px');
+  currentPxPerDay = clampPxPerDay(state.pxPerDay || SCALE_PX_PER_DAY.month, minPxPerDayToFillScreen(totalDays));
+  const timelineWidth = totalDays * currentPxPerDay;
+  currentTimelineWidth = timelineWidth;
   const sidebarWidth = currentSidebarWidth;
   const totalWidth = sidebarWidth + timelineWidth;
 
@@ -1360,10 +1370,15 @@ scrollContainer.addEventListener('pointerdown', (e) => {
 // Re-centraliza os nomes das barras visíveis ao rolar (inclui o pan por
 // clique-arrastar, que também dispara 'scroll') e ao redimensionar a janela.
 scrollContainer.addEventListener('scroll', scheduleBarLabelUpdate);
+let _lastViewportWidth = window.innerWidth;
 window.addEventListener('resize', () => {
   // A largura da sidebar muda ao cruzar o breakpoint mobile/desktop, o que
   // afeta o layout inteiro (não só as posições dos rótulos das barras).
-  if (getSidebarWidth() !== currentSidebarWidth) {
+  // Qualquer mudança de largura também precisa re-renderizar porque o zoom
+  // mínimo (que mantém o roadmap preenchendo a tela) depende dela.
+  const widthChanged = window.innerWidth !== _lastViewportWidth;
+  _lastViewportWidth = window.innerWidth;
+  if (getSidebarWidth() !== currentSidebarWidth || widthChanged) {
     render();
   }
   scheduleBarLabelUpdate();
