@@ -897,6 +897,28 @@ function renderTaskBar(project, ws, item, lane, rangeStart) {
   return wrapper;
 }
 
+// Ícones de marco por tipo: "contrato" (documento com dobra e linhas de
+// texto) e "fpso" (casco + superestrutura de navio) substituem o losango
+// padrão para deixar visualmente óbvio o que aquele marco representa. Sem
+// tipo definido (marco genérico), mantém o losango de sempre (via CSS).
+function contractIconSVG(color) {
+  return `<svg viewBox="0 0 16 16" width="15" height="15">
+    <path d="M3 1h6l4 4v9.3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" fill="${color}"/>
+    <path d="M9 1v4h4" fill="none" stroke="#fff" stroke-opacity="0.6" stroke-width="1" stroke-linejoin="round"/>
+    <line x1="4" y1="9" x2="10" y2="9" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="4" y1="11.5" x2="9" y2="11.5" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2" stroke-linecap="round"/>
+  </svg>`;
+}
+function fpsoIconSVG(color) {
+  return `<svg viewBox="0 0 16 16" width="15" height="15">
+    <path d="M1 10.5h14l-2.3 4H3.3z" fill="${color}"/>
+    <rect x="8.3" y="5.3" width="4.2" height="5.2" rx="0.6" fill="${color}"/>
+    <rect x="9.9" y="2.8" width="1.2" height="2.8" fill="${color}"/>
+    <line x1="3.3" y1="10.5" x2="12.7" y2="10.5" stroke="#fff" stroke-opacity="0.35" stroke-width="0.8"/>
+  </svg>`;
+}
+const MILESTONE_ICON_BUILDERS = { contract: contractIconSVG, fpso: fpsoIconSVG };
+
 function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverride, topOverride) {
   const date = parseDate(item.date);
   const isPast = date < parseDate(todayISO());
@@ -914,12 +936,17 @@ function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverrid
   wrapper.style.left = '0';
   wrapper.style.top = '0';
 
+  const iconBuilder = MILESTONE_ICON_BUILDERS[item.icon];
   const dia = document.createElement('div');
-  dia.className = 'milestone';
+  dia.className = 'milestone' + (iconBuilder ? ' milestone-icon' : '');
   dia.style.left = left + 'px';
   dia.style.top = top + 'px';
-  dia.style.background = project.color;
-  // Marco já passado e realizado: losango esmaecido. Já passado e NÃO
+  if (iconBuilder) {
+    dia.innerHTML = iconBuilder(project.color);
+  } else {
+    dia.style.background = project.color;
+  }
+  // Marco já passado e realizado: ícone esmaecido. Já passado e NÃO
   // realizado (atrasado): mantém opacidade cheia, mas ganha borda vermelha.
   if (isPast) {
     if (item.done) {
@@ -929,7 +956,8 @@ function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverrid
     }
   }
   dia.title = `${item.name}\n${formatBR(item.date)}` +
-    (isPast ? (item.done ? '\nRealizado' : '\nAtrasado (não realizado)') : '');
+    (isPast ? (item.done ? '\nRealizado' : '\nAtrasado (não realizado)') : '') +
+    (item.approx ? '\n(data aproximada — só o mês era conhecido)' : '');
 
   // Rótulo sempre centralizado exatamente sobre o losango (não ao lado).
   // Marcos já passados e realizados ficam acinzentados (padrão de tarefa
@@ -1253,6 +1281,7 @@ function openTaskModal(project, ws, item) {
 function openMilestoneModal(project, ws, item) {
   const isEdit = !!item;
   const date = isEdit ? item.date : todayISO();
+  const icon = (isEdit && item.icon) || 'generic';
   const html = `
     <h2>${isEdit ? 'Editar marco' : 'Novo marco'}</h2>
     <p style="margin:-6px 0 14px;color:var(--text-muted);font-size:12px;">${escapeHtml(project.name)} / ${escapeHtml(ws.name)}</p>
@@ -1263,6 +1292,14 @@ function openMilestoneModal(project, ws, item) {
     <div class="field">
       <label>Data</label>
       <input type="date" id="f-date" value="${date}" />
+    </div>
+    <div class="field">
+      <label>Ícone</label>
+      <select id="f-icon">
+        <option value="generic"${icon === 'generic' ? ' selected' : ''}>Genérico (losango)</option>
+        <option value="contract"${icon === 'contract' ? ' selected' : ''}>Contrato</option>
+        <option value="fpso"${icon === 'fpso' ? ' selected' : ''}>FPSO</option>
+      </select>
     </div>
     <div class="field field-checkbox">
       <label><input type="checkbox" id="f-done" ${isEdit && item.done ? 'checked' : ''} /> Marco realizado</label>
@@ -1286,12 +1323,13 @@ function openMilestoneModal(project, ws, item) {
       const name = m.querySelector('#f-name').value.trim();
       const d = m.querySelector('#f-date').value;
       const done = m.querySelector('#f-done').checked;
+      const iconValue = m.querySelector('#f-icon').value;
       if (!name) { showToast('Informe um nome para o marco.'); return; }
       if (!d) { showToast('Informe a data do marco.'); return; }
       if (isEdit) {
-        item.name = name; item.date = d; item.done = done;
+        item.name = name; item.date = d; item.done = done; item.icon = iconValue;
       } else {
-        ws.items.push({ id: uid('m'), type: 'milestone', name, date: d, done });
+        ws.items.push({ id: uid('m'), type: 'milestone', name, date: d, done, icon: iconValue });
       }
       saveState();
       render();
