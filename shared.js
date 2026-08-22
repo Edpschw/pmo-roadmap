@@ -20,7 +20,7 @@ const MILESTONE_PAST_LABEL_COLOR = '#9aa4b2';
 // "atrasado" usado no número de progresso das tarefas (.actual.behind).
 const MILESTONE_OVERDUE_LABEL_COLOR = '#d64545';
 
-const SCALE_PX_PER_DAY = { month: 6, quarter: 2.3, year: 1.0 };
+const SCALE_PX_PER_DAY = { day: 24, month: 6, quarter: 2.3, year: 1.0 };
 
 // Nível de agrupamento acima dos projetos (colapsável), por fase/situação
 // do contrato. GROUP_FALLBACK é usado para projetos antigos salvos sem
@@ -141,8 +141,8 @@ function seedState() {
   const proj = (name, color, group, workstreams) => ({ id: uid('p'), name, color, group, collapsed: false, workstreams });
 
   return {
-    scale: 'month',
-    pxPerDay: SCALE_PX_PER_DAY.month,
+    scale: 'all',
+    pxPerDay: SCALE_PX_PER_DAY.year,
     groupCollapsed: {},
     projects: [
       // Os 29 contratos de Partilha de Produção (CPP) em vigor no pré-sal,

@@ -15,17 +15,18 @@
   </div>
   <div class="toolbar-right">
     <div class="scale-switch" id="scaleSwitch">
-      <button data-scale="month" class="scale-btn active">Mês</button>
+      <button data-scale="day" class="scale-btn">Dia</button>
+      <button data-scale="month" class="scale-btn">Mês</button>
       <button data-scale="quarter" class="scale-btn">Trimestre</button>
       <button data-scale="year" class="scale-btn">Ano</button>
-      <button data-scale="all" class="scale-btn">Tudo</button>
+      <button data-scale="all" class="scale-btn active">Tudo</button>
     </div>
+    <button class="btn-ghost" id="todayBtn">Hoje</button>
     <a class="btn-ghost" href="tabela.html">Ver como tabela</a>
     <a class="btn-ghost" href="mapa.html">Ver mapa</a>
     <div class="options-wrap">
       <button class="btn-ghost btn-options" id="optionsBtn" title="Mais opções" aria-haspopup="true" aria-expanded="false">⋯</button>
       <div class="options-menu" id="optionsMenu" hidden>
-        <button class="options-item" id="todayBtn">Hoje</button>
         <button class="options-item" id="toggleAllBtn">Recolher tudo</button>
         <div class="options-divider"></div>
         <button class="options-item" id="importBtn">Importar JSON</button>
@@ -60,7 +61,7 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="vendor/xlsx.full.min.js"></script>
-<script src="shared.js?v=14"></script>
-<script src="app.js?v=29"></script>
+<script src="shared.js?v=15"></script>
+<script src="app.js?v=30"></script>
 </body>
 </html>

@@ -401,7 +401,13 @@ function render() {
   document.documentElement.style.setProperty('--sidebar-w', currentSidebarWidth + 'px');
   applyResponsiveMetrics();
   document.documentElement.style.setProperty('--header-h', HEADER_H + 'px');
-  currentPxPerDay = clampPxPerDay(state.pxPerDay || SCALE_PX_PER_DAY.month, minPxPerDayToFillScreen(totalDays));
+  // Escala "Tudo" recalcula o zoom pra caber a tela a cada render (em vez
+  // de reusar o valor salvo), pra continuar exata mesmo se a janela mudar
+  // de tamanho ou novos dados alterarem o intervalo total desde a última
+  // vez que "Tudo" foi selecionado (inclusive no primeiro carregamento,
+  // que já abre nessa escala por padrão — ver seedState() em shared.js).
+  const minFit = minPxPerDayToFillScreen(totalDays);
+  currentPxPerDay = state.scale === 'all' ? clampPxPerDay(minFit) : clampPxPerDay(state.pxPerDay || SCALE_PX_PER_DAY.month, minFit);
   const timelineWidth = totalDays * currentPxPerDay;
   currentTimelineWidth = timelineWidth;
   const sidebarWidth = currentSidebarWidth;
@@ -1580,7 +1586,7 @@ document.getElementById('importFile').addEventListener('change', (e) => {
       const parsed = JSON.parse(reader.result);
       if (!parsed || !Array.isArray(parsed.projects)) throw new Error('formato inválido');
       state = parsed;
-      if (!state.scale) state.scale = 'month';
+      if (!state.scale) state.scale = 'all';
       saveState();
       render();
       showToast('Roadmap importado.');
@@ -1708,7 +1714,7 @@ document.getElementById('importExcelFile').addEventListener('change', (e) => {
         return;
       }
       if (!confirm(`Importar substituirá o roadmap atual por ${projects.length} projeto(s) da planilha. Continuar?`)) return;
-      state = { scale: state.scale || 'month', pxPerDay: state.pxPerDay || SCALE_PX_PER_DAY.month, projects };
+      state = { scale: state.scale || 'all', pxPerDay: state.pxPerDay || SCALE_PX_PER_DAY.year, projects };
       saveState();
       render();
       showToast(skipped ? `Roadmap importado (${skipped} linha(s) ignorada(s) por dados incompletos).` : 'Roadmap importado do Excel.');
