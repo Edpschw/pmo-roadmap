@@ -12,6 +12,13 @@
    ========================================================================= */
 
 const GEOJSON_URL = 'data/contratos.geojson';
+// Todos os poços de cada contrato/campo, da base cadastral da ANP/BDEP
+// (ver scripts/build_pocos.py). Fica fora do seed do roadmap de propósito:
+// os campos em produção têm de dezenas a mais de cem poços cada (Búzios
+// 153, Tupi 159, Mero 74) — como marco de Gantt isso inviabilizaria a
+// leitura do roadmap, mas no mapa é justamente o que se quer ver ao
+// aproximar num contrato.
+const POCOS_URL = 'data/pocos.json';
 // Camada de contexto: outros campos do polígono do pré-sal que não são um
 // dos 29 contratos rastreados no roadmap — só pra dar noção de onde eles
 // ficam em relação aos que rastreamos. Ver comentário em cima de
@@ -151,6 +158,24 @@ function wellDivIcon(color) {
 // inteiro, que é justamente quando o usuário está olhando pra ele.
 const WELL_MAP_COVERAGE = 0.5;
 
+// Só a regra de ocupação não basta depois que entraram os campos em
+// produção: Búzios (153 poços) e Tupi (159) atingem metade da tela num zoom
+// em que os marcadores ficam a ~10 px um do outro, ou seja, uma mancha
+// ilegível. Então um conjunto denso só acende quando seus marcadores também
+// estiverem a pelo menos esta distância na tela (o ícone tem 15 px).
+const WELL_MIN_SPACING_PX = 14;
+
+// ...mas há conjuntos que nunca vão separar, por mais que se aproxime: são
+// poços perfurados praticamente do mesmo ponto (sondas de um mesmo módulo,
+// e desvios do tipo 1373/1373A/1373B). Pra eles não sumirem pra sempre, a
+// exigência de espaçamento é abandonada depois de 2 níveis de zoom além do
+// limiar de ocupação — daí o 4 = 2².
+const WELL_SPACING_GIVE_UP_RATIO = WELL_MAP_COVERAGE * 4;
+
+// Poços a menos disto um do outro (em graus, ~110 m) viram um marcador só.
+// Além de limpar a mancha, é o mais honesto: são o mesmo ponto no mapa.
+const WELL_MERGE_GRID = 1000;
+
 // Contratos sem poligonal na ANP (ver PROJECTS_WITHOUT_SHAPE) não têm bloco
 // pra medir, mas têm poços com coordenada real — nesses casos a referência
 // é uma caixa em volta dos próprios poços, com esta folga em graus de cada
@@ -170,23 +195,128 @@ function wellItemsOf(project) {
   return wells;
 }
 
-// Poços com coordenada real (base ANP/BDEP, ver item.coords) são
-// posicionados exatamente onde foram perfurados. Só poços sem coords
-// (ex.: marco "previsto" de um poço ainda não perfurado) caem no fallback
-// de aproximação dentro do polígono do contrato, espalhando em círculo
-// quando há mais de um caso assim no mesmo projeto pra não ficarem
-// empilhados. O ponto-base do fallback fica deslocado pro sul do centro
-// (não em cima dele) porque é ali que o popup do projeto abre (clique no
-// polígono ou openPopup() sem argumento usam o centro) — sem esse
-// deslocamento, um popup aberto tamparia o poço aproximado. Deslocamento e
-// raio são proporcionais ao tamanho do polígono (em graus), não um valor
-// fixo, pra continuar funcionando tanto num contrato pequeno quanto num
-// grande. Sem polígono (bounds nulo) só dá pra posicionar quem tem coords.
-function buildWellMarkers(project, bounds, color) {
-  const wells = wellItemsOf(project);
-  if (!wells.length) return null;
+// Código do poço dentro do nome do marco no roadmap ("Poço pioneiro
+// 1-BRSA-1363-RJS (gás com CO2...)" -> "1-BRSA-1363-RJS"), pra casar o
+// marco com o registro da ANP e manter o rótulo curado do roadmap, que
+// carrega o resultado do poço. Marco sem código (ex.: "Poço exploratório
+// (previsto)") não casa com nada e é desenhado à parte.
+const WELL_CODE_RE = /\b\d+-[A-Z]{2,6}-\d+[A-Z]*-[A-Z]{3}\b/;
+function wellCodeOf(name) {
+  const m = String(name).match(WELL_CODE_RE);
+  return m ? m[0] : null;
+}
 
-  const approxWells = wells.filter((item) => !item.coords);
+let pocosData = {};
+
+function wellPopupHTML(label, w, color, others) {
+  const rows = [];
+  if (w.d) rows.push(['Conclusão', formatBR(w.d)]);
+  if (w.op) rows.push(['Operador', w.op]);
+  if (w.cat) rows.push(['Categoria', w.cat]);
+  if (w.rec) rows.push(['Resultado', w.rec]);
+  if (w.sit) rows.push(['Situação', w.sit]);
+  if (w.lam) rows.push(['Lâmina d\'água', w.lam.toLocaleString('pt-BR') + ' m']);
+  if (w.prof) rows.push(['Profundidade', w.prof.toLocaleString('pt-BR') + ' m']);
+  if (w.ps) rows.push(['Atingiu o pré-sal', w.ps === 'S' ? 'Sim' : 'Não']);
+  if (w.sonda) rows.push(['Sonda', w.sonda]);
+  const rowsHTML = rows.map(([k, v]) => `<tr><td class="k">${k}</td><td>${escapeHtml(v)}</td></tr>`).join('');
+  const sub = label !== w.n ? `<p class="map-popup-source">Poço ${escapeHtml(w.n)}</p>` : '';
+  let merged = '';
+  if (others && others.length) {
+    const list = others.map((e) => {
+      const code = (e.info && e.info.n) || e.label;
+      return `<li>${escapeHtml(code)}${e.date ? ' — ' + formatBR(e.date) : ''}</li>`;
+    }).join('');
+    merged = `<p class="map-popup-source">Mesmo ponto (${others.length}):</p><ul class="map-popup-list">${list}</ul>`;
+  }
+  return `<div class="map-popup">
+    <h3 style="color:${color}">${escapeHtml(label)}</h3>
+    ${sub}
+    <table>${rowsHTML}</table>
+    ${merged}
+    <p class="map-popup-source">Fonte: ANP/BDEP — cadastro de poços</p>
+  </div>`;
+}
+
+function addWellMarker(group, latlng, color, entries) {
+  const marker = L.marker(latlng, { icon: wellDivIcon(color), zIndexOffset: 500 });
+  const first = entries[0];
+  const when = first.date ? formatBR(first.date) : '';
+  const extra = entries.length > 1 ? `<br>+ ${entries.length - 1} poço(s) no mesmo ponto` : '';
+  marker.bindTooltip(
+    `${escapeHtml(first.label)}${when ? '<br>' + when : ''}${first.approx ? ' (aprox.)' : ''}${extra}`,
+    { direction: 'top', offset: [0, -10], className: 'map-well-tooltip' },
+  );
+  if (first.info) marker.bindPopup(wellPopupHTML(first.label, first.info, color, entries.slice(1)));
+  group.addLayer(marker);
+}
+
+// Distância mediana de cada marcador ao vizinho mais próximo, em pixels no
+// zoom 0 — como a escala do Leaflet dobra a cada nível, dá pra converter
+// pro zoom atual com uma multiplicação (sep0 * 2^zoom) em vez de refazer a
+// conta O(n²) a cada movimento do mapa. Infinito quando há 0 ou 1 marcador:
+// sem vizinho, não há sobreposição possível.
+function medianNeighborSpacing(latlngs) {
+  if (latlngs.length < 2) return Infinity;
+  const pts = latlngs.map((ll) => map.project(L.latLng(ll), 0));
+  const nearest = pts.map((p, i) => {
+    let best = Infinity;
+    for (let j = 0; j < pts.length; j++) {
+      if (i === j) continue;
+      const d = Math.hypot(p.x - pts[j].x, p.y - pts[j].y);
+      if (d < best) best = d;
+    }
+    return best;
+  }).sort((a, b) => a - b);
+  return nearest[Math.floor(nearest.length / 2)];
+}
+
+// Monta os marcadores de poço de um contrato (ou de um campo da camada de
+// contexto, quando project é nulo). A base da ANP manda na posição e nas
+// informações; quando o poço também é um marco do roadmap, o rótulo curado
+// do marco prevalece — é ele que conta o resultado ("descoberta", "poço
+// seco", "sem indícios de pré-sal"). Marco sem correspondente na base (só
+// o poço previsto do Tupinambá hoje) entra pelo fallback: posição real se
+// tiver coords, senão uma aproximação dentro do polígono do contrato,
+// espalhada em círculo pra não empilhar e deslocada pro sul do centro,
+// que é onde o popup do contrato abre.
+function buildWellMarkers(key, project, bounds, color) {
+  const anpWells = pocosData[key] || [];
+  const milestones = project ? wellItemsOf(project) : [];
+  const byCode = new Map();
+  for (const item of milestones) {
+    const code = wellCodeOf(item.name);
+    if (code) byCode.set(code, item);
+  }
+
+  // Agrupa por célula de ~110 m: poços do mesmo ponto viram um marcador só.
+  // Marco do roadmap na frente da lista, pra ser ele o rótulo do marcador.
+  const cells = new Map();
+  const addEntry = (latlng, entry, curated) => {
+    const k = `${Math.round(latlng[0] * WELL_MERGE_GRID)}|${Math.round(latlng[1] * WELL_MERGE_GRID)}`;
+    let cell = cells.get(k);
+    if (!cell) {
+      cell = { latlng, entries: [] };
+      cells.set(k, cell);
+    }
+    if (curated) cell.entries.unshift(entry);
+    else cell.entries.push(entry);
+  };
+
+  const matched = new Set();
+  for (const w of anpWells) {
+    const item = byCode.get(w.n);
+    if (item) matched.add(item);
+    addEntry(w.c, {
+      label: item ? item.name : w.n,
+      info: w,
+      date: item ? item.date : w.d,
+      approx: false,
+    }, !!item);
+  }
+
+  const leftovers = milestones.filter((item) => !matched.has(item));
+  const approxWells = leftovers.filter((item) => !item.coords);
   let baseLat, baseLng, radiusLat, radiusLng;
   if (bounds) {
     const center = bounds.getCenter();
@@ -197,9 +327,7 @@ function buildWellMarkers(project, bounds, color) {
     radiusLat = Math.max(latSpan * 0.12, 0.01);
     radiusLng = Math.max(lngSpan * 0.12, 0.01);
   }
-
-  const group = L.layerGroup();
-  wells.forEach((item) => {
+  leftovers.forEach((item) => {
     let lat, lng;
     if (item.coords) {
       [lat, lng] = item.coords;
@@ -214,27 +342,49 @@ function buildWellMarkers(project, bounds, color) {
         lng += Math.cos(angle) * radiusLng;
       }
     }
-    const marker = L.marker([lat, lng], { icon: wellDivIcon(color), zIndexOffset: 500 });
-    marker.bindTooltip(`${escapeHtml(item.name)}<br>${formatBR(item.date)}${item.approx ? ' (aprox.)' : ''}`, {
-      direction: 'top', offset: [0, -10], className: 'map-well-tooltip',
-    });
-    group.addLayer(marker);
+    addEntry([lat, lng], { label: item.name, info: null, date: item.date, approx: item.approx }, true);
   });
-  return group.getLayers().length ? group : null;
+
+  if (!cells.size) return null;
+  const group = L.layerGroup();
+  const positions = [];
+  for (const cell of cells.values()) {
+    addWellMarker(group, cell.latlng, color, cell.entries);
+    positions.push(cell.latlng);
+  }
+  return { group, spacing0: medianNeighborSpacing(positions), count: positions.length };
 }
 
-const wellMarkersByProjectId = {};
-// Área de referência usada pra decidir se os poços do projeto aparecem —
-// a poligonal do contrato, ou a caixa em volta dos poços quando não há
-// poligonal (ver WELL_ONLY_BOUNDS_PAD).
-const wellRefBoundsByProjectId = {};
+// Um registro por contrato/campo que tem poço no mapa. refBounds é a área
+// usada pela regra de visibilidade: a poligonal quando existe, ou uma caixa
+// em volta dos próprios poços quando o contrato não tem poligonal na ANP.
+const wellSets = [];
+const wellSetByProjectId = {};
 
-function wellsOnlyBounds(project) {
-  const coords = wellItemsOf(project).filter((i) => i.coords).map((i) => i.coords);
+function wellsOnlyBounds(key, project) {
+  const coords = (pocosData[key] || []).map((w) => w.c)
+    .concat(project ? wellItemsOf(project).filter((i) => i.coords).map((i) => i.coords) : []);
   if (!coords.length) return null;
   const b = L.latLngBounds(coords);
   const p = WELL_ONLY_BOUNDS_PAD;
   return L.latLngBounds([b.getSouth() - p, b.getWest() - p], [b.getNorth() + p, b.getEast() + p]);
+}
+
+function registerWellSet(key, project, bounds, color, contexto) {
+  const built = buildWellMarkers(key, project, bounds, color);
+  if (!built) return;
+  const refBounds = bounds || wellsOnlyBounds(key, project);
+  if (!refBounds) return;
+  const set = {
+    key,
+    group: built.group,
+    spacing0: built.spacing0,
+    refBounds,
+    groupId: project ? project.group : null,
+    contexto: !!contexto,
+  };
+  wellSets.push(set);
+  if (project) wellSetByProjectId[project.id] = set;
 }
 
 // Quanto do mapa (na maior das duas dimensões) o retângulo ocuparia no zoom
@@ -253,21 +403,27 @@ function boundsScreenRatio(bounds, zoom) {
 // visão geral fica limpa e, ao aproximar num contrato, só os poços dele
 // aparecem. Grupo desmarcado no painel esconde os poços junto com os
 // polígonos.
+// As duas condições de zoom (ocupação da tela e espaçamento dos
+// marcadores), separadas da checagem de visibilidade pra que flyToProject
+// possa perguntar "em que zoom este conjunto acenderia?".
+function wellsFitAtZoom(set, zoom) {
+  const ratio = boundsScreenRatio(set.refBounds, zoom);
+  if (ratio < WELL_MAP_COVERAGE) return false;
+  return set.spacing0 * Math.pow(2, zoom) >= WELL_MIN_SPACING_PX
+    || ratio >= WELL_SPACING_GIVE_UP_RATIO;
+}
+
 function updateWellVisibility() {
   const mapBounds = map.getBounds();
   const zoom = map.getZoom();
-  for (const project of state.projects) {
-    const group = wellMarkersByProjectId[project.id];
-    if (!group) continue;
-    const ref = wellRefBoundsByProjectId[project.id];
-    const groupOn = groupVisible[project.group] !== undefined
-      ? groupVisible[project.group]
-      : groupVisible[GROUP_FALLBACK] !== false;
-    const show = !!ref && groupOn && ref.intersects(mapBounds)
-      && boundsScreenRatio(ref, zoom) >= WELL_MAP_COVERAGE;
-    const shown = map.hasLayer(group);
-    if (show && !shown) group.addTo(map);
-    else if (!show && shown) map.removeLayer(group);
+  for (const set of wellSets) {
+    const layerOn = set.contexto
+      ? presaltFieldsVisible
+      : (groupVisible[set.groupId] !== undefined ? groupVisible[set.groupId] : groupVisible[GROUP_FALLBACK] !== false);
+    const show = layerOn && set.refBounds.intersects(mapBounds) && wellsFitAtZoom(set, zoom);
+    const shown = map.hasLayer(set.group);
+    if (show && !shown) set.group.addTo(map);
+    else if (!show && shown) map.removeLayer(set.group);
   }
 }
 
@@ -299,12 +455,21 @@ async function init() {
   }
 
   try {
+    const pocosRes = await fetch(POCOS_URL);
+    pocosData = (await pocosRes.json()).pocos || {};
+  } catch (e) {
+    // Sem a base de poços o mapa segue mostrando só as poligonais.
+    showToast('Não foi possível carregar data/pocos.json — mapa sem poços.');
+  }
+
+  try {
     const presRes = await fetch(PRESALT_FIELDS_URL);
     const presGeojson = await presRes.json();
     for (const feat of presGeojson.features) {
       const layer = L.geoJSON(feat, { style: PRESALT_FIELD_STYLE });
       layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(feat.properties)));
       layer.addTo(presaltFieldsLayer);
+      registerWellSet(feat.properties.nome, null, layer.getBounds(), PRESALT_FIELD_STYLE.color, true);
     }
   } catch (e) {
     // Camada de contexto é opcional — segue sem ela se não carregar.
@@ -339,17 +504,14 @@ async function init() {
     allBounds.push(bounds);
   }
 
-  // Poços de TODOS os contratos que tenham poço cadastrado — inclusive os 8
-  // sem poligonal na ANP (blocos devolvidos e Sul de Gato do Mato), que
-  // ficavam completamente fora do mapa: agora que cada poço tem coordenada
-  // real, o polígono deixou de ser necessário pra posicioná-los.
+  // Poços de TODOS os contratos que tenham poço cadastrado — inclusive os
+  // campos em produção (Búzios, Mero/Libra, Bacalhau/Norte de Carcará…) e
+  // os 8 sem poligonal na ANP (blocos devolvidos e Sul de Gato do Mato),
+  // que ficavam completamente fora do mapa: com a coordenada real de cada
+  // poço, o polígono deixou de ser necessário pra posicioná-los.
   for (const project of state.projects) {
     const layer = layerByProjectId[project.id];
-    const polyBounds = layer ? layer.getBounds() : null;
-    const group = buildWellMarkers(project, polyBounds, project.color);
-    if (!group) continue;
-    wellMarkersByProjectId[project.id] = group;
-    wellRefBoundsByProjectId[project.id] = polyBounds || wellsOnlyBounds(project);
+    registerWellSet(project.name, project, layer ? layer.getBounds() : null, project.color, false);
   }
 
   if (allBounds.length) {
@@ -378,19 +540,27 @@ function setColorMode(mode) {
 }
 
 // Zoom que enquadra o alvo (como flyToBounds faria) mas nunca abaixo do
-// necessário pros poços aparecerem. Sem isso, o arredondamento de zoom do
-// Leaflet (zoomSnap = 1) às vezes para num nível em que o bloco fica logo
-// abaixo de WELL_MAP_COVERAGE, e clicar no projeto na lista enquadraria o
-// contrato sem revelar os poços dele — exatamente o que o usuário espera
-// ver ao focar num contrato.
-function zoomToFocus(bounds) {
-  let zoom = map.getBoundsZoom(bounds, false, L.point(40, 40));
-  while (zoom < map.getMaxZoom() && boundsScreenRatio(bounds, zoom) < WELL_MAP_COVERAGE) zoom += 1;
+// necessário pros poços daquele contrato aparecerem — focar um contrato e
+// não ver poço nenhum é justamente o que se quer evitar. Sobe no máximo 3
+// níveis além do enquadramento pra não sair voando pra um zoom em que o
+// contrato virou um detalhe; nos campos densos (Búzios, Norte de Carcará)
+// são os 2 níveis que separam "mancha" de "poços distinguíveis".
+const FOCUS_MAX_EXTRA_ZOOM = 3;
+
+function zoomToFocus(bounds, set) {
+  const fit = map.getBoundsZoom(bounds, false, L.point(40, 40));
+  let zoom = fit;
+  const limit = Math.min(map.getMaxZoom(), fit + FOCUS_MAX_EXTRA_ZOOM);
+  while (zoom < limit) {
+    if (set ? wellsFitAtZoom(set, zoom) : boundsScreenRatio(bounds, zoom) >= WELL_MAP_COVERAGE) break;
+    zoom += 1;
+  }
   return zoom;
 }
 
 function flyToProject(project) {
   const layer = layerByProjectId[project.id];
+  const wellSet = wellSetByProjectId[project.id];
   if (layer) {
     const bounds = layer.getBounds();
     // Ancorado na borda norte, não no centro: nesse zoom os poços do
@@ -398,15 +568,15 @@ function flyToProject(project) {
     // justamente eles (o balão do Leaflet sobe a partir do ponto).
     const anchor = L.latLng(bounds.getNorth(), bounds.getCenter().lng);
     map.once('moveend', () => layer.eachLayer((l) => l.openPopup(anchor)));
-    map.flyTo(bounds.getCenter(), zoomToFocus(bounds), { duration: 0.6 });
+    map.flyTo(bounds.getCenter(), zoomToFocus(bounds, wellSet), { duration: 0.6 });
     return;
   }
   // Sem poligonal, mas com poços cadastrados: vale a pena voar até eles em
   // vez de só avisar que não há shapefile.
-  const ref = wellRefBoundsByProjectId[project.id];
+  const ref = wellSet && wellSet.refBounds;
   if (ref) {
     showToast(`Sem poligonal para "${project.name}" (${PROJECTS_WITHOUT_SHAPE[project.name] || 'não encontrada nos shapefiles fornecidos.'}) — mostrando os poços do contrato.`);
-    map.flyTo(ref.getCenter(), zoomToFocus(ref), { duration: 0.6 });
+    map.flyTo(ref.getCenter(), zoomToFocus(ref, wellSet), { duration: 0.6 });
     return;
   }
   showToast(`Sem poligonal para "${project.name}": ${PROJECTS_WITHOUT_SHAPE[project.name] || 'não encontrada nos shapefiles fornecidos.'}`);
@@ -424,6 +594,7 @@ function togglePresaltFields(visible) {
   presaltFieldsVisible = visible;
   if (visible) map.addLayer(presaltFieldsLayer);
   else map.removeLayer(presaltFieldsLayer);
+  updateWellVisibility();
 }
 
 function renderColorModeControl(container) {

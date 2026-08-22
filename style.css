@@ -583,6 +583,9 @@ body.map-page .leaflet-popup-close-button:hover { color: var(--map-text) !import
 .map-popup td { padding: 1px 6px 1px 0; vertical-align: top; }
 .map-popup td.k { color: var(--map-text-muted); white-space: nowrap; }
 .map-popup-source { margin: 6px 0 0; font-size: 10px; color: var(--map-text-faint); }
+/* Poços que caem no mesmo ponto do mapa e viraram um marcador só. */
+.map-popup-list { margin: 2px 0 0; padding-left: 16px; font-size: 11px; color: var(--map-text-muted); max-height: 132px; overflow-y: auto; }
+.map-popup-list li { margin: 1px 0; }
 
 /* Marcador de poço: reseta o quadrado branco padrão do divIcon (o SVG já
    define a forma) e escurece o tooltip de hover pra bater com o resto. */
