@@ -149,28 +149,25 @@ function wellDivIcon(color) {
   });
 }
 
-// Fração do mapa que o contrato precisa ocupar (na maior das duas
-// dimensões — largura ou altura da tela) pros poços dele aparecerem
-// sozinhos. Comparar por dimensão, e não por área, é de propósito: os
-// blocos são quase quadrados e a tela é panorâmica, então um bloco que
-// preenche 90% da altura ainda ficaria abaixo de 50% *de área* — ou seja,
-// pela área os poços não apareceriam nem no zoom que enquadra o bloco
-// inteiro, que é justamente quando o usuário está olhando pra ele.
-const WELL_MAP_COVERAGE = 0.5;
-
-// Só a regra de ocupação não basta depois que entraram os campos em
-// produção: Búzios (153 poços) e Tupi (159) atingem metade da tela num zoom
-// em que os marcadores ficam a ~10 px um do outro, ou seja, uma mancha
-// ilegível. Então um conjunto denso só acende quando seus marcadores também
-// estiverem a pelo menos esta distância na tela (o ícone tem 15 px).
-const WELL_MIN_SPACING_PX = 14;
-
-// ...mas há conjuntos que nunca vão separar, por mais que se aproxime: são
-// poços perfurados praticamente do mesmo ponto (sondas de um mesmo módulo,
-// e desvios do tipo 1373/1373A/1373B). Pra eles não sumirem pra sempre, a
-// exigência de espaçamento é abandonada depois de 2 níveis de zoom além do
-// limiar de ocupação — daí o 4 = 2².
-const WELL_SPACING_GIVE_UP_RATIO = WELL_MAP_COVERAGE * 4;
+// Regra única de revelação: um conjunto de N poços aparece quando a
+// diagonal da área que o representa atinge, na tela, WELL_REVEAL_PX *
+// sqrt(N) pixels. A raiz de N não é arbitrária — é o que faz uma conta só
+// servir tanto pra um contrato de 1 poço quanto pra um campo com 150: se N
+// pontos estão espalhados numa área A, o espaçamento típico entre vizinhos
+// escala com sqrt(A)/sqrt(N); exigir que a diagonal em pixels cresça na
+// mesma proporção (sqrt(N)) equivale a manter esse espaçamento típico
+// constante, sem precisar de uma segunda regra separada só pra isso. E pra
+// N=1 a raiz vale 1, então a conta cai exatamente na exigência mais simples
+// possível — "a área de referência do contrato precisa estar claramente em
+// foco" — sem caso especial.
+//
+// A "área que o representa" é a caixa em volta dos próprios poços (o que
+// captura corretamente contratos com poços concentrados numa parte pequena
+// de um polígono grande, como os campos em produção) quando há mais de um
+// poço; com um poço só não há o que medir entre eles, então usa a área de
+// referência do contrato (polígono da ANP ou a caixa em volta do poço) —
+// ver refBounds/sizeBounds em registerWellSet.
+const WELL_REVEAL_PX = 90;
 
 // Poços a menos disto um do outro (em graus, ~110 m) viram um marcador só.
 // Além de limpar a mancha, é o mais honesto: são o mesmo ponto no mapa.
@@ -249,26 +246,6 @@ function addWellMarker(group, latlng, color, entries) {
   );
   if (first.info) marker.bindPopup(wellPopupHTML(first.label, first.info, color, entries.slice(1)));
   group.addLayer(marker);
-}
-
-// Distância mediana de cada marcador ao vizinho mais próximo, em pixels no
-// zoom 0 — como a escala do Leaflet dobra a cada nível, dá pra converter
-// pro zoom atual com uma multiplicação (sep0 * 2^zoom) em vez de refazer a
-// conta O(n²) a cada movimento do mapa. Infinito quando há 0 ou 1 marcador:
-// sem vizinho, não há sobreposição possível.
-function medianNeighborSpacing(latlngs) {
-  if (latlngs.length < 2) return Infinity;
-  const pts = latlngs.map((ll) => map.project(L.latLng(ll), 0));
-  const nearest = pts.map((p, i) => {
-    let best = Infinity;
-    for (let j = 0; j < pts.length; j++) {
-      if (i === j) continue;
-      const d = Math.hypot(p.x - pts[j].x, p.y - pts[j].y);
-      if (d < best) best = d;
-    }
-    return best;
-  }).sort((a, b) => a - b);
-  return nearest[Math.floor(nearest.length / 2)];
 }
 
 // Monta os marcadores de poço de um contrato (ou de um campo da camada de
@@ -352,7 +329,14 @@ function buildWellMarkers(key, project, bounds, color) {
     addWellMarker(group, cell.latlng, color, cell.entries);
     positions.push(cell.latlng);
   }
-  return { group, spacing0: medianNeighborSpacing(positions), count: positions.length };
+  // Caixa em volta dos marcadores finais (já mesclados) — a localização
+  // real dos poços, usada tanto pra saber se estão perto da tela quanto
+  // (quando há mais de um) como "área que representa" o conjunto na regra
+  // de revelação (ver WELL_REVEAL_PX). Com um marcador só vira uma caixa
+  // de tamanho zero em volta do próprio ponto — ainda válida pra saber
+  // "onde", só não serve pra medir espalhamento (ver sizeBounds).
+  const markerBounds = L.latLngBounds(positions);
+  return { group, markerBounds, count: positions.length };
 }
 
 // Um registro por contrato/campo que tem poço no mapa. refBounds é a área
@@ -378,7 +362,21 @@ function registerWellSet(key, project, bounds, color, contexto) {
   const set = {
     key,
     group: built.group,
-    spacing0: built.spacing0,
+    count: built.count,
+    // markerBounds é a localização real dos poços (caixa em volta dos
+    // marcadores, mesmo com um só) — usada pra decidir se estão perto da
+    // tela (updateWellVisibility) e como alvo do voo (flyToProject). Não dá
+    // pra usar a poligonal do contrato pra isso: um bloco grande pode ter
+    // os poços concentrados bem longe do centro dele (ver Sudoeste de
+    // Sagitário), e aí "a poligonal está na tela" não significa "os poços
+    // estão na tela".
+    markerBounds: built.markerBounds,
+    // sizeBounds é só a "área que representa" o conjunto pra regra de
+    // revelação (ver WELL_REVEAL_PX): a própria markerBounds quando há mais
+    // de um poço (mede o espalhamento real), ou a área de referência do
+    // contrato quando há um só (nada a medir entre poços nesse caso, então
+    // usa o tamanho do contrato como proxy de "está em foco").
+    sizeBounds: built.count > 1 ? built.markerBounds : refBounds,
     refBounds,
     groupId: project ? project.group : null,
     contexto: !!contexto,
@@ -387,32 +385,31 @@ function registerWellSet(key, project, bounds, color, contexto) {
   if (project) wellSetByProjectId[project.id] = set;
 }
 
-// Quanto do mapa (na maior das duas dimensões) o retângulo ocuparia no zoom
-// dado. Passa de 1 quando o contrato é maior que a tela — é o caso de estar
-// com o zoom "dentro" do bloco, em que os poços devem aparecer.
-function boundsScreenRatio(bounds, zoom) {
+// Maior dimensão (largura ou altura) que o retângulo ocuparia na tela, em
+// pixels, no zoom dado. Comparar por dimensão, e não por área, é de
+// propósito: os blocos são quase quadrados e a tela é panorâmica, então um
+// bloco que preenche 90% da altura ainda daria uma área bem menor — pela
+// área a regra exigiria mais zoom do que o necessário pra estar "olhando"
+// pro contrato.
+function boundsScreenPx(bounds, zoom) {
   const nw = map.project(bounds.getNorthWest(), zoom);
   const se = map.project(bounds.getSouthEast(), zoom);
-  const size = map.getSize();
-  return Math.max(Math.abs(se.x - nw.x) / size.x, Math.abs(se.y - nw.y) / size.y);
+  return Math.max(Math.abs(se.x - nw.x), Math.abs(se.y - nw.y));
+}
+
+// A regra única em si — ver o comentário de WELL_REVEAL_PX pra a lógica
+// por trás do sqrt(N). Separada de updateWellVisibility pra que
+// flyToProject também possa perguntar "em que zoom este conjunto
+// revelaria?" (zoomToFocus).
+function wellsRevealAtZoom(set, zoom) {
+  return boundsScreenPx(set.sizeBounds, zoom) >= WELL_REVEAL_PX * Math.sqrt(set.count);
 }
 
 // Poços aparecem sozinhos conforme o zoom: sem clique nenhum, para todos os
-// contratos que tenham poço cadastrado. Critério: o contrato precisa estar
-// visível na tela e ocupar pelo menos WELL_MAP_COVERAGE dela — assim a
-// visão geral fica limpa e, ao aproximar num contrato, só os poços dele
-// aparecem. Grupo desmarcado no painel esconde os poços junto com os
-// polígonos.
-// As duas condições de zoom (ocupação da tela e espaçamento dos
-// marcadores), separadas da checagem de visibilidade pra que flyToProject
-// possa perguntar "em que zoom este conjunto acenderia?".
-function wellsFitAtZoom(set, zoom) {
-  const ratio = boundsScreenRatio(set.refBounds, zoom);
-  if (ratio < WELL_MAP_COVERAGE) return false;
-  return set.spacing0 * Math.pow(2, zoom) >= WELL_MIN_SPACING_PX
-    || ratio >= WELL_SPACING_GIVE_UP_RATIO;
-}
-
+// contratos que tenham poço cadastrado — assim a visão geral fica limpa e,
+// ao aproximar de um contrato, só os poços dele aparecem. Grupo
+// desmarcado no painel (ou a camada de contexto) esconde os poços junto
+// com os polígonos.
 function updateWellVisibility() {
   const mapBounds = map.getBounds();
   const zoom = map.getZoom();
@@ -420,7 +417,7 @@ function updateWellVisibility() {
     const layerOn = set.contexto
       ? presaltFieldsVisible
       : (groupVisible[set.groupId] !== undefined ? groupVisible[set.groupId] : groupVisible[GROUP_FALLBACK] !== false);
-    const show = layerOn && set.refBounds.intersects(mapBounds) && wellsFitAtZoom(set, zoom);
+    const show = layerOn && set.markerBounds.intersects(mapBounds) && wellsRevealAtZoom(set, zoom);
     const shown = map.hasLayer(set.group);
     if (show && !shown) set.group.addTo(map);
     else if (!show && shown) map.removeLayer(set.group);
@@ -497,7 +494,12 @@ async function init() {
     // propaga pros filhos nem abre sozinho ao clicar no polígono no mapa —
     // precisa ligar em cada sub-camada individualmente.
     const bounds = layer.getBounds();
-    layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties)));
+    // autoPan desligado: o popup já abre ancorado na borda norte do bloco
+    // (ver anchor em flyToProject) bem longe de onde ele tamparia os
+    // poços — o auto-pan do Leaflet, se ligado, iria "corrigir" isso
+    // puxando o mapa de volta pra baixo do popup, exatamente pra cima dos
+    // poços que acabaram de ser revelados.
+    layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties), { autoPan: false }));
     const target = groupLayers[project.group] || groupLayers[GROUP_FALLBACK];
     layer.addTo(target);
     layerByProjectId[project.id] = layer;
@@ -534,33 +536,37 @@ function setColorMode(mode) {
     const c = colorForProject(project);
     layer.setStyle({ color: c, fillColor: c });
     const feat = featureByProject[project.name];
-    if (feat) layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties)));
+    if (feat) layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties), { autoPan: false }));
   }
   renderPanel();
 }
 
 // Zoom que enquadra o alvo (como flyToBounds faria) mas nunca abaixo do
 // necessário pros poços daquele contrato aparecerem — focar um contrato e
-// não ver poço nenhum é justamente o que se quer evitar. Sobe no máximo 3
-// níveis além do enquadramento pra não sair voando pra um zoom em que o
-// contrato virou um detalhe; nos campos densos (Búzios, Norte de Carcará)
-// são os 2 níveis que separam "mancha" de "poços distinguíveis".
-const FOCUS_MAX_EXTRA_ZOOM = 3;
-
+// não ver poço nenhum é justamente o que se quer evitar. Sem limite
+// artificial de quantos níveis subir além do enquadramento: se dois poços
+// só se distinguem em zoom bem profundo (caso real — uma extensão
+// perfurada a ~70 m do poço piloto), é isso que o clique deve entregar; o
+// teto é só o zoom máximo do mapa. Sem conjunto de poços (contrato sem
+// nenhum cadastrado), não há o que revelar — fica só no enquadramento
+// normal.
 function zoomToFocus(bounds, set) {
   const fit = map.getBoundsZoom(bounds, false, L.point(40, 40));
+  if (!set) return fit;
   let zoom = fit;
-  const limit = Math.min(map.getMaxZoom(), fit + FOCUS_MAX_EXTRA_ZOOM);
-  while (zoom < limit) {
-    if (set ? wellsFitAtZoom(set, zoom) : boundsScreenRatio(bounds, zoom) >= WELL_MAP_COVERAGE) break;
-    zoom += 1;
-  }
+  while (zoom < map.getMaxZoom() && !wellsRevealAtZoom(set, zoom)) zoom += 1;
   return zoom;
 }
 
 function flyToProject(project) {
   const layer = layerByProjectId[project.id];
   const wellSet = wellSetByProjectId[project.id];
+  // Quando há poços cadastrados, o alvo do voo é a localização real deles
+  // (markerBounds), não o centro do polígono do contrato: um bloco grande
+  // pode ter os poços concentrados bem longe do centro (ver comentário em
+  // markerBounds, registerWellSet) — enquadrar o polígono não enquadra os
+  // poços nesse caso.
+  const target = wellSet && wellSet.markerBounds.getCenter();
   if (layer) {
     const bounds = layer.getBounds();
     // Ancorado na borda norte, não no centro: nesse zoom os poços do
@@ -568,15 +574,14 @@ function flyToProject(project) {
     // justamente eles (o balão do Leaflet sobe a partir do ponto).
     const anchor = L.latLng(bounds.getNorth(), bounds.getCenter().lng);
     map.once('moveend', () => layer.eachLayer((l) => l.openPopup(anchor)));
-    map.flyTo(bounds.getCenter(), zoomToFocus(bounds, wellSet), { duration: 0.6 });
+    map.flyTo(target || bounds.getCenter(), zoomToFocus(bounds, wellSet), { duration: 0.6 });
     return;
   }
   // Sem poligonal, mas com poços cadastrados: vale a pena voar até eles em
   // vez de só avisar que não há shapefile.
-  const ref = wellSet && wellSet.refBounds;
-  if (ref) {
+  if (wellSet) {
     showToast(`Sem poligonal para "${project.name}" (${PROJECTS_WITHOUT_SHAPE[project.name] || 'não encontrada nos shapefiles fornecidos.'}) — mostrando os poços do contrato.`);
-    map.flyTo(ref.getCenter(), zoomToFocus(ref, wellSet), { duration: 0.6 });
+    map.flyTo(target, zoomToFocus(wellSet.refBounds, wellSet), { duration: 0.6 });
     return;
   }
   showToast(`Sem poligonal para "${project.name}": ${PROJECTS_WITHOUT_SHAPE[project.name] || 'não encontrada nos shapefiles fornecidos.'}`);
@@ -733,7 +738,7 @@ function renderPanel() {
 
   const wellsNote = document.createElement('p');
   wellsNote.className = 'map-panel-note';
-  wellsNote.textContent = 'Os poços de cada contrato aparecem sozinhos ao aproximar o zoom, quando o contrato ocupa pelo menos metade do mapa.';
+  wellsNote.textContent = 'Os poços de cada contrato aparecem sozinhos ao aproximar o zoom o bastante pra distingui-los.';
   el.appendChild(wellsNote);
 
   const missingCount = Object.keys(PROJECTS_WITHOUT_SHAPE).length;
