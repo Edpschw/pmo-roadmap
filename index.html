@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Roadmap PMO</title>
-<link rel="stylesheet" href="style.css?v=101" />
+<link rel="stylesheet" href="style.css?v=102" />
 </head>
 <body>
 
@@ -14,21 +14,30 @@
     <span class="subtitle" id="rangeLabel"></span>
   </div>
   <div class="toolbar-right">
-    <div class="scale-switch" id="scaleSwitch">
-      <button data-scale="month" class="scale-btn active">Mês</button>
-      <button data-scale="quarter" class="scale-btn">Trimestre</button>
-      <button data-scale="year" class="scale-btn">Ano</button>
-      <button data-scale="all" class="scale-btn">Tudo</button>
-    </div>
-    <button class="btn-ghost" id="todayBtn">Hoje</button>
-    <button class="btn-ghost" id="toggleAllBtn">Recolher tudo</button>
     <a class="btn-ghost" href="tabela.html">Ver como tabela</a>
     <a class="btn-ghost" href="mapa.html">Ver mapa</a>
-    <button class="btn-ghost" id="importBtn">Importar JSON</button>
-    <button class="btn-ghost" id="importExcelBtn">Importar Excel</button>
-    <button class="btn-ghost" id="templateExcelBtn">Modelo Excel</button>
-    <button class="btn-ghost" id="exportBtn">Exportar</button>
-    <button class="btn-primary" id="addProjectBtn">+ Novo Projeto</button>
+    <div class="options-wrap">
+      <button class="btn-ghost btn-options" id="optionsBtn" title="Mais opções" aria-haspopup="true" aria-expanded="false">⋯</button>
+      <div class="options-menu" id="optionsMenu" hidden>
+        <div class="options-label">Escala</div>
+        <div class="scale-switch" id="scaleSwitch">
+          <button data-scale="month" class="scale-btn active">Mês</button>
+          <button data-scale="quarter" class="scale-btn">Trimestre</button>
+          <button data-scale="year" class="scale-btn">Ano</button>
+          <button data-scale="all" class="scale-btn">Tudo</button>
+        </div>
+        <div class="options-divider"></div>
+        <button class="options-item" id="todayBtn">Hoje</button>
+        <button class="options-item" id="toggleAllBtn">Recolher tudo</button>
+        <div class="options-divider"></div>
+        <button class="options-item" id="importBtn">Importar JSON</button>
+        <button class="options-item" id="importExcelBtn">Importar Excel</button>
+        <button class="options-item" id="templateExcelBtn">Modelo Excel</button>
+        <button class="options-item" id="exportBtn">Exportar</button>
+        <div class="options-divider"></div>
+        <button class="options-item options-item-primary" id="addProjectBtn">+ Novo Projeto</button>
+      </div>
+    </div>
     <input type="file" id="importFile" accept="application/json" hidden />
     <input type="file" id="importExcelFile" accept=".xlsx,.xls" hidden />
   </div>
@@ -53,7 +62,7 @@
 <div class="toast" id="toast" hidden></div>
 
 <script src="vendor/xlsx.full.min.js"></script>
-<script src="shared.js?v=13"></script>
+<script src="shared.js?v=14"></script>
 <script src="app.js?v=29"></script>
 </body>
 </html>

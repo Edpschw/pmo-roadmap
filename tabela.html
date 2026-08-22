@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Roadmap PMO — Tabela</title>
-<link rel="stylesheet" href="style.css?v=101" />
+<link rel="stylesheet" href="style.css?v=102" />
 </head>
 <body>
 
@@ -16,7 +16,12 @@
   <div class="toolbar-right">
     <a class="btn-ghost" href="index.html">← Ver Roadmap</a>
     <a class="btn-ghost" href="mapa.html">Ver mapa</a>
-    <button class="btn-primary" id="addProjectBtn">+ Novo Projeto</button>
+    <div class="options-wrap">
+      <button class="btn-ghost btn-options" id="optionsBtn" title="Mais opções" aria-haspopup="true" aria-expanded="false">⋯</button>
+      <div class="options-menu" id="optionsMenu" hidden>
+        <button class="options-item options-item-primary" id="addProjectBtn">+ Novo Projeto</button>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -30,7 +35,7 @@
 
 <div class="toast" id="toast" hidden></div>
 
-<script src="shared.js?v=13"></script>
+<script src="shared.js?v=14"></script>
 <script src="tabela.js?v=2"></script>
 </body>
 </html>
