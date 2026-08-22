@@ -917,7 +917,15 @@ function fpsoIconSVG(color) {
     <line x1="3.3" y1="10.5" x2="12.7" y2="10.5" stroke="#fff" stroke-opacity="0.35" stroke-width="0.8"/>
   </svg>`;
 }
-const MILESTONE_ICON_BUILDERS = { contract: contractIconSVG, fpso: fpsoIconSVG };
+function wellIconSVG(color) {
+  return `<svg viewBox="0 0 16 16" width="15" height="15">
+    <path d="M8 1L3.2 13.5h1.7L8 4.6l3.1 8.9h1.7z" fill="${color}"/>
+    <line x1="4.6" y1="9.6" x2="11.4" y2="9.6" stroke="#fff" stroke-opacity="0.6" stroke-width="0.9"/>
+    <line x1="5.7" y1="6.8" x2="10.3" y2="6.8" stroke="#fff" stroke-opacity="0.6" stroke-width="0.9"/>
+    <rect x="2.6" y="13.5" width="10.8" height="1.3" rx="0.3" fill="${color}"/>
+  </svg>`;
+}
+const MILESTONE_ICON_BUILDERS = { contract: contractIconSVG, fpso: fpsoIconSVG, well: wellIconSVG };
 
 function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverride, topOverride) {
   const date = parseDate(item.date);
@@ -1299,6 +1307,7 @@ function openMilestoneModal(project, ws, item) {
         <option value="generic"${icon === 'generic' ? ' selected' : ''}>Genérico (losango)</option>
         <option value="contract"${icon === 'contract' ? ' selected' : ''}>Contrato</option>
         <option value="fpso"${icon === 'fpso' ? ' selected' : ''}>FPSO</option>
+        <option value="well"${icon === 'well' ? ' selected' : ''}>Poço</option>
       </select>
     </div>
     <div class="field field-checkbox">

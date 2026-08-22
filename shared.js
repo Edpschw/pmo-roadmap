@@ -131,10 +131,11 @@ function progressStatusClass(actualProgress, expectedProgress) {
 // administrados pela PPSA e licitados pela ANP.
 function seedState() {
   const t = (name, start, end, progress) => ({ id: uid('t'), type: 'task', name, start, end, progress });
-  // icon: 'contract' (documento) | 'fpso' (navio) | undefined (losango
-  // genérico). approx: true quando só o mês/ano da data era conhecido (o
-  // dia usa 01 como placeholder) — some visualmente do nome (que fica
-  // curto) mas continua exposto no tooltip, para não esconder a incerteza.
+  // icon: 'contract' (documento) | 'fpso' (navio) | 'well' (torre de
+  // perfuração) | undefined (losango genérico). approx: true quando só o
+  // mês/ano da data era conhecido (o dia usa 01 como placeholder) — some
+  // visualmente do nome (que fica curto) mas continua exposto no tooltip,
+  // para não esconder a incerteza.
   const m = (name, date, done, icon, approx) => ({ id: uid('m'), type: 'milestone', name, date, done: !!done, icon, approx: !!approx });
   const ws = (name, items) => ({ id: uid('ws'), name, items });
   const proj = (name, color, group, workstreams) => ({ id: uid('p'), name, color, group, collapsed: false, workstreams });
@@ -154,6 +155,13 @@ function seedState() {
       // tem essa data. Em Búzios, Itapu, Sépia, Atapu e Entorno de Sapinhoá,
       // o campo já produzia sob o regime anterior (Cessão Onerosa/
       // unitização) antes da assinatura do próprio CPP.
+      // Workstreams "Poços Exploratórios" (blocos em exploração): reunidas
+      // de notícias públicas (imprensa especializada, PPSA, Agência Brasil),
+      // não de boletins oficiais da ANP por poço — datas sem dia divulgado
+      // usam 01 como placeholder (approx: true). Blocos exploratórios sem
+      // poço perfurado ou com resultado ainda não divulgado publicamente
+      // (Sul de Gato do Mato, Esmeralda, Ametista, Citrino, Itaimbezinho,
+      // Jaspe) ficam sem essa workstream até haver dado concreto.
       proj('Libra', PALETTE[3], 'producao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2013-10-21', true, 'contract'),
@@ -206,6 +214,9 @@ function seedState() {
           m('Assinatura', '2018-01-31', true, 'contract'),
           m('Status contestado (PPSA: ativo / imprensa: devolvido)', '2021-01-01', false, 'contract', true),
         ]),
+        ws('Poços Exploratórios', [
+          m('Poço pioneiro (gás com CO2, sem viabilidade)', '2019-02-01', true, 'well', true),
+        ]),
       ]),
       proj('Alto de Cabo Frio Oeste', PALETTE[0], 'exploracao', [
         ws('Marcos do Contrato', [
@@ -213,11 +224,17 @@ function seedState() {
           m('Assinatura', '2018-01-31', true, 'contract'),
           m('Status contestado (PPSA: ativo / imprensa: devolvido)', '2024-07-01', false, 'contract', true),
         ]),
+        ws('Poços Exploratórios', [
+          m('Poço pioneiro (navio Brava Star)', '2019-10-01', true, 'well', true),
+        ]),
       ]),
       proj('Alto de Cabo Frio Central', PALETTE[1], 'exploracao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2017-10-27', true, 'contract'),
           m('Assinatura', '2018-01-31', true, 'contract'),
+        ]),
+        ws('Poços Exploratórios', [
+          m('Poço pioneiro 1-BRSA-1383A-RJS (teste de formação)', '2022-07-01', true, 'well', true),
         ]),
       ]),
       proj('Uirapuru', PALETTE[2], 'exploracao', [
@@ -225,11 +242,17 @@ function seedState() {
           m('Leilão', '2018-06-07', true, 'contract'),
           m('Assinatura', '2018-12-17', true, 'contract'),
         ]),
+        ws('Poços Exploratórios', [
+          m('Poço pioneiro (descoberta)', '2020-04-01', true, 'well', true),
+        ]),
       ]),
       proj('Dois Irmãos', PALETTE[3], 'exploracao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2018-06-07', true, 'contract'),
           m('Assinatura', '2018-12-17', true, 'contract'),
+        ]),
+        ws('Poços Exploratórios', [
+          m('Poço pioneiro (poço seco, navio Ocean Courage) — bloco devolvido', '2022-01-01', true, 'well', true),
         ]),
       ]),
       proj('Três Marias', PALETTE[4], 'devolvidos', [
@@ -258,11 +281,19 @@ function seedState() {
           m('Leilão', '2018-09-28', true, 'contract'),
           m('Assinatura', '2018-12-17', true, 'contract'),
         ]),
+        ws('Poços Exploratórios', [
+          m('Poço 4-BRSA-1403D-RJS (descoberta)', '2025-11-01', true, 'well', true),
+        ]),
       ]),
       proj('Aram', PALETTE[8], 'exploracao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2019-11-07', true, 'contract'),
           m('Assinatura', '2020-03-30', true, 'contract'),
+        ]),
+        ws('Poços Exploratórios', [
+          m('Poço pioneiro "Curaçao" 1-BRSA-1381-SPS (descoberta)', '2021-11-01', true, 'well', true),
+          m('Poço 4-BRSA-1395-SPS (óleo e gás)', '2025-03-01', true, 'well', true),
+          m('Poço 3-BRSA-1396D-SPS (óleo de alta qualidade)', '2025-05-01', true, 'well', true),
         ]),
       ]),
       proj('Búzios', PALETTE[9], 'producao', [
@@ -313,6 +344,9 @@ function seedState() {
           m('Leilão', '2022-12-16', true, 'contract'),
           m('Assinatura', '2023-05-31', true, 'contract'),
         ]),
+        ws('Poços Exploratórios', [
+          m('Início da perfuração (poço 1-BRSA-1401D/DA-RJS) — resultado ainda não divulgado', '2025-06-01', true, 'well', true),
+        ]),
       ]),
       proj('Norte de Brava', PALETTE[4], 'producao', [
         ws('Marcos do Contrato', [
@@ -328,17 +362,26 @@ function seedState() {
           m('Leilão', '2022-12-16', true, 'contract'),
           m('Assinatura', '2023-07-05', true, 'contract'),
         ]),
+        ws('Poços Exploratórios', [
+          m('Poço pioneiro 1-BP-13-SPS (descoberta)', '2025-08-01', true, 'well', true),
+        ]),
       ]),
       proj('Sudoeste de Sagitário', PALETTE[6], 'exploracao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2022-12-16', true, 'contract'),
           m('Assinatura', '2023-07-05', true, 'contract'),
         ]),
+        ws('Poços Exploratórios', [
+          m('Poço de extensão 3-BRSA-1388DA-SPS (resultado abaixo do esperado)', '2024-01-01', true, 'well', true),
+        ]),
       ]),
       proj('Tupinambá', PALETTE[7], 'exploracao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2023-12-13', true, 'contract'),
           m('Assinatura (data prevista)', '2024-05-31', false, 'contract'),
+        ]),
+        ws('Poços Exploratórios', [
+          m('Poço exploratório (previsto)', '2026-01-01', false, 'well', true),
         ]),
       ]),
       proj('Esmeralda', PALETTE[8], 'exploracao', [
