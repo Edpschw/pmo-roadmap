@@ -173,6 +173,9 @@ function seedState() {
           m('Assinatura', '2018-01-31', true, 'contract'),
           m('FID', '2025-03-21', true, 'contract'),
         ]),
+        ws('Primeiro Óleo por FPSO', [
+          m('FPSO Gato do Mato (previsto)', '2029-01-01', false, 'fpso', true),
+        ]),
       ]),
       proj('Norte de Carcará', PALETTE[5], 'producao', [
         ws('Marcos do Contrato', [
@@ -279,6 +282,9 @@ function seedState() {
           m('Almirante Tamandaré', '2025-02-15', true, 'fpso'),
           m('P-78', '2025-12-31', true, 'fpso'),
           m('P-79', '2026-05-01', true, 'fpso'),
+          m('P-80 (previsto)', '2027-01-01', false, 'fpso', true),
+          m('P-82 (previsto)', '2027-04-01', false, 'fpso', true),
+          m('P-83 (previsto)', '2027-07-01', false, 'fpso', true),
         ]),
       ]),
       proj('Itapu', PALETTE[0], 'producao', [
