@@ -203,18 +203,23 @@ function seedState() {
           m('Devolução', '2024-08-01', true, 'contract', true),
         ]),
       ]),
-      proj('Peroba', PALETTE[9], 'exploracao', [
+      // Peroba e Alto de Cabo Frio Oeste: chegamos a marcar como "status
+      // contestado" (a página da PPSA os listava como ativos), mas pesquisa
+      // adicional confirmou a devolução com múltiplas fontes independentes
+      // e consistentes entre si (consórcio, data e motivo batendo) — por
+      // isso migraram para o grupo "Devolvidos".
+      proj('Peroba', PALETTE[9], 'devolvidos', [
         ws('Marcos do Contrato', [
           m('Leilão', '2017-10-27', true, 'contract'),
           m('Assinatura', '2018-01-31', true, 'contract'),
-          m('Status contestado (PPSA: ativo / imprensa: devolvido)', '2021-01-01', false, 'contract', true),
+          m('Devolução', '2021-01-01', true, 'contract', true),
         ]),
       ]),
-      proj('Alto de Cabo Frio Oeste', PALETTE[0], 'exploracao', [
+      proj('Alto de Cabo Frio Oeste', PALETTE[0], 'devolvidos', [
         ws('Marcos do Contrato', [
           m('Leilão', '2017-10-27', true, 'contract'),
           m('Assinatura', '2018-01-31', true, 'contract'),
-          m('Status contestado (PPSA: ativo / imprensa: devolvido)', '2024-07-01', false, 'contract', true),
+          m('Devolução', '2024-09-01', true, 'contract', true),
         ]),
       ]),
       proj('Alto de Cabo Frio Central', PALETTE[1], 'exploracao', [
@@ -300,18 +305,22 @@ function seedState() {
         ws('Marcos do Contrato', [
           m('Leilão', '2021-12-17', true, 'contract'),
           m('Assinatura', '2022-04-27', true, 'contract'),
+          m('FID Sépia-2', '2024-05-27', true, 'contract'),
         ]),
         ws('Primeiro Óleo por FPSO', [
           m('Carioca (regime anterior)', '2021-08-23', true, 'fpso'),
+          m('P-85 (previsto)', '2029-01-01', false, 'fpso', true),
         ]),
       ]),
       proj('Atapu', PALETTE[2], 'producao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2021-12-17', true, 'contract'),
           m('Assinatura', '2022-04-27', true, 'contract'),
+          m('FID Atapu-2', '2024-05-27', true, 'contract'),
         ]),
         ws('Primeiro Óleo por FPSO', [
           m('P-70 (regime anterior)', '2020-06-25', true, 'fpso'),
+          m('P-84 (previsto)', '2029-01-01', false, 'fpso', true),
         ]),
       ]),
       proj('Água Marinha', PALETTE[3], 'exploracao', [
