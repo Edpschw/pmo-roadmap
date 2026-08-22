@@ -155,13 +155,14 @@ function seedState() {
       // tem essa data. Em Búzios, Itapu, Sépia, Atapu e Entorno de Sapinhoá,
       // o campo já produzia sob o regime anterior (Cessão Onerosa/
       // unitização) antes da assinatura do próprio CPP.
-      // Workstreams "Poços Exploratórios" (blocos em exploração): reunidas
-      // de notícias públicas (imprensa especializada, PPSA, Agência Brasil),
-      // não de boletins oficiais da ANP por poço — datas sem dia divulgado
-      // usam 01 como placeholder (approx: true). Blocos exploratórios sem
-      // poço perfurado ou com resultado ainda não divulgado publicamente
-      // (Sul de Gato do Mato, Esmeralda, Ametista, Citrino, Itaimbezinho,
-      // Jaspe) ficam sem essa workstream até haver dado concreto.
+      // Workstreams "Poços Exploratórios" (blocos em exploração e
+      // devolvidos): reunidas de notícias públicas (imprensa especializada,
+      // PPSA, Agência Brasil), não de boletins oficiais da ANP por poço —
+      // datas sem dia divulgado usam 01 como placeholder (approx: true).
+      // Blocos sem poço perfurado ou com resultado ainda não divulgado
+      // publicamente (Sul de Gato do Mato, Esmeralda, Ametista, Citrino,
+      // Itaimbezinho, Jaspe) ficam sem essa workstream até haver dado
+      // concreto.
       proj('Libra', PALETTE[3], 'producao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2013-10-21', true, 'contract'),
@@ -208,7 +209,14 @@ function seedState() {
         ws('Marcos do Contrato', [
           m('Leilão', '2018-09-28', true, 'contract'),
           m('Assinatura', '2018-12-17', true, 'contract'),
+          // Data de devolução incerta: a fonte mais específica achada é um
+          // artigo de set/2025 noticiando a devolução formal — pode ser só
+          // defasagem de divulgação do resultado do poço (ago/2024, ver
+          // workstream abaixo) ou a data real do protocolo na ANP.
           m('Devolução', '2024-08-01', true, 'contract', true),
+        ]),
+        ws('Poços Exploratórios', [
+          m('Poço 1-BP-12D-RJS (poço seco)', '2024-08-01', true, 'well', true),
         ]),
       ]),
       // Peroba e Alto de Cabo Frio Oeste: chegamos a marcar como "status
@@ -269,12 +277,24 @@ function seedState() {
           m('Assinatura', '2018-12-17', true, 'contract'),
           m('Devolução', '2023-10-01', true, 'contract', true),
         ]),
+        ws('Poços Exploratórios', [
+          m('Poço 1-BRSA-1382D-RJS (indícios sem viabilidade)', '2022-03-01', true, 'well', true),
+        ]),
       ]),
+      // Saturno: a data de devolução abaixo foi corrigida — o poço seco
+      // (maio/2020, ver workstream) tinha sido registrado por engano como
+      // a própria devolução. Fontes convergentes (Petróleo Hoje, Eixos)
+      // indicam que o bloco só foi devolvido à ANP no 4º tri/2022, quase
+      // 2 anos e meio depois; dia exato não encontrado (01/10 é placeholder
+      // de início do trimestre).
       proj('Saturno', PALETTE[5], 'devolvidos', [
         ws('Marcos do Contrato', [
           m('Leilão', '2018-09-28', true, 'contract'),
           m('Assinatura', '2018-12-17', true, 'contract'),
-          m('Devolução', '2020-05-01', true, 'contract', true),
+          m('Devolução', '2022-10-01', true, 'contract', true),
+        ]),
+        ws('Poços Exploratórios', [
+          m('Poço 1-SHEL-33-RJS "Saturno1" (poço seco)', '2020-05-01', true, 'well', true),
         ]),
       ]),
       proj('Titã', PALETTE[6], 'devolvidos', [
@@ -282,6 +302,9 @@ function seedState() {
           m('Leilão', '2018-09-28', true, 'contract'),
           m('Assinatura', '2018-12-17', true, 'contract'),
           m('Devolução', '2025-09-30', true, 'contract'),
+        ]),
+        ws('Poços Exploratórios', [
+          m('Poço 1-EMEB-2-RJS "Titã-1" (indícios, avaliado como não comercial)', '2021-11-01', true, 'well', true),
         ]),
       ]),
       proj('Sudoeste de Tartaruga Verde', PALETTE[7], 'exploracao', [
@@ -447,7 +470,10 @@ function seedState() {
 // travar o arraste de item em zoom muito baixo (ver MIN_PX_PER_DAY_FOR_DRAG
 // em app.js) — a causa provável do erro: nessa escala poucos pixels de
 // mouse já representam anos, e um clique impreciso vira arraste enorme.
-const SEED_VERSION = 4;
+// v5: workstreams "Poços Exploratórios" dos blocos devolvidos (Pau-Brasil,
+// Três Marias, Saturno, Titã) + corrige a data de devolução do Saturno
+// (ver FIELD_CORRECTIONS).
+const SEED_VERSION = 5;
 
 // Nomes antigos de marco que migraram para um nome novo em seedState() —
 // sem isso, o merge abaixo (que só adiciona, nunca substitui) deixaria o
@@ -466,6 +492,12 @@ const FIELD_CORRECTIONS = [
   {
     project: 'Norte de Brava', workstream: 'Primeiro Óleo por FPSO', item: 'Anita Garibaldi',
     field: 'date', value: '2023-08-16',
+  },
+  {
+    // Registrada por engano com a data do poço seco (05/2020); a devolução
+    // real do bloco só ocorreu no 4º tri/2022 (ver comentário no seed).
+    project: 'Saturno', workstream: 'Marcos do Contrato', item: 'Devolução',
+    field: 'date', value: '2022-10-01',
   },
 ];
 
