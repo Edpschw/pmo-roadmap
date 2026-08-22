@@ -174,6 +174,22 @@ function seedState() {
           m('Leilão', '2013-10-21', true, 'contract'),
           m('Assinatura', '2013-12-02', true, 'contract'),
         ]),
+        ws('Poços Perfurados', [
+          m('2 poços perfurados em 2010', '2010-12-31', true, 'well'),
+          m('3 poços perfurados em 2014', '2014-12-31', true, 'well'),
+          m('5 poços perfurados em 2015', '2015-12-31', true, 'well'),
+          m('7 poços perfurados em 2016', '2016-12-31', true, 'well'),
+          m('4 poços perfurados em 2017', '2017-12-31', true, 'well'),
+          m('6 poços perfurados em 2018', '2018-12-31', true, 'well'),
+          m('4 poços perfurados em 2019', '2019-12-31', true, 'well'),
+          m('9 poços perfurados em 2020', '2020-12-31', true, 'well'),
+          m('8 poços perfurados em 2021', '2021-12-31', true, 'well'),
+          m('11 poços perfurados em 2022', '2022-12-31', true, 'well'),
+          m('5 poços perfurados em 2023', '2023-12-31', true, 'well'),
+          m('4 poços perfurados em 2024', '2024-12-31', true, 'well'),
+          m('5 poços perfurados em 2025', '2025-12-31', true, 'well'),
+          m('1 poço perfurado em 2026 (até agora)', '2026-03-10', true, 'well'),
+        ]),
         ws('Primeiro Óleo por FPSO (campo de Mero)', [
           m('Pioneiro (EWT)', '2017-11-26', true, 'fpso'),
           m('Guanabara (Mero-1)', '2022-04-30', true, 'fpso'),
@@ -202,6 +218,18 @@ function seedState() {
           m('Assinatura', '2018-01-31', true, 'contract'),
           m('FID', '2021-06-01', true, 'contract', true),
         ]),
+        ws('Poços Perfurados', [
+          m('2 poços perfurados em 2011', '2011-12-31', true, 'well'),
+          m('1 poço perfurado em 2012', '2012-12-31', true, 'well'),
+          m('1 poço perfurado em 2013', '2013-12-31', true, 'well'),
+          m('2 poços perfurados em 2015', '2015-12-31', true, 'well'),
+          m('1 poço perfurado em 2018', '2018-12-31', true, 'well'),
+          m('2 poços perfurados em 2019', '2019-12-31', true, 'well'),
+          m('3 poços perfurados em 2023', '2023-12-31', true, 'well'),
+          m('4 poços perfurados em 2024', '2024-12-31', true, 'well'),
+          m('4 poços perfurados em 2025', '2025-12-31', true, 'well'),
+          m('2 poços perfurados em 2026 (até agora)', '2026-07-07', true, 'well'),
+        ]),
         ws('Primeiro Óleo por FPSO', [
           m('Bacalhau', '2025-10-16', true, 'fpso'),
         ]),
@@ -210,6 +238,9 @@ function seedState() {
         ws('Marcos do Contrato', [
           m('Leilão', '2017-10-27', true, 'contract'),
           m('Assinatura (unitização)', '2018-01-31', true, 'contract'),
+        ]),
+        ws('Poços Perfurados', [
+          m('1 poço perfurado em 2021', '2021-12-31', true, 'well'),
         ]),
         ws('Primeiro Óleo por FPSO', [
           m('Cidade de São Paulo (regime anterior)', '2013-01-01', true, 'fpso', true),
@@ -352,6 +383,25 @@ function seedState() {
           m('Leilão', '2019-11-06', true, 'contract'),
           m('Assinatura', '2020-03-30', true, 'contract'),
         ]),
+        ws('Poços Perfurados', [
+          m('1 poço perfurado em 2010', '2010-12-31', true, 'well'),
+          m('2 poços perfurados em 2011', '2011-12-31', true, 'well'),
+          m('3 poços perfurados em 2012', '2012-12-31', true, 'well'),
+          m('6 poços perfurados em 2013', '2013-12-31', true, 'well'),
+          m('4 poços perfurados em 2014', '2014-12-31', true, 'well'),
+          m('4 poços perfurados em 2015', '2015-12-31', true, 'well'),
+          m('3 poços perfurados em 2016', '2016-12-31', true, 'well'),
+          m('11 poços perfurados em 2017', '2017-12-31', true, 'well'),
+          m('12 poços perfurados em 2018', '2018-12-31', true, 'well'),
+          m('7 poços perfurados em 2019', '2019-12-31', true, 'well'),
+          m('15 poços perfurados em 2020', '2020-12-31', true, 'well'),
+          m('12 poços perfurados em 2021', '2021-12-31', true, 'well'),
+          m('5 poços perfurados em 2022', '2022-12-31', true, 'well'),
+          m('16 poços perfurados em 2023', '2023-12-31', true, 'well'),
+          m('18 poços perfurados em 2024', '2024-12-31', true, 'well'),
+          m('17 poços perfurados em 2025', '2025-12-31', true, 'well'),
+          m('17 poços perfurados em 2026 (até agora)', '2026-08-02', true, 'well'),
+        ]),
         ws('Primeiro Óleo por FPSO', [
           m('P-74', '2018-04-24', true, 'fpso'),
           m('P-75', '2018-11-11', true, 'fpso'),
@@ -371,6 +421,15 @@ function seedState() {
           m('Leilão', '2019-11-06', true, 'contract'),
           m('Assinatura', '2020-03-30', true, 'contract'),
         ]),
+        ws('Poços Perfurados', [
+          m('1 poço perfurado em 2013', '2013-12-31', true, 'well'),
+          m('1 poço perfurado em 2014', '2014-12-31', true, 'well'),
+          m('1 poço perfurado em 2015', '2015-12-31', true, 'well'),
+          m('2 poços perfurados em 2022', '2022-12-31', true, 'well'),
+          m('3 poços perfurados em 2023', '2023-12-31', true, 'well'),
+          m('2 poços perfurados em 2024', '2024-12-31', true, 'well'),
+          m('2 poços perfurados em 2025', '2025-12-31', true, 'well'),
+        ]),
         ws('Primeiro Óleo por FPSO', [
           m('P-71', '2022-12-21', true, 'fpso'),
         ]),
@@ -380,6 +439,19 @@ function seedState() {
           m('Leilão', '2021-12-17', true, 'contract'),
           m('Assinatura', '2022-04-27', true, 'contract'),
           m('FID Sépia-2', '2024-05-27', true, 'contract'),
+        ]),
+        ws('Poços Perfurados', [
+          m('1 poço perfurado em 2011', '2011-12-31', true, 'well'),
+          m('1 poço perfurado em 2012', '2012-12-31', true, 'well'),
+          m('1 poço perfurado em 2013', '2013-12-31', true, 'well'),
+          m('1 poço perfurado em 2014', '2014-12-31', true, 'well'),
+          m('1 poço perfurado em 2015', '2015-12-31', true, 'well'),
+          m('1 poço perfurado em 2019', '2019-12-31', true, 'well'),
+          m('5 poços perfurados em 2020', '2020-12-31', true, 'well'),
+          m('1 poço perfurado em 2021', '2021-12-31', true, 'well'),
+          m('1 poço perfurado em 2022', '2022-12-31', true, 'well'),
+          m('2 poços perfurados em 2025', '2025-12-31', true, 'well'),
+          m('2 poços perfurados em 2026 (até agora)', '2026-06-23', true, 'well'),
         ]),
         ws('Primeiro Óleo por FPSO', [
           m('Carioca (regime anterior)', '2021-08-23', true, 'fpso'),
@@ -391,6 +463,15 @@ function seedState() {
           m('Leilão', '2021-12-17', true, 'contract'),
           m('Assinatura', '2022-04-27', true, 'contract'),
           m('FID Atapu-2', '2024-05-27', true, 'contract'),
+        ]),
+        ws('Poços Perfurados', [
+          m('2 poços perfurados em 2013', '2013-12-31', true, 'well'),
+          m('1 poço perfurado em 2014', '2014-12-31', true, 'well'),
+          m('3 poços perfurados em 2015', '2015-12-31', true, 'well'),
+          m('1 poço perfurado em 2016', '2016-12-31', true, 'well'),
+          m('3 poços perfurados em 2017', '2017-12-31', true, 'well'),
+          m('2 poços perfurados em 2025', '2025-12-31', true, 'well'),
+          m('2 poços perfurados em 2026 (até agora)', '2026-07-31', true, 'well'),
         ]),
         ws('Primeiro Óleo por FPSO', [
           m('P-70 (regime anterior)', '2020-06-25', true, 'fpso'),
@@ -411,6 +492,9 @@ function seedState() {
         ws('Marcos do Contrato', [
           m('Leilão', '2022-12-16', true, 'contract'),
           m('Assinatura', '2023-07-05', true, 'contract'),
+        ]),
+        ws('Poços Perfurados', [
+          m('1 poço perfurado em 2025', '2025-12-31', true, 'well'),
         ]),
         ws('Primeiro Óleo por FPSO', [
           m('Anita Garibaldi', '2023-08-16', true, 'fpso'),
@@ -504,7 +588,19 @@ function seedState() {
 // Sagitário. Não inclui os grandes campos em produção (Búzios, Itapu,
 // Sépia, Atapu etc.), que têm dezenas a centenas de poços na base ANP —
 // fora da granularidade deste roadmap.
-const SEED_VERSION = 6;
+// v7: workstream "Poços Perfurados" nos 8 projetos do grupo Produção
+// (Libra, Norte de Carcará, Entorno de Sapinhoá, Búzios, Itapu, Sépia,
+// Atapu, Norte de Brava) — um marco por ano-calendário com a contagem de
+// poços concluídos naquele ano (fonte: mesma base ANP/BDEP, agregada por
+// scripts/build_pocos.py), datado em 31/12. É o resumo que faltava pros
+// campos excluídos do v6 por terem poço demais pra virar marco individual
+// — ano incompleto (2026) fica com "(até agora)" no nome e a data do
+// último poço concluído, não 31/12, pra não postar um marco "concluído"
+// numa data ainda no futuro. Nome de workstream diferente de "Poços
+// Exploratórios" de propósito: mapa.js só desenha marcador de poço pra
+// esse nome exato, e estes marcos não têm um ponto único no mapa (são
+// contagem agregada de um ano inteiro), então ficam só no roadmap/tabela.
+const SEED_VERSION = 7;
 
 // Nomes antigos de marco que migraram para um nome novo em seedState() —
 // sem isso, o merge abaixo (que só adiciona, nunca substitui) deixaria o
