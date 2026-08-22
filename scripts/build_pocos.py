@@ -145,6 +145,7 @@ def main(csv_path, out_path):
 
     pocos = {}
     report = []
+    used_poco_codes = set()
 
     for name, rule in PLAN.items():
         campos = set(rule.get('campos', []))
@@ -162,6 +163,7 @@ def main(csv_path, out_path):
             if desde and (w.get('d') or '9999') < desde:
                 continue
             matched.append(w)
+            used_poco_codes.add(r['POCO'].strip())
         matched.sort(key=lambda w: (w.get('d') or '9999', w['n']))
         if matched:
             pocos[name] = matched
@@ -175,14 +177,36 @@ def main(csv_path, out_path):
             w = build_well(r)
             if w:
                 matched.append(w)
+                used_poco_codes.add(r['POCO'].strip())
         matched.sort(key=lambda w: (w.get('d') or '9999', w['n']))
         if matched:
             pocos[campo] = matched
         report.append((campo + ' (contexto)', len(matched)))
 
+    # "Todos os poços do pré-sal": todo poço offshore (TERRA_MAR='M') das
+    # bacias de Santos e Campos que ainda não entrou em nenhum contrato ou
+    # campo de contexto acima — visão completa da atividade de perfuração
+    # nas duas bacias do pré-sal, além dos 24 contratos/campos já
+    # nomeados. Onshore (poços em terra dessas bacias) fica de fora: não
+    # tem relação com o play do pré-sal.
+    outros = []
+    for r in rows:
+        if (r['BACIA'] or '').strip() not in BACIAS:
+            continue
+        if (r['TERRA_MAR'] or '').strip() != 'M':
+            continue
+        if r['POCO'].strip() in used_poco_codes:
+            continue
+        w = build_well(r)
+        if w:
+            outros.append(w)
+    outros.sort(key=lambda w: (w.get('d') or '9999', w['n']))
+    report.append(('Outros poços do pré-sal', len(outros)))
+
     out = {
         'fonte': 'ANP/BDEP — Tabela de Poços (16/08/2026)',
         'pocos': pocos,
+        'outros': outros,
     }
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(out, f, ensure_ascii=False, separators=(',', ':'))
@@ -190,7 +214,7 @@ def main(csv_path, out_path):
     total = sum(n for _, n in report)
     for name, n in sorted(report, key=lambda x: -x[1]):
         print(f'{n:5d}  {name}')
-    print(f'\n{total} poços em {len(pocos)} contratos/campos -> {out_path}')
+    print(f'\n{total} poços ({len(pocos)} contratos/campos nomeados + {len(outros)} outros) -> {out_path}')
 
 
 if __name__ == '__main__':
