@@ -142,15 +142,18 @@ function wellDivIcon(color) {
   });
 }
 
-// Não temos coordenada real de cada poço (só a data de perfuração) — usa
-// uma aproximação dentro do polígono do contrato, espalhando em círculo
-// quando há mais de um poço no mesmo projeto pra não ficarem empilhados.
-// O ponto-base fica deslocado pro sul do centro (não em cima dele) porque
-// é ali que o popup do projeto abre (clique no polígono ou openPopup() sem
-// argumento usam o centro) — sem esse deslocamento, o próprio popup tampa
-// os poços que ele acabou de revelar. Desloque e raio são proporcionais ao
-// tamanho do polígono (em graus), não um valor fixo, pra continuar
-// funcionando tanto num contrato pequeno quanto num grande.
+// Poços com coordenada real (base ANP/BDEP, ver item.coords) são
+// posicionados exatamente onde foram perfurados. Só poços sem coords
+// (ex.: marco "previsto" de um poço ainda não perfurado) caem no fallback
+// de aproximação dentro do polígono do contrato, espalhando em círculo
+// quando há mais de um caso assim no mesmo projeto pra não ficarem
+// empilhados. O ponto-base do fallback fica deslocado pro sul do centro
+// (não em cima dele) porque é ali que o popup do projeto abre (clique no
+// polígono ou openPopup() sem argumento usam o centro) — sem esse
+// deslocamento, o próprio popup tamparia o poço aproximado. Deslocamento e
+// raio são proporcionais ao tamanho do polígono (em graus), não um valor
+// fixo, pra continuar funcionando tanto num contrato pequeno quanto num
+// grande.
 function buildWellMarkers(project, bounds, color) {
   const wells = [];
   for (const ws of project.workstreams) {
@@ -168,15 +171,22 @@ function buildWellMarkers(project, bounds, color) {
   const baseLng = center.lng;
   const radiusLat = Math.max(latSpan * 0.12, 0.01);
   const radiusLng = Math.max(lngSpan * 0.12, 0.01);
+  const approxWells = wells.filter((item) => !item.coords);
 
   const group = L.layerGroup();
-  wells.forEach((item, i) => {
-    let lat = baseLat;
-    let lng = baseLng;
-    if (wells.length > 1) {
-      const angle = (2 * Math.PI * i) / wells.length;
-      lat += Math.sin(angle) * radiusLat;
-      lng += Math.cos(angle) * radiusLng;
+  wells.forEach((item) => {
+    let lat, lng;
+    if (item.coords) {
+      [lat, lng] = item.coords;
+    } else {
+      lat = baseLat;
+      lng = baseLng;
+      if (approxWells.length > 1) {
+        const i = approxWells.indexOf(item);
+        const angle = (2 * Math.PI * i) / approxWells.length;
+        lat += Math.sin(angle) * radiusLat;
+        lng += Math.cos(angle) * radiusLng;
+      }
     }
     const marker = L.marker([lat, lng], { icon: wellDivIcon(color), zIndexOffset: 500 });
     marker.bindTooltip(`${escapeHtml(item.name)}<br>${formatBR(item.date)}${item.approx ? ' (aprox.)' : ''}`, {

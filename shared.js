@@ -135,8 +135,14 @@ function seedState() {
   // perfuração) | undefined (losango genérico). approx: true quando só o
   // mês/ano da data era conhecido (o dia usa 01 como placeholder) — some
   // visualmente do nome (que fica curto) mas continua exposto no tooltip,
-  // para não esconder a incerteza.
-  const m = (name, date, done, icon, approx) => ({ id: uid('m'), type: 'milestone', name, date, done: !!done, icon, approx: !!approx });
+  // para não esconder a incerteza. coords: [lat, lng] real (cadastro de
+  // poços da ANP/BDEP) — só em marcos de poço; usado pelo mapa pra
+  // posicionar o marcador no local exato em vez de uma aproximação.
+  const m = (name, date, done, icon, approx, coords) => {
+    const item = { id: uid('m'), type: 'milestone', name, date, done: !!done, icon, approx: !!approx };
+    if (coords) item.coords = coords;
+    return item;
+  };
   const ws = (name, items) => ({ id: uid('ws'), name, items });
   const proj = (name, color, group, workstreams) => ({ id: uid('p'), name, color, group, collapsed: false, workstreams });
 
@@ -182,6 +188,10 @@ function seedState() {
           m('Assinatura', '2018-01-31', true, 'contract'),
           m('FID', '2025-03-21', true, 'contract'),
         ]),
+        ws('Poços Exploratórios', [
+          m('Poço 3-SHEL-30-RJS', '2019-08-05', true, 'well', false, [-25.0377719444, -42.9877680555]),
+          m('Poço 3-SHEL-32D-RJS', '2020-03-28', true, 'well', false, [-25.0007769444, -43.0176375]),
+        ]),
         ws('Primeiro Óleo por FPSO', [
           m('FPSO Gato do Mato (previsto)', '2029-01-01', false, 'fpso', true),
         ]),
@@ -216,7 +226,7 @@ function seedState() {
           m('Devolução', '2024-08-01', true, 'contract', true),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço 1-BP-12D-RJS (poço seco)', '2024-08-01', true, 'well', true),
+          m('Poço 1-BP-12D-RJS (poço seco)', '2024-08-08', true, 'well', false, [-25.7683027777, -42.26555]),
         ]),
       ]),
       // Peroba e Alto de Cabo Frio Oeste: chegamos a marcar como "status
@@ -231,7 +241,7 @@ function seedState() {
           m('Devolução', '2021-01-01', true, 'contract', true),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço pioneiro (gás com CO2, sem viabilidade)', '2019-02-01', true, 'well', true),
+          m('Poço pioneiro 1-BRSA-1363-RJS (gás com CO2, sem viabilidade)', '2019-01-13', true, 'well', false, [-25.8670094444, -42.8721602777]),
         ]),
       ]),
       proj('Alto de Cabo Frio Oeste', PALETTE[0], 'devolvidos', [
@@ -241,7 +251,7 @@ function seedState() {
           m('Devolução', '2024-09-01', true, 'contract', true),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço pioneiro (navio Brava Star)', '2019-10-01', true, 'well', true),
+          m('Poço pioneiro 1-SHEL-31-RJS (navio Brava Star)', '2019-12-01', true, 'well', false, [-24.1683375, -41.554565]),
         ]),
       ]),
       proj('Alto de Cabo Frio Central', PALETTE[1], 'exploracao', [
@@ -250,7 +260,10 @@ function seedState() {
           m('Assinatura', '2018-01-31', true, 'contract'),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço pioneiro 1-BRSA-1383A-RJS (teste de formação)', '2022-07-01', true, 'well', true),
+          m('Poço piloto 1-BRSA-1383-RJS (sem indícios de pré-sal)', '2022-01-14', true, 'well', false, [-24.0065952777, -41.2217283333]),
+          m('Poço pioneiro 1-BRSA-1383A-RJS (teste de formação)', '2022-04-22', true, 'well', false, [-24.0069738888, -41.2217544444]),
+          m('Poço de extensão 3-BRSA-1398-RJS', '2025-06-21', true, 'well', false, [-23.9855466666, -41.0245102777]),
+          m('Poço pioneiro adjacente 4-BRSA-1402-RJS', '2025-08-30', true, 'well', false, [-24.0024966666, -40.8114041666]),
         ]),
       ]),
       proj('Uirapuru', PALETTE[2], 'exploracao', [
@@ -259,7 +272,9 @@ function seedState() {
           m('Assinatura', '2018-12-17', true, 'contract'),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço pioneiro (descoberta)', '2020-04-01', true, 'well', true),
+          m('Poço pioneiro 1-BRSA-1373-SPS', '2019-11-19', true, 'well', false, [-25.1068191666, -43.8094255555]),
+          m('Poço 1-BRSA-1373A-SPS (sem indícios de pré-sal)', '2019-11-26', true, 'well', false, [-25.1068191666, -43.8094255555]),
+          m('Poço 1-BRSA-1373B-SPS (descoberta)', '2020-03-20', true, 'well', false, [-25.1073161111, -43.8094705555]),
         ]),
       ]),
       proj('Dois Irmãos', PALETTE[3], 'exploracao', [
@@ -268,7 +283,7 @@ function seedState() {
           m('Assinatura', '2018-12-17', true, 'contract'),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço pioneiro (poço seco, navio Ocean Courage) — bloco devolvido', '2022-01-01', true, 'well', true),
+          m('Poço pioneiro 1-BRSA-1384-RJS (poço seco) — bloco devolvido', '2022-04-21', true, 'well', false, [-23.9493144444, -40.5409130555]),
         ]),
       ]),
       proj('Três Marias', PALETTE[4], 'devolvidos', [
@@ -278,7 +293,7 @@ function seedState() {
           m('Devolução', '2023-10-01', true, 'contract', true),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço 1-BRSA-1382D-RJS (indícios sem viabilidade)', '2022-03-01', true, 'well', true),
+          m('Poço 1-BRSA-1382D-RJS (indícios sem viabilidade)', '2022-02-01', true, 'well', false, [-24.9830291666, -42.0607191666]),
         ]),
       ]),
       // Saturno: a data de devolução abaixo foi corrigida — o poço seco
@@ -294,7 +309,7 @@ function seedState() {
           m('Devolução', '2022-10-01', true, 'contract', true),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço 1-SHEL-33-RJS "Saturno1" (poço seco)', '2020-05-01', true, 'well', true),
+          m('Poço 1-SHEL-33-RJS "Saturno1" (poço seco)', '2020-05-30', true, 'well', false, [-25.0051347222, -41.141395]),
         ]),
       ]),
       proj('Titã', PALETTE[6], 'devolvidos', [
@@ -304,7 +319,7 @@ function seedState() {
           m('Devolução', '2025-09-30', true, 'contract'),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço 1-EMEB-2-RJS "Titã-1" (indícios, avaliado como não comercial)', '2021-11-01', true, 'well', true),
+          m('Poço 1-EMEB-2-RJS "Titã-1" (indícios, avaliado como não comercial)', '2021-10-23', true, 'well', false, [-24.6917719444, -41.0392758333]),
         ]),
       ]),
       proj('Sudoeste de Tartaruga Verde', PALETTE[7], 'exploracao', [
@@ -313,7 +328,8 @@ function seedState() {
           m('Assinatura', '2018-12-17', true, 'contract'),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço 4-BRSA-1403D-RJS (descoberta)', '2025-11-01', true, 'well', true),
+          m('Poço 1-BRSA-1375-RJS (sem indícios de pré-sal)', '2020-03-28', true, 'well', false, [-23.0201805555, -40.7220438888]),
+          m('Poço 4-BRSA-1403D-RJS (descoberta)', '2025-11-10', true, 'well', false, [-23.0157605555, -40.7963169444]),
         ]),
       ]),
       proj('Aram', PALETTE[8], 'exploracao', [
@@ -322,9 +338,13 @@ function seedState() {
           m('Assinatura', '2020-03-30', true, 'contract'),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço pioneiro "Curaçao" 1-BRSA-1381-SPS (descoberta)', '2021-11-01', true, 'well', true),
-          m('Poço 4-BRSA-1395-SPS (óleo e gás)', '2025-03-01', true, 'well', true),
-          m('Poço 3-BRSA-1396D-SPS (óleo de alta qualidade)', '2025-05-01', true, 'well', true),
+          m('Poço pioneiro "Curaçao" 1-BRSA-1381-SPS (descoberta)', '2021-12-10', true, 'well', false, [-25.6399680555, -44.6537894444]),
+          m('Poço de extensão 3-BRSA-1387D-SPS', '2023-05-29', true, 'well', false, [-25.7290438888, -44.6548777777]),
+          m('Poço 3-BRSA-1396D-SPS (óleo de alta qualidade)', '2025-04-26', true, 'well', false, [-25.6443022222, -44.6005983333]),
+          m('Poço 4-BRSA-1395-SPS (óleo e gás)', '2025-05-22', true, 'well', false, [-25.3788336111, -44.4963166666]),
+          m('Poço de extensão 3-BRSA-1400-SPS (sem indícios de pré-sal)', '2025-06-29', true, 'well', false, [-25.5827458333, -44.6510069444]),
+          m('Poço de extensão 3-BRSA-1399-SPS', '2025-09-15', true, 'well', false, [-25.6742902777, -44.6978444444]),
+          m('Poço de extensão 3-BRSA-1400A-SPS', '2025-09-29', true, 'well', false, [-25.5827458333, -44.6510069444]),
         ]),
       ]),
       proj('Búzios', PALETTE[9], 'producao', [
@@ -383,7 +403,8 @@ function seedState() {
           m('Assinatura', '2023-05-31', true, 'contract'),
         ]),
         ws('Poços Exploratórios', [
-          m('Início da perfuração (poço 1-BRSA-1401D/DA-RJS) — resultado ainda não divulgado', '2025-06-01', true, 'well', true),
+          m('Poço piloto 1-BRSA-1401D-RJS (sem indícios de pré-sal)', '2025-07-08', true, 'well', false, [-22.8648086111, -40.0253722222]),
+          m('Poço 1-BRSA-1401DA-RJS (atingiu o pré-sal)', '2025-10-17', true, 'well', false, [-22.8645369444, -40.0254675]),
         ]),
       ]),
       proj('Norte de Brava', PALETTE[4], 'producao', [
@@ -401,7 +422,7 @@ function seedState() {
           m('Assinatura', '2023-07-05', true, 'contract'),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço pioneiro 1-BP-13-SPS (descoberta)', '2025-08-01', true, 'well', true),
+          m('Poço pioneiro 1-BP-13-SPS (descoberta)', '2025-07-17', true, 'well', false, [-26.492925, -43.4648333333]),
         ]),
       ]),
       proj('Sudoeste de Sagitário', PALETTE[6], 'exploracao', [
@@ -410,7 +431,8 @@ function seedState() {
           m('Assinatura', '2023-07-05', true, 'contract'),
         ]),
         ws('Poços Exploratórios', [
-          m('Poço de extensão 3-BRSA-1388DA-SPS (resultado abaixo do esperado)', '2024-01-01', true, 'well', true),
+          m('Poço piloto 3-BRSA-1388D-SPS (sem indícios de pré-sal)', '2023-06-23', true, 'well', false, [-25.1666836111, -44.1801369444]),
+          m('Poço de extensão 3-BRSA-1388DA-SPS (resultado abaixo do esperado)', '2023-10-11', true, 'well', false, [-25.1664525, -44.1807536111]),
         ]),
       ]),
       proj('Tupinambá', PALETTE[7], 'exploracao', [
@@ -473,15 +495,33 @@ function seedState() {
 // v5: workstreams "Poços Exploratórios" dos blocos devolvidos (Pau-Brasil,
 // Três Marias, Saturno, Titã) + corrige a data de devolução do Saturno
 // (ver FIELD_CORRECTIONS).
-const SEED_VERSION = 5;
+// v6: dados reais de localização e data da base oficial de poços da
+// ANP/BDEP (Tabela_pocos, ago/2026) — substitui aproximações por
+// coordenadas e datas exatas (campo "coords" em m(), ver FIELD_CORRECTIONS
+// para marcos com nome inalterado) e adiciona poços até então não
+// rastreados para Sul de Gato do Mato, Alto de Cabo Frio Central,
+// Uirapuru, Sudoeste de Tartaruga Verde, Aram, Água Marinha e Sudoeste de
+// Sagitário. Não inclui os grandes campos em produção (Búzios, Itapu,
+// Sépia, Atapu etc.), que têm dezenas a centenas de poços na base ANP —
+// fora da granularidade deste roadmap.
+const SEED_VERSION = 6;
 
 // Nomes antigos de marco que migraram para um nome novo em seedState() —
 // sem isso, o merge abaixo (que só adiciona, nunca substitui) deixaria o
 // marco antigo e o novo lado a lado. Chave: nome do projeto; valor: nomes
 // de marco antigos a remover ao mesclar.
 const RENAMED_MILESTONES = {
-  'Peroba': ['Status contestado (PPSA: ativo / imprensa: devolvido)'],
-  'Alto de Cabo Frio Oeste': ['Status contestado (PPSA: ativo / imprensa: devolvido)'],
+  'Peroba': [
+    'Status contestado (PPSA: ativo / imprensa: devolvido)',
+    'Poço pioneiro (gás com CO2, sem viabilidade)',
+  ],
+  'Alto de Cabo Frio Oeste': [
+    'Status contestado (PPSA: ativo / imprensa: devolvido)',
+    'Poço pioneiro (navio Brava Star)',
+  ],
+  'Uirapuru': ['Poço pioneiro (descoberta)'],
+  'Dois Irmãos': ['Poço pioneiro (poço seco, navio Ocean Courage) — bloco devolvido'],
+  'Água Marinha': ['Início da perfuração (poço 1-BRSA-1401D/DA-RJS) — resultado ainda não divulgado'],
 };
 
 // Correções pontuais de um campo que já se sabe estar errado (bug de
@@ -491,13 +531,61 @@ const RENAMED_MILESTONES = {
 const FIELD_CORRECTIONS = [
   {
     project: 'Norte de Brava', workstream: 'Primeiro Óleo por FPSO', item: 'Anita Garibaldi',
-    field: 'date', value: '2023-08-16',
+    fields: { date: '2023-08-16' },
   },
   {
     // Registrada por engano com a data do poço seco (05/2020); a devolução
     // real do bloco só ocorreu no 4º tri/2022 (ver comentário no seed).
     project: 'Saturno', workstream: 'Marcos do Contrato', item: 'Devolução',
-    field: 'date', value: '2022-10-01',
+    fields: { date: '2022-10-01' },
+  },
+  // Datas exatas e coordenadas reais (base de poços ANP/BDEP,
+  // ago/2026) substituindo aproximações anteriores — nomes de marco
+  // inalterados, então o merge (que só adiciona por nome) não pegaria
+  // essas correções sozinho.
+  {
+    project: 'Alto de Cabo Frio Central', workstream: 'Poços Exploratórios', item: 'Poço pioneiro 1-BRSA-1383A-RJS (teste de formação)',
+    fields: { date: '2022-04-22', coords: [-24.0069738888, -41.2217544444] },
+  },
+  {
+    project: 'Sudoeste de Tartaruga Verde', workstream: 'Poços Exploratórios', item: 'Poço 4-BRSA-1403D-RJS (descoberta)',
+    fields: { date: '2025-11-10', coords: [-23.0157605555, -40.7963169444] },
+  },
+  {
+    project: 'Aram', workstream: 'Poços Exploratórios', item: 'Poço pioneiro "Curaçao" 1-BRSA-1381-SPS (descoberta)',
+    fields: { date: '2021-12-10', coords: [-25.6399680555, -44.6537894444] },
+  },
+  {
+    project: 'Aram', workstream: 'Poços Exploratórios', item: 'Poço 4-BRSA-1395-SPS (óleo e gás)',
+    fields: { date: '2025-05-22', coords: [-25.3788336111, -44.4963166666] },
+  },
+  {
+    project: 'Aram', workstream: 'Poços Exploratórios', item: 'Poço 3-BRSA-1396D-SPS (óleo de alta qualidade)',
+    fields: { date: '2025-04-26', coords: [-25.6443022222, -44.6005983333] },
+  },
+  {
+    project: 'Bumerangue', workstream: 'Poços Exploratórios', item: 'Poço pioneiro 1-BP-13-SPS (descoberta)',
+    fields: { date: '2025-07-17', coords: [-26.492925, -43.4648333333] },
+  },
+  {
+    project: 'Pau-Brasil', workstream: 'Poços Exploratórios', item: 'Poço 1-BP-12D-RJS (poço seco)',
+    fields: { date: '2024-08-08', coords: [-25.7683027777, -42.26555] },
+  },
+  {
+    project: 'Três Marias', workstream: 'Poços Exploratórios', item: 'Poço 1-BRSA-1382D-RJS (indícios sem viabilidade)',
+    fields: { date: '2022-02-01', coords: [-24.9830291666, -42.0607191666] },
+  },
+  {
+    project: 'Saturno', workstream: 'Poços Exploratórios', item: 'Poço 1-SHEL-33-RJS "Saturno1" (poço seco)',
+    fields: { date: '2020-05-30', coords: [-25.0051347222, -41.141395] },
+  },
+  {
+    project: 'Titã', workstream: 'Poços Exploratórios', item: 'Poço 1-EMEB-2-RJS "Titã-1" (indícios, avaliado como não comercial)',
+    fields: { date: '2021-10-23', coords: [-24.6917719444, -41.0392758333] },
+  },
+  {
+    project: 'Sudoeste de Sagitário', workstream: 'Poços Exploratórios', item: 'Poço de extensão 3-BRSA-1388DA-SPS (resultado abaixo do esperado)',
+    fields: { date: '2023-10-11', coords: [-25.1664525, -44.1807536111] },
   },
 ];
 
@@ -537,7 +625,7 @@ function mergeSeedUpdates(saved) {
     const p = saved.projects.find((pr) => pr.name === fix.project);
     const w = p && p.workstreams.find((ws) => ws.name === fix.workstream);
     const i = w && w.items.find((it) => it.name === fix.item);
-    if (i) i[fix.field] = fix.value;
+    if (i) Object.assign(i, fix.fields);
   }
   saved.seedVersion = SEED_VERSION;
   return saved;
