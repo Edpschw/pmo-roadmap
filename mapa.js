@@ -613,8 +613,11 @@ function buildLegend(entries) {
 }
 
 // Preservado entre re-renders (troca de modo de cor, toggle de grupo etc.)
-// pra não reabrir o painel sozinho toda vez que o usuário interage com ele.
-let panelCollapsed = false;
+// pra não reabrir/refechar o painel sozinho toda vez que o usuário interage
+// com ele. Começa fechado: o mapa é o conteúdo principal da página, e o
+// painel (com a lista dos 29 contratos) tampava boa parte dele logo na
+// abertura — melhor deixar o usuário abrir quando quiser mexer nas camadas.
+let panelCollapsed = true;
 
 function renderPanel() {
   const panelEl = document.getElementById('mapPanel');
