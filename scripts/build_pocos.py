@@ -183,17 +183,22 @@ def main(csv_path, out_path):
             pocos[campo] = matched
         report.append((campo + ' (contexto)', len(matched)))
 
-    # "Todos os poços do pré-sal": todo poço offshore (TERRA_MAR='M') das
-    # bacias de Santos e Campos que ainda não entrou em nenhum contrato ou
-    # campo de contexto acima — visão completa da atividade de perfuração
-    # nas duas bacias do pré-sal, além dos 24 contratos/campos já
-    # nomeados. Onshore (poços em terra dessas bacias) fica de fora: não
-    # tem relação com o play do pré-sal.
+    # "Todos os poços do pré-sal": só poços que a ANP confirma terem
+    # atingido o pré-sal (ATINGIU_PRESAL='S') — não todo poço das bacias de
+    # Santos e Campos, que também têm décadas de produção pós-sal
+    # convencional (Marlim, Albacora, Barracuda etc.) sem relação com o
+    # play do pré-sal; incluir esses poluiria o mapa com pontos fora do
+    # tema. 'I' (indeterminado) e vazio (sem informação, comum em poços
+    # recentes sob confidencialidade) ficam de fora por serem incertos —
+    # mais conservador que arriscar incluir poço que não é do pré-sal.
+    # Ainda exclui quem já entrou em algum contrato/campo nomeado acima.
     outros = []
     for r in rows:
         if (r['BACIA'] or '').strip() not in BACIAS:
             continue
         if (r['TERRA_MAR'] or '').strip() != 'M':
+            continue
+        if (r['ATINGIU_PRESAL'] or '').strip() != 'S':
             continue
         if r['POCO'].strip() in used_poco_codes:
             continue

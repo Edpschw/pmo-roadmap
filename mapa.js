@@ -14,13 +14,13 @@
 const GEOJSON_URL = 'data/contratos.geojson';
 // Poços da base cadastral da ANP/BDEP (ver scripts/build_pocos.py), em duas
 // partes: "pocos" tem os poços de cada um dos 24 contratos/campos nomeados
-// (rótulo curado quando o poço também é marco do roadmap), "outros" tem
-// todo o resto — todo poço offshore das bacias de Santos e Campos (o play
-// do pré-sal) que não pertence a nenhum desses contratos, ~4 mil poços.
-// Fica fora do seed do roadmap de propósito: os campos em produção têm de
-// dezenas a mais de cem poços cada (Búzios 153, Tupi 159, Mero 74) — como
-// marco de Gantt isso inviabilizaria a leitura do roadmap, mas no mapa é
-// exatamente o que se quer ver.
+// (rótulo curado quando o poço também é marco do roadmap), "outros" tem o
+// resto do play do pré-sal — poços offshore de Santos/Campos com pré-sal
+// confirmado pela ANP (ATINGIU_PRESAL='S') que não pertencem a nenhum
+// desses contratos, ~280 poços. Fica fora do seed do roadmap de propósito:
+// os campos em produção têm de dezenas a mais de cem poços cada (Búzios
+// 153, Tupi 159, Mero 74) — como marco de Gantt isso inviabilizaria a
+// leitura do roadmap, mas no mapa é exatamente o que se quer ver.
 const POCOS_URL = 'data/pocos.json';
 // Camada de contexto: outros campos do polígono do pré-sal que não são um
 // dos 29 contratos rastreados no roadmap — só pra dar noção de onde eles
@@ -84,14 +84,21 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 
 // Adicionadas antes das camadas de projeto para ficarem visualmente por
 // baixo delas (Leaflet empilha na ordem de addTo). outrosPocosRenderer é
-// canvas (não SVG): com ~4 mil pontos da camada "todos os poços do
-// pré-sal" (ver OUTROS_POCOS_COLOR), um <canvas> só é muito mais leve que
-// 4 mil elementos SVG individuais no DOM.
+// canvas (não SVG): mesmo já filtrada a só poços confirmados de pré-sal
+// (ver build_pocos.py), um <canvas> só continua mais leve que um elemento
+// SVG por marcador.
 const presaltFieldsLayer = L.layerGroup().addTo(map);
 let presaltFieldsVisible = true;
 const outrosPocosRenderer = L.canvas({ padding: 0.5 });
-const outrosPocosLayer = L.layerGroup().addTo(map);
+const outrosPocosLayer = L.layerGroup();
 let outrosPocosVisible = true;
+// Zoom mínimo pra "Todos os poços do pré-sal" aparecer: são poços fora dos
+// contratos rastreados, então mesmo já filtrados a só pré-sal confirmado
+// (283 poços) eles poluem a visão geral do Brasil inteiro (zoom inicial,
+// ~6-7) — um zoom intermediário, nem tão baixo quanto essa visão geral nem
+// tão alto quanto focar um contrato específico, é o ponto em que já dá pra
+// ver a região de Santos/Campos sem a tela virar uma nuvem de pontos.
+const OUTROS_POCOS_MIN_ZOOM = 8;
 
 const groupLayers = {};
 for (const g of GROUP_DEFS) groupLayers[g.id] = L.layerGroup().addTo(map);
@@ -346,10 +353,10 @@ function registerWellSet(key, project, bounds, color, targetLayer) {
 }
 
 // Poço genérico da base ANP/BDEP sem vínculo com nenhum dos 24
-// contratos/campos nomeados — "todos os poços do pré-sal" (ver campo
-// "outros" em data/pocos.json e o comentário em cima de
-// OUTROS_POCOS_COLOR). Marcador mais simples (círculo, sem tooltip com
-// nome de marco) porque são ~4 mil pontos: nada nesse volume é "curado".
+// contratos/campos nomeados, mas com pré-sal confirmado pela ANP — "todos
+// os poços do pré-sal" (ver campo "outros" em data/pocos.json, filtrado em
+// build_pocos.py). Marcador mais simples (círculo, sem rótulo curado):
+// nesse volume não há marco de roadmap pra casar.
 const OUTROS_POCOS_COLOR = '#6b7280';
 function addOutrosPocoMarker(targetLayer, renderer, w) {
   const marker = L.circleMarker(w.c, {
@@ -471,6 +478,9 @@ async function init() {
     map.fitBounds(bounds, { padding: [24, 24] });
   }
 
+  map.on('zoomend', updateOutrosPocosVisibility);
+  updateOutrosPocosVisibility();
+
   renderPanel();
 }
 
@@ -527,10 +537,20 @@ function togglePresaltFields(visible) {
   else map.removeLayer(presaltFieldsLayer);
 }
 
+// Únicos poços com regra de zoom no mapa (ver OUTROS_POCOS_MIN_ZOOM) — os
+// dos contratos rastreados ficam com o polígono deles em qualquer zoom, mas
+// estes são muitos poços genéricos espalhados fora de qualquer contrato, e
+// só cabem na tela sem poluir a partir de um zoom intermediário.
+function updateOutrosPocosVisibility() {
+  const show = outrosPocosVisible && map.getZoom() >= OUTROS_POCOS_MIN_ZOOM;
+  const shown = map.hasLayer(outrosPocosLayer);
+  if (show && !shown) map.addLayer(outrosPocosLayer);
+  else if (!show && shown) map.removeLayer(outrosPocosLayer);
+}
+
 function toggleOutrosPocos(visible) {
   outrosPocosVisible = visible;
-  if (visible) map.addLayer(outrosPocosLayer);
-  else map.removeLayer(outrosPocosLayer);
+  updateOutrosPocosVisibility();
 }
 
 function renderColorModeControl(container) {
@@ -639,7 +659,7 @@ function renderPanel() {
   const outrosNote = document.createElement('p');
   outrosNote.className = 'map-panel-note';
   outrosNote.style.marginTop = '0';
-  outrosNote.textContent = 'Todo poço offshore de Santos e Campos fora dos contratos rastreados (pontos cinza) — fonte: ANP/BDEP.';
+  outrosNote.textContent = 'Poços com pré-sal confirmado pela ANP, fora dos contratos rastreados (pontos cinza) — aparecem a partir de um zoom intermediário, pra não poluir a visão geral.';
   outrosSection.appendChild(outrosNote);
   el.appendChild(outrosSection);
 
