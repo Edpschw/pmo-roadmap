@@ -421,6 +421,43 @@ function seedState() {
 
 /* -------------------------------- State -------------------------------- */
 
+// Incrementar sempre que seedState() ganhar workstreams/marcos novos que
+// devem chegar automaticamente a quem já tem estado salvo no navegador
+// (ver mergeSeedUpdates). Estado salvo sem "seedVersion" é tratado como 0.
+const SEED_VERSION = 2;
+
+// Aplica ao estado salvo do usuário só o que existe em seedState() e ainda
+// não existe localmente — nunca sobrescreve nem remove nada que o usuário
+// já tenha (editado ou apagado de propósito). Casa projeto por nome e,
+// dentro dele, workstream por nome; workstream nova é adicionada inteira,
+// workstream já existente ganha apenas os itens (por nome) que faltarem.
+// Projetos que o usuário não tem salvos (removidos ou nunca importados)
+// não são recriados.
+function mergeSeedUpdates(saved) {
+  const reference = seedState();
+  for (const refProj of reference.projects) {
+    const savedProj = saved.projects.find((p) => p.name === refProj.name);
+    if (!savedProj) continue;
+    for (const refWs of refProj.workstreams) {
+      const savedWs = savedProj.workstreams.find((w) => w.name === refWs.name);
+      if (!savedWs) {
+        savedProj.workstreams.push(refWs);
+        continue;
+      }
+      for (const refItem of refWs.items) {
+        const exists = savedWs.items.some((i) => i.name === refItem.name);
+        if (!exists) savedWs.items.push(refItem);
+      }
+    }
+  }
+  saved.seedVersion = SEED_VERSION;
+  return saved;
+}
+
+// Sinaliza para app.js/tabela.js, depois do carregamento, se algo foi
+// adicionado automaticamente — para mostrar um toast avisando o usuário.
+let seedMigrationHappened = false;
+
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -436,13 +473,20 @@ function loadState() {
         for (const p of parsed.projects) {
           if (!p.group) p.group = inferProjectGroup(p.name);
         }
+        if ((parsed.seedVersion || 0) < SEED_VERSION) {
+          mergeSeedUpdates(parsed);
+          seedMigrationHappened = true;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+        }
         return parsed;
       }
     }
   } catch (e) {
     console.warn('Falha ao carregar estado salvo, usando dados de exemplo.', e);
   }
-  return seedState();
+  const fresh = seedState();
+  fresh.seedVersion = SEED_VERSION;
+  return fresh;
 }
 
 function saveState() {

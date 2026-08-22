@@ -399,3 +399,10 @@ document.getElementById('addProjectBtn').addEventListener('click', addProjectPro
 document.getElementById('emptyAddProjectBtn').addEventListener('click', addProjectPrompt);
 
 renderTable();
+
+// Estado salvo em versão antiga: shared.js já mesclou automaticamente as
+// workstreams/marcos novos de seedState() (só o que faltava) — avisa aqui
+// porque showToast só existe depois que este arquivo carrega.
+if (seedMigrationHappened) {
+  showToast('Roadmap atualizado com novos marcos (ex.: poços exploratórios).');
+}

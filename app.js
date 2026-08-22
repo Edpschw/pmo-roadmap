@@ -1719,3 +1719,10 @@ document.getElementById('templateExcelBtn').addEventListener('click', () => {
 render();
 setTimeout(scrollToToday, 50);
 setInterval(render, 60000); // mantém a linha de "hoje" precisa com o passar do tempo
+
+// Estado salvo em versão antiga: shared.js já mesclou automaticamente as
+// workstreams/marcos novos de seedState() (só o que faltava) — avisa aqui
+// porque showToast só existe depois que este arquivo carrega.
+if (seedMigrationHappened) {
+  showToast('Roadmap atualizado com novos marcos (ex.: poços exploratórios).');
+}
