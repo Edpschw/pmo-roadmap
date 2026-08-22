@@ -181,6 +181,9 @@ function seedState() {
           m('Assinatura', '2018-01-31', true, 'contract'),
           m('FID', '2025-03-21', true, 'contract'),
         ]),
+        ws('Primeiro Óleo por FPSO', [
+          m('FPSO Gato do Mato (previsto)', '2029-01-01', false, 'fpso', true),
+        ]),
       ]),
       proj('Norte de Carcará', PALETTE[5], 'producao', [
         ws('Marcos do Contrato', [
@@ -208,21 +211,26 @@ function seedState() {
           m('Devolução', '2024-08-01', true, 'contract', true),
         ]),
       ]),
-      proj('Peroba', PALETTE[9], 'exploracao', [
+      // Peroba e Alto de Cabo Frio Oeste: chegamos a marcar como "status
+      // contestado" (a página da PPSA os listava como ativos), mas pesquisa
+      // adicional confirmou a devolução com múltiplas fontes independentes
+      // e consistentes entre si (consórcio, data e motivo batendo) — por
+      // isso migraram para o grupo "Devolvidos".
+      proj('Peroba', PALETTE[9], 'devolvidos', [
         ws('Marcos do Contrato', [
           m('Leilão', '2017-10-27', true, 'contract'),
           m('Assinatura', '2018-01-31', true, 'contract'),
-          m('Status contestado (PPSA: ativo / imprensa: devolvido)', '2021-01-01', false, 'contract', true),
+          m('Devolução', '2021-01-01', true, 'contract', true),
         ]),
         ws('Poços Exploratórios', [
           m('Poço pioneiro (gás com CO2, sem viabilidade)', '2019-02-01', true, 'well', true),
         ]),
       ]),
-      proj('Alto de Cabo Frio Oeste', PALETTE[0], 'exploracao', [
+      proj('Alto de Cabo Frio Oeste', PALETTE[0], 'devolvidos', [
         ws('Marcos do Contrato', [
           m('Leilão', '2017-10-27', true, 'contract'),
           m('Assinatura', '2018-01-31', true, 'contract'),
-          m('Status contestado (PPSA: ativo / imprensa: devolvido)', '2024-07-01', false, 'contract', true),
+          m('Devolução', '2024-09-01', true, 'contract', true),
         ]),
         ws('Poços Exploratórios', [
           m('Poço pioneiro (navio Brava Star)', '2019-10-01', true, 'well', true),
@@ -310,6 +318,9 @@ function seedState() {
           m('Almirante Tamandaré', '2025-02-15', true, 'fpso'),
           m('P-78', '2025-12-31', true, 'fpso'),
           m('P-79', '2026-05-01', true, 'fpso'),
+          m('P-80 (previsto)', '2027-01-01', false, 'fpso', true),
+          m('P-82 (previsto)', '2027-04-01', false, 'fpso', true),
+          m('P-83 (previsto)', '2027-07-01', false, 'fpso', true),
         ]),
       ]),
       proj('Itapu', PALETTE[0], 'producao', [
@@ -325,18 +336,22 @@ function seedState() {
         ws('Marcos do Contrato', [
           m('Leilão', '2021-12-17', true, 'contract'),
           m('Assinatura', '2022-04-27', true, 'contract'),
+          m('FID Sépia-2', '2024-05-27', true, 'contract'),
         ]),
         ws('Primeiro Óleo por FPSO', [
           m('Carioca (regime anterior)', '2021-08-23', true, 'fpso'),
+          m('P-85 (previsto)', '2029-01-01', false, 'fpso', true),
         ]),
       ]),
       proj('Atapu', PALETTE[2], 'producao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2021-12-17', true, 'contract'),
           m('Assinatura', '2022-04-27', true, 'contract'),
+          m('FID Atapu-2', '2024-05-27', true, 'contract'),
         ]),
         ws('Primeiro Óleo por FPSO', [
           m('P-70 (regime anterior)', '2020-06-25', true, 'fpso'),
+          m('P-84 (previsto)', '2029-01-01', false, 'fpso', true),
         ]),
       ]),
       proj('Água Marinha', PALETTE[3], 'exploracao', [
@@ -421,28 +436,49 @@ function seedState() {
 
 /* -------------------------------- State -------------------------------- */
 
-// Incrementar sempre que seedState() ganhar workstreams/marcos novos que
-// devem chegar automaticamente a quem já tem estado salvo no navegador
-// (ver mergeSeedUpdates). Estado salvo sem "seedVersion" é tratado como 0.
-const SEED_VERSION = 2;
+// Incrementar sempre que seedState() ganhar workstreams/marcos novos, ou
+// corrigir dados existentes, que devem chegar automaticamente a quem já
+// tem estado salvo no navegador (ver mergeSeedUpdates). Estado salvo sem
+// "seedVersion" é tratado como 0.
+// v2: workstreams "Poços Exploratórios". v3: FPSOs previstos (Búzios,
+// Sul de Gato do Mato, Sépia-2, Atapu-2) + Peroba/Alto de Cabo Frio Oeste
+// confirmados como devolvidos (grupo e nome do marco de status).
+const SEED_VERSION = 3;
+
+// Nomes antigos de marco que migraram para um nome novo em seedState() —
+// sem isso, o merge abaixo (que só adiciona, nunca substitui) deixaria o
+// marco antigo e o novo lado a lado. Chave: nome do projeto; valor: nomes
+// de marco antigos a remover ao mesclar.
+const RENAMED_MILESTONES = {
+  'Peroba': ['Status contestado (PPSA: ativo / imprensa: devolvido)'],
+  'Alto de Cabo Frio Oeste': ['Status contestado (PPSA: ativo / imprensa: devolvido)'],
+};
 
 // Aplica ao estado salvo do usuário só o que existe em seedState() e ainda
 // não existe localmente — nunca sobrescreve nem remove nada que o usuário
-// já tenha (editado ou apagado de propósito). Casa projeto por nome e,
-// dentro dele, workstream por nome; workstream nova é adicionada inteira,
-// workstream já existente ganha apenas os itens (por nome) que faltarem.
-// Projetos que o usuário não tem salvos (removidos ou nunca importados)
-// não são recriados.
+// já tenha editado ou adicionado por conta própria. Casa projeto por nome
+// e, dentro dele, workstream por nome; workstream nova é adicionada
+// inteira, workstream já existente ganha apenas os itens (por nome) que
+// faltarem. Projetos que o usuário não tem salvos (removidos ou nunca
+// importados) não são recriados. O grupo (Exploração/Produção/Devolvidos)
+// é sincronizado com a referência, já que reflete a situação real do
+// contrato (não uma preferência pessoal) — se você reclassificou um
+// projeto de propósito, ajuste de novo depois de uma migração.
 function mergeSeedUpdates(saved) {
   const reference = seedState();
   for (const refProj of reference.projects) {
     const savedProj = saved.projects.find((p) => p.name === refProj.name);
     if (!savedProj) continue;
+    savedProj.group = refProj.group;
+    const renamed = RENAMED_MILESTONES[refProj.name];
     for (const refWs of refProj.workstreams) {
       const savedWs = savedProj.workstreams.find((w) => w.name === refWs.name);
       if (!savedWs) {
         savedProj.workstreams.push(refWs);
         continue;
+      }
+      if (renamed) {
+        savedWs.items = savedWs.items.filter((i) => !renamed.includes(i.name));
       }
       for (const refItem of refWs.items) {
         const exists = savedWs.items.some((i) => i.name === refItem.name);
