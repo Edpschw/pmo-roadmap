@@ -442,8 +442,12 @@ function seedState() {
 // "seedVersion" é tratado como 0.
 // v2: workstreams "Poços Exploratórios". v3: FPSOs previstos (Búzios,
 // Sul de Gato do Mato, Sépia-2, Atapu-2) + Peroba/Alto de Cabo Frio Oeste
-// confirmados como devolvidos (grupo e nome do marco de status).
-const SEED_VERSION = 3;
+// confirmados como devolvidos (grupo e nome do marco de status). v4:
+// corrige a data da Anita Garibaldi (ver FIELD_CORRECTIONS) e passa a
+// travar o arraste de item em zoom muito baixo (ver MIN_PX_PER_DAY_FOR_DRAG
+// em app.js) — a causa provável do erro: nessa escala poucos pixels de
+// mouse já representam anos, e um clique impreciso vira arraste enorme.
+const SEED_VERSION = 4;
 
 // Nomes antigos de marco que migraram para um nome novo em seedState() —
 // sem isso, o merge abaixo (que só adiciona, nunca substitui) deixaria o
@@ -453,6 +457,17 @@ const RENAMED_MILESTONES = {
   'Peroba': ['Status contestado (PPSA: ativo / imprensa: devolvido)'],
   'Alto de Cabo Frio Oeste': ['Status contestado (PPSA: ativo / imprensa: devolvido)'],
 };
+
+// Correções pontuais de um campo que já se sabe estar errado (bug de
+// arraste em zoom baixo, erro de digitação etc.) — diferente do resto do
+// merge (que só adiciona), isto SOBRESCREVE o valor salvo do usuário. Usar
+// só para erros confirmados com fonte, nunca para forçar preferência.
+const FIELD_CORRECTIONS = [
+  {
+    project: 'Norte de Brava', workstream: 'Primeiro Óleo por FPSO', item: 'Anita Garibaldi',
+    field: 'date', value: '2023-08-16',
+  },
+];
 
 // Aplica ao estado salvo do usuário só o que existe em seedState() e ainda
 // não existe localmente — nunca sobrescreve nem remove nada que o usuário
@@ -485,6 +500,12 @@ function mergeSeedUpdates(saved) {
         if (!exists) savedWs.items.push(refItem);
       }
     }
+  }
+  for (const fix of FIELD_CORRECTIONS) {
+    const p = saved.projects.find((pr) => pr.name === fix.project);
+    const w = p && p.workstreams.find((ws) => ws.name === fix.workstream);
+    const i = w && w.items.find((it) => it.name === fix.item);
+    if (i) i[fix.field] = fix.value;
   }
   saved.seedVersion = SEED_VERSION;
   return saved;

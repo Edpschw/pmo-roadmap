@@ -1008,6 +1008,13 @@ function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverrid
 
 /* ------------------------------- Drag logic ------------------------------- */
 
+// Abaixo desse pxPerDay (ex.: escala "Tudo" cobrindo ~14 anos, onde
+// MIN_PX_PER_DAY chega a 0.02), poucos pixels de imprecisão do mouse já
+// deslocam o item por anos inteiros — um clique meio trêmulo em cima de um
+// marco de 15px vira sem querer um "arraste" de anos. Abaixo do limiar,
+// qualquer clique abre o modal de edição em vez de iniciar arraste.
+const MIN_PX_PER_DAY_FOR_DRAG = 0.2;
+
 function attachTaskDrag(bar, handleLeft, handleRight, project, ws, item) {
   bar.addEventListener('pointerdown', (e) => startDrag(e, 'move'));
   handleLeft.addEventListener('pointerdown', (e) => startDrag(e, 'resize-left'));
@@ -1016,6 +1023,10 @@ function attachTaskDrag(bar, handleLeft, handleRight, project, ws, item) {
   function startDrag(e, mode) {
     e.stopPropagation();
     e.preventDefault();
+    if (currentPxPerDay < MIN_PX_PER_DAY_FOR_DRAG) {
+      openTaskModal(project, ws, item);
+      return;
+    }
     const startX = e.clientX;
     const origStart = parseDate(item.start);
     const origEnd = parseDate(item.end);
@@ -1069,6 +1080,10 @@ function attachMilestoneDrag(dia, project, ws, item) {
   dia.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
     e.preventDefault();
+    if (currentPxPerDay < MIN_PX_PER_DAY_FOR_DRAG) {
+      openMilestoneModal(project, ws, item);
+      return;
+    }
     const startX = e.clientX;
     const origOffset = diffDays(currentRangeStart, parseDate(item.date));
     let hasMoved = false;
