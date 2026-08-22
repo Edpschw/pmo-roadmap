@@ -1,19 +1,23 @@
+/* Tema escuro/"executivo" por padrão em todo o app — mesma paleta usada
+   no mapa (mapa.html tem seu próprio conjunto --map-* redundante, mas
+   equivalente; deixado como está para não arriscar regressão lá). */
 :root {
-  --bg: #f4f6f9;
-  --panel: #ffffff;
-  --border: #e2e6ec;
-  --border-strong: #d3d9e2;
-  --text: #1c2530;
-  --text-muted: #6b7686;
-  --text-faint: #9aa4b2;
+  --bg: #0b0d10;
+  --panel: #15181d;
+  --surface: #1a1e25;
+  --border: #262b33;
+  --border-strong: #333846;
+  --text: #e8eaed;
+  --text-muted: #8b93a1;
+  --text-faint: #5c6470;
   --accent: #3457d5;
-  --accent-soft: #eaefff;
+  --accent-soft: rgba(52, 87, 213, 0.18);
   --danger: #d64545;
   --today: #e0522f;
   --row-h: 44px;
   --sidebar-w: 300px;
   --radius: 8px;
-  --shadow: 0 4px 20px rgba(20, 30, 50, 0.10);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   font-synthesis: none;
 }
 
@@ -84,14 +88,14 @@ body { display: flex; flex-direction: column; height: 100vh; }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:hover { background: #2a45b8; }
 .btn-ghost { background: var(--panel); color: var(--text); border-color: var(--border-strong); }
-.btn-ghost:hover { background: var(--bg); }
+.btn-ghost:hover { background: var(--surface); }
 .btn-icon {
   background: transparent; border: none; color: var(--text-muted);
   width: 24px; height: 24px; padding: 0; border-radius: 5px;
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 15px; line-height: 1;
 }
-.btn-icon:hover { background: var(--bg); color: var(--text); }
+.btn-icon:hover { background: var(--surface); color: var(--text); }
 
 /* ---------- Menu de opções (toolbar) ---------- */
 .options-wrap { position: relative; }
@@ -114,7 +118,7 @@ body { display: flex; flex-direction: column; height: 100vh; }
   background: transparent; border: none; color: var(--text); border-radius: 6px;
   padding: 7px 8px; cursor: pointer; width: 100%;
 }
-.options-item:hover { background: var(--bg); }
+.options-item:hover { background: var(--surface); }
 .options-item-primary { color: var(--accent); }
 
 /* ---------- Layout ---------- */
@@ -142,11 +146,11 @@ body { display: flex; flex-direction: column; height: 100vh; }
   border-bottom: 1px solid var(--border-strong);
   height: var(--header-h, 46px);
 }
-.row.group-row { background: #eef1f6; }
-.row.group-row:hover { background: #e6eaf1; }
-.row.project-row { background: #fbfcfe; }
-.row.project-row:hover { background: #f4f7ff; }
-.row.workstream-row:hover .label-cell { background: #fafbfd; }
+.row.group-row { background: var(--surface); }
+.row.group-row:hover { background: #20242c; }
+.row.project-row { background: #101317; }
+.row.project-row:hover { background: var(--surface); }
+.row.workstream-row:hover .label-cell { background: var(--surface); }
 
 .label-cell {
   flex: 0 0 var(--sidebar-w);
@@ -206,7 +210,7 @@ body { display: flex; flex-direction: column; height: 100vh; }
 .gridline.month-start { background: var(--border-strong); }
 
 .weekend-shade {
-  position: absolute; top: 0; background: rgba(28, 37, 48, 0.035); pointer-events: none;
+  position: absolute; top: 0; background: rgba(255, 255, 255, 0.045); pointer-events: none;
 }
 
 /* Cabeçalho em duas camadas: "coarse" (contexto: ano/mês/semana) e "fine"
@@ -220,12 +224,18 @@ body { display: flex; flex-direction: column; height: 100vh; }
 .header-tier-label.coarse {
   font-size: 10px; font-weight: 700; color: var(--text-faint);
   letter-spacing: .04em; text-transform: uppercase;
-  background: #fafbfd; border-bottom: 1px solid var(--border);
+  background: var(--panel); border-bottom: 1px solid var(--border);
 }
 .header-tier-label.fine {
   font-size: 11.5px; font-weight: 600; color: var(--text-muted);
 }
 .header-tier-label.fine.weekend { color: var(--today); opacity: 0.85; }
+/* Mês como linha "fine" (dentro do cabeçalho de ano): coluna estreita
+   demais pra padding lateral + texto alinhado à esquerda como as outras
+   linhas "fine" — centraliza e reduz a fonte, igual ao dia. */
+.header-tier-label.fine.unit-month {
+  padding-left: 0; justify-content: center; text-align: center; font-size: 10px;
+}
 .header-tier-label.unit-day {
   padding-left: 0; justify-content: center; text-align: center;
   font-size: 10.5px; font-weight: 600;
@@ -302,7 +312,7 @@ body { display: flex; flex-direction: column; height: 100vh; }
   position: absolute; transform: translateY(-100%);
   font-size: 11px; font-weight: 600; color: var(--text);
   text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  pointer-events: none; background: rgba(255,255,255,0.92);
+  pointer-events: none; background: rgba(21,24,29,0.92);
   padding: 1px 4px; border-radius: 4px; z-index: 13;
   box-shadow: 0 1px 2px rgba(20,30,50,0.12);
 }
@@ -323,7 +333,7 @@ body { display: flex; flex-direction: column; height: 100vh; }
 
 /* ---------- Modal ---------- */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(15, 20, 30, 0.35);
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
   display: flex; align-items: center; justify-content: center; z-index: 100;
 }
 .modal-overlay[hidden] { display: none; }
@@ -366,15 +376,16 @@ body { display: flex; flex-direction: column; height: 100vh; }
 /* ---------- Toast ---------- */
 .toast {
   position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
-  background: #1c2530; color: #fff; padding: 9px 16px; border-radius: 8px;
+  background: var(--panel); color: var(--text); border: 1px solid var(--border-strong);
+  padding: 9px 16px; border-radius: 8px;
   font-size: 12.5px; font-weight: 500; z-index: 200; box-shadow: var(--shadow);
 }
 
 /* scrollbars */
 .roadmap-scroll::-webkit-scrollbar { width: 11px; height: 11px; }
 .roadmap-scroll::-webkit-scrollbar-track { background: transparent; }
-.roadmap-scroll::-webkit-scrollbar-thumb { background: #c7cfda; border-radius: 6px; border: 3px solid var(--bg); }
-.roadmap-scroll::-webkit-scrollbar-thumb:hover { background: #aab4c3; }
+.roadmap-scroll::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 6px; border: 3px solid var(--bg); }
+.roadmap-scroll::-webkit-scrollbar-thumb:hover { background: #454b5c; }
 
 /* ---------- Visão em tabela (tabela.html) ---------- */
 .table-wrapper {
@@ -393,13 +404,13 @@ body { display: flex; flex-direction: column; height: 100vh; }
 }
 .data-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .data-table .indent-cell { width: 18px; padding: 0; }
-.data-table .item-row:hover { background: #f7f9fc; }
+.data-table .item-row:hover { background: var(--surface); }
 .data-table .placeholder-row td { color: var(--text-faint); font-size: 12.5px; font-style: italic; padding: 8px 10px 8px 34px; }
 
 .group-header-content { display: flex; align-items: center; gap: 10px; }
 .project-header-row td { background: var(--bg); border-top: 2px solid var(--border-strong); padding: 10px; }
 .project-header-row .group-name-input { font-weight: 700; font-size: 13.5px; max-width: 320px; }
-.ws-header-row td { background: #fafbfd; padding: 7px 10px 7px 30px; }
+.ws-header-row td { background: var(--surface); padding: 7px 10px 7px 30px; }
 .ws-header-row .group-name-input { font-weight: 600; font-size: 12.5px; color: var(--text-muted); max-width: 300px; }
 .group-header-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
 .btn-small { padding: 5px 10px; font-size: 11.5px; }
@@ -417,8 +428,8 @@ body { display: flex; flex-direction: column; height: 100vh; }
   display: inline-block; padding: 2px 8px; border-radius: 20px;
   font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
 }
-.type-badge.type-task { background: var(--accent-soft); color: var(--accent); }
-.type-badge.type-milestone { background: #fde9e2; color: #b8451f; }
+.type-badge.type-task { background: var(--accent-soft); color: #6f8bff; }
+.type-badge.type-milestone { background: rgba(224, 118, 47, 0.18); color: #f0965e; }
 
 .expected-cell, .empty-cell { color: var(--text-faint); font-size: 12.5px; }
 .done-cell { display: flex; align-items: center; gap: 8px; }

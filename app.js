@@ -147,7 +147,13 @@ function iterateSegments(unit, rangeStart, rangeEnd) {
 
 function formatSegmentLabel(unit, boundary, tierKind) {
   if (unit === 'year') return String(boundary.getUTCFullYear());
-  if (unit === 'month') return `${MONTHS_PT[boundary.getUTCMonth()]} ${boundary.getUTCFullYear()}`;
+  if (unit === 'month') {
+    // Como "week" logo abaixo: no nível "fine" (mês dentro de um cabeçalho
+    // de ano) a coluna é estreita demais pra "jan 2026" inteiro — o ano já
+    // está na linha "coarse" acima, então basta o mês abreviado.
+    if (tierKind === 'fine') return MONTHS_PT[boundary.getUTCMonth()];
+    return `${MONTHS_PT[boundary.getUTCMonth()]} ${boundary.getUTCFullYear()}`;
+  }
   if (unit === 'week') {
     if (tierKind === 'coarse') return `${pad2(boundary.getUTCDate())} ${MONTHS_PT[boundary.getUTCMonth()]}`;
     return boundary.getUTCDate() === 1 ? `${pad2(boundary.getUTCDate())} ${MONTHS_PT[boundary.getUTCMonth()]}` : pad2(boundary.getUTCDate());
@@ -516,7 +522,6 @@ function render() {
 
   gridEl.insertBefore(overlay, gridEl.firstChild);
   syncScaleButtons();
-  syncToggleAllButton();
   updateBarLabelPositions();
   updateTodayMarkerVisibility();
 }
@@ -1519,31 +1524,22 @@ document.getElementById('todayBtn').addEventListener('click', () => {
   scrollToToday();
 });
 
-document.getElementById('toggleAllBtn').addEventListener('click', () => {
-  const allCollapsed = isEverythingCollapsed();
-  for (const project of state.projects) project.collapsed = !allCollapsed;
-  for (const groupDef of GROUP_DEFS) state.groupCollapsed[groupDef.id] = !allCollapsed;
+// Dois botões explícitos (em vez de um só alternando "Recolher"/"Expandir"
+// conforme o estado) — mais claro quando o estado já está misto (alguns
+// grupos/projetos recolhidos, outros não), caso em que um toggle único não
+// deixa óbvio pra qual lado ele vai.
+document.getElementById('collapseAllBtn').addEventListener('click', () => {
+  for (const project of state.projects) project.collapsed = true;
+  for (const groupDef of GROUP_DEFS) state.groupCollapsed[groupDef.id] = true;
   saveState();
   render();
 });
-
-// "Tudo" inclui os grupos e os projetos — só conta como recolhido se ambos
-// os níveis estiverem, para o botão "Expandir tudo" realmente abrir tudo.
-function isEverythingCollapsed() {
-  if (!state.projects.length) return false;
-  const groupsCollapsed = GROUP_DEFS.every((g) => {
-    const hasProjects = state.projects.some((p) => (p.group || GROUP_FALLBACK) === g.id);
-    return !hasProjects || state.groupCollapsed[g.id];
-  });
-  return groupsCollapsed && state.projects.every((p) => p.collapsed);
-}
-
-// Rótulo do botão reflete o estado atual: se tudo já está recolhido, oferece
-// "Expandir tudo"; caso contrário (tudo expandido ou misto), "Recolher tudo".
-function syncToggleAllButton() {
-  const btn = document.getElementById('toggleAllBtn');
-  btn.textContent = isEverythingCollapsed() ? 'Expandir tudo' : 'Recolher tudo';
-}
+document.getElementById('expandAllBtn').addEventListener('click', () => {
+  for (const project of state.projects) project.collapsed = false;
+  for (const groupDef of GROUP_DEFS) state.groupCollapsed[groupDef.id] = false;
+  saveState();
+  render();
+});
 
 function scrollToToday() {
   if (!currentRangeStart) return;
