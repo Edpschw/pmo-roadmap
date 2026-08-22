@@ -178,62 +178,47 @@ function wellCategory(info) {
 }
 
 // Um desenho por situação, todos no mesmo viewBox 16×16 (assim o mesmo
-// iconAnchor serve pra todos) — silhuetas bem diferentes entre si de
-// propósito, já que a cor sozinha está ocupada identificando o projeto.
-// 'producao' é a torre de perfuração (o ícone original, ponto de
-// referência); as outras seguem um vocabulário comum de sinalização
-// (seta pra injeção, X pra abandonado, gota vazia/cheia pra indício/gás,
-// círculo vazio pro poço seco) que não depende de decorar cada forma —
-// dá pra reconhecer o padrão geral (cheio=achou algo, vazio=não achou,
-// seta=intervenção) mesmo sem ler a legenda.
+// iconAnchor serve pra todos). Vocabulário de símbolo de poço mais comum em
+// mapas de E&P (o mesmo círculo/triângulo/quadrado usado pelos basemaps de
+// agências como a Texas RRC e a Colorado COGCC, e pelo estilo "Petroleum"
+// do ArcGIS) em vez de pictogramas desenhados — mais reconhecível pra quem
+// já viu um mapa de poços antes, e mais simples de manter legível pequeno:
+// círculo = óleo, triângulo = gás, quadrado = injeção, vazio = não achou
+// nada (seco) ou achou pela metade (indício), X = abandonado.
 const WELL_SHAPES = {
   producao: (c) => `
-    <g fill="none" stroke="#0b0d10" stroke-width="2.3" stroke-linecap="round">
-      <path d="M8 2.3 L3 13.6 M8 2.3 L13 13.6"/>
-      <path d="M4.9 9.5 L11.1 9.5 M5.9 6.6 L10.1 6.6"/>
-    </g>
-    <g fill="none" stroke="${c}" stroke-width="1.3" stroke-linecap="round">
-      <path d="M8 2.3 L3 13.6 M8 2.3 L13 13.6"/>
-      <path d="M4.9 9.5 L11.1 9.5 M5.9 6.6 L10.1 6.6"/>
-    </g>
-    <rect x="1.8" y="13.6" width="12.4" height="1.5" rx="0.4" fill="${c}" stroke="#0b0d10" stroke-width="0.5"/>
-    <circle cx="8" cy="2.3" r="1.3" fill="${c}" stroke="#0b0d10" stroke-width="0.5"/>`,
-  injecao: (c) => `
-    <path d="M8 2 L8 9.5 M4.2 8.5 L8 12.8 L11.8 8.5" fill="none" stroke="#0b0d10" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M8 2 L8 9.5 M4.2 8.5 L8 12.8 L11.8 8.5" fill="none" stroke="${c}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="1.8" y="13.4" width="12.4" height="1.5" rx="0.4" fill="${c}" stroke="#0b0d10" stroke-width="0.5"/>`,
-  abandonado: (c) => `
-    <circle cx="8" cy="8" r="6" fill="none" stroke="#0b0d10" stroke-width="2.6"/>
-    <circle cx="8" cy="8" r="6" fill="none" stroke="${c}" stroke-width="1.6"/>
-    <path d="M5 5 L11 11 M11 5 L5 11" stroke="#0b0d10" stroke-width="2.3" stroke-linecap="round"/>
-    <path d="M5 5 L11 11 M11 5 L5 11" stroke="${c}" stroke-width="1.3" stroke-linecap="round"/>`,
-  indicio: (c) => `
-    <path d="M8 1.6 C8 1.6 3 8 3 11 C3 13.6 5.2 15 8 15 C10.8 15 13 13.6 13 11 C13 8 8 1.6 8 1.6 Z"
-      fill="none" stroke="#0b0d10" stroke-width="2.3"/>
-    <path d="M8 1.6 C8 1.6 3 8 3 11 C3 13.6 5.2 15 8 15 C10.8 15 13 13.6 13 11 C13 8 8 1.6 8 1.6 Z"
-      fill="none" stroke="${c}" stroke-width="1.3"/>`,
-  seco: (c) => `
-    <circle cx="8" cy="8" r="4.4" fill="none" stroke="#0b0d10" stroke-width="2.4"/>
-    <circle cx="8" cy="8" r="4.4" fill="none" stroke="${c}" stroke-width="1.4"/>`,
+    <circle cx="8" cy="8" r="5.4" fill="${c}" stroke="#0b0d10" stroke-width="1.4"/>`,
   gas: (c) => `
-    <path d="M8.3 1.4 C6 4.6 4.8 7 5 9.3 C5.2 11.8 6.9 13.6 9 13.4 C11.3 13.2 12.6 11.1 12.1 8.9 C11.9 8 11.2 7.2 10.7 7.7 C11 9 10.3 9.9 9.4 9.5 C10 7.3 9.4 3.4 8.3 1.4 Z"
-      fill="${c}" stroke="#0b0d10" stroke-width="1.1"/>`,
+    <path d="M8 2 L13.7 12.6 L2.3 12.6 Z" fill="${c}" stroke="#0b0d10" stroke-width="1.4" stroke-linejoin="round"/>`,
+  injecao: (c) => `
+    <rect x="3" y="3" width="10" height="10" fill="${c}" stroke="#0b0d10" stroke-width="1.4"/>`,
+  indicio: (c) => `
+    <circle cx="8" cy="8" r="5.4" fill="none" stroke="#0b0d10" stroke-width="1.4"/>
+    <path d="M8 2.6 A5.4 5.4 0 0 0 8 13.4 Z" fill="${c}"/>`,
+  seco: (c) => `
+    <circle cx="8" cy="8" r="4.2" fill="none" stroke="#0b0d10" stroke-width="1.6"/>
+    <circle cx="8" cy="8" r="4.2" fill="none" stroke="${c}" stroke-width="0.9"/>`,
+  abandonado: (c) => `
+    <circle cx="8" cy="8" r="5.4" fill="none" stroke="#0b0d10" stroke-width="1.4"/>
+    <path d="M5 5 L11 11 M11 5 L5 11" stroke="#0b0d10" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M5 5 L11 11 M11 5 L5 11" stroke="${c}" stroke-width="1.3" stroke-linecap="round"/>`,
   indefinido: (c) => `
-    <rect x="4.7" y="4.7" width="6.6" height="6.6" transform="rotate(45 8 8)" fill="none" stroke="#0b0d10" stroke-width="2.2"/>
-    <rect x="4.7" y="4.7" width="6.6" height="6.6" transform="rotate(45 8 8)" fill="none" stroke="${c}" stroke-width="1.2"/>`,
+    <circle cx="8" cy="8" r="2.6" fill="${c}" stroke="#0b0d10" stroke-width="1" fill-opacity="0.55"/>`,
 };
 
 // Ícone de poço no mapa: uma silhueta por situação (ver WELL_SHAPES e
 // wellCategory), como divIcon do Leaflet (contorno escuro pra destacar
 // tanto sobre o tile escuro quanto sobre o preenchimento colorido do
-// polígono).
+// polígono). Pequeno de propósito: contratos densos (Búzios chega a 137
+// marcadores) já ficam cheios mesmo assim — um ícone maior só empilharia
+// mais um em cima do outro.
 function wellDivIcon(color, category) {
   const shape = WELL_SHAPES[category] || WELL_SHAPES.indefinido;
   return L.divIcon({
     className: 'map-well-icon',
-    html: `<svg viewBox="0 0 16 16" width="21" height="21" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.7))">${shape(color)}</svg>`,
-    iconSize: [21, 21],
-    iconAnchor: [10.5, 18.4],
+    html: `<svg viewBox="0 0 16 16" width="13" height="13" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,0.7))">${shape(color)}</svg>`,
+    iconSize: [13, 13],
+    iconAnchor: [6.5, 6.5],
   });
 }
 
@@ -311,7 +296,7 @@ function addWellMarker(targetLayer, latlng, color, entries) {
   const extra = entries.length > 1 ? `<br>+ ${entries.length - 1} poço(s) no mesmo ponto` : '';
   marker.bindTooltip(
     `${escapeHtml(first.label)}${when ? '<br>' + when : ''}${first.approx ? ' (aprox.)' : ''}${extra}`,
-    { direction: 'top', offset: [0, -13], className: 'map-well-tooltip' },
+    { direction: 'top', offset: [0, -6], className: 'map-well-tooltip' },
   );
   if (first.info) marker.bindPopup(wellPopupHTML(first.label, first.info, color, entries.slice(1)));
   targetLayer.addLayer(marker);
