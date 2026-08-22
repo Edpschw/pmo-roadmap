@@ -142,6 +142,34 @@ function wellDivIcon(color) {
   });
 }
 
+// Fração do mapa que o contrato precisa ocupar (na maior das duas
+// dimensões — largura ou altura da tela) pros poços dele aparecerem
+// sozinhos. Comparar por dimensão, e não por área, é de propósito: os
+// blocos são quase quadrados e a tela é panorâmica, então um bloco que
+// preenche 90% da altura ainda ficaria abaixo de 50% *de área* — ou seja,
+// pela área os poços não apareceriam nem no zoom que enquadra o bloco
+// inteiro, que é justamente quando o usuário está olhando pra ele.
+const WELL_MAP_COVERAGE = 0.5;
+
+// Contratos sem poligonal na ANP (ver PROJECTS_WITHOUT_SHAPE) não têm bloco
+// pra medir, mas têm poços com coordenada real — nesses casos a referência
+// é uma caixa em volta dos próprios poços, com esta folga em graus de cada
+// lado (~0,2° de lado no total, ≈ 20 km, ordem de grandeza de um bloco do
+// pré-sal) pra que o zoom em que os poços aparecem fique parecido com o dos
+// contratos que têm poligonal.
+const WELL_ONLY_BOUNDS_PAD = 0.1;
+
+function wellItemsOf(project) {
+  const wells = [];
+  for (const ws of project.workstreams) {
+    if (ws.name !== 'Poços Exploratórios') continue;
+    for (const item of ws.items) {
+      if (item.type === 'milestone' && item.icon === 'well') wells.push(item);
+    }
+  }
+  return wells;
+}
+
 // Poços com coordenada real (base ANP/BDEP, ver item.coords) são
 // posicionados exatamente onde foram perfurados. Só poços sem coords
 // (ex.: marco "previsto" de um poço ainda não perfurado) caem no fallback
@@ -150,28 +178,25 @@ function wellDivIcon(color) {
 // empilhados. O ponto-base do fallback fica deslocado pro sul do centro
 // (não em cima dele) porque é ali que o popup do projeto abre (clique no
 // polígono ou openPopup() sem argumento usam o centro) — sem esse
-// deslocamento, o próprio popup tamparia o poço aproximado. Deslocamento e
+// deslocamento, um popup aberto tamparia o poço aproximado. Deslocamento e
 // raio são proporcionais ao tamanho do polígono (em graus), não um valor
 // fixo, pra continuar funcionando tanto num contrato pequeno quanto num
-// grande.
+// grande. Sem polígono (bounds nulo) só dá pra posicionar quem tem coords.
 function buildWellMarkers(project, bounds, color) {
-  const wells = [];
-  for (const ws of project.workstreams) {
-    if (ws.name !== 'Poços Exploratórios') continue;
-    for (const item of ws.items) {
-      if (item.type === 'milestone' && item.icon === 'well') wells.push(item);
-    }
-  }
+  const wells = wellItemsOf(project);
   if (!wells.length) return null;
 
-  const center = bounds.getCenter();
-  const latSpan = bounds.getNorth() - bounds.getSouth();
-  const lngSpan = bounds.getEast() - bounds.getWest();
-  const baseLat = center.lat - Math.max(latSpan * 0.32, 0.02);
-  const baseLng = center.lng;
-  const radiusLat = Math.max(latSpan * 0.12, 0.01);
-  const radiusLng = Math.max(lngSpan * 0.12, 0.01);
   const approxWells = wells.filter((item) => !item.coords);
+  let baseLat, baseLng, radiusLat, radiusLng;
+  if (bounds) {
+    const center = bounds.getCenter();
+    const latSpan = bounds.getNorth() - bounds.getSouth();
+    const lngSpan = bounds.getEast() - bounds.getWest();
+    baseLat = center.lat - Math.max(latSpan * 0.32, 0.02);
+    baseLng = center.lng;
+    radiusLat = Math.max(latSpan * 0.12, 0.01);
+    radiusLng = Math.max(lngSpan * 0.12, 0.01);
+  }
 
   const group = L.layerGroup();
   wells.forEach((item) => {
@@ -179,6 +204,7 @@ function buildWellMarkers(project, bounds, color) {
     if (item.coords) {
       [lat, lng] = item.coords;
     } else {
+      if (!bounds) return;
       lat = baseLat;
       lng = baseLng;
       if (approxWells.length > 1) {
@@ -194,17 +220,55 @@ function buildWellMarkers(project, bounds, color) {
     });
     group.addLayer(marker);
   });
-  return group;
+  return group.getLayers().length ? group : null;
 }
 
 const wellMarkersByProjectId = {};
-function showWells(project) {
-  const group = wellMarkersByProjectId[project.id];
-  if (group) group.addTo(map);
+// Área de referência usada pra decidir se os poços do projeto aparecem —
+// a poligonal do contrato, ou a caixa em volta dos poços quando não há
+// poligonal (ver WELL_ONLY_BOUNDS_PAD).
+const wellRefBoundsByProjectId = {};
+
+function wellsOnlyBounds(project) {
+  const coords = wellItemsOf(project).filter((i) => i.coords).map((i) => i.coords);
+  if (!coords.length) return null;
+  const b = L.latLngBounds(coords);
+  const p = WELL_ONLY_BOUNDS_PAD;
+  return L.latLngBounds([b.getSouth() - p, b.getWest() - p], [b.getNorth() + p, b.getEast() + p]);
 }
-function hideWells(project) {
-  const group = wellMarkersByProjectId[project.id];
-  if (group) map.removeLayer(group);
+
+// Quanto do mapa (na maior das duas dimensões) o retângulo ocuparia no zoom
+// dado. Passa de 1 quando o contrato é maior que a tela — é o caso de estar
+// com o zoom "dentro" do bloco, em que os poços devem aparecer.
+function boundsScreenRatio(bounds, zoom) {
+  const nw = map.project(bounds.getNorthWest(), zoom);
+  const se = map.project(bounds.getSouthEast(), zoom);
+  const size = map.getSize();
+  return Math.max(Math.abs(se.x - nw.x) / size.x, Math.abs(se.y - nw.y) / size.y);
+}
+
+// Poços aparecem sozinhos conforme o zoom: sem clique nenhum, para todos os
+// contratos que tenham poço cadastrado. Critério: o contrato precisa estar
+// visível na tela e ocupar pelo menos WELL_MAP_COVERAGE dela — assim a
+// visão geral fica limpa e, ao aproximar num contrato, só os poços dele
+// aparecem. Grupo desmarcado no painel esconde os poços junto com os
+// polígonos.
+function updateWellVisibility() {
+  const mapBounds = map.getBounds();
+  const zoom = map.getZoom();
+  for (const project of state.projects) {
+    const group = wellMarkersByProjectId[project.id];
+    if (!group) continue;
+    const ref = wellRefBoundsByProjectId[project.id];
+    const groupOn = groupVisible[project.group] !== undefined
+      ? groupVisible[project.group]
+      : groupVisible[GROUP_FALLBACK] !== false;
+    const show = !!ref && groupOn && ref.intersects(mapBounds)
+      && boundsScreenRatio(ref, zoom) >= WELL_MAP_COVERAGE;
+    const shown = map.hasLayer(group);
+    if (show && !shown) group.addTo(map);
+    else if (!show && shown) map.removeLayer(group);
+  }
 }
 
 function presaltFieldPopupHTML(props) {
@@ -268,19 +332,24 @@ async function init() {
     // propaga pros filhos nem abre sozinho ao clicar no polígono no mapa —
     // precisa ligar em cada sub-camada individualmente.
     const bounds = layer.getBounds();
-    wellMarkersByProjectId[project.id] = buildWellMarkers(project, bounds, project.color);
-    layer.eachLayer((l) => {
-      l.bindPopup(popupHTML(project, feat.properties));
-      // Poços só aparecem no mapa enquanto o popup do projeto estiver
-      // aberto (clique no polígono, direto no mapa ou pela lista lateral)
-      // — escondidos de novo ao fechar, pra não poluir a visão geral.
-      l.on('popupopen', () => showWells(project));
-      l.on('popupclose', () => hideWells(project));
-    });
+    layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties)));
     const target = groupLayers[project.group] || groupLayers[GROUP_FALLBACK];
     layer.addTo(target);
     layerByProjectId[project.id] = layer;
     allBounds.push(bounds);
+  }
+
+  // Poços de TODOS os contratos que tenham poço cadastrado — inclusive os 8
+  // sem poligonal na ANP (blocos devolvidos e Sul de Gato do Mato), que
+  // ficavam completamente fora do mapa: agora que cada poço tem coordenada
+  // real, o polígono deixou de ser necessário pra posicioná-los.
+  for (const project of state.projects) {
+    const layer = layerByProjectId[project.id];
+    const polyBounds = layer ? layer.getBounds() : null;
+    const group = buildWellMarkers(project, polyBounds, project.color);
+    if (!group) continue;
+    wellMarkersByProjectId[project.id] = group;
+    wellRefBoundsByProjectId[project.id] = polyBounds || wellsOnlyBounds(project);
   }
 
   if (allBounds.length) {
@@ -288,6 +357,9 @@ async function init() {
     for (const b of allBounds.slice(1)) bounds = bounds.extend(b);
     map.fitBounds(bounds, { padding: [24, 24] });
   }
+
+  map.on('moveend zoomend', updateWellVisibility);
+  updateWellVisibility();
 
   renderPanel();
 }
@@ -305,14 +377,39 @@ function setColorMode(mode) {
   renderPanel();
 }
 
+// Zoom que enquadra o alvo (como flyToBounds faria) mas nunca abaixo do
+// necessário pros poços aparecerem. Sem isso, o arredondamento de zoom do
+// Leaflet (zoomSnap = 1) às vezes para num nível em que o bloco fica logo
+// abaixo de WELL_MAP_COVERAGE, e clicar no projeto na lista enquadraria o
+// contrato sem revelar os poços dele — exatamente o que o usuário espera
+// ver ao focar num contrato.
+function zoomToFocus(bounds) {
+  let zoom = map.getBoundsZoom(bounds, false, L.point(40, 40));
+  while (zoom < map.getMaxZoom() && boundsScreenRatio(bounds, zoom) < WELL_MAP_COVERAGE) zoom += 1;
+  return zoom;
+}
+
 function flyToProject(project) {
   const layer = layerByProjectId[project.id];
-  if (!layer) {
-    showToast(`Sem poligonal para "${project.name}": ${PROJECTS_WITHOUT_SHAPE[project.name] || 'não encontrada nos shapefiles fornecidos.'}`);
+  if (layer) {
+    const bounds = layer.getBounds();
+    // Ancorado na borda norte, não no centro: nesse zoom os poços do
+    // contrato já estão visíveis, e um popup no meio do bloco taparia
+    // justamente eles (o balão do Leaflet sobe a partir do ponto).
+    const anchor = L.latLng(bounds.getNorth(), bounds.getCenter().lng);
+    map.once('moveend', () => layer.eachLayer((l) => l.openPopup(anchor)));
+    map.flyTo(bounds.getCenter(), zoomToFocus(bounds), { duration: 0.6 });
     return;
   }
-  map.once('moveend', () => layer.eachLayer((l) => l.openPopup()));
-  map.flyToBounds(layer.getBounds(), { padding: [40, 40], duration: 0.6 });
+  // Sem poligonal, mas com poços cadastrados: vale a pena voar até eles em
+  // vez de só avisar que não há shapefile.
+  const ref = wellRefBoundsByProjectId[project.id];
+  if (ref) {
+    showToast(`Sem poligonal para "${project.name}" (${PROJECTS_WITHOUT_SHAPE[project.name] || 'não encontrada nos shapefiles fornecidos.'}) — mostrando os poços do contrato.`);
+    map.flyTo(ref.getCenter(), zoomToFocus(ref), { duration: 0.6 });
+    return;
+  }
+  showToast(`Sem poligonal para "${project.name}": ${PROJECTS_WITHOUT_SHAPE[project.name] || 'não encontrada nos shapefiles fornecidos.'}`);
 }
 
 function toggleGroup(groupId, visible) {
@@ -320,6 +417,7 @@ function toggleGroup(groupId, visible) {
   const layer = groupLayers[groupId];
   if (visible) map.addLayer(layer);
   else map.removeLayer(layer);
+  updateWellVisibility();
 }
 
 function togglePresaltFields(visible) {
@@ -462,10 +560,15 @@ function renderPanel() {
     el.appendChild(section);
   }
 
+  const wellsNote = document.createElement('p');
+  wellsNote.className = 'map-panel-note';
+  wellsNote.textContent = 'Os poços de cada contrato aparecem sozinhos ao aproximar o zoom, quando o contrato ocupa pelo menos metade do mapa.';
+  el.appendChild(wellsNote);
+
   const missingCount = Object.keys(PROJECTS_WITHOUT_SHAPE).length;
   const note = document.createElement('p');
   note.className = 'map-panel-note';
-  note.textContent = `${missingCount} projeto(s) sem poligonal disponível nos shapefiles da ANP fornecidos (clique no nome pra ver o motivo).`;
+  note.textContent = `${missingCount} projeto(s) sem poligonal disponível nos shapefiles da ANP fornecidos (clique no nome pra ver o motivo e ir até os poços).`;
   el.appendChild(note);
 }
 
