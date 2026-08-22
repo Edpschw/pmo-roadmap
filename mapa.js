@@ -83,25 +83,29 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 }).addTo(map);
 
 // Adicionadas antes das camadas de projeto para ficarem visualmente por
-// baixo delas (Leaflet empilha na ordem de addTo). outrosPocosRenderer é
-// canvas (não SVG): mesmo já filtrada a só poços confirmados de pré-sal
-// (ver build_pocos.py), um <canvas> só continua mais leve que um elemento
-// SVG por marcador.
+// baixo delas (Leaflet empilha na ordem de addTo).
 const presaltFieldsLayer = L.layerGroup().addTo(map);
 let presaltFieldsVisible = true;
-const outrosPocosRenderer = L.canvas({ padding: 0.5 });
 const outrosPocosLayer = L.layerGroup();
 let outrosPocosVisible = true;
-// Zoom mínimo pra "Todos os poços do pré-sal" aparecer: são poços fora dos
-// contratos rastreados, então mesmo já filtrados a só pré-sal confirmado
-// (283 poços) eles poluem a visão geral do Brasil inteiro (zoom inicial,
-// ~6-7) — um zoom intermediário, nem tão baixo quanto essa visão geral nem
-// tão alto quanto focar um contrato específico, é o ponto em que já dá pra
-// ver a região de Santos/Campos sem a tela virar uma nuvem de pontos.
-const OUTROS_POCOS_MIN_ZOOM = 8;
+// Zoom mínimo pra QUALQUER poço aparecer no mapa — mesma regra pros
+// nomeados (dos 24 contratos/campos) e pros genéricos ("todos os poços do
+// pré-sal"): na visão geral do Brasil inteiro (zoom inicial, ~6-7), um
+// poço é só um pontinho sem contexto, e com centenas deles a tela vira uma
+// nuvem. Um zoom intermediário — nem tão baixo quanto essa visão geral nem
+// tão alto quanto focar um contrato específico — é o ponto em que já dá
+// pra ver a região (Santos, Campos) sem poluir.
+const WELLS_MIN_ZOOM = 8;
 
 const groupLayers = {};
 for (const g of GROUP_DEFS) groupLayers[g.id] = L.layerGroup().addTo(map);
+// Poços dos contratos rastreados, um layer por grupo — separado do
+// groupLayers dos polígonos (que ficam visíveis em qualquer zoom) porque a
+// visibilidade destes depende também do zoom (ver updateWellsVisibility).
+const wellGroupLayers = {};
+for (const g of GROUP_DEFS) wellGroupLayers[g.id] = L.layerGroup();
+// Poços dos campos de contexto (ver presaltFieldsLayer) — mesma separação.
+const wellPresaltLayer = L.layerGroup();
 
 const layerByProjectId = {};
 const featureByProject = {};
@@ -149,19 +153,30 @@ function popupHTML(project, props) {
   </div>`;
 }
 
-// Ícone de poço no mapa: mesmo desenho de torre de perfuração do
-// wellIconSVG em app.js, como divIcon do Leaflet (contorno escuro pra
-// destacar tanto sobre o tile escuro quanto sobre o preenchimento colorido
-// do polígono).
+// Ícone de poço no mapa: torre de perfuração como divIcon do Leaflet
+// (contorno escuro pra destacar tanto sobre o tile escuro quanto sobre o
+// preenchimento colorido do polígono). A silhueta triangular sozinha
+// (versão anterior) lia mais como "montanha" que como poço — esta usa a
+// treliça de uma torre de verdade (duas pernas + travessas + coroamento no
+// topo), que continua reconhecível no tamanho pequeno do mapa mas não se
+// confunde com outros ícones de "área"/"pico".
 function wellDivIcon(color) {
   return L.divIcon({
     className: 'map-well-icon',
-    html: `<svg viewBox="0 0 16 16" width="15" height="15" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6))">
-      <path d="M8 1L3.2 13.5h1.7L8 4.6l3.1 8.9h1.7z" fill="${color}" stroke="#0b0d10" stroke-width="0.6"/>
-      <rect x="2.6" y="13.5" width="10.8" height="1.3" rx="0.3" fill="${color}" stroke="#0b0d10" stroke-width="0.4"/>
+    html: `<svg viewBox="0 0 16 16" width="16" height="16" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.7))">
+      <g fill="none" stroke="#0b0d10" stroke-width="2.3" stroke-linecap="round">
+        <path d="M8 2.3 L3 13.6 M8 2.3 L13 13.6"/>
+        <path d="M4.9 9.5 L11.1 9.5 M5.9 6.6 L10.1 6.6"/>
+      </g>
+      <g fill="none" stroke="${color}" stroke-width="1.3" stroke-linecap="round">
+        <path d="M8 2.3 L3 13.6 M8 2.3 L13 13.6"/>
+        <path d="M4.9 9.5 L11.1 9.5 M5.9 6.6 L10.1 6.6"/>
+      </g>
+      <rect x="1.8" y="13.6" width="12.4" height="1.5" rx="0.4" fill="${color}" stroke="#0b0d10" stroke-width="0.5"/>
+      <circle cx="8" cy="2.3" r="1.3" fill="${color}" stroke="#0b0d10" stroke-width="0.5"/>
     </svg>`,
-    iconSize: [15, 15],
-    iconAnchor: [7.5, 13],
+    iconSize: [16, 16],
+    iconAnchor: [8, 14],
   });
 }
 
@@ -340,11 +355,10 @@ function wellsOnlyBounds(key, project) {
   return L.latLngBounds([b.getSouth() - p, b.getWest() - p], [b.getNorth() + p, b.getEast() + p]);
 }
 
-// Poços de um contrato sem poligonal vão direto em groupLayers[grupo] (o
-// mesmo container que o toggle de grupo do painel já esconde/mostra), então
-// não precisam de nenhum registro de visibilidade próprio — só guardamos a
-// área de referência, pro caso de precisar voar até eles sem um polígono
-// pra enquadrar.
+// A visibilidade dos marcadores é toda controlada pelo targetLayer (toggle
+// de grupo + zoom, ver updateWellsVisibility) — só guardamos, à parte, a
+// área de referência de um contrato sem poligonal, pro caso de precisar
+// voar até ele sem um polígono pra enquadrar (ver flyToProject).
 function registerWellSet(key, project, bounds, color, targetLayer) {
   const built = buildWellMarkers(key, project, bounds, color, targetLayer);
   if (!built || !project || bounds) return;
@@ -355,19 +369,11 @@ function registerWellSet(key, project, bounds, color, targetLayer) {
 // Poço genérico da base ANP/BDEP sem vínculo com nenhum dos 24
 // contratos/campos nomeados, mas com pré-sal confirmado pela ANP — "todos
 // os poços do pré-sal" (ver campo "outros" em data/pocos.json, filtrado em
-// build_pocos.py). Marcador mais simples (círculo, sem rótulo curado):
-// nesse volume não há marco de roadmap pra casar.
-const OUTROS_POCOS_COLOR = '#6b7280';
-function addOutrosPocoMarker(targetLayer, renderer, w) {
-  const marker = L.circleMarker(w.c, {
-    renderer, radius: 3, color: '#20242b', weight: 1,
-    fillColor: OUTROS_POCOS_COLOR, fillOpacity: 0.85,
-  });
-  marker.bindTooltip(`${escapeHtml(w.n)}${w.d ? '<br>' + formatBR(w.d) : ''}`, {
-    direction: 'top', offset: [0, -4], className: 'map-well-tooltip',
-  });
-  marker.bindPopup(wellPopupHTML(w.n, w, OUTROS_POCOS_COLOR));
-  targetLayer.addLayer(marker);
+// build_pocos.py). Mesmo ícone dos poços nomeados, numa cor neutra — só
+// não tem rótulo curado (nesse volume não há marco de roadmap pra casar).
+const OUTROS_POCOS_COLOR = '#9099a8';
+function addOutrosPocoMarker(targetLayer, w) {
+  addWellMarker(targetLayer, w.c, OUTROS_POCOS_COLOR, [{ label: w.n, info: w, date: w.d, approx: false }]);
 }
 
 function presaltFieldPopupHTML(props) {
@@ -413,7 +419,7 @@ async function init() {
       const layer = L.geoJSON(feat, { style: PRESALT_FIELD_STYLE });
       layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(feat.properties)));
       layer.addTo(presaltFieldsLayer);
-      registerWellSet(feat.properties.nome, null, layer.getBounds(), PRESALT_FIELD_STYLE.color, presaltFieldsLayer);
+      registerWellSet(feat.properties.nome, null, layer.getBounds(), PRESALT_FIELD_STYLE.color, wellPresaltLayer);
     }
   } catch (e) {
     // Camada de contexto é opcional — segue sem ela se não carregar.
@@ -458,19 +464,19 @@ async function init() {
   // os 8 sem poligonal na ANP (blocos devolvidos e Sul de Gato do Mato),
   // que ficavam completamente fora do mapa: com a coordenada real de cada
   // poço, o polígono deixou de ser necessário pra posicioná-los. Vão pra
-  // dentro do groupLayers do próprio grupo do projeto — o mesmo container
-  // que o toggle "Exploração/Produção/Devolvidos" do painel já
-  // esconde/mostra, então não precisam de lógica de visibilidade própria.
+  // wellGroupLayers[grupo do projeto] — separado do groupLayers do
+  // polígono porque a visibilidade destes também depende do zoom (ver
+  // updateWellsVisibility), diferente do polígono, que fica sempre visível.
   for (const project of state.projects) {
     const layer = layerByProjectId[project.id];
-    const targetLayer = groupLayers[project.group] || groupLayers[GROUP_FALLBACK];
+    const targetLayer = wellGroupLayers[project.group] || wellGroupLayers[GROUP_FALLBACK];
     registerWellSet(project.name, project, layer ? layer.getBounds() : null, project.color, targetLayer);
   }
 
   // "Todos os poços do pré-sal": todo poço offshore de Santos/Campos que
   // não é de nenhum dos 24 contratos/campos acima (ver scripts/build_pocos.py)
   // — pontos genéricos, sem o casamento com marco do roadmap dos outros.
-  for (const w of outrosPocos) addOutrosPocoMarker(outrosPocosLayer, outrosPocosRenderer, w);
+  for (const w of outrosPocos) addOutrosPocoMarker(outrosPocosLayer, w);
 
   if (allBounds.length) {
     let bounds = allBounds[0];
@@ -478,8 +484,8 @@ async function init() {
     map.fitBounds(bounds, { padding: [24, 24] });
   }
 
-  map.on('zoomend', updateOutrosPocosVisibility);
-  updateOutrosPocosVisibility();
+  map.on('zoomend', updateWellsVisibility);
+  updateWellsVisibility();
 
   renderPanel();
 }
@@ -497,10 +503,9 @@ function setColorMode(mode) {
   renderPanel();
 }
 
-// Poços aparecem sempre, em qualquer zoom, então enquadrar o alvo (como
-// flyToBounds faria) já é suficiente — todo poço do contrato mora dentro
-// da área enquadrada (do próprio polígono, ou de refBounds pros 8 sem
-// polígono), sem precisar aproximar além disso pra revelar nada.
+// Basta enquadrar o alvo (como flyToBounds faria): focar um contrato
+// específico sempre passa do zoom mínimo dos poços (ver WELLS_MIN_ZOOM),
+// então não precisa de nenhum ajuste extra pra garantir que eles apareçam.
 function flyToProject(project) {
   const layer = layerByProjectId[project.id];
   if (layer) {
@@ -529,28 +534,38 @@ function toggleGroup(groupId, visible) {
   const layer = groupLayers[groupId];
   if (visible) map.addLayer(layer);
   else map.removeLayer(layer);
+  updateWellsVisibility();
 }
 
 function togglePresaltFields(visible) {
   presaltFieldsVisible = visible;
   if (visible) map.addLayer(presaltFieldsLayer);
   else map.removeLayer(presaltFieldsLayer);
-}
-
-// Únicos poços com regra de zoom no mapa (ver OUTROS_POCOS_MIN_ZOOM) — os
-// dos contratos rastreados ficam com o polígono deles em qualquer zoom, mas
-// estes são muitos poços genéricos espalhados fora de qualquer contrato, e
-// só cabem na tela sem poluir a partir de um zoom intermediário.
-function updateOutrosPocosVisibility() {
-  const show = outrosPocosVisible && map.getZoom() >= OUTROS_POCOS_MIN_ZOOM;
-  const shown = map.hasLayer(outrosPocosLayer);
-  if (show && !shown) map.addLayer(outrosPocosLayer);
-  else if (!show && shown) map.removeLayer(outrosPocosLayer);
+  updateWellsVisibility();
 }
 
 function toggleOutrosPocos(visible) {
   outrosPocosVisible = visible;
-  updateOutrosPocosVisibility();
+  updateWellsVisibility();
+}
+
+// Um único lugar decidindo a visibilidade de TODO poço no mapa — nomeado
+// ou genérico —, com a mesma regra pros dois: zoom >= WELLS_MIN_ZOOM E a
+// camada correspondente ligada no painel (grupo do contrato, campos de
+// contexto, ou "todos os poços do pré-sal"). O polígono do contrato não
+// entra aqui — esse continua visível em qualquer zoom, só os poços têm
+// esse corte.
+function showOrHide(layer, visible) {
+  const shown = map.hasLayer(layer);
+  if (visible && !shown) map.addLayer(layer);
+  else if (!visible && shown) map.removeLayer(layer);
+}
+
+function updateWellsVisibility() {
+  const zoomOk = map.getZoom() >= WELLS_MIN_ZOOM;
+  for (const g of GROUP_DEFS) showOrHide(wellGroupLayers[g.id], zoomOk && groupVisible[g.id]);
+  showOrHide(wellPresaltLayer, zoomOk && presaltFieldsVisible);
+  showOrHide(outrosPocosLayer, zoomOk && outrosPocosVisible);
 }
 
 function renderColorModeControl(container) {
@@ -659,7 +674,7 @@ function renderPanel() {
   const outrosNote = document.createElement('p');
   outrosNote.className = 'map-panel-note';
   outrosNote.style.marginTop = '0';
-  outrosNote.textContent = 'Poços com pré-sal confirmado pela ANP, fora dos contratos rastreados (pontos cinza) — aparecem a partir de um zoom intermediário, pra não poluir a visão geral.';
+  outrosNote.textContent = 'Poços com pré-sal confirmado pela ANP, fora dos contratos rastreados (pontos cinza).';
   outrosSection.appendChild(outrosNote);
   el.appendChild(outrosSection);
 
@@ -707,7 +722,7 @@ function renderPanel() {
 
   const wellsNote = document.createElement('p');
   wellsNote.className = 'map-panel-note';
-  wellsNote.textContent = 'Os poços de cada contrato aparecem em qualquer zoom, junto com o polígono dele.';
+  wellsNote.textContent = 'Poços (de qualquer camada) só aparecem a partir de um zoom intermediário, pra não poluir a visão geral — o polígono do contrato continua visível em qualquer zoom.';
   el.appendChild(wellsNote);
 
   const missingCount = Object.keys(PROJECTS_WITHOUT_SHAPE).length;
