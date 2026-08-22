@@ -146,15 +146,31 @@ for s in summary:
 # --------------------------------------------------------------------------
 # Camada de contexto: outros campos do pré-sal que NÃO são um dos 29
 # contratos rastreados no roadmap (só pra dar noção geográfica de onde eles
-# ficam no polígono do pré-sal como um todo). Lista levantada por pesquisa
-# (PPSA, ANP, imprensa especializada) em 22/08/2026, cruzada por nome com
-# CAMPOS_PRODUCAO_SIRGAS — inclui só campos com alta confiança de serem
-# pré-sal (bacia de Santos; região do pós-sal raso, como Mexilhão/Tambaú/
-# Uruguá/Baúna/Atlanta/Goiá/Neon/Orca, foi excluída de propósito). Campos
-# citados na pesquisa mas sem registro de campo comercial na ANP ainda
-# (Sururu, complexo Pão de Açúcar/SEAT/Gávea) ou com posição incerta em
-# relação ao polígono legal (Jubarte, bacia de Campos/ES) ficaram de fora.
-EXTRA_PRESALT_FIELDS = ['LPA', 'TUP', 'STUP', 'BBG', 'NBBG', 'SBBG', 'OATP', 'SPH']
+# ficam no polígono do pré-sal como um todo).
+#
+# v2 da lista (22/08/2026): a primeira versão vinha de pesquisa jornalística
+# cruzada por nome (PPSA/ANP/imprensa) e por isso tinha lacunas conhecidas —
+# faltava Mero (o próprio campo âncora do contrato Libra, coberto no mapa
+# só pelo polígono do BLOCO, bem maior que o campo em si) e Jubarte tinha
+# ficado de fora por "posição incerta em relação ao polígono legal". Esta
+# versão troca a pesquisa por evidência direta: agrega a base de poços da
+# ANP/BDEP (Tabela_pocos, mesma usada em scripts/build_pocos.py) por CAMPO,
+# nas bacias de Santos e Campos, e inclui todo campo com pelo menos 3 poços
+# com ATINGIU_PRESAL='S' E onde esses poços são pelo menos 20% do total
+# perfurado ali. O corte em 20% é o que separa os campos de pré-sal de
+# verdade (~60-90% dos poços confirmam, Jubarte inclusive com 26%) dos
+# gigantes clássicos do pós-sal de Campos que só têm um poço ou outro mais
+# fundo tocando o pré-sal por baixo (Marlim 2%, Roncador 1%, Albacora 3%) —
+# sem esse corte por proporção, contar só poço confirmado incluiria toda a
+# bacia de Campos histórica. Único ajuste manual sobre o resultado: Norte
+# de Berbigão (mesmo regime — Cessão Onerosa — e cluster de Berbigão/Sul de
+# Berbigão, os dois com poços confirmados) fica embora não tenha nenhum
+# poço registrado com esse nome exato de campo na exportação atual — campo
+# declarado (ETAPA=Desenvolvimento no cadastro da ANP), só ainda sem poço
+# atribuído a ele especificamente.
+EXTRA_PRESALT_FIELDS = [
+    'LPA', 'TUP', 'STUP', 'BBG', 'NBBG', 'SBBG', 'OATP', 'SPH', 'MRO', 'JUB', 'RMT', 'WAH',
+]
 
 extra_idxs = records_matching(campos, 'SIG_CAMPO', EXTRA_PRESALT_FIELDS)
 extra_features = []
