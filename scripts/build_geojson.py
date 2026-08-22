@@ -111,3 +111,41 @@ with open('contratos.geojson', 'w', encoding='utf-8') as f:
 print('Features escritas:', len(features))
 for s in summary:
     print(s)
+
+# --------------------------------------------------------------------------
+# Camada de contexto: outros campos do pré-sal que NÃO são um dos 29
+# contratos rastreados no roadmap (só pra dar noção geográfica de onde eles
+# ficam no polígono do pré-sal como um todo). Lista levantada por pesquisa
+# (PPSA, ANP, imprensa especializada) em 22/08/2026, cruzada por nome com
+# CAMPOS_PRODUCAO_SIRGAS — inclui só campos com alta confiança de serem
+# pré-sal (bacia de Santos; região do pós-sal raso, como Mexilhão/Tambaú/
+# Uruguá/Baúna/Atlanta/Goiá/Neon/Orca, foi excluída de propósito). Campos
+# citados na pesquisa mas sem registro de campo comercial na ANP ainda
+# (Sururu, complexo Pão de Açúcar/SEAT/Gávea) ou com posição incerta em
+# relação ao polígono legal (Jubarte, bacia de Campos/ES) ficaram de fora.
+EXTRA_PRESALT_FIELDS = ['LPA', 'TUP', 'STUP', 'BBG', 'NBBG', 'SBBG', 'OATP', 'SPH']
+
+extra_idxs = records_matching(campos, 'SIG_CAMPO', EXTRA_PRESALT_FIELDS)
+extra_features = []
+for i in extra_idxs:
+    shp = campos.shape(i)
+    rec = campos.record(i).as_dict()
+    geom = shp.__geo_interface__
+    geom['coordinates'] = round_coords(geom['coordinates'])
+    props = {
+        'nome': rec.get('NOM_CAMPO', ''),
+        'bacia': rec.get('NOM_BACIA', ''),
+        'operador': rec.get('OPERADOR_C', ''),
+        'rodada': rec.get('NUM_RODADA', ''),
+        'etapa': rec.get('ETAPA', ''),
+        'area_km2': float(rec.get('AREA') or 0),
+    }
+    extra_features.append({'type': 'Feature', 'properties': props, 'geometry': geom})
+
+extra_fc = {'type': 'FeatureCollection', 'features': extra_features}
+with open('campos_presal.geojson', 'w', encoding='utf-8') as f:
+    json.dump(extra_fc, f, ensure_ascii=False, separators=(',', ':'))
+
+print('\nCampos extra de pré-sal (contexto):', len(extra_features))
+for feat in extra_features:
+    print(' ', feat['properties']['nome'])

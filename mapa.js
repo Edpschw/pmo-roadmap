@@ -12,6 +12,12 @@
    ========================================================================= */
 
 const GEOJSON_URL = 'data/contratos.geojson';
+// Camada de contexto: outros campos do polígono do pré-sal que não são um
+// dos 29 contratos rastreados no roadmap — só pra dar noção de onde eles
+// ficam em relação aos que rastreamos. Ver comentário em cima de
+// EXTRA_PRESALT_FIELDS no script de geração para a lista e os critérios.
+const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
+const PRESALT_FIELD_STYLE = { color: '#9aa1ac', weight: 1.25, dashArray: '4 3', fillColor: '#9aa1ac', fillOpacity: 0.1 };
 
 // Projetos sem poligonal nos dois shapefiles fornecidos, com o motivo —
 // ver comentário em cima de PLAN no script de geração (scripts/build_geojson.py).
@@ -66,6 +72,11 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   maxZoom: 20,
 }).addTo(map);
 
+// Adicionada antes das camadas de projeto para ficar visualmente por baixo
+// delas (Leaflet empilha na ordem de addTo).
+const presaltFieldsLayer = L.layerGroup().addTo(map);
+let presaltFieldsVisible = true;
+
 const groupLayers = {};
 for (const g of GROUP_DEFS) groupLayers[g.id] = L.layerGroup().addTo(map);
 
@@ -115,6 +126,22 @@ function popupHTML(project, props) {
   </div>`;
 }
 
+function presaltFieldPopupHTML(props) {
+  const rows = [
+    ['Bacia', props.bacia || '—'],
+    ['Operador', props.operador || '—'],
+    ['Rodada', props.rodada || '—'],
+    ['Etapa', props.etapa || '—'],
+    ['Área', props.area_km2 ? Math.round(props.area_km2).toLocaleString('pt-BR') + ' km²' : '—'],
+  ];
+  const rowsHTML = rows.map(([k, v]) => `<tr><td class="k">${k}</td><td>${v}</td></tr>`).join('');
+  return `<div class="map-popup">
+    <h3 style="color:#9aa1ac">${escapeHtml(props.nome)}</h3>
+    <table>${rowsHTML}</table>
+    <p class="map-popup-source">Campo de contexto (fora dos 29 contratos rastreados) — Fonte: ANP, Campos de Produção (SIRGAS 2000)</p>
+  </div>`;
+}
+
 async function init() {
   let geojson;
   try {
@@ -124,6 +151,18 @@ async function init() {
     showToast('Não foi possível carregar data/contratos.geojson.');
     renderSidebar();
     return;
+  }
+
+  try {
+    const presRes = await fetch(PRESALT_FIELDS_URL);
+    const presGeojson = await presRes.json();
+    for (const feat of presGeojson.features) {
+      const layer = L.geoJSON(feat, { style: PRESALT_FIELD_STYLE });
+      layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(feat.properties)));
+      layer.addTo(presaltFieldsLayer);
+    }
+  } catch (e) {
+    // Camada de contexto é opcional — segue sem ela se não carregar.
   }
 
   for (const feat of geojson.features) featureByProject[feat.properties.projeto] = feat;
@@ -193,6 +232,12 @@ function toggleGroup(groupId, visible) {
   else map.removeLayer(layer);
 }
 
+function togglePresaltFields(visible) {
+  presaltFieldsVisible = visible;
+  if (visible) map.addLayer(presaltFieldsLayer);
+  else map.removeLayer(presaltFieldsLayer);
+}
+
 function renderColorModeControl(container) {
   const wrap = document.createElement('div');
   wrap.className = 'map-mode-control';
@@ -242,6 +287,24 @@ function renderSidebar() {
   el.innerHTML = '';
 
   renderColorModeControl(el);
+
+  const presaltSection = document.createElement('div');
+  presaltSection.className = 'map-sidebar-section';
+  const presaltHeader = document.createElement('label');
+  presaltHeader.className = 'map-sidebar-group-header';
+  const presaltCheckbox = document.createElement('input');
+  presaltCheckbox.type = 'checkbox';
+  presaltCheckbox.checked = presaltFieldsVisible;
+  presaltCheckbox.addEventListener('change', () => togglePresaltFields(presaltCheckbox.checked));
+  presaltHeader.appendChild(presaltCheckbox);
+  presaltHeader.appendChild(document.createTextNode(' Outros campos do pré-sal'));
+  presaltSection.appendChild(presaltHeader);
+  const presaltNote = document.createElement('p');
+  presaltNote.className = 'map-sidebar-note';
+  presaltNote.style.marginTop = '0';
+  presaltNote.textContent = 'Contexto geográfico (tracejado cinza) — não fazem parte dos 29 contratos rastreados.';
+  presaltSection.appendChild(presaltNote);
+  el.appendChild(presaltSection);
 
   for (const g of GROUP_DEFS) {
     const projects = state.projects.filter((p) => p.group === g.id);
