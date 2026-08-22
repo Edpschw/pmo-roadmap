@@ -1,12 +1,3 @@
-# Gera data/contratos.geojson a partir dos shapefiles oficiais da ANP
-# (Blocos Exploratórios sob Contrato e Campos de Produção, SIRGAS 2000).
-# Baixe os dois .zip em gov.br/anp/.../shapefile-de-dados, extraia como:
-#   blocos_exploratorios/BLOCOS_EXPLORATORIOS_SIRGASPolygon.{shp,shx,dbf,prj}
-#   campos_producao/CAMPOS_PRODUCAO_SIRGASPolygon.{shp,shx,dbf,prj}
-# na mesma pasta deste script, então: pip install pyshp && python3 build_geojson.py
-# Regenerar quando o mapeamento PLAN precisar de ajuste (bloco renomeado
-# pela ANP, contrato novo assinado, etc.) — depois copiar o resultado para
-# data/contratos.geojson no repo.
 import shapefile, json
 
 blocos = shapefile.Reader('blocos_exploratorios/BLOCOS_EXPLORATORIOS_SIRGASPolygon.shp', encoding='latin1')
@@ -86,12 +77,19 @@ for name, (source, key_field, values) in PLAN.items():
             'area_km2': sum(float(a.get('AREA_TOTAL') or 0) for a in attrs_list),
         }
     else:
+        # Campo "principal" = o de código mais curto (sem sufixo _ECO/LESTE/
+        # NORTE/etc.), usado como referência de rodada/regime de origem —
+        # sub-áreas do mesmo contrato costumam ter NUM_RODADA divergente
+        # entre si (ex.: Búzios/Sépia/Atapu/Itapu nasceram na Cessão Onerosa
+        # de 2010 e só viraram partilha depois, no leilão do excedente).
+        primary = min(attrs_list, key=lambda a: len(a.get('SIG_CAMPO') or 'zzzzzzzz'))
         props = {
             'projeto': name,
             'fonte': 'campo_producao',
             'bacia': a0.get('NOM_BACIA', ''),
             'operador': a0.get('OPERADOR_C', ''),
             'campos': ', '.join(sorted(set(a.get('NOM_CAMPO', '') for a in attrs_list))),
+            'rodada': primary.get('NUM_RODADA', ''),
             'inicio_producao': a0.get('DAT_INICIO', ''),
             'area_km2': sum(float(a.get('AREA') or 0) for a in attrs_list),
         }

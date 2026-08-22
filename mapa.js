@@ -7,15 +7,14 @@
    (Blocos Exploratórios sob Contrato + Campos de Produção, SIRGAS 2000 —
    equivalente a WGS84 para fins de exibição em mapa web) que o usuário
    baixou e enviou em 22/08/2026. Sem servidor: o GeoJSON é um arquivo
-   estático, e os tiles de base vêm do OpenStreetMap (única chamada de rede
-   desta página; o resto do app funciona offline).
+   estático, e os tiles de base vêm do CARTO (única chamada de rede desta
+   página; o resto do app funciona offline).
    ========================================================================= */
 
 const GEOJSON_URL = 'data/contratos.geojson';
 
 // Projetos sem poligonal nos dois shapefiles fornecidos, com o motivo —
-// ver comentário em cima de PLAN no script de geração (build_geojson.py,
-// não versionado; a lista abaixo é o resultado dele).
+// ver comentário em cima de PLAN no script de geração (scripts/build_geojson.py).
 const PROJECTS_WITHOUT_SHAPE = {
   'Sul de Gato do Mato': 'FID recente (2025); área ainda não aparece nos cadastros públicos de bloco ou campo.',
   'Peroba': 'Bloco devolvido — não consta mais no cadastro de blocos ativos da ANP.',
@@ -26,6 +25,29 @@ const PROJECTS_WITHOUT_SHAPE = {
   'Saturno': 'Bloco devolvido — não consta mais no cadastro de blocos ativos da ANP.',
   'Titã': 'Bloco devolvido — não consta mais no cadastro de blocos ativos da ANP.',
 };
+
+// Modos de coloração do mapa. 'projeto' usa a cor de cada projeto (mesma do
+// Gantt/tabela); 'status' usa o grupo (Exploração/Produção/Devolvidos);
+// 'rodada' usa a rodada/regime de origem do contrato, como vem da ANP no
+// GeoJSON (props.rodada) — inclui valores fora do padrão "Partilha N"/
+// "OPPN" para os campos que nasceram na Cessão Onerosa de 2010 (Búzios,
+// Itapu, Sépia, Atapu) e só viraram partilha no leilão do excedente.
+const COLOR_MODES = [
+  { id: 'projeto', label: 'Projeto' },
+  { id: 'status', label: 'Status' },
+  { id: 'rodada', label: 'Rodada' },
+];
+let colorMode = 'projeto';
+
+const GROUP_COLORS = { exploracao: '#2f9ed6', producao: '#1c9e6b', devolvidos: '#d64545' };
+// Paleta do resto do app (10 cores) + reforço, para cobrir todas as
+// rodadas/regimes distintos encontrados nos 21 contratos com shapefile.
+const CATEGORY_PALETTE = PALETTE.concat(['#7a5cff', '#00b3a4', '#8a6d3b']);
+let rodadaColorMap = {};
+let rodadaOrder = [];
+
+const groupVisible = {};
+for (const g of GROUP_DEFS) groupVisible[g.id] = true;
 
 const toastEl = document.getElementById('toast');
 let toastTimer = null;
@@ -48,6 +70,7 @@ const groupLayers = {};
 for (const g of GROUP_DEFS) groupLayers[g.id] = L.layerGroup().addTo(map);
 
 const layerByProjectId = {};
+const featureByProject = {};
 
 function formatAnpDate(s) {
   return s ? s.replaceAll('-', '/') : '—';
@@ -59,15 +82,25 @@ function escapeHtml(s) {
   return div.innerHTML;
 }
 
+function colorForProject(project) {
+  if (colorMode === 'status') return GROUP_COLORS[project.group] || '#5c6470';
+  if (colorMode === 'rodada') {
+    const feat = featureByProject[project.name];
+    const rodada = feat && feat.properties.rodada;
+    return (rodada && rodadaColorMap[rodada]) || '#5c6470';
+  }
+  return project.color;
+}
+
 function popupHTML(project, props) {
   const groupLabel = (GROUP_DEFS.find((g) => g.id === project.group) || {}).label || project.group;
   const rows = [
     ['Grupo', groupLabel],
     ['Bacia', props.bacia || '—'],
     ['Operador', props.operador || '—'],
+    ['Rodada', props.rodada || '—'],
   ];
   if (props.fonte === 'bloco_exploratorio') {
-    rows.push(['Rodada', props.rodada || '—']);
     rows.push(['Assinatura', formatAnpDate(props.assinatura)]);
   } else {
     rows.push(['Campo(s) ANP', props.campos || '—']);
@@ -76,7 +109,7 @@ function popupHTML(project, props) {
   rows.push(['Área', props.area_km2 ? Math.round(props.area_km2).toLocaleString('pt-BR') + ' km²' : '—']);
   const rowsHTML = rows.map(([k, v]) => `<tr><td class="k">${k}</td><td>${v}</td></tr>`).join('');
   return `<div class="map-popup">
-    <h3 style="color:${project.color}">${escapeHtml(project.name)}</h3>
+    <h3 style="color:${colorForProject(project)}">${escapeHtml(project.name)}</h3>
     <table>${rowsHTML}</table>
     <p class="map-popup-source">Fonte: ANP — ${props.fonte === 'bloco_exploratorio' ? 'Blocos Exploratórios sob Contrato' : 'Campos de Produção'} (SIRGAS 2000)</p>
   </div>`;
@@ -93,8 +126,11 @@ async function init() {
     return;
   }
 
-  const featureByProject = {};
   for (const feat of geojson.features) featureByProject[feat.properties.projeto] = feat;
+
+  rodadaOrder = [...new Set(geojson.features.map((f) => f.properties.rodada).filter(Boolean))].sort();
+  rodadaColorMap = {};
+  rodadaOrder.forEach((r, i) => { rodadaColorMap[r] = CATEGORY_PALETTE[i % CATEGORY_PALETTE.length]; });
 
   const allBounds = [];
   for (const project of state.projects) {
@@ -102,17 +138,16 @@ async function init() {
     if (!feat) continue;
     const layer = L.geoJSON(feat, {
       style: {
-        color: project.color,
+        color: colorForProject(project),
         weight: 2,
-        fillColor: project.color,
+        fillColor: colorForProject(project),
         fillOpacity: 0.42,
       },
     });
     // bindPopup na camada externa (o grupo retornado por L.geoJSON) não
     // propaga pros filhos nem abre sozinho ao clicar no polígono no mapa —
     // precisa ligar em cada sub-camada individualmente.
-    const popupHtml = popupHTML(project, feat.properties);
-    layer.eachLayer((l) => l.bindPopup(popupHtml));
+    layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties)));
     const target = groupLayers[project.group] || groupLayers[GROUP_FALLBACK];
     layer.addTo(target);
     layerByProjectId[project.id] = layer;
@@ -128,6 +163,19 @@ async function init() {
   renderSidebar();
 }
 
+function setColorMode(mode) {
+  colorMode = mode;
+  for (const project of state.projects) {
+    const layer = layerByProjectId[project.id];
+    if (!layer) continue;
+    const c = colorForProject(project);
+    layer.setStyle({ color: c, fillColor: c });
+    const feat = featureByProject[project.name];
+    if (feat) layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties)));
+  }
+  renderSidebar();
+}
+
 function flyToProject(project) {
   const layer = layerByProjectId[project.id];
   if (!layer) {
@@ -139,14 +187,61 @@ function flyToProject(project) {
 }
 
 function toggleGroup(groupId, visible) {
+  groupVisible[groupId] = visible;
   const layer = groupLayers[groupId];
   if (visible) map.addLayer(layer);
   else map.removeLayer(layer);
 }
 
+function renderColorModeControl(container) {
+  const wrap = document.createElement('div');
+  wrap.className = 'map-mode-control';
+  const label = document.createElement('div');
+  label.className = 'map-mode-label';
+  label.textContent = 'Colorir por';
+  wrap.appendChild(label);
+
+  const group = document.createElement('div');
+  group.className = 'map-mode-buttons';
+  for (const m of COLOR_MODES) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'map-mode-btn' + (colorMode === m.id ? ' active' : '');
+    btn.textContent = m.label;
+    btn.addEventListener('click', () => setColorMode(m.id));
+    group.appendChild(btn);
+  }
+  wrap.appendChild(group);
+  container.appendChild(wrap);
+
+  if (colorMode === 'status') {
+    container.appendChild(buildLegend(GROUP_DEFS.map((g) => [g.label, GROUP_COLORS[g.id]])));
+  } else if (colorMode === 'rodada') {
+    container.appendChild(buildLegend(rodadaOrder.map((r) => [r, rodadaColorMap[r]])));
+  }
+}
+
+function buildLegend(entries) {
+  const legend = document.createElement('div');
+  legend.className = 'map-legend';
+  for (const [label, color] of entries) {
+    const row = document.createElement('div');
+    row.className = 'map-legend-row';
+    const dot = document.createElement('span');
+    dot.className = 'map-sidebar-dot';
+    dot.style.background = color;
+    row.appendChild(dot);
+    row.appendChild(document.createTextNode(label));
+    legend.appendChild(row);
+  }
+  return legend;
+}
+
 function renderSidebar() {
   const el = document.getElementById('mapSidebar');
   el.innerHTML = '';
+
+  renderColorModeControl(el);
 
   for (const g of GROUP_DEFS) {
     const projects = state.projects.filter((p) => p.group === g.id);
@@ -159,7 +254,7 @@ function renderSidebar() {
     header.className = 'map-sidebar-group-header';
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.checked = true;
+    checkbox.checked = groupVisible[g.id];
     checkbox.addEventListener('change', () => toggleGroup(g.id, checkbox.checked));
     header.appendChild(checkbox);
     header.appendChild(document.createTextNode(' ' + g.label));
@@ -173,7 +268,8 @@ function renderSidebar() {
       li.className = 'map-sidebar-item' + (hasShape ? '' : ' no-shape');
       const dot = document.createElement('span');
       dot.className = 'map-sidebar-dot';
-      dot.style.background = project.color;
+      dot.style.background = hasShape ? colorForProject(project) : 'transparent';
+      dot.style.borderColor = hasShape ? 'transparent' : 'var(--map-text-faint)';
       li.appendChild(dot);
       li.appendChild(document.createTextNode(project.name));
       if (!hasShape) {
