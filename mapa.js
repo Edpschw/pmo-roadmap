@@ -126,6 +126,77 @@ function popupHTML(project, props) {
   </div>`;
 }
 
+// Ícone de poço no mapa: mesmo desenho de torre de perfuração do
+// wellIconSVG em app.js, como divIcon do Leaflet (contorno escuro pra
+// destacar tanto sobre o tile escuro quanto sobre o preenchimento colorido
+// do polígono).
+function wellDivIcon(color) {
+  return L.divIcon({
+    className: 'map-well-icon',
+    html: `<svg viewBox="0 0 16 16" width="15" height="15" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6))">
+      <path d="M8 1L3.2 13.5h1.7L8 4.6l3.1 8.9h1.7z" fill="${color}" stroke="#0b0d10" stroke-width="0.6"/>
+      <rect x="2.6" y="13.5" width="10.8" height="1.3" rx="0.3" fill="${color}" stroke="#0b0d10" stroke-width="0.4"/>
+    </svg>`,
+    iconSize: [15, 15],
+    iconAnchor: [7.5, 13],
+  });
+}
+
+// Não temos coordenada real de cada poço (só a data de perfuração) — usa
+// uma aproximação dentro do polígono do contrato, espalhando em círculo
+// quando há mais de um poço no mesmo projeto pra não ficarem empilhados.
+// O ponto-base fica deslocado pro sul do centro (não em cima dele) porque
+// é ali que o popup do projeto abre (clique no polígono ou openPopup() sem
+// argumento usam o centro) — sem esse deslocamento, o próprio popup tampa
+// os poços que ele acabou de revelar. Desloque e raio são proporcionais ao
+// tamanho do polígono (em graus), não um valor fixo, pra continuar
+// funcionando tanto num contrato pequeno quanto num grande.
+function buildWellMarkers(project, bounds, color) {
+  const wells = [];
+  for (const ws of project.workstreams) {
+    if (ws.name !== 'Poços Exploratórios') continue;
+    for (const item of ws.items) {
+      if (item.type === 'milestone' && item.icon === 'well') wells.push(item);
+    }
+  }
+  if (!wells.length) return null;
+
+  const center = bounds.getCenter();
+  const latSpan = bounds.getNorth() - bounds.getSouth();
+  const lngSpan = bounds.getEast() - bounds.getWest();
+  const baseLat = center.lat - Math.max(latSpan * 0.32, 0.02);
+  const baseLng = center.lng;
+  const radiusLat = Math.max(latSpan * 0.12, 0.01);
+  const radiusLng = Math.max(lngSpan * 0.12, 0.01);
+
+  const group = L.layerGroup();
+  wells.forEach((item, i) => {
+    let lat = baseLat;
+    let lng = baseLng;
+    if (wells.length > 1) {
+      const angle = (2 * Math.PI * i) / wells.length;
+      lat += Math.sin(angle) * radiusLat;
+      lng += Math.cos(angle) * radiusLng;
+    }
+    const marker = L.marker([lat, lng], { icon: wellDivIcon(color), zIndexOffset: 500 });
+    marker.bindTooltip(`${escapeHtml(item.name)}<br>${formatBR(item.date)}${item.approx ? ' (aprox.)' : ''}`, {
+      direction: 'top', offset: [0, -10], className: 'map-well-tooltip',
+    });
+    group.addLayer(marker);
+  });
+  return group;
+}
+
+const wellMarkersByProjectId = {};
+function showWells(project) {
+  const group = wellMarkersByProjectId[project.id];
+  if (group) group.addTo(map);
+}
+function hideWells(project) {
+  const group = wellMarkersByProjectId[project.id];
+  if (group) map.removeLayer(group);
+}
+
 function presaltFieldPopupHTML(props) {
   const rows = [
     ['Bacia', props.bacia || '—'],
@@ -186,11 +257,20 @@ async function init() {
     // bindPopup na camada externa (o grupo retornado por L.geoJSON) não
     // propaga pros filhos nem abre sozinho ao clicar no polígono no mapa —
     // precisa ligar em cada sub-camada individualmente.
-    layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties)));
+    const bounds = layer.getBounds();
+    wellMarkersByProjectId[project.id] = buildWellMarkers(project, bounds, project.color);
+    layer.eachLayer((l) => {
+      l.bindPopup(popupHTML(project, feat.properties));
+      // Poços só aparecem no mapa enquanto o popup do projeto estiver
+      // aberto (clique no polígono, direto no mapa ou pela lista lateral)
+      // — escondidos de novo ao fechar, pra não poluir a visão geral.
+      l.on('popupopen', () => showWells(project));
+      l.on('popupclose', () => hideWells(project));
+    });
     const target = groupLayers[project.group] || groupLayers[GROUP_FALLBACK];
     layer.addTo(target);
     layerByProjectId[project.id] = layer;
-    allBounds.push(layer.getBounds());
+    allBounds.push(bounds);
   }
 
   if (allBounds.length) {
