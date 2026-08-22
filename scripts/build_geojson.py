@@ -1,4 +1,5 @@
 import shapefile, json
+from shapely.geometry import Polygon
 
 blocos = shapefile.Reader('blocos_exploratorios/BLOCOS_EXPLORATORIOS_SIRGASPolygon.shp', encoding='latin1')
 campos = shapefile.Reader('campos_producao/CAMPOS_PRODUCAO_SIRGASPolygon.shp', encoding='latin1')
@@ -63,6 +64,36 @@ for name, (source, key_field, values) in PLAN.items():
             polys.append(g['coordinates'])
         elif g['type'] == 'MultiPolygon':
             polys.extend(g['coordinates'])
+
+    # Alguns campos da Cessão Onerosa (Búzios, Itapu, Sépia, Atapu) têm um
+    # registro "_ECO" (a designação de excedente da cessão onerosa) cujo
+    # polígono é idêntico ao do campo principal, não uma área adicional —
+    # um MultiPolygon com as duas peças sobrepostas 100% faz o SVG (regra
+    # evenodd) cancelar o próprio preenchimento, e o contrato aparece sem
+    # cor nenhuma no mapa por mais denso que fique o zoom. Descarta peça
+    # cuja área já esteja quase totalmente (>99%) coberta por outra já
+    # aceita — sobreposição parcial genuína (sub-áreas vizinhas que só
+    # tangenciam) continua sendo desenhada normalmente.
+    def dedup_overlapping(rings):
+        kept = []
+        kept_polys = []
+        for ring in rings:
+            poly = Polygon(ring[0])
+            if not poly.is_valid or poly.area == 0:
+                kept.append(ring)
+                kept_polys.append(poly)
+                continue
+            covered = any(
+                poly.intersection(other).area / poly.area > 0.99
+                for other in kept_polys
+            )
+            if not covered:
+                kept.append(ring)
+                kept_polys.append(poly)
+        return kept
+
+    if len(polys) > 1:
+        polys = dedup_overlapping(polys)
     geometry = {'type': 'MultiPolygon', 'coordinates': polys} if len(polys) > 1 else {'type': 'Polygon', 'coordinates': polys[0]}
 
     a0 = attrs_list[0]
