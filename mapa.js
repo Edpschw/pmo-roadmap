@@ -37,9 +37,11 @@ function showToast(msg) {
 }
 
 const map = L.map('map', { zoomControl: true, minZoom: 3 }).setView([-25.3, -43], 6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  maxZoom: 18,
+// CARTO Dark Matter: base escura (visual "executivo"), sem chave de API.
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  subdomains: 'abcd',
+  maxZoom: 20,
 }).addTo(map);
 
 const groupLayers = {};
@@ -101,9 +103,9 @@ async function init() {
     const layer = L.geoJSON(feat, {
       style: {
         color: project.color,
-        weight: 1.5,
+        weight: 2,
         fillColor: project.color,
-        fillOpacity: 0.35,
+        fillOpacity: 0.42,
       },
     });
     // bindPopup na camada externa (o grupo retornado por L.geoJSON) não

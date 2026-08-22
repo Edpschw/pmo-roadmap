@@ -423,42 +423,85 @@ body { display: flex; flex-direction: column; height: 100vh; }
   .scale-btn { padding: 7px 12px; }
 }
 
-/* ---------- Visão em mapa (mapa.html) ---------- */
+/* ---------- Visão em mapa (mapa.html) ----------
+   Tema escuro/"executivo", só nesta página (tokens próprios escopados em
+   body.map-page — não mexe no tema claro do Gantt/tabela). Tiles de base
+   também são escuros (CARTO Dark Matter, ver mapa.js); as cores de cada
+   projeto (mesma paleta do resto do app) ficam mais evidentes sobre o
+   fundo escuro do que ficariam sobre um mapa claro. */
+body.map-page {
+  --map-bg: #0b0d10;
+  --map-panel: #15181d;
+  --map-border: #262b33;
+  --map-text: #e8eaed;
+  --map-text-muted: #8b93a1;
+  --map-text-faint: #5c6470;
+  background: var(--map-bg);
+}
+body.map-page .toolbar {
+  background: var(--map-panel);
+  border-bottom: 1px solid var(--map-border);
+}
+body.map-page .toolbar-left h1, body.map-page .toolbar-left .subtitle { color: var(--map-text); }
+body.map-page .toolbar-left .subtitle { color: var(--map-text-muted); }
+body.map-page .btn-ghost {
+  background: transparent; color: var(--map-text); border-color: var(--map-border);
+}
+body.map-page .btn-ghost:hover { background: #1e222a; }
+
 .map-wrapper { flex: 1 1 auto; display: flex; overflow: hidden; }
-#map { flex: 1 1 auto; height: 100%; background: #dce6f0; }
+#map { flex: 1 1 auto; height: 100%; background: var(--map-bg); }
 
 .map-sidebar {
   flex: 0 0 var(--sidebar-w); width: var(--sidebar-w);
-  overflow-y: auto; background: var(--panel); border-right: 1px solid var(--border);
+  overflow-y: auto; background: var(--map-panel); border-right: 1px solid var(--map-border);
   padding: 14px 12px;
 }
 .map-sidebar-section { margin-bottom: 16px; }
 .map-sidebar-group-header {
   display: flex; align-items: center; gap: 6px;
-  font-size: 12.5px; font-weight: 700; color: var(--text);
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--map-text-muted);
   margin-bottom: 6px; cursor: pointer;
 }
 .map-sidebar-list { list-style: none; margin: 0; padding: 0; }
 .map-sidebar-item {
   display: flex; align-items: center; gap: 7px;
   padding: 5px 4px; border-radius: 6px; cursor: pointer;
-  font-size: 12.5px; color: var(--text);
+  font-size: 12.5px; color: var(--map-text);
 }
-.map-sidebar-item:hover { background: var(--bg); }
-.map-sidebar-item.no-shape { color: var(--text-muted); }
+.map-sidebar-item:hover { background: #1e222a; }
+.map-sidebar-item.no-shape { color: var(--map-text-muted); }
 .map-sidebar-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
 .map-sidebar-flag {
-  margin-left: auto; font-size: 9.5px; color: var(--text-faint);
-  background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px;
+  margin-left: auto; font-size: 9.5px; color: var(--map-text-faint);
+  background: var(--map-bg); border: 1px solid var(--map-border); border-radius: 4px; padding: 1px 5px;
   white-space: nowrap;
 }
-.map-sidebar-note { font-size: 11px; color: var(--text-muted); line-height: 1.5; margin-top: 4px; }
+.map-sidebar-note { font-size: 11px; color: var(--map-text-muted); line-height: 1.5; margin-top: 4px; }
+
+/* Controles do Leaflet (zoom, atribuição) e popup — a skin padrão é clara
+   e destoaria do resto da página. */
+body.map-page .leaflet-bar, body.map-page .leaflet-bar a {
+  background: var(--map-panel); border-color: var(--map-border); color: var(--map-text);
+}
+body.map-page .leaflet-bar a:hover { background: #1e222a; }
+body.map-page .leaflet-control-attribution {
+  background: rgba(11, 13, 16, 0.75); color: var(--map-text-muted);
+}
+body.map-page .leaflet-control-attribution a { color: var(--map-text-muted); }
+body.map-page .leaflet-popup-content-wrapper, body.map-page .leaflet-popup-tip {
+  background: var(--map-panel); color: var(--map-text);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+}
+body.map-page .leaflet-popup-close-button { color: var(--map-text-muted) !important; }
+body.map-page .leaflet-popup-close-button:hover { color: var(--map-text) !important; }
 
 .map-popup h3 { margin: 0 0 6px; font-size: 13.5px; }
 .map-popup table { border-collapse: collapse; font-size: 11.5px; }
 .map-popup td { padding: 1px 6px 1px 0; vertical-align: top; }
-.map-popup td.k { color: var(--text-muted); white-space: nowrap; }
-.map-popup-source { margin: 6px 0 0; font-size: 10px; color: var(--text-faint); }
+.map-popup td.k { color: var(--map-text-muted); white-space: nowrap; }
+.map-popup-source { margin: 6px 0 0; font-size: 10px; color: var(--map-text-faint); }
 
 /* ---------- Telas estreitas (celular), incluindo paisagem: usa a
    condição de altura curta + orientação para pegar o celular deitado, que
