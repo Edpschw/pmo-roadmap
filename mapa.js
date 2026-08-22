@@ -149,7 +149,7 @@ async function init() {
     geojson = await res.json();
   } catch (e) {
     showToast('Não foi possível carregar data/contratos.geojson.');
-    renderSidebar();
+    renderPanel();
     return;
   }
 
@@ -199,7 +199,7 @@ async function init() {
     map.fitBounds(bounds, { padding: [24, 24] });
   }
 
-  renderSidebar();
+  renderPanel();
 }
 
 function setColorMode(mode) {
@@ -212,7 +212,7 @@ function setColorMode(mode) {
     const feat = featureByProject[project.name];
     if (feat) layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties)));
   }
-  renderSidebar();
+  renderPanel();
 }
 
 function flyToProject(project) {
@@ -273,7 +273,7 @@ function buildLegend(entries) {
     const row = document.createElement('div');
     row.className = 'map-legend-row';
     const dot = document.createElement('span');
-    dot.className = 'map-sidebar-dot';
+    dot.className = 'map-panel-dot';
     dot.style.background = color;
     row.appendChild(dot);
     row.appendChild(document.createTextNode(label));
@@ -282,16 +282,40 @@ function buildLegend(entries) {
   return legend;
 }
 
-function renderSidebar() {
-  const el = document.getElementById('mapSidebar');
-  el.innerHTML = '';
+// Preservado entre re-renders (troca de modo de cor, toggle de grupo etc.)
+// pra não reabrir o painel sozinho toda vez que o usuário interage com ele.
+let panelCollapsed = false;
+
+function renderPanel() {
+  const panelEl = document.getElementById('mapPanel');
+  panelEl.innerHTML = '';
+  panelEl.classList.toggle('collapsed', panelCollapsed);
+
+  const header = document.createElement('div');
+  header.className = 'map-panel-header';
+  const title = document.createElement('h2');
+  title.textContent = 'Camadas';
+  const toggle = document.createElement('span');
+  toggle.className = 'map-panel-toggle';
+  toggle.textContent = '▾';
+  header.appendChild(title);
+  header.appendChild(toggle);
+  header.addEventListener('click', () => {
+    panelCollapsed = !panelCollapsed;
+    renderPanel();
+  });
+  panelEl.appendChild(header);
+
+  const el = document.createElement('div');
+  el.className = 'map-panel-body';
+  panelEl.appendChild(el);
 
   renderColorModeControl(el);
 
   const presaltSection = document.createElement('div');
-  presaltSection.className = 'map-sidebar-section';
+  presaltSection.className = 'map-panel-section';
   const presaltHeader = document.createElement('label');
-  presaltHeader.className = 'map-sidebar-group-header';
+  presaltHeader.className = 'map-panel-group-header';
   const presaltCheckbox = document.createElement('input');
   presaltCheckbox.type = 'checkbox';
   presaltCheckbox.checked = presaltFieldsVisible;
@@ -300,7 +324,7 @@ function renderSidebar() {
   presaltHeader.appendChild(document.createTextNode(' Outros campos do pré-sal'));
   presaltSection.appendChild(presaltHeader);
   const presaltNote = document.createElement('p');
-  presaltNote.className = 'map-sidebar-note';
+  presaltNote.className = 'map-panel-note';
   presaltNote.style.marginTop = '0';
   presaltNote.textContent = 'Contexto geográfico (tracejado cinza) — não fazem parte dos 29 contratos rastreados.';
   presaltSection.appendChild(presaltNote);
@@ -311,10 +335,10 @@ function renderSidebar() {
     if (!projects.length) continue;
 
     const section = document.createElement('div');
-    section.className = 'map-sidebar-section';
+    section.className = 'map-panel-section';
 
     const header = document.createElement('label');
-    header.className = 'map-sidebar-group-header';
+    header.className = 'map-panel-group-header';
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = groupVisible[g.id];
@@ -324,20 +348,20 @@ function renderSidebar() {
     section.appendChild(header);
 
     const list = document.createElement('ul');
-    list.className = 'map-sidebar-list';
+    list.className = 'map-panel-list';
     for (const project of projects) {
       const li = document.createElement('li');
       const hasShape = !!layerByProjectId[project.id];
-      li.className = 'map-sidebar-item' + (hasShape ? '' : ' no-shape');
+      li.className = 'map-panel-item' + (hasShape ? '' : ' no-shape');
       const dot = document.createElement('span');
-      dot.className = 'map-sidebar-dot';
+      dot.className = 'map-panel-dot';
       dot.style.background = hasShape ? colorForProject(project) : 'transparent';
       dot.style.borderColor = hasShape ? 'transparent' : 'var(--map-text-faint)';
       li.appendChild(dot);
       li.appendChild(document.createTextNode(project.name));
       if (!hasShape) {
         const flag = document.createElement('span');
-        flag.className = 'map-sidebar-flag';
+        flag.className = 'map-panel-flag';
         flag.textContent = 'sem shapefile';
         li.appendChild(flag);
       }
@@ -350,7 +374,7 @@ function renderSidebar() {
 
   const missingCount = Object.keys(PROJECTS_WITHOUT_SHAPE).length;
   const note = document.createElement('p');
-  note.className = 'map-sidebar-note';
+  note.className = 'map-panel-note';
   note.textContent = `${missingCount} projeto(s) sem poligonal disponível nos shapefiles da ANP fornecidos (clique no nome pra ver o motivo).`;
   el.appendChild(note);
 }

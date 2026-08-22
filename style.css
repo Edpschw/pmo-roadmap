@@ -484,36 +484,62 @@ body.map-page .btn-ghost {
 }
 body.map-page .btn-ghost:hover { background: #1e222a; }
 
-.map-wrapper { flex: 1 1 auto; display: flex; overflow: hidden; }
-#map { flex: 1 1 auto; height: 100%; background: var(--map-bg); }
+/* O mapa ocupa 100% de .map-wrapper; o painel de controles (modo de cor +
+   legenda + camadas) flutua por cima, ancorado no canto superior direito,
+   em vez de empurrar o mapa como uma coluna lateral fixa — assim o mapa
+   sempre fica em tela cheia por baixo dele. */
+.map-wrapper { flex: 1 1 auto; position: relative; overflow: hidden; }
+#map { position: absolute; inset: 0; background: var(--map-bg); }
 
-.map-sidebar {
-  flex: 0 0 var(--sidebar-w); width: var(--sidebar-w);
-  overflow-y: auto; background: var(--map-panel); border-right: 1px solid var(--map-border);
-  padding: 14px 12px;
+.map-panel {
+  position: absolute; top: 12px; right: 12px; z-index: 1000;
+  width: 280px; max-height: calc(100% - 24px);
+  display: flex; flex-direction: column;
+  background: rgba(21, 24, 29, 0.92); backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--map-border); border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
 }
-.map-sidebar-section { margin-bottom: 16px; }
-.map-sidebar-group-header {
+.map-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; cursor: pointer; flex: 0 0 auto;
+}
+.map-panel-header h2 {
+  margin: 0; font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--map-text);
+}
+.map-panel-toggle {
+  color: var(--map-text-muted); font-size: 10px; transition: transform .15s;
+}
+.map-panel.collapsed .map-panel-toggle { transform: rotate(-90deg); }
+.map-panel-body {
+  overflow-y: auto; padding: 0 12px 12px; border-top: 1px solid var(--map-border);
+}
+.map-panel.collapsed .map-panel-body { display: none; }
+.map-panel.collapsed .map-panel-header { padding-bottom: 10px; }
+.map-panel-section { margin-top: 14px; }
+.map-panel-section:first-child { margin-top: 12px; }
+.map-panel-group-header {
   display: flex; align-items: center; gap: 6px;
   font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
   color: var(--map-text-muted);
   margin-bottom: 6px; cursor: pointer;
 }
-.map-sidebar-list { list-style: none; margin: 0; padding: 0; }
-.map-sidebar-item {
+.map-panel-list { list-style: none; margin: 0; padding: 0; }
+.map-panel-item {
   display: flex; align-items: center; gap: 7px;
   padding: 5px 4px; border-radius: 6px; cursor: pointer;
   font-size: 12.5px; color: var(--map-text);
 }
-.map-sidebar-item:hover { background: #1e222a; }
-.map-sidebar-item.no-shape { color: var(--map-text-muted); }
-.map-sidebar-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; border: 1px solid transparent; }
-.map-sidebar-flag {
+.map-panel-item:hover { background: #1e222a; }
+.map-panel-item.no-shape { color: var(--map-text-muted); }
+.map-panel-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; border: 1px solid transparent; }
+.map-panel-flag {
   margin-left: auto; font-size: 9.5px; color: var(--map-text-faint);
   background: var(--map-bg); border: 1px solid var(--map-border); border-radius: 4px; padding: 1px 5px;
   white-space: nowrap;
 }
-.map-sidebar-note { font-size: 11px; color: var(--map-text-muted); line-height: 1.5; margin-top: 4px; }
+.map-panel-note { font-size: 11px; color: var(--map-text-muted); line-height: 1.5; margin-top: 4px; }
 
 /* Seletor "Colorir por" + legenda (status/rodada) */
 .map-mode-control { margin-bottom: 10px; }
@@ -627,4 +653,8 @@ body.map-page .leaflet-popup-close-button:hover { color: var(--map-text) !import
   .cell-input { padding: 3px 5px; }
   .cell-number { width: 56px; }
   .btn-small { padding: 4px 8px; font-size: 10.5px; }
+
+  /* Painel flutuante do mapa: em telas estreitas, 280px fixos deixam
+     pouco mapa visível — encolhe e some com a margem direita. */
+  .map-panel { top: 8px; right: 8px; width: min(240px, calc(100vw - 60px)); }
 }
