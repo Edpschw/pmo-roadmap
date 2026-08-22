@@ -153,30 +153,87 @@ function popupHTML(project, props) {
   </div>`;
 }
 
-// Ícone de poço no mapa: torre de perfuração como divIcon do Leaflet
-// (contorno escuro pra destacar tanto sobre o tile escuro quanto sobre o
-// preenchimento colorido do polígono). A silhueta triangular sozinha
-// (versão anterior) lia mais como "montanha" que como poço — esta usa a
-// treliça de uma torre de verdade (duas pernas + travessas + coroamento no
-// topo), que continua reconhecível no tamanho pequeno do mapa mas não se
-// confunde com outros ícones de "área"/"pico".
-function wellDivIcon(color) {
+// Classifica um poço da base ANP/BDEP numa das 6 situações que o mapa
+// desenha com ícone próprio (ver WELL_SHAPES) — prioridade em cima de
+// RECLASSIFICACAO (o resultado apurado do poço), caindo pra SITUACAO (o
+// estado atual, "produzindo"/"injetando"/etc.) só quando não há
+// reclassificação confiável (poço muito antigo, ou sob confidencialidade).
+// 'indefinido' é o poço sem nenhum registro de resultado — a maioria dos
+// marcos curados do roadmap (ver addWellMarker), que carregam o resultado
+// no próprio nome em vez de num campo separado.
+function wellCategory(info) {
+  if (!info) return 'indefinido';
+  const rec = info.rec || '';
+  if (rec.includes('INJEÇÃO')) return 'injecao';
+  if (rec.includes('ABANDONADO')) return 'abandonado';
+  if (rec === 'SECO SEM INDÍCIOS') return 'seco';
+  if (rec.includes('INDÍCIOS')) return rec.includes('PETRÓLEO') ? 'indicio' : 'gas';
+  if (rec.includes('GÁS') && !rec.includes('PETRÓLEO')) return 'gas';
+  if (rec.includes('PRODUTOR') || rec.includes('PORTADOR') || rec.includes('DESCOBRIDOR') || rec.includes('EXTENSÃO')) return 'producao';
+  const sit = info.sit || '';
+  if (sit === 'PRODUZINDO') return 'producao';
+  if (sit === 'INJETANDO') return 'injecao';
+  if (sit.includes('ABANDONADO') || sit === 'ARRASADO' || sit === 'FECHADO' || sit === 'DEVOLVIDO') return 'abandonado';
+  return 'indefinido';
+}
+
+// Um desenho por situação, todos no mesmo viewBox 16×16 (assim o mesmo
+// iconAnchor serve pra todos) — silhuetas bem diferentes entre si de
+// propósito, já que a cor sozinha está ocupada identificando o projeto.
+// 'producao' é a torre de perfuração (o ícone original, ponto de
+// referência); as outras seguem um vocabulário comum de sinalização
+// (seta pra injeção, X pra abandonado, gota vazia/cheia pra indício/gás,
+// círculo vazio pro poço seco) que não depende de decorar cada forma —
+// dá pra reconhecer o padrão geral (cheio=achou algo, vazio=não achou,
+// seta=intervenção) mesmo sem ler a legenda.
+const WELL_SHAPES = {
+  producao: (c) => `
+    <g fill="none" stroke="#0b0d10" stroke-width="2.3" stroke-linecap="round">
+      <path d="M8 2.3 L3 13.6 M8 2.3 L13 13.6"/>
+      <path d="M4.9 9.5 L11.1 9.5 M5.9 6.6 L10.1 6.6"/>
+    </g>
+    <g fill="none" stroke="${c}" stroke-width="1.3" stroke-linecap="round">
+      <path d="M8 2.3 L3 13.6 M8 2.3 L13 13.6"/>
+      <path d="M4.9 9.5 L11.1 9.5 M5.9 6.6 L10.1 6.6"/>
+    </g>
+    <rect x="1.8" y="13.6" width="12.4" height="1.5" rx="0.4" fill="${c}" stroke="#0b0d10" stroke-width="0.5"/>
+    <circle cx="8" cy="2.3" r="1.3" fill="${c}" stroke="#0b0d10" stroke-width="0.5"/>`,
+  injecao: (c) => `
+    <path d="M8 2 L8 9.5 M4.2 8.5 L8 12.8 L11.8 8.5" fill="none" stroke="#0b0d10" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8 2 L8 9.5 M4.2 8.5 L8 12.8 L11.8 8.5" fill="none" stroke="${c}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="1.8" y="13.4" width="12.4" height="1.5" rx="0.4" fill="${c}" stroke="#0b0d10" stroke-width="0.5"/>`,
+  abandonado: (c) => `
+    <circle cx="8" cy="8" r="6" fill="none" stroke="#0b0d10" stroke-width="2.6"/>
+    <circle cx="8" cy="8" r="6" fill="none" stroke="${c}" stroke-width="1.6"/>
+    <path d="M5 5 L11 11 M11 5 L5 11" stroke="#0b0d10" stroke-width="2.3" stroke-linecap="round"/>
+    <path d="M5 5 L11 11 M11 5 L5 11" stroke="${c}" stroke-width="1.3" stroke-linecap="round"/>`,
+  indicio: (c) => `
+    <path d="M8 1.6 C8 1.6 3 8 3 11 C3 13.6 5.2 15 8 15 C10.8 15 13 13.6 13 11 C13 8 8 1.6 8 1.6 Z"
+      fill="none" stroke="#0b0d10" stroke-width="2.3"/>
+    <path d="M8 1.6 C8 1.6 3 8 3 11 C3 13.6 5.2 15 8 15 C10.8 15 13 13.6 13 11 C13 8 8 1.6 8 1.6 Z"
+      fill="none" stroke="${c}" stroke-width="1.3"/>`,
+  seco: (c) => `
+    <circle cx="8" cy="8" r="4.4" fill="none" stroke="#0b0d10" stroke-width="2.4"/>
+    <circle cx="8" cy="8" r="4.4" fill="none" stroke="${c}" stroke-width="1.4"/>`,
+  gas: (c) => `
+    <path d="M8.3 1.4 C6 4.6 4.8 7 5 9.3 C5.2 11.8 6.9 13.6 9 13.4 C11.3 13.2 12.6 11.1 12.1 8.9 C11.9 8 11.2 7.2 10.7 7.7 C11 9 10.3 9.9 9.4 9.5 C10 7.3 9.4 3.4 8.3 1.4 Z"
+      fill="${c}" stroke="#0b0d10" stroke-width="1.1"/>`,
+  indefinido: (c) => `
+    <rect x="4.7" y="4.7" width="6.6" height="6.6" transform="rotate(45 8 8)" fill="none" stroke="#0b0d10" stroke-width="2.2"/>
+    <rect x="4.7" y="4.7" width="6.6" height="6.6" transform="rotate(45 8 8)" fill="none" stroke="${c}" stroke-width="1.2"/>`,
+};
+
+// Ícone de poço no mapa: uma silhueta por situação (ver WELL_SHAPES e
+// wellCategory), como divIcon do Leaflet (contorno escuro pra destacar
+// tanto sobre o tile escuro quanto sobre o preenchimento colorido do
+// polígono).
+function wellDivIcon(color, category) {
+  const shape = WELL_SHAPES[category] || WELL_SHAPES.indefinido;
   return L.divIcon({
     className: 'map-well-icon',
-    html: `<svg viewBox="0 0 16 16" width="16" height="16" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.7))">
-      <g fill="none" stroke="#0b0d10" stroke-width="2.3" stroke-linecap="round">
-        <path d="M8 2.3 L3 13.6 M8 2.3 L13 13.6"/>
-        <path d="M4.9 9.5 L11.1 9.5 M5.9 6.6 L10.1 6.6"/>
-      </g>
-      <g fill="none" stroke="${color}" stroke-width="1.3" stroke-linecap="round">
-        <path d="M8 2.3 L3 13.6 M8 2.3 L13 13.6"/>
-        <path d="M4.9 9.5 L11.1 9.5 M5.9 6.6 L10.1 6.6"/>
-      </g>
-      <rect x="1.8" y="13.6" width="12.4" height="1.5" rx="0.4" fill="${color}" stroke="#0b0d10" stroke-width="0.5"/>
-      <circle cx="8" cy="2.3" r="1.3" fill="${color}" stroke="#0b0d10" stroke-width="0.5"/>
-    </svg>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 14],
+    html: `<svg viewBox="0 0 16 16" width="21" height="21" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.7))">${shape(color)}</svg>`,
+    iconSize: [21, 21],
+    iconAnchor: [10.5, 18.4],
   });
 }
 
@@ -248,13 +305,13 @@ function wellPopupHTML(label, w, color, others) {
 }
 
 function addWellMarker(targetLayer, latlng, color, entries) {
-  const marker = L.marker(latlng, { icon: wellDivIcon(color), zIndexOffset: 500 });
   const first = entries[0];
+  const marker = L.marker(latlng, { icon: wellDivIcon(color, wellCategory(first.info)), zIndexOffset: 500 });
   const when = first.date ? formatBR(first.date) : '';
   const extra = entries.length > 1 ? `<br>+ ${entries.length - 1} poço(s) no mesmo ponto` : '';
   marker.bindTooltip(
     `${escapeHtml(first.label)}${when ? '<br>' + when : ''}${first.approx ? ' (aprox.)' : ''}${extra}`,
-    { direction: 'top', offset: [0, -10], className: 'map-well-tooltip' },
+    { direction: 'top', offset: [0, -13], className: 'map-well-tooltip' },
   );
   if (first.info) marker.bindPopup(wellPopupHTML(first.label, first.info, color, entries.slice(1)));
   targetLayer.addLayer(marker);
@@ -596,6 +653,36 @@ function renderColorModeControl(container) {
   }
 }
 
+// Ordem de exibição na legenda — do resultado mais positivo (achou e
+// produz) ao mais neutro (sem registro), agrupando injeção/abandonado
+// (intervenção/descontinuado) no meio.
+const WELL_CATEGORY_LABELS = [
+  ['producao', 'Produção (óleo)'],
+  ['gas', 'Produção/indício de gás'],
+  ['indicio', 'Indício de óleo (poço seco)'],
+  ['seco', 'Seco, sem indícios'],
+  ['injecao', 'Injeção (água, vapor ou gás)'],
+  ['abandonado', 'Abandonado'],
+  ['indefinido', 'Sem resultado registrado'],
+];
+const WELL_LEGEND_COLOR = '#c7cad1';
+
+function buildWellShapeLegend() {
+  const legend = document.createElement('div');
+  legend.className = 'map-legend';
+  for (const [category, label] of WELL_CATEGORY_LABELS) {
+    const row = document.createElement('div');
+    row.className = 'map-legend-row';
+    const icon = document.createElement('span');
+    icon.className = 'map-legend-well-icon';
+    icon.innerHTML = `<svg viewBox="0 0 16 16" width="15" height="15">${WELL_SHAPES[category](WELL_LEGEND_COLOR)}</svg>`;
+    row.appendChild(icon);
+    row.appendChild(document.createTextNode(label));
+    legend.appendChild(row);
+  }
+  return legend;
+}
+
 function buildLegend(entries) {
   const legend = document.createElement('div');
   legend.className = 'map-legend';
@@ -680,6 +767,15 @@ function renderPanel() {
   outrosNote.textContent = 'Poços com pré-sal confirmado pela ANP, fora dos contratos rastreados (pontos cinza).';
   outrosSection.appendChild(outrosNote);
   el.appendChild(outrosSection);
+
+  const shapeSection = document.createElement('div');
+  shapeSection.className = 'map-panel-section';
+  const shapeHeader = document.createElement('div');
+  shapeHeader.className = 'map-mode-label';
+  shapeHeader.textContent = 'Situação do poço';
+  shapeSection.appendChild(shapeHeader);
+  shapeSection.appendChild(buildWellShapeLegend());
+  el.appendChild(shapeSection);
 
   for (const g of GROUP_DEFS) {
     const projects = state.projects.filter((p) => p.group === g.id);
