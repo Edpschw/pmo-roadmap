@@ -212,19 +212,20 @@ function wellCategory(info) {
 
 // Um desenho por situação, todos no mesmo viewBox 16×16 (assim o mesmo
 // iconAnchor serve pra todos). Vocabulário de símbolo de poço mais comum em
-// mapas de E&P (o mesmo círculo/triângulo/quadrado usado pelos basemaps de
-// agências como a Texas RRC e a Colorado COGCC, e pelo estilo "Petroleum"
-// do ArcGIS) em vez de pictogramas desenhados — mais reconhecível pra quem
-// já viu um mapa de poços antes, e mais simples de manter legível pequeno:
-// círculo = óleo, triângulo = gás, quadrado = injeção, vazio = não achou
-// nada (seco) ou achou pela metade (indício), X = abandonado.
+// mapas de E&P (o mesmo círculo/triângulo usado pelos basemaps de agências
+// como a Texas RRC e a Colorado COGCC, e pelo estilo "Petroleum" do
+// ArcGIS) em vez de pictogramas desenhados — mais reconhecível pra quem já
+// viu um mapa de poços antes, e mais simples de manter legível pequeno:
+// círculo = óleo, triângulo = gás, seta pra baixo = injeção (fluido volta
+// pro reservatório), vazio = não achou nada (seco) ou achou pela metade
+// (indício), X = abandonado.
 const WELL_SHAPES = {
   producao: (c) => `
     <circle cx="8" cy="8" r="5.4" fill="${c}" stroke="#0b0d10" stroke-width="1.4"/>`,
   gas: (c) => `
     <path d="M8 2 L13.7 12.6 L2.3 12.6 Z" fill="${c}" stroke="#0b0d10" stroke-width="1.4" stroke-linejoin="round"/>`,
   injecao: (c) => `
-    <rect x="3" y="3" width="10" height="10" fill="${c}" stroke="#0b0d10" stroke-width="1.4"/>`,
+    <path d="M6.2 2.2H9.8V7.4H12.8L8 13L3.2 7.4H6.2Z" fill="${c}" stroke="#0b0d10" stroke-width="1.4" stroke-linejoin="round"/>`,
   indicio: (c) => `
     <circle cx="8" cy="8" r="5.4" fill="none" stroke="#0b0d10" stroke-width="1.4"/>
     <path d="M8 2.6 A5.4 5.4 0 0 0 8 13.4 Z" fill="${c}"/>`,
@@ -238,6 +239,28 @@ const WELL_SHAPES = {
   indefinido: (c) => `
     <circle cx="8" cy="8" r="2.6" fill="${c}" stroke="#0b0d10" stroke-width="1" fill-opacity="0.55"/>`,
 };
+
+// Selo no canto superior direito da seta de injeção, indicando o fluido
+// injetado (os únicos dois valores de RECLASSIFICACAO observados na base
+// são "INJEÇÃO DE ÁGUA" e "INJEÇÃO DE GÁS NATURAL" — ver wellInjectionType).
+// Cor fixa (não a cor do projeto): assim o selo se reconhece à distância
+// como "água" ou "gás" em qualquer contrato, igual o anel laranja de AnC.
+const INJECTION_BADGES = {
+  agua: `<path d="M13 0.6C14.6 2.9 15.5 4.5 15.5 5.7A2.5 2.5 0 1 1 10.5 5.7C10.5 4.5 11.4 2.9 13 0.6Z" fill="#3aa8ff" stroke="#0b0d10" stroke-width="0.6"/>`,
+  gas: `<path d="M13.4 0.5C13.7 2.1 14.7 2.9 15.4 3.8A2.6 2.6 0 1 1 10.5 4.9C10.5 4.4 10.65 4.0 10.9 3.6C11.0 4.1 11.25 4.3 11.6 4.1C11.35 3.0 11.75 1.9 13.4 0.5Z" fill="#ff6b35" stroke="#0b0d10" stroke-width="0.6"/>`,
+};
+
+// Sub-tipo de injeção pro selo do ícone (ver INJECTION_BADGES) — só faz
+// sentido quando wellCategory(info) já deu 'injecao'. null quando o
+// RECLASSIFICACAO não bate com nenhum dos dois valores conhecidos (não
+// deveria acontecer com os dados atuais, mas fica sem selo em vez de
+// assumir errado).
+function wellInjectionType(info) {
+  const rec = (info && info.rec) || '';
+  if (rec.includes('GÁS')) return 'gas';
+  if (rec.includes('ÁGUA')) return 'agua';
+  return null;
+}
 
 // Ícone de poço no mapa: uma silhueta por situação (ver WELL_SHAPES e
 // wellCategory), como divIcon do Leaflet (contorno escuro pra destacar
@@ -253,12 +276,13 @@ const WELL_SHAPES = {
 // visual de que aquele ponto está fora de qualquer contorno desenhado.
 const ANC_RING_COLOR = '#e8a33d';
 
-function wellDivIcon(color, category, anc) {
+function wellDivIcon(color, category, anc, injType) {
   const shape = WELL_SHAPES[category] || WELL_SHAPES.indefinido;
   const ring = anc ? `<circle cx="8" cy="8" r="7.2" fill="none" stroke="${ANC_RING_COLOR}" stroke-width="1.1" stroke-dasharray="2 1.4"/>` : '';
+  const badge = category === 'injecao' && INJECTION_BADGES[injType] ? INJECTION_BADGES[injType] : '';
   return L.divIcon({
     className: 'map-well-icon',
-    html: `<svg viewBox="0 0 16 16" width="13" height="13" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,0.7))">${shape(color)}${ring}</svg>`,
+    html: `<svg viewBox="0 0 16 16" width="13" height="13" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,0.7))">${shape(color)}${badge}${ring}</svg>`,
     iconSize: [13, 13],
     iconAnchor: [6.5, 6.5],
   });
@@ -437,7 +461,7 @@ function wellPopupHTML(label, w, color, others) {
 function addWellMarker(targetLayer, latlng, color, entries) {
   const first = entries[0];
   const anc = !!(first.info && first.info.anc);
-  const marker = L.marker(latlng, { icon: wellDivIcon(color, wellCategory(first.info), anc), zIndexOffset: 500 });
+  const marker = L.marker(latlng, { icon: wellDivIcon(color, wellCategory(first.info), anc, wellInjectionType(first.info)), zIndexOffset: 500 });
   const when = first.date ? formatBR(first.date) : '';
   const extra = entries.length > 1 ? `<br>+ ${entries.length - 1} poço(s) no mesmo ponto` : '';
   const ancNote = anc ? '<br>Área não concedida (AnC)' : '';
@@ -962,7 +986,6 @@ const WELL_CATEGORY_LABELS = [
   ['gas', 'Produção/indício de gás'],
   ['indicio', 'Indício de óleo (poço seco)'],
   ['seco', 'Seco, sem indícios'],
-  ['injecao', 'Injeção (água, vapor ou gás)'],
   ['abandonado', 'Abandonado'],
   ['indefinido', 'Sem resultado registrado'],
 ];
@@ -977,6 +1000,16 @@ function buildWellShapeLegend() {
     const icon = document.createElement('span');
     icon.className = 'map-legend-well-icon';
     icon.innerHTML = `<svg viewBox="0 0 16 16" width="15" height="15">${WELL_SHAPES[category](WELL_LEGEND_COLOR)}</svg>`;
+    row.appendChild(icon);
+    row.appendChild(document.createTextNode(label));
+    legend.appendChild(row);
+  }
+  for (const [injType, label] of [['agua', 'Injeção de água'], ['gas', 'Injeção de gás']]) {
+    const row = document.createElement('div');
+    row.className = 'map-legend-row';
+    const icon = document.createElement('span');
+    icon.className = 'map-legend-well-icon';
+    icon.innerHTML = `<svg viewBox="0 0 16 16" width="15" height="15">${WELL_SHAPES.injecao(WELL_LEGEND_COLOR)}${INJECTION_BADGES[injType]}</svg>`;
     row.appendChild(icon);
     row.appendChild(document.createTextNode(label));
     legend.appendChild(row);
