@@ -171,6 +171,7 @@ const rangeLabelEl = document.getElementById('rangeLabel');
 const modalOverlay = document.getElementById('modalOverlay');
 const modalEl = document.getElementById('modal');
 const toastEl = document.getElementById('toast');
+const popoverEl = document.getElementById('popover');
 
 /* -------------------------------- Toast --------------------------------- */
 
@@ -248,6 +249,28 @@ function milestoneLabelBoxWidth(name) {
   return Math.ceil(measureTextWidth(name, MILESTONE_LABEL_FONT) * 1.1) + 12;
 }
 
+// Rótulo sempre visível no gráfico fica só com o essencial (código do
+// poço, apelido entre aspas se houver); o resultado/detalhe que antes
+// vinha grudado no nome ("(sem indícios de pré-sal)", "— bloco
+// devolvido" etc.) sai do texto sempre-visível e passa a aparecer só no
+// hover (ver showMilestoneTooltip) — nada é perdido, só deixa de poluir
+// a régua quando o gráfico tem muitos marcos próximos. Remove parêntese
+// final e cláusula final com travessão (—, não hífen comum: código de
+// poço como "1-BRSA-1363-RJS" usa hífen e não pode ser cortado no meio).
+function simplifyMilestoneLabel(name) {
+  let s = String(name);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    let m = s.match(/^(.*?)\s*\([^()]*\)\s*$/);
+    if (m && m[1]) { s = m[1]; changed = true; continue; }
+    m = s.match(/^(.*)\s+—\s+.+$/);
+    if (m && m[1]) { s = m[1]; changed = true; continue; }
+  }
+  s = s.trim();
+  return s || String(name).trim();
+}
+
 // O rótulo do marco fica sempre centralizado exatamente sobre o losango —
 // nunca desloca horizontalmente, nem para desviar de barras de tarefa (isso
 // já causou o rótulo "teleportando" para longe do marco). A única
@@ -267,7 +290,7 @@ function resolveMilestoneLabelLayout(placements, rangeStart) {
   for (const laneItems of byLane.values()) {
     const withPos = laneItems.map((item) => {
       const diamondX = diffDays(rangeStart, parseDate(item.date)) * currentPxPerDay;
-      const labelBoxWidth = milestoneLabelBoxWidth(item.name);
+      const labelBoxWidth = milestoneLabelBoxWidth(simplifyMilestoneLabel(item.name));
       return { item, left: diamondX - labelBoxWidth / 2, right: diamondX + labelBoxWidth / 2 };
     }).sort((a, b) => a.left - b.left);
 
@@ -724,15 +747,11 @@ function renderProjectRow(project, rangeStart) {
   let rowHeight = Math.max(PROJECT_ROW_H, mobileLabelHeight);
   let milestonePlacements = [];
   let milestoneLaneCount = 1;
-  const ownerByItem = new Map();
   if (project.collapsed) {
     const milestones = [];
     for (const w of project.workstreams) {
       for (const it of w.items) {
-        if (it.type === 'milestone') {
-          milestones.push(it);
-          ownerByItem.set(it, w);
-        }
+        if (it.type === 'milestone') milestones.push(it);
       }
     }
     if (milestones.length) {
@@ -792,7 +811,7 @@ function renderProjectRow(project, rangeStart) {
   const milestoneLabelLayout = resolveMilestoneLabelLayout(milestonePlacements, rangeStart);
   for (const { item, lane } of milestonePlacements) {
     const milestoneTop = rowHeight / 2 - COLLAPSED_MILESTONE_LIFT + (lane - (milestoneLaneCount - 1) / 2) * LANE_H;
-    timelineCell.appendChild(renderMilestone(project, ownerByItem.get(item), item, lane, rangeStart, milestoneLabelLayout.get(item), milestoneTop));
+    timelineCell.appendChild(renderMilestone(project, item, lane, rangeStart, milestoneLabelLayout.get(item), milestoneTop));
   }
 
   row.appendChild(timelineCell);
@@ -819,7 +838,6 @@ function renderWorkstreamRow(project, ws, rangeStart) {
   const actions = document.createElement('div');
   actions.className = 'row-actions';
   actions.appendChild(iconButton('T', 'Nova tarefa', () => openTaskModal(project, ws)));
-  actions.appendChild(iconButton('◆', 'Novo marco', () => openMilestoneModal(project, ws)));
   actions.appendChild(iconButton('✎', 'Editar workstream', () => openWorkstreamModal(project, ws), 'secondary-action'));
   actions.appendChild(iconButton('✕', 'Excluir workstream', () => confirmDeleteWorkstream(project, ws), 'secondary-action'));
   labelCell.appendChild(actions);
@@ -840,7 +858,7 @@ function renderWorkstreamRow(project, ws, rangeStart) {
     if (item.type === 'task') {
       timelineCell.appendChild(renderTaskBar(project, ws, item, lane, rangeStart));
     } else {
-      timelineCell.appendChild(renderMilestone(project, ws, item, lane, rangeStart, milestoneLabelLayout.get(item)));
+      timelineCell.appendChild(renderMilestone(project, item, lane, rangeStart, milestoneLabelLayout.get(item)));
     }
   }
 
@@ -945,8 +963,61 @@ function wellIconSVG(color) {
   </svg>`;
 }
 const MILESTONE_ICON_BUILDERS = { contract: contractIconSVG, fpso: fpsoIconSVG, well: wellIconSVG };
+const MILESTONE_TYPE_LABELS = { contract: 'Marco de contrato', fpso: 'FPSO', well: 'Poço' };
 
-function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverride, topOverride) {
+// Tooltip de hover do marco — mostra o nome completo (o rótulo sempre
+// visível no gráfico é o simplificado, ver simplifyMilestoneLabel) e os
+// detalhes que antes só davam pra ver editando o marco (agora só leitura,
+// ver "retirar edição" no histórico do repositório). Reaproveita o
+// #popover, que não tinha nenhum outro uso na página.
+function showMilestoneTooltip(dia, item, isPast) {
+  const typeLabel = MILESTONE_TYPE_LABELS[item.icon] || 'Marco';
+  let statusHTML = '';
+  if (isPast) {
+    statusHTML = item.done
+      ? `<p class="milestone-tooltip-status" style="color:${MILESTONE_PAST_LABEL_COLOR}">Realizado</p>`
+      : `<p class="milestone-tooltip-status" style="color:${MILESTONE_OVERDUE_LABEL_COLOR}">Atrasado (não realizado)</p>`;
+  } else {
+    statusHTML = '<p class="milestone-tooltip-status">Previsto</p>';
+  }
+  const approxHTML = item.approx
+    ? '<p class="milestone-tooltip-approx">Data aproximada — só o mês era conhecido.</p>'
+    : '';
+  popoverEl.innerHTML = `
+    <div class="milestone-tooltip">
+      <h3>${escapeHtml(item.name)}</h3>
+      <p class="milestone-tooltip-meta">${escapeHtml(typeLabel)} · ${formatBR(item.date)}</p>
+      ${statusHTML}
+      ${approxHTML}
+    </div>`;
+  popoverEl.hidden = false;
+  popoverEl.classList.add('milestone-tooltip-popover');
+
+  const rect = dia.getBoundingClientRect();
+  const popRect = popoverEl.getBoundingClientRect();
+  let left = rect.left + rect.width / 2 - popRect.width / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - popRect.width - 8));
+  let top = rect.top - popRect.height - 10;
+  let arrowBelow = false;
+  if (top < 8) {
+    top = rect.bottom + 10;
+    arrowBelow = true;
+  }
+  popoverEl.classList.toggle('arrow-below', arrowBelow);
+  popoverEl.classList.toggle('arrow-above', !arrowBelow);
+  popoverEl.style.left = left + 'px';
+  popoverEl.style.top = top + 'px';
+  // Seta aponta pro losango mesmo quando o tooltip precisa deslocar
+  // horizontalmente pra não sair da tela (ver clamp de `left` acima).
+  popoverEl.style.setProperty('--arrow-left', (rect.left + rect.width / 2 - left) + 'px');
+}
+
+function hideMilestoneTooltip() {
+  popoverEl.hidden = true;
+  popoverEl.classList.remove('milestone-tooltip-popover', 'arrow-below', 'arrow-above');
+}
+
+function renderMilestone(project, item, lane, rangeStart, labelLayoutOverride, topOverride) {
   const date = parseDate(item.date);
   const isPast = date < parseDate(todayISO());
   const left = diffDays(rangeStart, date) * currentPxPerDay;
@@ -982,9 +1053,11 @@ function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverrid
       dia.style.border = `2px solid ${MILESTONE_OVERDUE_LABEL_COLOR}`;
     }
   }
-  dia.title = `${item.name}\n${formatBR(item.date)}` +
-    (isPast ? (item.done ? '\nRealizado' : '\nAtrasado (não realizado)') : '') +
-    (item.approx ? '\n(data aproximada — só o mês era conhecido)' : '');
+  // Sem title nativo: o hover mostra o tooltip rico (ver
+  // showMilestoneTooltip), que já leva nome completo, data e status —
+  // duplicar num title do navegador só criaria dois tooltips concorrendo.
+  dia.addEventListener('mouseenter', () => showMilestoneTooltip(dia, item, isPast));
+  dia.addEventListener('mouseleave', hideMilestoneTooltip);
 
   // Rótulo sempre centralizado exatamente sobre o losango (não ao lado).
   // Marcos já passados e realizados ficam acinzentados (padrão de tarefa
@@ -996,10 +1069,11 @@ function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverrid
   // horizontal nunca muda, continua centralizada na data real.
   const labelEl = document.createElement('span');
   labelEl.className = 'milestone-label';
-  labelEl.textContent = item.name;
+  const simplifiedName = simplifyMilestoneLabel(item.name);
+  labelEl.textContent = simplifiedName;
   if (isPast) labelEl.style.color = item.done ? MILESTONE_PAST_LABEL_COLOR : MILESTONE_OVERDUE_LABEL_COLOR;
 
-  const labelBoxWidth = milestoneLabelBoxWidth(item.name);
+  const labelBoxWidth = milestoneLabelBoxWidth(simplifiedName);
   const labelLeft = Math.max(2, Math.min(left - labelBoxWidth / 2, currentTimelineWidth - labelBoxWidth - 2));
   labelEl.style.left = labelLeft + 'px';
   labelEl.style.width = labelBoxWidth + 'px';
@@ -1009,8 +1083,6 @@ function renderMilestone(project, ws, item, lane, rangeStart, labelLayoutOverrid
   } else {
     labelEl.style.top = (top - 8) + 'px';
   }
-
-  attachMilestoneDrag(dia, project, ws, item);
 
   wrapper.appendChild(dia);
   wrapper.appendChild(labelEl);
@@ -1085,44 +1157,6 @@ function attachTaskDrag(bar, handleLeft, handleRight, project, ws, item) {
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
   }
-}
-
-function attachMilestoneDrag(dia, project, ws, item) {
-  dia.addEventListener('pointerdown', (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (currentPxPerDay < MIN_PX_PER_DAY_FOR_DRAG) {
-      openMilestoneModal(project, ws, item);
-      return;
-    }
-    const startX = e.clientX;
-    const origOffset = diffDays(currentRangeStart, parseDate(item.date));
-    let hasMoved = false;
-    dia.classList.add('dragging');
-
-    function onMove(ev) {
-      const deltaPx = ev.clientX - startX;
-      const deltaDays = Math.round(deltaPx / currentPxPerDay);
-      if (deltaDays !== 0) hasMoved = true;
-      const newOffset = origOffset + deltaDays;
-      dia.style.left = (newOffset * currentPxPerDay) + 'px';
-      dia._pendingOffset = newOffset;
-    }
-    function onUp(ev) {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      dia.classList.remove('dragging');
-      if (hasMoved && dia._pendingOffset !== undefined) {
-        item.date = toISO(addDays(currentRangeStart, dia._pendingOffset));
-        saveState();
-        render();
-      } else if (!hasMoved) {
-        openMilestoneModal(project, ws, item);
-      }
-    }
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-  });
 }
 
 /* -------------------------------- Modals ---------------------------------- */
@@ -1316,68 +1350,6 @@ function openTaskModal(project, ws, item) {
       render();
       closeModal();
       showToast(isEdit ? 'Tarefa atualizada.' : 'Tarefa criada.');
-    });
-  });
-}
-
-function openMilestoneModal(project, ws, item) {
-  const isEdit = !!item;
-  const date = isEdit ? item.date : todayISO();
-  const icon = (isEdit && item.icon) || 'generic';
-  const html = `
-    <h2>${isEdit ? 'Editar marco' : 'Novo marco'}</h2>
-    <p style="margin:-6px 0 14px;color:var(--text-muted);font-size:12px;">${escapeHtml(project.name)} / ${escapeHtml(ws.name)}</p>
-    <div class="field">
-      <label>Nome do marco</label>
-      <input type="text" id="f-name" value="${isEdit ? escapeAttr(item.name) : ''}" placeholder="Ex: Aprovação do comitê" />
-    </div>
-    <div class="field">
-      <label>Data</label>
-      <input type="date" id="f-date" value="${date}" />
-    </div>
-    <div class="field">
-      <label>Ícone</label>
-      <select id="f-icon">
-        <option value="generic"${icon === 'generic' ? ' selected' : ''}>Genérico (losango)</option>
-        <option value="contract"${icon === 'contract' ? ' selected' : ''}>Contrato</option>
-        <option value="fpso"${icon === 'fpso' ? ' selected' : ''}>FPSO</option>
-        <option value="well"${icon === 'well' ? ' selected' : ''}>Poço</option>
-      </select>
-    </div>
-    <div class="field field-checkbox">
-      <label><input type="checkbox" id="f-done" ${isEdit && item.done ? 'checked' : ''} /> Marco realizado</label>
-    </div>
-    <div class="modal-actions">
-      <div>${isEdit ? '<button class="btn-danger" id="f-delete">Excluir marco</button>' : ''}</div>
-      <div class="modal-actions-right">
-        <button class="btn-ghost" id="f-cancel">Cancelar</button>
-        <button class="btn-primary" id="f-save">${isEdit ? 'Salvar' : 'Criar'}</button>
-      </div>
-    </div>`;
-  openModalWith(html, (m) => {
-    m.querySelector('#f-cancel').addEventListener('click', closeModal);
-    if (isEdit) {
-      m.querySelector('#f-delete').addEventListener('click', () => {
-        closeModal();
-        confirmDeleteItem(project, ws, item, 'marco');
-      });
-    }
-    m.querySelector('#f-save').addEventListener('click', () => {
-      const name = m.querySelector('#f-name').value.trim();
-      const d = m.querySelector('#f-date').value;
-      const done = m.querySelector('#f-done').checked;
-      const iconValue = m.querySelector('#f-icon').value;
-      if (!name) { showToast('Informe um nome para o marco.'); return; }
-      if (!d) { showToast('Informe a data do marco.'); return; }
-      if (isEdit) {
-        item.name = name; item.date = d; item.done = done; item.icon = iconValue;
-      } else {
-        ws.items.push({ id: uid('m'), type: 'milestone', name, date: d, done, icon: iconValue });
-      }
-      saveState();
-      render();
-      closeModal();
-      showToast(isEdit ? 'Marco atualizado.' : 'Marco criado.');
     });
   });
 }
