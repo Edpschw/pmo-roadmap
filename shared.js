@@ -143,16 +143,32 @@ function wellCodeOf(name) {
 // Categoria de um poço a partir do registro da ANP/BDEP (info = um item de
 // data/pocos.json: { rec: RECLASSIFICACAO, sit: SITUACAO, ... }).
 // RECLASSIFICACAO (resultado apurado) manda antes de SITUACAO (estado
-// atual) — mas produtor/injetor só conta se o poço ainda estiver ativo:
-// RECLASSIFICACAO é um veredito histórico que não muda quando o poço é
-// desativado depois; SITUACAO, sim. Sem essa checagem, quase metade dos
-// poços "produtor" na base tinham SITUACAO abandonado e apareciam como
-// óleo/injeção ativos indevidamente no mapa.
+// atual) — mas produtor/injetor só conta se o poço ainda estiver
+// definitivamente fora de operação: RECLASSIFICACAO é um veredito
+// histórico que não muda quando o poço é desativado depois; SITUACAO,
+// sim. Sem essa checagem, quase metade dos poços "produtor" na base
+// tinham SITUACAO abandonado/fechado e apareciam como óleo/injeção
+// ativos indevidamente no mapa.
+//
+// Revisão (poços abandonados): SITUACAO tem 4 variantes de "abandonado"
+// bem diferentes — só ABANDONADO PERMANENTEMENTE (e ARRASADO/DEVOLVIDO/
+// "aguardando arrasamento") é estado final. ABANDONADO TEMPORARIAMENTE
+// (com ou sem monitoramento) e ABANDONADO POR LOGÍSTICA EXPLORATÓRIA são
+// pausas operacionais — o poço pode ser reaberto, e não é coincidência
+// que a maioria desses dois grupos tenha RECLASSIFICACAO de produtor/
+// portador/descobridor (achou petróleo ou gás): plugar um poço
+// exploratório depois do teste e voltar depois pra decidir o
+// desenvolvimento é rotina, não um resultado negativo. Contar os dois
+// como "abandonado" escondia justamente a descoberta que a categoria
+// deveria mostrar — por isso só entram no sitAbandoned os estados
+// realmente finais; FECHADO continua contando (é o caso identificado no
+// bug original: poço fechado é poço que não está operando agora).
 function wellCategory(info) {
   if (!info) return 'indefinido';
   const rec = info.rec || '';
   const sit = info.sit || '';
-  const sitAbandoned = sit.includes('ABANDONADO') || sit === 'ARRASADO' || sit === 'FECHADO' || sit === 'DEVOLVIDO';
+  const sitAbandoned = sit === 'ABANDONADO PERMANENTEMENTE' || sit === 'ARRASADO' || sit === 'FECHADO'
+    || sit === 'DEVOLVIDO' || sit === 'ABANDONADO AGUARDANDO ABANDONO DEFINITIVO/ARRASAMENTO';
   if (rec.includes('INJEÇÃO')) return sitAbandoned ? 'abandonado' : 'injecao';
   if (rec.includes('ABANDONADO')) return 'abandonado';
   if (rec === 'SECO SEM INDÍCIOS') return 'seco';

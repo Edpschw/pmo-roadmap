@@ -581,6 +581,32 @@ function computeFieldRow(feature) {
   };
 }
 
+// "outros" em data/pocos.json: poços do play do pré-sal (ATINGIU_PRESAL=
+// 'S' na base ANP/BDEP) que não caem em nenhum dos 29 contratos
+// rastreados nem em nenhum dos 13 campos de contexto nomeados — sem
+// operador/bacia/regime/STOIIP porque não são um campo, é o resto
+// espalhado do play. Sem isso, "todos os campos do pré-sal" ficava
+// faltando justamente os ~225 poços que o mapa já desenha (camada
+// "outros poços", cor neutra) mas a página de análises não somava em
+// lugar nenhum.
+function computeOutrosRow(outrosPocos) {
+  const counts = {};
+  for (const [cat] of WELL_CATEGORY_ORDER) counts[cat] = 0;
+  for (const w of outrosPocos) counts[wellCategory(w)]++;
+  return {
+    name: 'Outros poços do pré-sal (sem campo nomeado)',
+    operador: null,
+    bacia: null,
+    regime: null,
+    areaKm2: null,
+    wellsTotal: outrosPocos.length,
+    wellCounts: counts,
+    stoiip: null,
+    participacao: null,
+    isOutros: true,
+  };
+}
+
 function renderFieldsTable(container, fieldRows) {
   const wrap = document.createElement('div');
   wrap.className = 'table-wrapper';
@@ -601,9 +627,13 @@ function renderFieldsTable(container, fieldRows) {
   table.appendChild(thead);
 
   const tbody = document.createElement('tbody');
-  const sorted = [...fieldRows].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-  for (const r of sorted) {
+  // "Outros" não é um campo nomeado — fica sempre por último em vez de
+  // entrar na ordem alfabética junto dos campos de verdade.
+  const named = fieldRows.filter((r) => !r.isOutros).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const outros = fieldRows.filter((r) => r.isOutros);
+  for (const r of [...named, ...outros]) {
     const tr = document.createElement('tr');
+    if (r.isOutros) tr.className = 'muted';
     tr.innerHTML = `
       <td>${escapeHtml(r.name)}</td>
       <td class="${r.regime === 'Partilha' ? '' : 'muted'}">${escapeHtml(r.regime || '—')}</td>
@@ -622,10 +652,12 @@ function renderFieldsTable(container, fieldRows) {
 }
 
 function renderFieldsSection(container, fieldRows) {
+  const named = fieldRows.filter((r) => !r.isOutros);
+  const outros = fieldRows.find((r) => r.isOutros);
   const intro = document.createElement('p');
   intro.className = 'chart-card-subtitle';
   intro.style.margin = '0 0 14px';
-  intro.textContent = `Campos do pré-sal que não são nenhum dos 29 contratos rastreados acima — a maioria em regime de Concessão ou Cessão Onerosa (${fieldRows.filter((r) => r.regime !== 'Partilha').length} de ${fieldRows.length}), bem anterior à Lei da Partilha (2010); só Mero é Partilha. Alguns ficam dentro da área de um contrato já rastreado (ex.: Mero fica dentro do bloco de Libra) — por isso os poços e o STOIIP daqui não entram nos KPIs do topo, pra não contar em dobro.`;
+  intro.textContent = `Campos do pré-sal que não são nenhum dos 29 contratos rastreados acima — a maioria em regime de Concessão ou Cessão Onerosa (${named.filter((r) => r.regime !== 'Partilha').length} de ${named.length}), bem anterior à Lei da Partilha (2010); só Mero é Partilha. Alguns ficam dentro da área de um contrato já rastreado (ex.: Mero fica dentro do bloco de Libra) — por isso os poços e o STOIIP daqui não entram nos KPIs do topo, pra não contar em dobro.${outros ? ` Inclui também os ${fmtNum(outros.wellsTotal)} poços do play do pré-sal (ATINGIU_PRESAL=S na base ANP/BDEP) que não pertencem a nenhum campo nomeado nem contrato rastreado — a mesma camada "outros poços" já desenhada no mapa.` : ''}`;
   container.appendChild(intro);
   container.appendChild(buildWellsStackedCard(
     fieldRows,
@@ -640,6 +672,7 @@ function renderFieldsSection(container, fieldRows) {
 async function init() {
   const wrapper = document.getElementById('analyticsWrapper');
   let presalGeojson = null;
+  let outrosPocos = [];
   try {
     const [geojson, pocosJson, pd, presal] = await Promise.all([
       fetch(GEOJSON_URL).then((r) => r.json()),
@@ -649,6 +682,7 @@ async function init() {
     ]);
     for (const feat of geojson.features) featureByProject[feat.properties.projeto] = feat;
     pocosData = pocosJson.pocos || {};
+    outrosPocos = pocosJson.outros || [];
     pdData = pd;
     presalGeojson = presal;
   } catch (err) {
@@ -658,6 +692,7 @@ async function init() {
   const rows = state.projects.map(computeProjectRow);
   const agg = computeAggregates(rows);
   const fieldRows = presalGeojson ? presalGeojson.features.map(computeFieldRow) : [];
+  if (outrosPocos.length) fieldRows.push(computeOutrosRow(outrosPocos));
 
   wrapper.innerHTML = '';
 
