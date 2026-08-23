@@ -21,17 +21,34 @@ const PD_URL = 'data/planos_desenvolvimento.json';
 // topo: somar contaria o mesmo poço/volume duas vezes.
 const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
 
-// Ordem fixa (nunca ciclada) das 7 categorias de poço — ver wellCategory em
-// shared.js. Cores validadas contra a superfície escura do app (ver skill
-// de dataviz: paleta categórica, pior par adjacente CVD ΔE 8.4).
+// Ordem fixa (nunca ciclada) das categorias de poço mostradas na seção
+// "Campos em produção" — ver wellCategory em shared.js. "Abandonado" fica
+// de fora de propósito: mesmo depois da revisão que já tirou abandono
+// temporário/logística exploratória daquela categoria, o que sobra ali é
+// poço definitivamente fora de operação, e a estatística de produção é
+// sobre o que está em pé, não sobre o que já foi desativado (ver
+// withoutAbandonedWells). A seção de exploração usa a contagem bruta
+// (ALL_WELL_CATEGORIES) — lá abandonado é o desfecho normal da maioria
+// dos poços, tirá-lo esvaziaria o gráfico. Cores validadas contra a
+// superfície escura do app (ver skill de dataviz: paleta categórica, pior
+// par adjacente CVD ΔE 8.4, revalidado pra esta sequência de 6 depois de
+// tirar o slot 6).
 const WELL_CATEGORY_ORDER = [
   ['producao', 'Produção', 'var(--viz-cat-1)'],
   ['gas', 'Gás', 'var(--viz-cat-2)'],
   ['injecao', 'Injeção', 'var(--viz-cat-3)'],
   ['indicio', 'Indício', 'var(--viz-cat-4)'],
   ['seco', 'Seco', 'var(--viz-cat-5)'],
-  ['abandonado', 'Abandonado', 'var(--viz-cat-6)'],
   ['indefinido', 'Sem registro', 'var(--viz-cat-7)'],
+];
+const ALL_WELL_CATEGORIES = [...WELL_CATEGORY_ORDER.map(([cat]) => cat), 'abandonado'];
+
+// Mesma lista, com "Abandonado" de volta — só pra o gráfico de poços por
+// categoria da seção "Contratos de exploração" (buildWellsStackedCard
+// recebe isto no lugar de WELL_CATEGORY_ORDER quando chamado de lá).
+const EXPLORATION_WELL_CATEGORY_ORDER = [
+  ...WELL_CATEGORY_ORDER,
+  ['abandonado', 'Abandonado', 'var(--viz-cat-6)'],
 ];
 
 // Cor neutra pros campos de contexto e pro balde "outros poços" nos
@@ -146,12 +163,29 @@ function attachTooltip(el, htmlFn) {
 
 /* ----------------------------- Cálculo por projeto ------------------------ */
 
+// Contagem bruta (inclui abandonado) — usada como está pelos contratos de
+// exploração, onde abandonado é o desfecho normal da maioria dos poços
+// (ver nota no gráfico de renderExploracaoSection) e tirá-lo esvaziaria o
+// gráfico. A seção "Campos em produção" usa withoutAbandonedWells (abaixo)
+// pra recontar sem ele — ver nota em WELL_CATEGORY_ORDER.
 function wellCountsFor(projectName) {
   const wells = pocosData[projectName] || [];
   const counts = {};
-  for (const [cat] of WELL_CATEGORY_ORDER) counts[cat] = 0;
+  for (const cat of ALL_WELL_CATEGORIES) counts[cat] = 0;
   for (const w of wells) counts[wellCategory(w)]++;
   return { total: wells.length, counts };
+}
+
+// Recontagem de uma linha de contrato rastreado (a única que ainda carrega
+// contagem bruta — campo de contexto e poços avulsos já saem sem
+// abandonado, ver computeFieldRow/computeOutrosRow) sem os poços
+// definitivamente abandonados — só pra seção "Campos em produção".
+function withoutAbandonedWells(row) {
+  const wells = (pocosData[row.name] || []).filter((w) => wellCategory(w) !== 'abandonado');
+  const counts = {};
+  for (const [cat] of WELL_CATEGORY_ORDER) counts[cat] = 0;
+  for (const w of wells) counts[wellCategory(w)]++;
+  return { ...row, wellsTotal: wells.length, wellCounts: counts };
 }
 
 // FPSOs de "Primeiro Óleo por FPSO" — instalados (marco done) contam pro
@@ -304,7 +338,7 @@ function renderKPIRow(container, agg) {
   ));
   row.appendChild(statTile(
     'Poços perfurados', fmtNum(agg.wellsTotal),
-    `Base ANP/BDEP — ${agg.wellCatTotals.producao} produtores · ${agg.wellCatTotals.injecao} injetores · ${agg.wellCatTotals.abandonado} abandonados`,
+    `Base ANP/BDEP, todos os 29 contratos (inclui abandonados de exploração) — ${agg.wellCatTotals.producao} produtores · ${agg.wellCatTotals.injecao} injetores`,
   ));
   row.appendChild(statTile(
     'FPSOs em operação', fmtNum(agg.fpsoInstalled),
@@ -395,7 +429,7 @@ function renderStoiipChart(container, rows) {
   container.appendChild(card);
 }
 
-function buildStackedBarRow(row, maxTotal) {
+function buildStackedBarRow(row, maxTotal, categoryOrder) {
   const wrap = document.createElement('div');
   wrap.className = 'hbar-row';
 
@@ -410,7 +444,7 @@ function buildStackedBarRow(row, maxTotal) {
   const fill = document.createElement('div');
   fill.className = 'hbar-fill';
   fill.style.width = Math.max(3, (row.wellsTotal / maxTotal) * 100) + '%';
-  for (const [cat, label, colorVar] of WELL_CATEGORY_ORDER) {
+  for (const [cat, label, colorVar] of categoryOrder) {
     const n = row.wellCounts[cat];
     if (!n) continue;
     const seg = document.createElement('div');
@@ -435,7 +469,8 @@ function buildStackedBarRow(row, maxTotal) {
 // Cartão de barra empilhada por categoria de poço — reaproveitado pelos
 // 29 projetos rastreados e pelos campos de contexto (mesma forma de linha,
 // só muda o título/legenda de rodapé de quem não tem poço ainda).
-function buildWellsStackedCard(rows, title, subtitle) {
+function buildWellsStackedCard(rows, title, subtitle, categoryOrder) {
+  categoryOrder = categoryOrder || WELL_CATEGORY_ORDER;
   const withWells = rows.filter((r) => r.wellsTotal > 0).sort((a, b) => b.wellsTotal - a.wellsTotal);
   const withoutWells = rows.filter((r) => r.wellsTotal === 0);
 
@@ -452,7 +487,7 @@ function buildWellsStackedCard(rows, title, subtitle) {
 
   const legend = document.createElement('div');
   legend.className = 'viz-legend';
-  for (const [, label, colorVar] of WELL_CATEGORY_ORDER) {
+  for (const [, label, colorVar] of categoryOrder) {
     const item = document.createElement('div');
     item.className = 'viz-legend-item';
     const sw = document.createElement('span');
@@ -468,7 +503,7 @@ function buildWellsStackedCard(rows, title, subtitle) {
     const list = document.createElement('div');
     list.className = 'hbar-list';
     const max = Math.max(...withWells.map((r) => r.wellsTotal));
-    for (const r of withWells) list.appendChild(buildStackedBarRow(r, max));
+    for (const r of withWells) list.appendChild(buildStackedBarRow(r, max, categoryOrder));
     card.appendChild(list);
   }
 
@@ -557,7 +592,10 @@ function dedupedProducaoWells(producaoProjectRows, fieldRows, outrosPocos) {
     wells.push(...(pocosData[r.name] || []));
   }
   wells.push(...outrosPocos);
-  return wells;
+  // Poço definitivamente abandonado fica fora daqui também — ver nota em
+  // WELL_CATEGORY_ORDER — pra "poços por ano" e os stat tiles de
+  // produtores/injetores não contarem poço fora de operação.
+  return wells.filter((w) => wellCategory(w) !== 'abandonado');
 }
 
 function computeProdInjStats(wells) {
@@ -683,10 +721,12 @@ function nameCellHTML(r) {
 function computeFieldRow(feature) {
   const props = feature.properties;
   const name = props.nome;
-  const wc = wellCountsFor(name);
   const pd = pdData[name];
   const volumes = pd && pd.volumes ? pd.volumes : null;
-  return {
+  // Campo de contexto só aparece na seção "Campos em produção" — nunca na
+  // de exploração — então já sai contado sem abandonado, igual aos
+  // contratos rastreados dessa seção (ver withoutAbandonedWells).
+  return withoutAbandonedWells({
     name,
     color: CONTEXT_FIELD_COLOR,
     isContract: false,
@@ -694,12 +734,10 @@ function computeFieldRow(feature) {
     bacia: props.bacia || null,
     regime: regimeOf(props.rodada),
     areaKm2: props.area_km2 || null,
-    wellsTotal: wc.total,
-    wellCounts: wc.counts,
     stoiip: volumes && volumes.oleoInSituMMbbl != null ? volumes.oleoInSituMMbbl : null,
     participacao: participacaoText(pd),
     pdKey: pd ? pd.fonte : null,
-  };
+  });
 }
 
 // "outros" em data/pocos.json: poços do play do pré-sal (ATINGIU_PRESAL=
@@ -711,9 +749,10 @@ function computeFieldRow(feature) {
 // "outros poços", cor neutra) mas a página de análises não somava em
 // lugar nenhum.
 function computeOutrosRow(outrosPocos) {
+  const wells = outrosPocos.filter((w) => wellCategory(w) !== 'abandonado');
   const counts = {};
   for (const [cat] of WELL_CATEGORY_ORDER) counts[cat] = 0;
-  for (const w of outrosPocos) counts[wellCategory(w)]++;
+  for (const w of wells) counts[wellCategory(w)]++;
   return {
     name: 'Outros poços do pré-sal (sem campo nomeado)',
     color: CONTEXT_FIELD_COLOR,
@@ -722,7 +761,7 @@ function computeOutrosRow(outrosPocos) {
     bacia: null,
     regime: null,
     areaKm2: null,
-    wellsTotal: outrosPocos.length,
+    wellsTotal: wells.length,
     wellCounts: counts,
     stoiip: null,
     participacao: null,
@@ -859,6 +898,7 @@ function renderExploracaoSection(container, explorationRows) {
     explorationRows,
     'Poços por categoria, por contrato de exploração',
     'Base ANP/BDEP — poços pioneiros e de avaliação; a maioria acaba abandonada (rotina de poço exploratório) independente do resultado geológico, ver nota em shared.js/wellCategory.',
+    EXPLORATION_WELL_CATEGORY_ORDER,
   ));
 
   const wrap = document.createElement('div');
@@ -938,7 +978,9 @@ async function init() {
   // ciclo de vida do contrato: campos que já produzem (rastreados +
   // contexto, juntos) de um lado, contratos que ainda estão em exploração
   // (ou devolvidos sem descoberta) do outro.
-  const producaoRows = rows.filter((r) => r.group === 'producao');
+  // withoutAbandonedWells só na produção — ver nota em WELL_CATEGORY_ORDER;
+  // a de exploração usa o row bruto (rows), com abandonado incluído.
+  const producaoRows = rows.filter((r) => r.group === 'producao').map(withoutAbandonedWells);
   const exploracaoRows = rows.filter((r) => r.group === 'exploracao' || r.group === 'devolvidos');
 
   const producaoSection = document.createElement('section');
