@@ -52,7 +52,7 @@
     "sistemaResumo": "FPSO Pioneiro Libra (SPA, até 2029, 50.000 bbl/d) + 4 FPSOs definitivos (Guanabara, Sepetiba, Marechal Duque de Caxias, Mero 4), 180.000 bbl/d cada",
     "pocos": { "dataRef": "2021 (projeto)", "produtores": 32, "injetores": 33, "obs": "65 poços no projeto da jazida compartilhada, recuperação secundária por injeção alternada de água e gás (WAG)" },
     "geologiaResumo": "Carbonáticos da Fm. Barra Velha e coquinas da Fm. Itapema (Aptiano), 5.700–6.000 m, óleo 29° API",
-    "volumes": { "dataRef": "BAR 2021 (31/12/2021)", "oleoInSituMMbbl": 10274.03, "gasInSituMMm3": 375037.92, "oleoAcumMMbbl": 40.05, "gasAcumMMm3": 2682.08 },
+    "volumes": { "dataRef": "BAR 2021 (31/12/2021)", "oleoInSituMMbbl": 10274.03, "gasInSituMMm3": 375037.92, "oleoAcumMMbbl": 40.05, "gasAcumMMm3": 2682.08, "reservaProvada": { "dataRef": "31/12/2017 — PD completo", "oleoMMbbl": 505, "gasMMm3": 5555 } },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/rd-0758-mero-e-anc-sumario-executivo-aip.pdf"
   },
   "MERO": {
@@ -70,7 +70,7 @@
     "sistemaResumo": "FPSO Pioneiro Libra (SPA, até 2029, 50.000 bbl/d) + 4 FPSOs definitivos (Guanabara, Sepetiba, Marechal Duque de Caxias, Mero 4), 180.000 bbl/d cada",
     "pocos": { "dataRef": "2021 (projeto)", "produtores": 32, "injetores": 33, "obs": "65 poços no projeto da jazida compartilhada, recuperação secundária por injeção alternada de água e gás (WAG)" },
     "geologiaResumo": "Carbonáticos da Fm. Barra Velha e coquinas da Fm. Itapema (Aptiano), 5.700–6.000 m, óleo 29° API",
-    "volumes": { "dataRef": "BAR 2021 (31/12/2021)", "oleoInSituMMbbl": 10274.03, "gasInSituMMm3": 375037.92, "oleoAcumMMbbl": 40.05, "gasAcumMMm3": 2682.08 },
+    "volumes": { "dataRef": "BAR 2021 (31/12/2021)", "oleoInSituMMbbl": 10274.03, "gasInSituMMm3": 375037.92, "oleoAcumMMbbl": 40.05, "gasAcumMMm3": 2682.08, "reservaProvada": { "dataRef": "31/12/2017 — PD completo", "oleoMMbbl": 505, "gasMMm3": 5555 } },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/rd-0758-mero-e-anc-sumario-executivo-aip.pdf"
   },
   "SUL DE TUPI": {
@@ -156,7 +156,7 @@
     "sistemaResumo": "SPA com FPSO BW Cidade de São Vicente (poço 1-BRSA-1116-RJS); projeto definitivo: 5 produtores + 4 injetores (água/água-gás), completação inteligente em 2 zonas",
     "pocos": { "dataRef": "2017-04", "perfurados": 3, "produtores": 2, "injetores": 0 },
     "geologiaResumo": "Microbiolitos da Fm. Barra Velha (Aptiano), 5.000-6.000 m, grande variabilidade permo-porosa por fraturas e diagênese",
-    "volumes": { "dataRef": "BAR 2016", "oleoInSituMMbbl": 1316.14, "gasInSituMMm3": 17995.50, "oleoAcumMMbbl": 0.01, "gasAcumMMm3": 0.12 },
+    "volumes": { "dataRef": "BAR 2016", "oleoInSituMMbbl": 1316.14, "gasInSituMMm3": 17995.50, "oleoAcumMMbbl": 0.01, "gasAcumMMm3": 0.12, "reservaProvada": { "dataRef": "2020 — PD completo 2021", "oleoMMbbl": 175.7, "gasMMm3": 1630 } },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/itapu.pdf"
   },
   "Sépia": {

@@ -378,6 +378,17 @@ function pdSectionHTML(key) {
     if (p.abandonados != null) parts.push(`${p.abandonados} abandonados`);
     rows.push([`Poços (${p.dataRef || '—'})`, parts.join(', ') + (p.obs ? ` — ${p.obs}` : '')]);
   }
+  if (pd.volumes) {
+    const v = pd.volumes;
+    const fmt = (n) => n.toLocaleString('pt-BR');
+    if (v.oleoInSituMMbbl != null) rows.push([`STOIIP (${v.dataRef || '—'})`, `${fmt(v.oleoInSituMMbbl)} MMbbl`]);
+    if (v.gasInSituMMm3 != null) rows.push([`GIIP (${v.dataRef || '—'})`, `${fmt(v.gasInSituMMm3)} MMm³`]);
+    if (v.reservaProvada) {
+      const r = v.reservaProvada;
+      if (r.oleoMMbbl != null) rows.push([`Volume recuperável óleo (${r.dataRef || '—'})`, `${fmt(r.oleoMMbbl)} MMbbl`]);
+      if (r.gasMMm3 != null) rows.push([`Volume recuperável gás (${r.dataRef || '—'})`, `${fmt(r.gasMMm3)} MMm³`]);
+    }
+  }
   const rowsHTML = rows.filter(([, v]) => v).map(([k, v]) => `<tr><td class="k">${k}</td><td>${escapeHtml(v)}</td></tr>`).join('');
   return `<div class="map-popup-pd">
     <h4>Plano de Desenvolvimento${pd.titulo ? ` — ${escapeHtml(pd.titulo)}` : ''}</h4>
