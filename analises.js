@@ -220,6 +220,7 @@ function computeProjectRow(project) {
     stoiip: volumes && volumes.oleoInSituMMbbl != null ? volumes.oleoInSituMMbbl : null,
     recOleo: volumes && volumes.reservaProvada && volumes.reservaProvada.oleoMMbbl != null ? volumes.reservaProvada.oleoMMbbl : null,
     participacao: participacaoText(pd),
+    pdKey: pd ? pd.fonte : null,
   };
 }
 
@@ -320,8 +321,34 @@ function renderKPIRow(container, agg) {
   container.appendChild(row);
 }
 
+// Contrato rastreado e campo de contexto que citam o mesmo Plano de
+// Desenvolvimento (Atapu/Oeste de Atapu, Sapinhoá/Entorno de Sapinhoá,
+// Libra/Mero, Berbigão/Norte de Berbigão/Sul de Berbigão) têm STOIIP
+// idêntico by design — é a mesma jazida compartilhada, só documentada do
+// ponto de vista do contrato inteiro ou só do campo por dentro. Duas
+// barras coladas com o mesmo valor pareciam bug, não informação — agrupa
+// por pd.fonte (a URL do PD é a chave real de "é o mesmo documento") numa
+// barra só antes de desenhar.
+function groupByPdKey(rows) {
+  const groups = new Map();
+  for (const r of rows) {
+    const key = r.pdKey || r.name;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  }
+  return [...groups.values()].map((members) => {
+    const contractMember = members.find((m) => m.isContract);
+    return {
+      name: members.map((m) => m.name).join(' / '),
+      color: contractMember ? contractMember.color : members[0].color,
+      stoiip: members[0].stoiip,
+      members,
+    };
+  });
+}
+
 function renderStoiipChart(container, rows) {
-  const withStoiip = rows.filter((r) => r.stoiip != null).sort((a, b) => b.stoiip - a.stoiip);
+  const withStoiip = groupByPdKey(rows.filter((r) => r.stoiip != null)).sort((a, b) => b.stoiip - a.stoiip);
   if (!withStoiip.length) return;
 
   const card = document.createElement('div');
@@ -331,32 +358,34 @@ function renderStoiipChart(container, rows) {
   title.textContent = 'STOIIP por contrato/campo (óleo in situ)';
   const sub = document.createElement('p');
   sub.className = 'chart-card-subtitle';
-  sub.textContent = `Só as ${withStoiip.length} entidades com Plano de Desenvolvimento público — as demais ainda não têm PD aprovado/divulgado. Cor própria = contrato rastreado; cinza = campo de contexto (sem contrato próprio).`;
+  sub.textContent = `Só as ${withStoiip.length} entidades/grupos com Plano de Desenvolvimento público — as demais ainda não têm PD aprovado/divulgado. Contrato e campo de contexto do mesmo PD (mesma jazida compartilhada) aparecem juntos numa barra só. Cor própria = grupo com contrato rastreado; cinza = só campo de contexto.`;
   card.appendChild(title);
   card.appendChild(sub);
 
   const list = document.createElement('div');
   list.className = 'hbar-list';
   const max = Math.max(...withStoiip.map((r) => r.stoiip));
-  for (const r of withStoiip) {
+  for (const g of withStoiip) {
     const row = document.createElement('div');
     row.className = 'hbar-row';
     const name = document.createElement('div');
     name.className = 'hbar-name';
-    name.textContent = r.name;
-    name.title = r.name;
+    name.textContent = g.name;
+    name.title = g.name;
     const track = document.createElement('div');
     track.className = 'hbar-track';
     const fill = document.createElement('div');
     fill.className = 'hbar-fill';
-    fill.style.width = Math.max(3, (r.stoiip / max) * 100) + '%';
-    fill.style.background = r.color;
+    fill.style.width = Math.max(3, (g.stoiip / max) * 100) + '%';
+    fill.style.background = g.color;
     fill.tabIndex = 0;
-    attachTooltip(fill, () => `<strong>${escapeHtml(r.name)}</strong>` + tooltipRowHTML('STOIIP', `${fmtNum(r.stoiip)} MMbbl`));
+    attachTooltip(fill, () => `<strong>${escapeHtml(g.name)}</strong>`
+      + tooltipRowHTML('STOIIP', `${fmtNum(g.stoiip)} MMbbl`)
+      + (g.members.length > 1 ? `<div class="viz-tooltip-row"><span>Mesma jazida compartilhada, ${g.members.length} entidades</span></div>` : ''));
     track.appendChild(fill);
     const value = document.createElement('div');
     value.className = 'hbar-value';
-    value.textContent = fmtNum(r.stoiip) + ' MMbbl';
+    value.textContent = fmtNum(g.stoiip) + ' MMbbl';
     track.appendChild(value);
     row.appendChild(name);
     row.appendChild(track);
@@ -669,6 +698,7 @@ function computeFieldRow(feature) {
     wellCounts: wc.counts,
     stoiip: volumes && volumes.oleoInSituMMbbl != null ? volumes.oleoInSituMMbbl : null,
     participacao: participacaoText(pd),
+    pdKey: pd ? pd.fonte : null,
   };
 }
 
