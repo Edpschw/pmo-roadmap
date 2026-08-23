@@ -29,6 +29,15 @@ const POCOS_URL = 'data/pocos.json';
 const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
 const PRESALT_FIELD_STYLE = { color: '#9aa1ac', weight: 1.25, dashArray: '4 3', fillColor: '#9aa1ac', fillOpacity: 0.1 };
 
+// Sumários executivos de Plano de Desenvolvimento (ANP) — só o sumário é
+// público (Decreto 7.724/2012, art. 5º §2º: o PD completo dá vantagem
+// competitiva a outros agentes, então fica restrito). Chave = nome do
+// projeto rastreado (ex. "Búzios", "Libra") OU nome do campo de contexto
+// (ex. "MERO", "SAPINHOÁ") — um mesmo campo pode ter os dois quando o
+// projeto rastreado é o bloco/contrato (maior) e o campo de contexto é só
+// a área do reservatório em si (menor); os dois usam a mesma entrada.
+const PD_URL = 'data/planos_desenvolvimento.json';
+
 // Projetos sem poligonal nos dois shapefiles fornecidos, com o motivo —
 // ver comentário em cima de PLAN no script de geração (scripts/build_geojson.py).
 const PROJECTS_WITHOUT_SHAPE = {
@@ -159,6 +168,7 @@ function popupHTML(project, props) {
     <h3 style="color:${colorForProject(project)}">${escapeHtml(project.name)}</h3>
     <table>${rowsHTML}</table>
     <p class="map-popup-source">Fonte: ANP — ${props.fonte === 'bloco_exploratorio' ? 'Blocos Exploratórios sob Contrato' : 'Campos de Produção'} (SIRGAS 2000)</p>
+    ${pdSectionHTML(project.name)}
   </div>`;
 }
 
@@ -336,6 +346,48 @@ function wellCodeOf(name) {
 
 let pocosData = {};
 let outrosPocos = [];
+let pdData = {};
+
+// "2015-03-10" -> "10/03/2015"; qualquer coisa que não seja uma data ISO
+// completa (data parcial "2017-12", ou texto livre tipo "Previsão
+// maio/2018") passa direto — nem todo campo do PD tem dia exato.
+function formatMaybeISO(s) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(s || '') ? formatBR(s) : s;
+}
+
+// Bloco "Plano de Desenvolvimento" pra anexar num popup (contrato ou campo
+// de contexto) — string vazia se não há sumário executivo pra essa chave,
+// pra quem chama só fazer `${pdSectionHTML(key)}` sem checar antes.
+function pdSectionHTML(key) {
+  const pd = pdData[key];
+  if (!pd) return '';
+  const rows = [
+    ['Situação', pd.situacao],
+    ['Descoberta', formatBR(pd.descoberta) + (pd.descobertaObs ? ` (${pd.descobertaObs})` : '')],
+    ['Comercialidade', formatBR(pd.comercialidade) + (pd.comercialidadeObs ? ` (${pd.comercialidadeObs})` : '')],
+    ['Início produção', formatMaybeISO(pd.inicioProducao)],
+    ['Térm. previsto', formatMaybeISO(pd.previsaoTermino)],
+    ['Lâmina d\'água', pd.laminaDagua],
+  ];
+  if (pd.pocos) {
+    const p = pd.pocos;
+    const parts = [];
+    if (p.perfurados != null) parts.push(`${p.perfurados} perfurados`);
+    if (p.produtores != null) parts.push(`${p.produtores} produtores`);
+    if (p.injetores != null) parts.push(`${p.injetores} injetores`);
+    if (p.abandonados != null) parts.push(`${p.abandonados} abandonados`);
+    rows.push([`Poços (${p.dataRef || '—'})`, parts.join(', ') + (p.obs ? ` — ${p.obs}` : '')]);
+  }
+  const rowsHTML = rows.filter(([, v]) => v).map(([k, v]) => `<tr><td class="k">${k}</td><td>${escapeHtml(v)}</td></tr>`).join('');
+  return `<div class="map-popup-pd">
+    <h4>Plano de Desenvolvimento${pd.titulo ? ` — ${escapeHtml(pd.titulo)}` : ''}</h4>
+    <table>${rowsHTML}</table>
+    ${pd.sistemaResumo ? `<p class="map-popup-pd-text"><strong>Sistema:</strong> ${escapeHtml(pd.sistemaResumo)}</p>` : ''}
+    ${pd.geologiaResumo ? `<p class="map-popup-pd-text"><strong>Geologia:</strong> ${escapeHtml(pd.geologiaResumo)}</p>` : ''}
+    ${pd.notaNome ? `<p class="map-popup-pd-text">${escapeHtml(pd.notaNome)}</p>` : ''}
+    <p class="map-popup-source">Sumário executivo (PD completo é confidencial por lei) — <a href="${pd.fonte}" target="_blank" rel="noopener">PDF na ANP</a></p>
+  </div>`;
+}
 
 function wellPopupHTML(label, w, color, others) {
   const rows = [];
@@ -517,6 +569,7 @@ function presaltFieldPopupHTML(props) {
     <h3 style="color:#9aa1ac">${escapeHtml(props.nome)}</h3>
     <table>${rowsHTML}</table>
     <p class="map-popup-source">Campo de contexto (fora dos 29 contratos rastreados) — Fonte: ANP, Campos de Produção (SIRGAS 2000)</p>
+    ${pdSectionHTML(props.nome)}
   </div>`;
 }
 
@@ -545,12 +598,22 @@ async function init() {
     showToast('Não foi possível carregar data/pocos.json — mapa sem poços.');
   }
 
+  // Precisa carregar antes dos popups serem montados (popupHTML e
+  // presaltFieldPopupHTML chamam pdSectionHTML na hora do bindPopup, não
+  // na hora de abrir o popup — se pdData ainda estivesse vazio aqui, o
+  // popup ficaria pra sempre sem a seção de Plano de Desenvolvimento).
+  try {
+    pdData = await (await fetch(PD_URL)).json();
+  } catch (e) {
+    // Camada opcional — segue sem a seção de Plano de Desenvolvimento.
+  }
+
   try {
     const presRes = await fetch(PRESALT_FIELDS_URL);
     const presGeojson = await presRes.json();
     for (const feat of presGeojson.features) {
       const layer = L.geoJSON(feat, { style: PRESALT_FIELD_STYLE });
-      layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(feat.properties)));
+      layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(feat.properties), { maxWidth: 320 }));
       layer.addTo(presaltFieldsLayer);
       registerWellSet(feat.properties.nome, null, layer.getBounds(), PRESALT_FIELD_STYLE.color, wellPresaltLayer);
     }
@@ -585,7 +648,7 @@ async function init() {
     // poços — o auto-pan do Leaflet, se ligado, iria "corrigir" isso
     // puxando o mapa de volta pra baixo do popup, exatamente pra cima dos
     // poços que acabaram de ser revelados.
-    layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties), { autoPan: false }));
+    layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties), { autoPan: false, maxWidth: 320 }));
     const target = groupLayers[project.group] || groupLayers[GROUP_FALLBACK];
     layer.addTo(target);
     layerByProjectId[project.id] = layer;
@@ -676,7 +739,7 @@ function setColorMode(mode) {
     const c = colorForProject(project);
     layer.setStyle({ color: c, fillColor: c });
     const feat = featureByProject[project.name];
-    if (feat) layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties), { autoPan: false }));
+    if (feat) layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties), { autoPan: false, maxWidth: 320 }));
   }
   renderPanel();
 }

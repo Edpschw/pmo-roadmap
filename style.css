@@ -629,6 +629,16 @@ body.map-page .leaflet-popup-close-button:hover { color: var(--map-text) !import
 .map-popup-list { margin: 2px 0 0; padding-left: 16px; font-size: 11px; color: var(--map-text-muted); max-height: 132px; overflow-y: auto; }
 .map-popup-list li { margin: 1px 0; }
 
+/* Seção "Plano de Desenvolvimento" (ver pdSectionHTML em mapa.js) — só
+   quando há sumário executivo pra aquele contrato/campo, por isso a borda
+   superior: marca visualmente onde os dados do PD (fonte separada,
+   sumário público de um documento majoritariamente confidencial) começam
+   dentro do popup, que até aqui só tinha dados do shapefile de campos. */
+.map-popup-pd { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--map-border); }
+.map-popup-pd h4 { margin: 0 0 5px; font-size: 11.5px; font-weight: 700; color: var(--map-text); }
+.map-popup-pd-text { margin: 5px 0 0; font-size: 11px; line-height: 1.4; color: var(--map-text-muted); }
+.map-popup-pd-text strong { color: var(--map-text); font-weight: 600; }
+
 /* Marcador de poço: reseta o quadrado branco padrão do divIcon (o SVG já
    define a forma) e escurece o tooltip de hover pra bater com o resto. */
 .map-well-icon { background: transparent; border: none; }
