@@ -754,6 +754,9 @@ function updateWellsVisibility() {
   for (const g of GROUP_DEFS) showOrHide(wellGroupLayers[g.id], zoomOk && groupVisible[g.id]);
   showOrHide(wellPresaltLayer, zoomOk && presaltFieldsVisible);
   showOrHide(outrosPocosLayer, zoomOk && outrosPocosVisible);
+  // Legenda dos tipos de poço só faz sentido quando há poço na tela pra
+  // explicar — mesmo corte de zoom que revela os próprios poços.
+  document.getElementById('mapWellLegendFixed').hidden = !zoomOk;
   updateProjectLabels();
 }
 
