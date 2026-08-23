@@ -757,6 +757,46 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .analytics-table .participacao-cell { max-width: 260px; white-space: normal; line-height: 1.4; font-size: 11px; }
 .analytics-table-note { font-size: 11px; color: var(--text-faint); margin-top: 10px; line-height: 1.5; }
 
+/* ---------- Visão em poços (pocos.html) ---------- */
+.pocos-wrapper { flex: 1 1 auto; overflow: auto; padding: 0 20px 40px; }
+.pocos-content { max-width: 1180px; margin: 0 auto; }
+.pocos-toolbar {
+  position: sticky; top: 0; z-index: 20; background: var(--bg);
+  padding: 18px 0 14px; margin-bottom: 16px; border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.pocos-search-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pocos-search {
+  flex: 1 1 260px; max-width: 420px; border: 1px solid var(--border-strong); border-radius: 8px;
+  padding: 8px 12px; font-size: 13px; font-family: inherit; color: var(--text); background: var(--panel);
+}
+.pocos-search:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.pocos-filter-result { font-size: 11px; color: var(--text-faint); }
+.pocos-nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.pocos-nav-pill {
+  font-size: 11px; padding: 4px 9px 4px 7px; border-radius: 12px; border: 1px solid var(--border-strong);
+  background: var(--panel); color: var(--text-muted); cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 5px; font-family: inherit;
+}
+.pocos-nav-pill:hover { background: var(--surface); color: var(--text); }
+.pocos-nav-pill[hidden] { display: none; }
+.pocos-nav-dot { width: 7px; height: 7px; border-radius: 2px; flex: 0 0 7px; }
+.pocos-field-card { scroll-margin-top: 132px; }
+.pocos-field-card[hidden] { display: none; }
+.pocos-field-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.pocos-field-header .chart-card-title { display: flex; align-items: center; gap: 8px; margin: 0; }
+.pocos-field-meta { display: flex; align-items: center; gap: 10px; }
+.pocos-badge {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--text-faint); background: var(--surface); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 6px;
+}
+.pocos-count { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.pocos-table-wrapper { padding: 0; overflow-x: auto; }
+.pocos-table-wrapper .data-table { min-width: 1500px; }
+.pocos-table-wrapper .data-table th, .pocos-table-wrapper .data-table td { white-space: nowrap; }
+.pocos-anc { color: var(--text-faint); font-weight: 400; }
+
 /* ---------- Telas estreitas (celular), incluindo paisagem: usa a
    condição de altura curta + orientação para pegar o celular deitado, que
    tem largura grande mas continua sendo uma tela pequena. ---------- */
