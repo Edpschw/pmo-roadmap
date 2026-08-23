@@ -363,8 +363,8 @@ function pdSectionHTML(key) {
   if (!pd) return '';
   const rows = [
     ['Situação', pd.situacao],
-    ['Descoberta', formatBR(pd.descoberta) + (pd.descobertaObs ? ` (${pd.descobertaObs})` : '')],
-    ['Comercialidade', formatBR(pd.comercialidade) + (pd.comercialidadeObs ? ` (${pd.comercialidadeObs})` : '')],
+    ['Descoberta', pd.descoberta ? formatBR(pd.descoberta) + (pd.descobertaObs ? ` (${pd.descobertaObs})` : '') : null],
+    ['Comercialidade', pd.comercialidade ? formatBR(pd.comercialidade) + (pd.comercialidadeObs ? ` (${pd.comercialidadeObs})` : '') : null],
     ['Início produção', formatMaybeISO(pd.inicioProducao)],
     ['Térm. previsto', formatMaybeISO(pd.previsaoTermino)],
     ['Lâmina d\'água', pd.laminaDagua],
