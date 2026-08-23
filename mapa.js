@@ -112,6 +112,12 @@ const wellPresaltLayer = L.layerGroup();
 
 const layerByProjectId = {};
 const featureByProject = {};
+// Rótulo com o nome do projeto sobre o centro do polígono — só aparece
+// no zoom em que os poços ainda não apareceram (ver updateProjectLabels),
+// pra dar contexto de qual projeto é qual sem precisar clicar em cada
+// polígono. Adicionado direto no mapa (não num layerGroup), então
+// showOrHide funciona nele igual funciona nos outros.
+const projectLabelByProjectId = {};
 
 function formatAnpDate(s) {
   return s ? s.replaceAll('-', '/') : '—';
@@ -515,6 +521,11 @@ function presaltFieldPopupHTML(props) {
 }
 
 async function init() {
+  // Legenda discreta e sempre visível dos tipos de poço — fora do painel
+  // "Camadas" (que começa recolhido, ver panelCollapsed), pra quem só
+  // quer lembrar o que cada ícone significa sem abrir o painel inteiro.
+  document.getElementById('mapWellLegendFixed').appendChild(buildWellShapeLegend());
+
   let geojson;
   try {
     const res = await fetch(GEOJSON_URL);
@@ -579,6 +590,17 @@ async function init() {
     layer.addTo(target);
     layerByProjectId[project.id] = layer;
     allBounds.push(bounds);
+
+    projectLabelByProjectId[project.id] = L.marker(bounds.getCenter(), {
+      icon: L.divIcon({
+        className: 'map-project-label-icon',
+        html: `<span class="map-project-label">${escapeHtml(project.name)}</span>`,
+        iconSize: null,
+      }),
+      interactive: false,
+      keyboard: false,
+      zIndexOffset: -100,
+    });
   }
   for (const project of state.projects) projectYearById[project.id] = projectContractYear(project);
 
@@ -643,6 +665,7 @@ function applyYearFilter() {
     if (visible && !entry.targetLayer.hasLayer(entry.marker)) entry.targetLayer.addLayer(entry.marker);
     else if (!visible && entry.targetLayer.hasLayer(entry.marker)) entry.targetLayer.removeLayer(entry.marker);
   }
+  updateProjectLabels();
 }
 
 function setColorMode(mode) {
@@ -731,6 +754,28 @@ function updateWellsVisibility() {
   for (const g of GROUP_DEFS) showOrHide(wellGroupLayers[g.id], zoomOk && groupVisible[g.id]);
   showOrHide(wellPresaltLayer, zoomOk && presaltFieldsVisible);
   showOrHide(outrosPocosLayer, zoomOk && outrosPocosVisible);
+  updateProjectLabels();
+}
+
+// Nome do projeto sobre o polígono só no zoom em que os poços ainda não
+// aparecem (zoom < wellsMinZoom — o oposto exato da regra de
+// updateWellsVisibility acima): é o zoom em que só dá pra distinguir os
+// polígonos coloridos clicando um por um, sem essa pista. Some assim que
+// os poços entram, pra não sobrepor o rótulo aos marcadores. Respeita o
+// grupo (Exploração/Produção/Devolvidos) ligado/desligado e o filtro de
+// ano — usa target.hasLayer(layer) como fonte da verdade de se o
+// polígono está mesmo visível agora (já calculado por applyYearFilter),
+// em vez de duplicar aquela lógica aqui.
+function updateProjectLabels() {
+  const zoomOk = map.getZoom() < wellsMinZoom;
+  for (const project of state.projects) {
+    const marker = projectLabelByProjectId[project.id];
+    const layer = layerByProjectId[project.id];
+    if (!marker || !layer) continue;
+    const groupId = groupLayers[project.group] ? project.group : GROUP_FALLBACK;
+    const target = groupLayers[groupId];
+    showOrHide(marker, zoomOk && groupVisible[groupId] && target.hasLayer(layer));
+  }
 }
 
 function renderColorModeControl(container) {

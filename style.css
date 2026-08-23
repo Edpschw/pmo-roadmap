@@ -560,6 +560,37 @@ body.map-page .btn-ghost:hover { background: #1e222a; }
 .map-legend-row { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--map-text-muted); }
 .map-legend-well-icon { flex: 0 0 auto; width: 15px; height: 15px; display: flex; align-items: center; justify-content: center; }
 
+/* Legenda dos tipos de poço, discreta e sempre visível (fora do painel
+   "Camadas", que começa recolhido) — canto inferior esquerdo, livre
+   (zoom fica no superior esquerdo, atribuição no inferior direito).
+   pointer-events: none pra não atrapalhar arrastar/zoom do mapa por
+   baixo dela. */
+.map-well-legend-fixed {
+  position: absolute; left: 10px; bottom: 10px; z-index: 900;
+  background: rgba(21, 24, 29, 0.82); backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--map-border); border-radius: 9px;
+  padding: 7px 9px; pointer-events: none; max-width: 190px;
+}
+.map-well-legend-fixed .map-legend { margin: 0; gap: 3px; }
+.map-well-legend-fixed .map-legend-row { font-size: 9.5px; gap: 5px; line-height: 1.3; }
+.map-well-legend-fixed .map-legend-well-icon { width: 12px; height: 12px; }
+.map-well-legend-fixed .map-legend-well-icon svg { width: 11px; height: 11px; }
+
+/* Nome do projeto sobre o centro do polígono, só no zoom em que os poços
+   ainda não aparecem (ver updateProjectLabels em mapa.js) — sombra forte
+   pra ficar legível em cima de qualquer cor de preenchimento. O
+   posicionamento do ícone em si (translate3d) é controlado pelo Leaflet
+   via style inline — por isso o transform de centralização vai no `span`
+   de dentro, não no wrapper do divIcon, pra não competir com ele. */
+.map-project-label-icon { background: transparent; border: none; pointer-events: none; }
+.map-project-label {
+  display: inline-block; white-space: nowrap; transform: translate(-50%, -50%);
+  font-size: 11px; font-weight: 700; color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.8);
+  letter-spacing: 0.01em;
+}
+
 /* Sliders do painel "Controles" (zoom mínimo dos poços, filtro de ano) */
 .map-slider-row { margin-bottom: 10px; }
 .map-slider-row:last-of-type { margin-bottom: 0; }
