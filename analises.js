@@ -13,6 +13,13 @@
 const GEOJSON_URL = 'data/contratos.geojson';
 const POCOS_URL = 'data/pocos.json';
 const PD_URL = 'data/planos_desenvolvimento.json';
+// Campos de contexto do pré-sal (ver mapa.js) — a maioria é regime
+// Concessão ou Cessão Onerosa, não Partilha de Produção (só MERO, com
+// "(PP)" na rodada). Não são nenhum dos 29 contratos rastreados (podem
+// sobrepor um deles em área — ex.: MERO é o reservatório dentro do bloco
+// de Libra — por isso ficam numa seção à parte, sem somar nos KPIs do
+// topo: somar contaria o mesmo poço/volume duas vezes.
+const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
 
 // Ordem fixa (nunca ciclada) das 7 categorias de poço — ver wellCategory em
 // shared.js. Cores validadas contra a superfície escura do app (ver skill
@@ -42,6 +49,28 @@ function fmtNum(n, opts) {
 function yearOfISO(iso) {
   const y = parseInt(String(iso).slice(0, 4), 10);
   return Number.isFinite(y) ? y : null;
+}
+
+// "Empresa X 40% · Empresa Y 25%" — mesmo formato usado no popup do mapa
+// (ver pdSectionHTML em mapa.js). null quando o PD dessa chave não trouxe
+// a tabela de participação (a maioria dos sumários executivos traz, mas
+// nem todos — Wahoo e Lapa nunca chegaram a PD completo com essa seção).
+function participacaoText(pd) {
+  if (!pd || !pd.participacao || !pd.participacao.length) return null;
+  return pd.participacao.map((p) => `${p.empresa} ${p.pct.toLocaleString('pt-BR')}%`).join(' · ');
+}
+
+// Regime do contrato a partir do campo "rodada" do GeoJSON: "(PP)" marca
+// Partilha de Produção explicitamente; "Cessão Onerosa" é regime próprio
+// (2010); qualquer outra rodada numerada (0, 1, 2, 6, 7...) sem "(PP)" é
+// uma rodada de Concessão, de antes da Lei do Partilha (2010). Usado só
+// nos campos de contexto (ver renderFieldsSection) — os 29 projetos
+// rastreados são todos CPP, então essa distinção não se aplica a eles.
+function regimeOf(rodada) {
+  if (!rodada) return null;
+  if (rodada.includes('(PP)')) return 'Partilha';
+  if (rodada === 'Cessão Onerosa') return 'Cessão Onerosa';
+  return 'Concessão';
 }
 
 /* --------------------------- Tooltip de hover ----------------------------- */
@@ -173,6 +202,7 @@ function computeProjectRow(project) {
     leadTimeYears,
     stoiip: volumes && volumes.oleoInSituMMbbl != null ? volumes.oleoInSituMMbbl : null,
     recOleo: volumes && volumes.reservaProvada && volumes.reservaProvada.oleoMMbbl != null ? volumes.reservaProvada.oleoMMbbl : null,
+    participacao: participacaoText(pd),
   };
 }
 
@@ -356,19 +386,22 @@ function buildStackedBarRow(row, maxTotal) {
   return wrap;
 }
 
-function renderWellsStackedChart(container, rows) {
+// Cartão de barra empilhada por categoria de poço — reaproveitado pelos
+// 29 projetos rastreados e pelos campos de contexto (mesma forma de linha,
+// só muda o título/legenda de rodapé de quem não tem poço ainda).
+function buildWellsStackedCard(rows, title, subtitle) {
   const withWells = rows.filter((r) => r.wellsTotal > 0).sort((a, b) => b.wellsTotal - a.wellsTotal);
   const withoutWells = rows.filter((r) => r.wellsTotal === 0);
 
   const card = document.createElement('div');
   card.className = 'chart-card';
-  const title = document.createElement('h3');
-  title.className = 'chart-card-title';
-  title.textContent = 'Poços por categoria, por projeto';
+  const titleEl = document.createElement('h3');
+  titleEl.className = 'chart-card-title';
+  titleEl.textContent = title;
   const sub = document.createElement('p');
   sub.className = 'chart-card-subtitle';
-  sub.textContent = 'Base ANP/BDEP — o comprimento da barra é o total de poços; os segmentos mostram a composição por categoria.';
-  card.appendChild(title);
+  sub.textContent = subtitle;
+  card.appendChild(titleEl);
   card.appendChild(sub);
 
   const legend = document.createElement('div');
@@ -385,11 +418,13 @@ function renderWellsStackedChart(container, rows) {
   }
   card.appendChild(legend);
 
-  const list = document.createElement('div');
-  list.className = 'hbar-list';
-  const max = Math.max(...withWells.map((r) => r.wellsTotal));
-  for (const r of withWells) list.appendChild(buildStackedBarRow(r, max));
-  card.appendChild(list);
+  if (withWells.length) {
+    const list = document.createElement('div');
+    list.className = 'hbar-list';
+    const max = Math.max(...withWells.map((r) => r.wellsTotal));
+    for (const r of withWells) list.appendChild(buildStackedBarRow(r, max));
+    card.appendChild(list);
+  }
 
   if (withoutWells.length) {
     const note = document.createElement('p');
@@ -397,7 +432,15 @@ function renderWellsStackedChart(container, rows) {
     note.textContent = `Sem poço perfurado ainda: ${withoutWells.map((r) => r.name).join(', ')}.`;
     card.appendChild(note);
   }
-  container.appendChild(card);
+  return card;
+}
+
+function renderWellsStackedChart(container, rows) {
+  container.appendChild(buildWellsStackedCard(
+    rows,
+    'Poços por categoria, por projeto',
+    'Base ANP/BDEP — o comprimento da barra é o total de poços; os segmentos mostram a composição por categoria.',
+  ));
 }
 
 function renderFpsoByYearChart(container, projects) {
@@ -456,6 +499,7 @@ function renderProjectTable(container, rows) {
   thead.innerHTML = `<tr>
     <th>Projeto</th>
     <th>Operador</th>
+    <th>Parceiros (%)</th>
     <th>Bacia</th>
     <th class="num">Leilão</th>
     <th class="num">Poços (ANP)</th>
@@ -476,7 +520,7 @@ function renderProjectTable(container, rows) {
     const gtr = document.createElement('tr');
     gtr.className = 'group-row';
     const gtd = document.createElement('td');
-    gtd.colSpan = 11;
+    gtd.colSpan = 12;
     gtd.textContent = `${groupDef ? groupDef.label : groupId} (${groupRows.length})`;
     gtr.appendChild(gtd);
     tbody.appendChild(gtr);
@@ -486,6 +530,7 @@ function renderProjectTable(container, rows) {
       tr.innerHTML = `
         <td><div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span>${escapeHtml(r.name)}</div></td>
         <td class="${r.operador ? '' : 'muted'}">${escapeHtml(r.operador || '—')}</td>
+        <td class="${r.participacao ? '' : 'muted'} participacao-cell">${escapeHtml(r.participacao || '—')}</td>
         <td class="${r.bacia ? '' : 'muted'}">${escapeHtml(r.bacia || '—')}</td>
         <td class="num">${r.leilaoYear != null ? r.leilaoYear : '—'}</td>
         <td class="num">${r.wellsTotal || '—'}</td>
@@ -505,29 +550,114 @@ function renderProjectTable(container, rows) {
 
   const note = document.createElement('p');
   note.className = 'analytics-table-note';
-  note.textContent = 'FPSOs: instalados (+ previstos entre parênteses). Lead time = anos entre o leilão e o 1º óleo instalado; negativo indica que o campo já produzia num contrato anterior (Cessão Onerosa/unitização) antes do leilão deste contrato específico — Búzios, Itapu, Sépia, Atapu e Entorno de Sapinhoá.';
+  note.textContent = 'Parceiros: só onde o sumário executivo de PD publicado trouxe a tabela de participação. FPSOs: instalados (+ previstos entre parênteses). Lead time = anos entre o leilão e o 1º óleo instalado; negativo indica que o campo já produzia num contrato anterior (Cessão Onerosa/unitização) antes do leilão deste contrato específico — Búzios, Itapu, Sépia, Atapu e Entorno de Sapinhoá.';
   container.appendChild(note);
+}
+
+/* ------------------------ Campos de contexto (não-CPP) --------------------- */
+// Campos do play do pré-sal que não são nenhum dos 29 contratos rastreados
+// acima (ver PRESALT_FIELDS_URL) — a maioria em regime de Concessão ou
+// Cessão Onerosa, bem anterior à Lei da Partilha (2010); só Mero é
+// Partilha. Alguns ficam dentro da área de um contrato rastreado (Mero
+// dentro do bloco de Libra, por exemplo) — por isso entram numa seção à
+// parte em vez de nos KPIs do topo: somar contaria poço/volume em dobro.
+
+function computeFieldRow(feature) {
+  const props = feature.properties;
+  const name = props.nome;
+  const wc = wellCountsFor(name);
+  const pd = pdData[name];
+  const volumes = pd && pd.volumes ? pd.volumes : null;
+  return {
+    name,
+    operador: props.operador || null,
+    bacia: props.bacia || null,
+    regime: regimeOf(props.rodada),
+    areaKm2: props.area_km2 || null,
+    wellsTotal: wc.total,
+    wellCounts: wc.counts,
+    stoiip: volumes && volumes.oleoInSituMMbbl != null ? volumes.oleoInSituMMbbl : null,
+    participacao: participacaoText(pd),
+  };
+}
+
+function renderFieldsTable(container, fieldRows) {
+  const wrap = document.createElement('div');
+  wrap.className = 'table-wrapper';
+  wrap.style.padding = '0';
+  const table = document.createElement('table');
+  table.className = 'data-table analytics-table';
+  const thead = document.createElement('thead');
+  thead.innerHTML = `<tr>
+    <th>Campo</th>
+    <th>Regime</th>
+    <th>Operador</th>
+    <th>Parceiros (%)</th>
+    <th>Bacia</th>
+    <th class="num">Poços (ANP)</th>
+    <th class="num">STOIIP (MMbbl)</th>
+    <th class="num">Área (km²)</th>
+  </tr>`;
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  const sorted = [...fieldRows].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  for (const r of sorted) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(r.name)}</td>
+      <td class="${r.regime === 'Partilha' ? '' : 'muted'}">${escapeHtml(r.regime || '—')}</td>
+      <td class="${r.operador ? '' : 'muted'}">${escapeHtml(r.operador || '—')}</td>
+      <td class="${r.participacao ? '' : 'muted'} participacao-cell">${escapeHtml(r.participacao || '—')}</td>
+      <td class="${r.bacia ? '' : 'muted'}">${escapeHtml(r.bacia || '—')}</td>
+      <td class="num">${r.wellsTotal || '—'}</td>
+      <td class="num">${r.stoiip != null ? fmtNum(r.stoiip) : '—'}</td>
+      <td class="num">${r.areaKm2 != null ? fmtNum(r.areaKm2) : '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  container.appendChild(wrap);
+}
+
+function renderFieldsSection(container, fieldRows) {
+  const intro = document.createElement('p');
+  intro.className = 'chart-card-subtitle';
+  intro.style.margin = '0 0 14px';
+  intro.textContent = `Campos do pré-sal que não são nenhum dos 29 contratos rastreados acima — a maioria em regime de Concessão ou Cessão Onerosa (${fieldRows.filter((r) => r.regime !== 'Partilha').length} de ${fieldRows.length}), bem anterior à Lei da Partilha (2010); só Mero é Partilha. Alguns ficam dentro da área de um contrato já rastreado (ex.: Mero fica dentro do bloco de Libra) — por isso os poços e o STOIIP daqui não entram nos KPIs do topo, pra não contar em dobro.`;
+  container.appendChild(intro);
+  container.appendChild(buildWellsStackedCard(
+    fieldRows,
+    'Poços por categoria, por campo',
+    'Base ANP/BDEP — mesma leitura do gráfico de projetos, agora pros 13 campos de contexto do play do pré-sal.',
+  ));
+  renderFieldsTable(container, fieldRows);
 }
 
 /* ---------------------------------- Init ----------------------------------- */
 
 async function init() {
   const wrapper = document.getElementById('analyticsWrapper');
+  let presalGeojson = null;
   try {
-    const [geojson, pocosJson, pd] = await Promise.all([
+    const [geojson, pocosJson, pd, presal] = await Promise.all([
       fetch(GEOJSON_URL).then((r) => r.json()),
       fetch(POCOS_URL).then((r) => r.json()),
       fetch(PD_URL).then((r) => r.json()),
+      fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
     ]);
     for (const feat of geojson.features) featureByProject[feat.properties.projeto] = feat;
     pocosData = pocosJson.pocos || {};
     pdData = pd;
+    presalGeojson = presal;
   } catch (err) {
     console.error('Falha ao carregar dados de análise', err);
   }
 
   const rows = state.projects.map(computeProjectRow);
   const agg = computeAggregates(rows);
+  const fieldRows = presalGeojson ? presalGeojson.features.map(computeFieldRow) : [];
 
   wrapper.innerHTML = '';
 
@@ -555,6 +685,17 @@ async function init() {
   tableSection.appendChild(tableTitle);
   renderProjectTable(tableSection, rows);
   wrapper.appendChild(tableSection);
+
+  if (fieldRows.length) {
+    const fieldsSection = document.createElement('section');
+    fieldsSection.className = 'analytics-section';
+    const fieldsTitle = document.createElement('h2');
+    fieldsTitle.className = 'analytics-section-title';
+    fieldsTitle.textContent = 'Campos (inclusive fora da Partilha)';
+    fieldsSection.appendChild(fieldsTitle);
+    renderFieldsSection(fieldsSection, fieldRows);
+    wrapper.appendChild(fieldsSection);
+  }
 }
 
 init();

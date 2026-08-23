@@ -4,6 +4,11 @@
     "titulo": "Bacalhau e Bacalhau Norte (AIP) 2021",
     "resolucao": "RD 163/2021",
     "contrato": "48610.003883/2000 (CSS) + 48610.012964/2017-03 (CPP)",
+    "participacao": [
+      { "empresa": "Equinor Brasil Energia Ltda.", "pct": 40 },
+      { "empresa": "ExxonMobil Exploração Brasil Ltda.", "pct": 40 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 20 }
+    ],
     "situacao": "Em desenvolvimento",
     "descoberta": "2012-03-19",
     "descobertaObs": "poço 4-BRSA-971B-SPS, bloco BM-S-8",
@@ -23,6 +28,9 @@
     "titulo": "Búzios 2016",
     "resolucao": "RD 832 de 18/02/2016 — Resolução nº 093/2016",
     "contrato": "48610.012913/2010-05",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }
+    ],
     "situacao": "Produzindo",
     "descoberta": "2010-03-01",
     "comercialidade": "2013-12-19",
@@ -41,6 +49,14 @@
     "titulo": "Campo de Mero (AIP) 2021",
     "resolucao": "RD 0758/2021 de 09/12/2021",
     "contrato": "48610.011150/2013-10 (MRO-PP) + Área Não Contratada (ANC)",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 40 },
+      { "empresa": "TotalEnergies EP Brasil Ltda.", "pct": 20 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 20 },
+      { "empresa": "CNODC Brasil Petróleo e Gás Ltda.", "pct": 10 },
+      { "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 10 }
+    ],
+    "participacaoObs": "% do contrato de partilha MRO-PP. A Área Não Contratada (3,5% da jazida) é 100% PPSA/União.",
     "situacao": "Em produção",
     "descoberta": "2010-10-28",
     "comercialidade": "2017-11-30",
@@ -59,6 +75,14 @@
     "titulo": "Campo de Mero (AIP) 2021",
     "resolucao": "RD 0758/2021 de 09/12/2021",
     "contrato": "48610.011150/2013-10 (MRO-PP) + Área Não Contratada (ANC)",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 40 },
+      { "empresa": "TotalEnergies EP Brasil Ltda.", "pct": 20 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 20 },
+      { "empresa": "CNODC Brasil Petróleo e Gás Ltda.", "pct": 10 },
+      { "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 10 }
+    ],
+    "participacaoObs": "% do contrato de partilha MRO-PP. A Área Não Contratada (3,5% da jazida) é 100% PPSA/União.",
     "situacao": "Em produção",
     "descoberta": "2010-10-28",
     "comercialidade": "2017-11-30",
@@ -78,6 +102,9 @@
     "notaNome": "Chamado de \"Sul de Lula\" no documento — a ANP mantém o nome antigo \"Sul de Tupi\" no shapefile de campos, mas é o mesmo campo (Tupi foi rebatizado Lula em 2010).",
     "resolucao": "RD 0914 de 10/01/2018 — Resolução nº 007/2018",
     "contrato": "48610.012913/2010-05",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }
+    ],
     "situacao": "Produção a iniciar",
     "descoberta": "2013-01-04",
     "comercialidade": "2013-12-19",
@@ -95,6 +122,11 @@
   "LAPA": {
     "titulo": "Lapa 2024",
     "contrato": "48610.003884/2000",
+    "participacao": [
+      { "empresa": "TotalEnergies EP Brasil Ltda.", "pct": 45 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 30 },
+      { "empresa": "Repsol Sinopec Brasil S.A.", "pct": 25 }
+    ],
     "situacao": "Em produção",
     "descoberta": "2007-08-07",
     "descobertaObs": "poço 1-BRSA-491-SPS",
@@ -114,6 +146,12 @@
     "titulo": "Sapinhoá e Entorno de Sapinhoá 2024",
     "resolucao": "RD 1.140 de 11/07/2024 — Resolução nº 476/2024",
     "contrato": "48610.003884/2000 (Concessão, Sapinhoá) + 48610.012961/2017-61 (Partilha, Entorno de Sapinhoá)",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 45 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 30 },
+      { "empresa": "Repsol Sinopec Brasil S.A.", "pct": 25 }
+    ],
+    "participacaoObs": "Mesmo % nos dois contratos (Concessão e Partilha).",
     "situacao": "Em produção",
     "descoberta": "2008-06-13",
     "comercialidade": "2011-12-29",
@@ -132,6 +170,12 @@
     "titulo": "Sapinhoá e Entorno de Sapinhoá 2024",
     "resolucao": "RD 1.140 de 11/07/2024 — Resolução nº 476/2024",
     "contrato": "48610.003884/2000 (Concessão, Sapinhoá) + 48610.012961/2017-61 (Partilha, Entorno de Sapinhoá)",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 45 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 30 },
+      { "empresa": "Repsol Sinopec Brasil S.A.", "pct": 25 }
+    ],
+    "participacaoObs": "Mesmo % nos dois contratos (Concessão e Partilha).",
     "situacao": "Em produção",
     "descoberta": "2008-06-13",
     "comercialidade": "2011-12-29",
@@ -150,6 +194,9 @@
     "titulo": "Itapu 2017",
     "resolucao": "RD 885 de 17/05/2017 — Resolução nº 301/2017",
     "contrato": "Bloco 1 do Contrato da Cessão Onerosa (Florim)",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }
+    ],
     "descoberta": "2012-12-01",
     "descobertaObs": "poço 1-BRSA-1116-RJS",
     "laminaDagua": "2.000 m",
@@ -163,6 +210,9 @@
     "titulo": "Sépia 2017",
     "notaNome": "Documento de 2017, anterior ao contrato de partilha atual (leilão do excedente da Cessão Onerosa, 2021/2022) — números de poços e volumes provavelmente desatualizados.",
     "contrato": "48610.012913/2010-05",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }
+    ],
     "situacao": "Em desenvolvimento",
     "descoberta": "2012-03-08",
     "descobertaObs": "poço 1-BRSA-976-RJS",
@@ -182,6 +232,12 @@
     "titulo": "Atapu e Oeste de Atapu (AIP) 2024",
     "resolucao": "RD 355/2024 de 29/05/2024",
     "contrato": "Atapu: Cessão Onerosa 48610.012913/2010-05 + Partilha 48610.226558/2021-02 — Oeste de Atapu: Concessão 48610.003886/2000A — + Área Não Contratada",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 52.5 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 25 },
+      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 22.5 }
+    ],
+    "participacaoObs": "% do contrato de Partilha de Atapu (Atapu-PP); na Cessão Onerosa (Atapu-CO) a Petrobras tem 100%.",
     "situacao": "Em produção",
     "descoberta": "2013-05-01",
     "descobertaObs": "poço 1-BRSA-1146-RJS",
@@ -201,6 +257,13 @@
     "titulo": "Atapu e Oeste de Atapu (AIP) 2024",
     "resolucao": "RD 355/2024 de 29/05/2024",
     "contrato": "Atapu: Cessão Onerosa 48610.012913/2010-05 + Partilha 48610.226558/2021-02 — Oeste de Atapu: Concessão 48610.003886/2000A — + Área Não Contratada",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 42.5 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 25 },
+      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 22.5 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 10 }
+    ],
+    "participacaoObs": "% do contrato de Concessão de Oeste de Atapu (CSS).",
     "situacao": "Em produção",
     "descoberta": "2013-05-01",
     "descobertaObs": "poço 1-BRSA-1146-RJS",
@@ -220,6 +283,13 @@
     "titulo": "Berbigão, Norte de Berbigão e Sul de Berbigão 2025",
     "resolucao": "Decisão de Diretoria nº 24/2025 de 23/01/2025",
     "contrato": "Berbigão: Concessão 48610.003886/2000A — Norte e Sul de Berbigão: Cessão Onerosa 48610.012913/2010-05",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 42.5 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 25 },
+      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 22.5 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 10 }
+    ],
+    "participacaoObs": "% do contrato de Concessão de Berbigão (CSS). Norte/Sul de Berbigão (Cessão Onerosa) são 100% Petrobras.",
     "situacao": "Em produção",
     "descoberta": "2008-09-10",
     "comercialidade": "2014-12-29",
@@ -238,6 +308,10 @@
     "titulo": "Berbigão, Norte de Berbigão e Sul de Berbigão 2025",
     "resolucao": "Decisão de Diretoria nº 24/2025 de 23/01/2025",
     "contrato": "Berbigão: Concessão 48610.003886/2000A — Norte e Sul de Berbigão: Cessão Onerosa 48610.012913/2010-05",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }
+    ],
+    "participacaoObs": "% do contrato de Cessão Onerosa (CO). Berbigão (Concessão) tem sócios — ver entrada BERBIGÃO.",
     "situacao": "Em produção",
     "descoberta": "2008-09-10",
     "comercialidade": "2014-12-29",
@@ -256,6 +330,10 @@
     "titulo": "Berbigão, Norte de Berbigão e Sul de Berbigão 2025",
     "resolucao": "Decisão de Diretoria nº 24/2025 de 23/01/2025",
     "contrato": "Berbigão: Concessão 48610.003886/2000A — Norte e Sul de Berbigão: Cessão Onerosa 48610.012913/2010-05",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }
+    ],
+    "participacaoObs": "% do contrato de Cessão Onerosa (CO). Berbigão (Concessão) tem sócios — ver entrada BERBIGÃO.",
     "situacao": "Em produção",
     "descoberta": "2008-09-10",
     "comercialidade": "2014-12-29",
@@ -274,6 +352,10 @@
     "titulo": "Wahoo 2023",
     "resolucao": "RD 240/2023",
     "contrato": "48610.007974/2004-11",
+    "participacao": [
+      { "empresa": "Petro Rio Jaguar Petróleo S.A.", "pct": 64.286 },
+      { "empresa": "IBV Brasil Petróleo Ltda.", "pct": 35.714 }
+    ],
     "situacao": "Em desenvolvimento",
     "descoberta": "2008-05-30",
     "descobertaObs": "poço 1-APL-1ESS",
@@ -294,6 +376,11 @@
     "notaNome": "Chamado de \"Lula\" no documento (nome dado em 2010) — a ANP mantém o nome antigo \"Tupi\" no shapefile de campos.",
     "resolucao": "RD 0914 de 10/01/2018 — Resolução nº 007/2018",
     "contrato": "48610.003886/2010",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 65 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 25 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 10 }
+    ],
     "situacao": "Em Produção",
     "descoberta": "2006-08-01",
     "comercialidade": "2010-12-29",

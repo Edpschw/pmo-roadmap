@@ -360,9 +360,13 @@ function pdSectionHTML(key) {
     }
   }
   const rowsHTML = rows.filter(([, v]) => v).map(([k, v]) => `<tr><td class="k">${k}</td><td>${escapeHtml(v)}</td></tr>`).join('');
+  const participacaoHTML = pd.participacao && pd.participacao.length
+    ? `<p class="map-popup-pd-text"><strong>Parceiros:</strong> ${pd.participacao.map((p) => `${escapeHtml(p.empresa)} ${p.pct.toLocaleString('pt-BR')}%`).join(' · ')}${pd.participacaoObs ? ` (${escapeHtml(pd.participacaoObs)})` : ''}</p>`
+    : '';
   return `<div class="map-popup-pd">
     <h4>Plano de Desenvolvimento${pd.titulo ? ` — ${escapeHtml(pd.titulo)}` : ''}</h4>
     <table>${rowsHTML}</table>
+    ${participacaoHTML}
     ${pd.sistemaResumo ? `<p class="map-popup-pd-text"><strong>Sistema:</strong> ${escapeHtml(pd.sistemaResumo)}</p>` : ''}
     ${pd.geologiaResumo ? `<p class="map-popup-pd-text"><strong>Geologia:</strong> ${escapeHtml(pd.geologiaResumo)}</p>` : ''}
     ${pd.notaNome ? `<p class="map-popup-pd-text">${escapeHtml(pd.notaNome)}</p>` : ''}
