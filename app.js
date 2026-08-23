@@ -249,14 +249,15 @@ function milestoneLabelBoxWidth(name) {
   return Math.ceil(measureTextWidth(name, MILESTONE_LABEL_FONT) * 1.1) + 12;
 }
 
-// Rótulo sempre visível no gráfico fica só com o essencial (código do
-// poço, apelido entre aspas se houver); o resultado/detalhe que antes
-// vinha grudado no nome ("(sem indícios de pré-sal)", "— bloco
-// devolvido" etc.) sai do texto sempre-visível e passa a aparecer só no
-// hover (ver showMilestoneTooltip) — nada é perdido, só deixa de poluir
-// a régua quando o gráfico tem muitos marcos próximos. Remove parêntese
-// final e cláusula final com travessão (—, não hífen comum: código de
-// poço como "1-BRSA-1363-RJS" usa hífen e não pode ser cortado no meio).
+// Rótulo sempre visível no gráfico fica só com o essencial. Marco de poço
+// (icon 'well') tem regra própria — ver wellMilestoneLabel logo abaixo,
+// que usa o código do poço e o operador direto da base da ANP; esta
+// função aqui cobre os demais tipos (contrato, FPSO, genérico): corta o
+// parêntese final e a cláusula final com travessão do nome ("Petrobras
+// compra 50% (Equinor)" vira "Petrobras compra 50%") — o texto completo
+// não se perde, continua aparecendo por inteiro no hover (ver
+// showMilestoneTooltip). Só corta em cima de travessão "—", nunca hífen
+// comum, porque nome de marco pode ter hífen no meio (datas, códigos).
 function simplifyMilestoneLabel(name) {
   let s = String(name);
   let changed = true;
@@ -271,13 +272,97 @@ function simplifyMilestoneLabel(name) {
   return s || String(name).trim();
 }
 
+// Base de poços da ANP/BDEP (data/pocos.json), a mesma usada pelo mapa —
+// mapa.js tem uma cópia independente destas mesmas funções (wellCategory,
+// wellCodeOf) porque as duas páginas carregam scripts separados sem
+// bundler; mudar a classificação num lugar exige mudar no outro igual.
+const POCOS_URL = 'data/pocos.json';
+let pocosDataApp = {};
+
+const WELL_CODE_RE = /\b\d+-[A-Z]{2,6}-\d+[A-Z]*-[A-Z]{3}\b/;
+function wellCodeOf(name) {
+  const m = String(name).match(WELL_CODE_RE);
+  return m ? m[0] : null;
+}
+
+// Mesma prioridade de classificação do mapa.js: RECLASSIFICACAO (resultado
+// apurado) antes de SITUACAO (estado atual), pra não achar "produtor" só
+// porque o poço está tecnicamente "produzindo" num sentido genérico.
+function wellCategory(info) {
+  if (!info) return 'indefinido';
+  const rec = info.rec || '';
+  if (rec.includes('INJEÇÃO')) return 'injecao';
+  if (rec.includes('ABANDONADO')) return 'abandonado';
+  if (rec === 'SECO SEM INDÍCIOS') return 'seco';
+  if (rec.includes('INDÍCIOS')) return rec.includes('PETRÓLEO') ? 'indicio' : 'gas';
+  if (rec.includes('GÁS') && !rec.includes('PETRÓLEO')) return 'gas';
+  if (rec.includes('PRODUTOR') || rec.includes('PORTADOR') || rec.includes('DESCOBRIDOR') || rec.includes('EXTENSÃO')) return 'producao';
+  const sit = info.sit || '';
+  if (sit === 'PRODUZINDO') return 'producao';
+  if (sit === 'INJETANDO') return 'injecao';
+  if (sit.includes('ABANDONADO') || sit === 'ARRASADO' || sit === 'FECHADO' || sit === 'DEVOLVIDO') return 'abandonado';
+  return 'indefinido';
+}
+
+// Marco agregado ("17 poços perfurados em 2024", workstream "Poços
+// Perfurados" dos campos em produção) — casa só o número no início do
+// nome, sem exigir o resto do texto, pra não depender do plural/singular
+// ("1 poço perfurado" vs "17 poços perfurados").
+const WELL_COUNT_MILESTONE_RE = /^(\d+)\s+poços?\s+perfurados?\s+em\s+\d{4}/i;
+
+// Produtores (categoria 'producao' ou 'gas' — os dois efetivamente
+// produzem, óleo ou gás) e injetores ('injecao') entre os poços do
+// projeto cadastrados na ANP com data de conclusão naquele ano. Não soma
+// os outros (seco/indício/abandonado/indefinido) de propósito: nenhum
+// dos dois está ativo produzindo ou injetando.
+function wellCountBreakdown(project, year) {
+  const wells = pocosDataApp[project.name] || [];
+  let produtores = 0;
+  let injetores = 0;
+  for (const w of wells) {
+    if (!w.d || w.d.slice(0, 4) !== year) continue;
+    const cat = wellCategory(w);
+    if (cat === 'producao' || cat === 'gas') produtores++;
+    else if (cat === 'injecao') injetores++;
+  }
+  return { produtores, injetores };
+}
+
+// Rótulo sempre visível de um marco de poço: só o essencial, direto da
+// base da ANP em vez do texto curado (que tinha prefixo de tipo, apelido
+// entre aspas e o resultado detalhado — tudo isso continua no hover, ver
+// showMilestoneTooltip). Agregado de ano vira só o número; poço
+// individual vira "código (operador)"; sem correspondência na base (ex.:
+// "Poço exploratório (previsto)", que ainda não tem poço real perfurado)
+// cai no corte genérico de simplifyMilestoneLabel.
+function wellMilestoneLabel(project, item) {
+  const countMatch = item.name.match(WELL_COUNT_MILESTONE_RE);
+  if (countMatch) return countMatch[1];
+  const code = wellCodeOf(item.name);
+  if (code) {
+    const wells = pocosDataApp[project.name] || [];
+    const found = wells.find((w) => w.n === code);
+    if (found && found.op) return `${code} (${found.op})`;
+    return code;
+  }
+  return simplifyMilestoneLabel(item.name);
+}
+
+// Ponto único de decisão entre as duas regras de simplificação (poço vs.
+// os demais tipos) — usado tanto no cálculo de colisão
+// (resolveMilestoneLabelLayout) quanto no desenho (renderMilestone), pra
+// nunca divergir entre a largura calculada e o texto realmente exibido.
+function milestoneLabelOf(project, item) {
+  return item.icon === 'well' ? wellMilestoneLabel(project, item) : simplifyMilestoneLabel(item.name);
+}
+
 // O rótulo do marco fica sempre centralizado exatamente sobre o losango —
 // nunca desloca horizontalmente, nem para desviar de barras de tarefa (isso
 // já causou o rótulo "teleportando" para longe do marco). A única
 // otimização: se colidir com o rótulo do marco anterior na mesma raia,
 // alterna para abaixo do losango em vez de acima. Recebe os `placements` já
 // calculados por packLanes() e devolve um Map item -> { below }.
-function resolveMilestoneLabelLayout(placements, rangeStart) {
+function resolveMilestoneLabelLayout(project, placements, rangeStart) {
   const GAP = 6;
   const byLane = new Map();
   for (const { item, lane } of placements) {
@@ -290,7 +375,7 @@ function resolveMilestoneLabelLayout(placements, rangeStart) {
   for (const laneItems of byLane.values()) {
     const withPos = laneItems.map((item) => {
       const diamondX = diffDays(rangeStart, parseDate(item.date)) * currentPxPerDay;
-      const labelBoxWidth = milestoneLabelBoxWidth(simplifyMilestoneLabel(item.name));
+      const labelBoxWidth = milestoneLabelBoxWidth(milestoneLabelOf(project, item));
       return { item, left: diamondX - labelBoxWidth / 2, right: diamondX + labelBoxWidth / 2 };
     }).sort((a, b) => a.left - b.left);
 
@@ -712,18 +797,11 @@ function renderProjectRow(project, rangeStart) {
   const label = document.createElement('span');
   label.className = 'label-text';
   label.textContent = project.name;
-  label.title = 'Clique para editar';
-  label.addEventListener('click', (e) => {
-    e.stopPropagation();
-    openProjectModal(project);
-  });
   labelCell.appendChild(label);
 
   const actions = document.createElement('div');
   actions.className = 'row-actions';
   actions.appendChild(iconButton('+', 'Nova workstream', () => openWorkstreamModal(project)));
-  actions.appendChild(iconButton('✎', 'Editar projeto', () => openProjectModal(project), 'secondary-action'));
-  actions.appendChild(iconButton('✕', 'Excluir projeto', () => confirmDeleteProject(project), 'secondary-action'));
   labelCell.appendChild(actions);
 
   // No mobile, o nome do projeto sempre cabe numa linha só: a sidebar já
@@ -808,7 +886,7 @@ function renderProjectRow(project, rangeStart) {
   // fixo sobe todos um pouco para não ficarem em cima da barra-resumo,
   // que agora é bem mais fina.
   const COLLAPSED_MILESTONE_LIFT = 8;
-  const milestoneLabelLayout = resolveMilestoneLabelLayout(milestonePlacements, rangeStart);
+  const milestoneLabelLayout = resolveMilestoneLabelLayout(project, milestonePlacements, rangeStart);
   for (const { item, lane } of milestonePlacements) {
     const milestoneTop = rowHeight / 2 - COLLAPSED_MILESTONE_LIFT + (lane - (milestoneLaneCount - 1) / 2) * LANE_H;
     timelineCell.appendChild(renderMilestone(project, item, lane, rangeStart, milestoneLabelLayout.get(item), milestoneTop));
@@ -837,7 +915,6 @@ function renderWorkstreamRow(project, ws, rangeStart) {
 
   const actions = document.createElement('div');
   actions.className = 'row-actions';
-  actions.appendChild(iconButton('T', 'Nova tarefa', () => openTaskModal(project, ws)));
   actions.appendChild(iconButton('✎', 'Editar workstream', () => openWorkstreamModal(project, ws), 'secondary-action'));
   actions.appendChild(iconButton('✕', 'Excluir workstream', () => confirmDeleteWorkstream(project, ws), 'secondary-action'));
   labelCell.appendChild(actions);
@@ -853,10 +930,10 @@ function renderWorkstreamRow(project, ws, rangeStart) {
   const timelineCell = document.createElement('div');
   timelineCell.className = 'timeline-cell';
 
-  const milestoneLabelLayout = resolveMilestoneLabelLayout(placements, rangeStart);
+  const milestoneLabelLayout = resolveMilestoneLabelLayout(project, placements, rangeStart);
   for (const { item, lane } of placements) {
     if (item.type === 'task') {
-      timelineCell.appendChild(renderTaskBar(project, ws, item, lane, rangeStart));
+      timelineCell.appendChild(renderTaskBar(project, item, lane, rangeStart));
     } else {
       timelineCell.appendChild(renderMilestone(project, item, lane, rangeStart, milestoneLabelLayout.get(item)));
     }
@@ -880,7 +957,7 @@ function iconButton(symbol, title, onClick, extraClass) {
   return btn;
 }
 
-function renderTaskBar(project, ws, item, lane, rangeStart) {
+function renderTaskBar(project, item, lane, rangeStart) {
   const start = parseDate(item.start);
   const end = parseDate(item.end);
   const left = diffDays(rangeStart, start) * currentPxPerDay;
@@ -914,17 +991,9 @@ function renderTaskBar(project, ws, item, lane, rangeStart) {
   labelSpan.textContent = item.name;
   bar.appendChild(labelSpan);
 
-  const handleLeft = document.createElement('div');
-  handleLeft.className = 'handle left';
-  bar.appendChild(handleLeft);
-  const handleRight = document.createElement('div');
-  handleRight.className = 'handle right';
-  bar.appendChild(handleRight);
-
   bar.title = `${item.name}\n${formatBR(item.start)} → ${formatBR(item.end)}\n` +
     `Progresso real: ${actualProgress}%\nProgresso esperado (hoje): ${expectedProgress}%`;
 
-  attachTaskDrag(bar, handleLeft, handleRight, project, ws, item);
   wrapper.appendChild(bar);
 
   // Dois números centralizados logo abaixo da barra: progresso real e o
@@ -965,12 +1034,16 @@ function wellIconSVG(color) {
 const MILESTONE_ICON_BUILDERS = { contract: contractIconSVG, fpso: fpsoIconSVG, well: wellIconSVG };
 const MILESTONE_TYPE_LABELS = { contract: 'Marco de contrato', fpso: 'FPSO', well: 'Poço' };
 
-// Tooltip de hover do marco — mostra o nome completo (o rótulo sempre
-// visível no gráfico é o simplificado, ver simplifyMilestoneLabel) e os
+// Tooltip de hover/clique do marco — mostra o nome completo (o rótulo
+// sempre visível no gráfico é o simplificado, ver milestoneLabelOf) e os
 // detalhes que antes só davam pra ver editando o marco (agora só leitura,
-// ver "retirar edição" no histórico do repositório). Reaproveita o
-// #popover, que não tinha nenhum outro uso na página.
-function showMilestoneTooltip(dia, item, isPast) {
+// ver "retirar edição" no histórico do repositório). Marco agregado de
+// poços perfurados no ano ganha a quebra por produtor/injetor, calculada
+// na hora a partir da base da ANP (ver wellCountBreakdown) — só aparece
+// quando pocosDataApp já carregou, pra não mostrar "0 · 0" enganoso
+// antes do fetch terminar. Reaproveita o #popover, que não tinha nenhum
+// outro uso na página.
+function showMilestoneTooltip(dia, project, item, isPast) {
   const typeLabel = MILESTONE_TYPE_LABELS[item.icon] || 'Marco';
   let statusHTML = '';
   if (isPast) {
@@ -983,10 +1056,17 @@ function showMilestoneTooltip(dia, item, isPast) {
   const approxHTML = item.approx
     ? '<p class="milestone-tooltip-approx">Data aproximada — só o mês era conhecido.</p>'
     : '';
+  let breakdownHTML = '';
+  const countMatch = item.name.match(WELL_COUNT_MILESTONE_RE);
+  if (countMatch && Object.keys(pocosDataApp).length) {
+    const { produtores, injetores } = wellCountBreakdown(project, item.date.slice(0, 4));
+    breakdownHTML = `<p class="milestone-tooltip-meta">Produtores: ${produtores} · Injetores: ${injetores}</p>`;
+  }
   popoverEl.innerHTML = `
     <div class="milestone-tooltip">
       <h3>${escapeHtml(item.name)}</h3>
       <p class="milestone-tooltip-meta">${escapeHtml(typeLabel)} · ${formatBR(item.date)}</p>
+      ${breakdownHTML}
       ${statusHTML}
       ${approxHTML}
     </div>`;
@@ -1016,6 +1096,10 @@ function hideMilestoneTooltip() {
   popoverEl.hidden = true;
   popoverEl.classList.remove('milestone-tooltip-popover', 'arrow-below', 'arrow-above');
 }
+// Clique no marco já para a propagação (ver renderMilestone) — este
+// listener só roda pra qualquer clique FORA de um marco, fechando um
+// tooltip que ficou aberto por toque.
+document.addEventListener('click', hideMilestoneTooltip);
 
 function renderMilestone(project, item, lane, rangeStart, labelLayoutOverride, topOverride) {
   const date = parseDate(item.date);
@@ -1056,8 +1140,16 @@ function renderMilestone(project, item, lane, rangeStart, labelLayoutOverride, t
   // Sem title nativo: o hover mostra o tooltip rico (ver
   // showMilestoneTooltip), que já leva nome completo, data e status —
   // duplicar num title do navegador só criaria dois tooltips concorrendo.
-  dia.addEventListener('mouseenter', () => showMilestoneTooltip(dia, item, isPast));
+  // Clique repete o mesmo conteúdo (stopPropagation pra não disparar o
+  // listener de documento logo abaixo, que fecha o tooltip em qualquer
+  // outro clique) — é o que dá acesso à mesma informação em touch, onde
+  // não existe hover.
+  dia.addEventListener('mouseenter', () => showMilestoneTooltip(dia, project, item, isPast));
   dia.addEventListener('mouseleave', hideMilestoneTooltip);
+  dia.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showMilestoneTooltip(dia, project, item, isPast);
+  });
 
   // Rótulo sempre centralizado exatamente sobre o losango (não ao lado).
   // Marcos já passados e realizados ficam acinzentados (padrão de tarefa
@@ -1069,7 +1161,7 @@ function renderMilestone(project, item, lane, rangeStart, labelLayoutOverride, t
   // horizontal nunca muda, continua centralizada na data real.
   const labelEl = document.createElement('span');
   labelEl.className = 'milestone-label';
-  const simplifiedName = simplifyMilestoneLabel(item.name);
+  const simplifiedName = milestoneLabelOf(project, item);
   labelEl.textContent = simplifiedName;
   if (isPast) labelEl.style.color = item.done ? MILESTONE_PAST_LABEL_COLOR : MILESTONE_OVERDUE_LABEL_COLOR;
 
@@ -1087,76 +1179,6 @@ function renderMilestone(project, item, lane, rangeStart, labelLayoutOverride, t
   wrapper.appendChild(dia);
   wrapper.appendChild(labelEl);
   return wrapper;
-}
-
-/* ------------------------------- Drag logic ------------------------------- */
-
-// Abaixo desse pxPerDay (ex.: escala "Tudo" cobrindo ~14 anos, onde
-// MIN_PX_PER_DAY chega a 0.02), poucos pixels de imprecisão do mouse já
-// deslocam o item por anos inteiros — um clique meio trêmulo em cima de um
-// marco de 15px vira sem querer um "arraste" de anos. Abaixo do limiar,
-// qualquer clique abre o modal de edição em vez de iniciar arraste.
-const MIN_PX_PER_DAY_FOR_DRAG = 0.2;
-
-function attachTaskDrag(bar, handleLeft, handleRight, project, ws, item) {
-  bar.addEventListener('pointerdown', (e) => startDrag(e, 'move'));
-  handleLeft.addEventListener('pointerdown', (e) => startDrag(e, 'resize-left'));
-  handleRight.addEventListener('pointerdown', (e) => startDrag(e, 'resize-right'));
-
-  function startDrag(e, mode) {
-    e.stopPropagation();
-    e.preventDefault();
-    if (currentPxPerDay < MIN_PX_PER_DAY_FOR_DRAG) {
-      openTaskModal(project, ws, item);
-      return;
-    }
-    const startX = e.clientX;
-    const origStart = parseDate(item.start);
-    const origEnd = parseDate(item.end);
-    const origStartOffset = diffDays(currentRangeStart, origStart);
-    const origEndOffset = diffDays(currentRangeStart, origEnd);
-    let hasMoved = false;
-    bar.classList.add('dragging');
-
-    function onMove(ev) {
-      const deltaPx = ev.clientX - startX;
-      const deltaDays = Math.round(deltaPx / currentPxPerDay);
-      if (deltaDays !== 0) hasMoved = true;
-
-      let newStartOffset = origStartOffset;
-      let newEndOffset = origEndOffset;
-      if (mode === 'move') {
-        newStartOffset = origStartOffset + deltaDays;
-        newEndOffset = origEndOffset + deltaDays;
-      } else if (mode === 'resize-left') {
-        newStartOffset = Math.min(origStartOffset + deltaDays, origEndOffset);
-      } else if (mode === 'resize-right') {
-        newEndOffset = Math.max(origEndOffset + deltaDays, origStartOffset);
-      }
-      bar.style.left = (newStartOffset * currentPxPerDay) + 'px';
-      bar.style.width = Math.max(14, (newEndOffset - newStartOffset + 1) * currentPxPerDay) + 'px';
-      bar._pendingStartOffset = newStartOffset;
-      bar._pendingEndOffset = newEndOffset;
-    }
-
-    function onUp(ev) {
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      bar.classList.remove('dragging');
-
-      if (hasMoved && bar._pendingStartOffset !== undefined) {
-        item.start = toISO(addDays(currentRangeStart, bar._pendingStartOffset));
-        item.end = toISO(addDays(currentRangeStart, bar._pendingEndOffset));
-        saveState();
-        render();
-      } else if (!hasMoved) {
-        openTaskModal(project, ws, item);
-      }
-    }
-
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-  }
 }
 
 /* -------------------------------- Modals ---------------------------------- */
@@ -1178,74 +1200,6 @@ function openModalWith(html, wireFn) {
   wireFn(modalEl);
   const firstInput = modalEl.querySelector('input, textarea, select');
   if (firstInput) firstInput.focus();
-}
-
-function colorSwatchesHTML(selected) {
-  return PALETTE.map((c) =>
-    `<div class="color-swatch${c === selected ? ' selected' : ''}" data-color="${c}" style="background:${c}"></div>`
-  ).join('');
-}
-
-function openProjectModal(project) {
-  const isEdit = !!project;
-  const color = project ? project.color : PALETTE[state.projects.length % PALETTE.length];
-  const currentGroup = (project && project.group) || GROUP_FALLBACK;
-  const groupOptionsHTML = GROUP_DEFS.map((g) =>
-    `<option value="${g.id}"${g.id === currentGroup ? ' selected' : ''}>${escapeAttr(g.label)}</option>`
-  ).join('');
-  const html = `
-    <h2>${isEdit ? 'Editar projeto' : 'Novo projeto'}</h2>
-    <div class="field">
-      <label>Nome do projeto</label>
-      <input type="text" id="f-name" value="${isEdit ? escapeAttr(project.name) : ''}" placeholder="Ex: Transformação Digital" />
-    </div>
-    <div class="field">
-      <label>Grupo</label>
-      <select id="f-group">${groupOptionsHTML}</select>
-    </div>
-    <div class="field">
-      <label>Cor</label>
-      <div class="color-grid" id="f-color-grid">${colorSwatchesHTML(color)}</div>
-    </div>
-    <div class="modal-actions">
-      <div>${isEdit ? '<button class="btn-danger" id="f-delete">Excluir projeto</button>' : ''}</div>
-      <div class="modal-actions-right">
-        <button class="btn-ghost" id="f-cancel">Cancelar</button>
-        <button class="btn-primary" id="f-save">${isEdit ? 'Salvar' : 'Criar'}</button>
-      </div>
-    </div>`;
-  openModalWith(html, (m) => {
-    let selectedColor = color;
-    m.querySelector('#f-color-grid').addEventListener('click', (e) => {
-      const sw = e.target.closest('.color-swatch');
-      if (!sw) return;
-      selectedColor = sw.dataset.color;
-      m.querySelectorAll('.color-swatch').forEach((s) => s.classList.toggle('selected', s === sw));
-    });
-    m.querySelector('#f-cancel').addEventListener('click', closeModal);
-    if (isEdit) {
-      m.querySelector('#f-delete').addEventListener('click', () => {
-        closeModal();
-        confirmDeleteProject(project);
-      });
-    }
-    m.querySelector('#f-save').addEventListener('click', () => {
-      const name = m.querySelector('#f-name').value.trim();
-      const group = m.querySelector('#f-group').value;
-      if (!name) { showToast('Informe um nome para o projeto.'); return; }
-      if (isEdit) {
-        project.name = name;
-        project.color = selectedColor;
-        project.group = group;
-      } else {
-        state.projects.push({ id: uid('p'), name, color: selectedColor, group, collapsed: false, workstreams: [] });
-      }
-      saveState();
-      render();
-      closeModal();
-      showToast(isEdit ? 'Projeto atualizado.' : 'Projeto criado.');
-    });
-  });
 }
 
 function openWorkstreamModal(project, ws) {
@@ -1288,81 +1242,7 @@ function openWorkstreamModal(project, ws) {
   });
 }
 
-function openTaskModal(project, ws, item) {
-  const isEdit = !!item;
-  const today = todayISO();
-  const start = isEdit ? item.start : today;
-  const end = isEdit ? item.end : toISO(addDays(parseDate(today), 14));
-  const progress = isEdit ? (item.progress || 0) : 0;
-  const html = `
-    <h2>${isEdit ? 'Editar tarefa' : 'Nova tarefa'}</h2>
-    <p style="margin:-6px 0 14px;color:var(--text-muted);font-size:12px;">${escapeHtml(project.name)} / ${escapeHtml(ws.name)}</p>
-    <div class="field">
-      <label>Nome da tarefa</label>
-      <input type="text" id="f-name" value="${isEdit ? escapeAttr(item.name) : ''}" placeholder="Ex: Levantamento de requisitos" />
-    </div>
-    <div class="field-row">
-      <div class="field">
-        <label>Início</label>
-        <input type="date" id="f-start" value="${start}" />
-      </div>
-      <div class="field">
-        <label>Fim</label>
-        <input type="date" id="f-end" value="${end}" />
-      </div>
-    </div>
-    <div class="field">
-      <label>Progresso: <span class="progress-value" id="f-progress-val">${progress}%</span></label>
-      <input type="range" id="f-progress" min="0" max="100" step="5" value="${progress}" />
-    </div>
-    <div class="modal-actions">
-      <div>${isEdit ? '<button class="btn-danger" id="f-delete">Excluir tarefa</button>' : ''}</div>
-      <div class="modal-actions-right">
-        <button class="btn-ghost" id="f-cancel">Cancelar</button>
-        <button class="btn-primary" id="f-save">${isEdit ? 'Salvar' : 'Criar'}</button>
-      </div>
-    </div>`;
-  openModalWith(html, (m) => {
-    m.querySelector('#f-progress').addEventListener('input', (e) => {
-      m.querySelector('#f-progress-val').textContent = e.target.value + '%';
-    });
-    m.querySelector('#f-cancel').addEventListener('click', closeModal);
-    if (isEdit) {
-      m.querySelector('#f-delete').addEventListener('click', () => {
-        closeModal();
-        confirmDeleteItem(project, ws, item, 'tarefa');
-      });
-    }
-    m.querySelector('#f-save').addEventListener('click', () => {
-      const name = m.querySelector('#f-name').value.trim();
-      const s = m.querySelector('#f-start').value;
-      const e = m.querySelector('#f-end').value;
-      const p = Number(m.querySelector('#f-progress').value);
-      if (!name) { showToast('Informe um nome para a tarefa.'); return; }
-      if (!s || !e) { showToast('Informe as datas de início e fim.'); return; }
-      if (e < s) { showToast('A data de fim não pode ser anterior ao início.'); return; }
-      if (isEdit) {
-        item.name = name; item.start = s; item.end = e; item.progress = p;
-      } else {
-        ws.items.push({ id: uid('t'), type: 'task', name, start: s, end: e, progress: p });
-      }
-      saveState();
-      render();
-      closeModal();
-      showToast(isEdit ? 'Tarefa atualizada.' : 'Tarefa criada.');
-    });
-  });
-}
-
 /* ------------------------------- Delete flows ------------------------------ */
-
-function confirmDeleteProject(project) {
-  if (!confirm(`Excluir o projeto "${project.name}" e todas as suas workstreams?`)) return;
-  state.projects = state.projects.filter((p) => p.id !== project.id);
-  saveState();
-  render();
-  showToast('Projeto excluído.');
-}
 
 function confirmDeleteWorkstream(project, ws) {
   if (!confirm(`Excluir a workstream "${ws.name}" e todos os seus itens?`)) return;
@@ -1370,14 +1250,6 @@ function confirmDeleteWorkstream(project, ws) {
   saveState();
   render();
   showToast('Workstream excluída.');
-}
-
-function confirmDeleteItem(project, ws, item, kindLabel) {
-  if (!confirm(`Excluir ${kindLabel} "${item.name}"?`)) return;
-  ws.items = ws.items.filter((i) => i.id !== item.id);
-  saveState();
-  render();
-  showToast(kindLabel[0].toUpperCase() + kindLabel.slice(1) + ' excluído(a).');
 }
 
 /* --------------------------------- Utils ----------------------------------- */
@@ -1390,9 +1262,6 @@ function escapeHtml(str) {
 function escapeAttr(str) { return escapeHtml(str); }
 
 /* ------------------------------- Toolbar wiring ----------------------------- */
-
-document.getElementById('addProjectBtn').addEventListener('click', () => openProjectModal(null));
-document.getElementById('emptyAddProjectBtn').addEventListener('click', () => openProjectModal(null));
 
 document.getElementById('scaleSwitch').addEventListener('click', (e) => {
   const btn = e.target.closest('.scale-btn');
@@ -1712,6 +1581,18 @@ document.getElementById('templateExcelBtn').addEventListener('click', () => {
 });
 
 /* ---------------------------------- Init ------------------------------------ */
+
+// Rótulo/tooltip de marco de poço depende da base da ANP (ver
+// wellMilestoneLabel, wellCountBreakdown) — carrega em paralelo com o
+// primeiro render() (que já roda com pocosDataApp vazio, caindo no corte
+// genérico até isso terminar) e manda um re-render assim que chegar.
+fetch(POCOS_URL).then((r) => r.json()).then((d) => {
+  pocosDataApp = d.pocos || {};
+  render();
+}).catch(() => {
+  // Sem os dados da ANP, os marcos de poço seguem no rótulo genérico
+  // (só corta parêntese/travessão) em vez de "código (operador)".
+});
 
 render();
 setTimeout(scrollToToday, 50);

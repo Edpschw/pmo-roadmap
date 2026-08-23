@@ -189,6 +189,9 @@ body { display: flex; flex-direction: column; height: 100vh; }
 }
 .row.workstream-row .label-text { font-weight: 500; color: var(--text-muted); font-size: 12.5px; }
 .label-text:hover { text-decoration: underline dotted; }
+/* Projeto não é mais editável clicando no nome — sem sublinhado de hover,
+   que sugeria essa ação (workstream continua editável, mantém o efeito). */
+.row.project-row .label-text:hover { text-decoration: none; }
 
 .row-actions { display: none; align-items: center; gap: 2px; flex: 0 0 auto; }
 .row:hover .row-actions { display: flex; }
@@ -258,11 +261,10 @@ body { display: flex; flex-direction: column; height: 100vh; }
   position: absolute;
   height: 22px;
   border-radius: 6px;
-  cursor: grab;
+  cursor: default;
   box-shadow: 0 1px 2px rgba(20,30,50,0.15);
   user-select: none;
 }
-.task-bar:active { cursor: grabbing; }
 /* Realce translúcido cobrindo a fração já concluída de uma barra colorida
    (tarefa ou barra-resumo de projeto) — mesma lógica visual nos dois casos. */
 .progress-fill {
@@ -278,12 +280,6 @@ body { display: flex; flex-direction: column; height: 100vh; }
   font-size: 11.5px; font-weight: 600; color: #fff;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
 }
-.task-bar .handle {
-  position: absolute; top: 0; bottom: 0; width: 7px; cursor: ew-resize; z-index: 2;
-}
-.task-bar .handle.left { left: -2px; }
-.task-bar .handle.right { right: -2px; }
-.task-bar.dragging { opacity: 0.85; box-shadow: 0 4px 14px rgba(20,30,50,0.30); z-index: 5; }
 
 .milestone {
   position: absolute; width: 15px; height: 15px;
@@ -348,30 +344,18 @@ body { display: flex; flex-direction: column; height: 100vh; }
   width: 100%;
 }
 .field input[type="color"] { width: 44px; height: 30px; padding: 2px; border: 1px solid var(--border-strong); border-radius: 6px; cursor: pointer; }
-.field-row { display: flex; gap: 10px; }
-.field-row .field { flex: 1; }
-.field input[type="range"] { width: 100%; }
-.progress-value { font-size: 12px; color: var(--text-muted); font-weight: 600; }
-.field-checkbox label {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer;
-}
-.field-checkbox input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
 .modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
 .modal-actions-right { display: flex; gap: 8px; }
 .btn-danger { background: none; border: none; color: var(--danger); font-weight: 600; font-size: 12.5px; cursor: pointer; padding: 6px 4px; }
 .btn-danger:hover { text-decoration: underline; }
 
-/* ---------- Popover (quick color / small pickers) ---------- */
+/* ---------- Popover ---------- */
 .popover {
   position: absolute; z-index: 90; background: var(--panel); border: 1px solid var(--border-strong);
   border-radius: 8px; box-shadow: var(--shadow); padding: 8px;
 }
-.color-grid { display: grid; grid-template-columns: repeat(6, 20px); gap: 6px; }
-.color-swatch { width: 20px; height: 20px; border-radius: 5px; cursor: pointer; border: 2px solid transparent; }
-.color-swatch.selected { border-color: var(--text); }
 
-/* Tooltip de hover do marco (reaproveita o #popover, sem outro uso na
+/* Tooltip de hover/clique do marco (reaproveita o #popover, sem outro uso na
    página) — position: fixed porque a posição vem de getBoundingClientRect
    do losango, coordenadas de viewport, não de documento. pointer-events
    none: é só leitura, não deve interceptar o mouse nem competir com o
@@ -462,16 +446,13 @@ body { display: flex; flex-direction: column; height: 100vh; }
 /* ---------- Telas de toque: alvos maiores, ações sempre visíveis ---------- */
 @media (hover: none) {
   .row-actions { display: flex; }
-  /* Editar/excluir já são acessíveis tocando no nome (abre o modal, que tem
-     "excluir" embutido); esconder essas ações libera espaço para o texto. */
+  /* Editar/excluir workstream ficam escondidos por padrão pra liberar
+     espaço pro texto — só aparecem tocando na linha (:hover cobre isso
+     no desktop; no touch a área toda vira alvo por causa do row-actions
+     acima). Projeto e tarefa não têm mais essas ações (view-only). */
   .btn-icon.secondary-action { display: none; }
   .btn-icon { width: 30px; height: 30px; font-size: 15px; }
   .chevron { flex: 0 0 22px; width: 22px; height: 22px; font-size: 11px; }
-  .task-bar .handle { width: 18px; }
-  .task-bar .handle.left { left: -9px; }
-  .task-bar .handle.right { right: -9px; }
-  .color-swatch { width: 26px; height: 26px; }
-  .color-grid { grid-template-columns: repeat(6, 26px); }
   .scale-btn { padding: 7px 12px; }
 }
 
@@ -679,7 +660,6 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   .header-tier-label.unit-day { font-size: 9px; }
 
   .modal { width: calc(100vw - 24px); max-width: calc(100vw - 24px); padding: 16px; }
-  .field-row { flex-direction: column; gap: 12px; }
 
   .table-wrapper { padding: 12px; }
   .project-header-row .group-name-input, .ws-header-row .group-name-input { max-width: 140px; }
