@@ -846,7 +846,7 @@ function renderProjectRow(project, rangeStart) {
     const milestones = [];
     for (const w of project.workstreams) {
       for (const it of w.items) {
-        if (it.type === 'milestone') milestones.push(it);
+        if (it.type === 'milestone' && isKeyCollapsedMilestone(it)) milestones.push(it);
       }
     }
     if (milestones.length) {
@@ -1050,6 +1050,18 @@ function wellIconSVG(color) {
 }
 const MILESTONE_ICON_BUILDERS = { contract: contractIconSVG, fpso: fpsoIconSVG, well: wellIconSVG };
 const MILESTONE_TYPE_LABELS = { contract: 'Marco de contrato', fpso: 'FPSO', well: 'Poço' };
+
+// Projeto colapsado só mostra os marcos mais essenciais pra leitura rápida
+// da linha do tempo: leilão, primeiro óleo (FPSO) e devolução do bloco já
+// dizem o essencial do ciclo de vida; poços agregados ("N poços perfurados
+// em YYYY") e marcos como Assinatura/FID ficam de fora, só reaparecem ao
+// expandir o projeto.
+function isKeyCollapsedMilestone(item) {
+  if (item.icon === 'fpso') return true;
+  if (item.icon === 'contract') return item.name === 'Leilão' || item.name === 'Devolução';
+  if (item.icon === 'well') return item.name.startsWith('Poço pioneiro');
+  return false;
+}
 
 // Tooltip de hover/clique do marco — mostra o nome completo (o rótulo
 // sempre visível no gráfico é o simplificado, ver milestoneLabelOf) e os
