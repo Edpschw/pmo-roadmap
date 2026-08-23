@@ -562,6 +562,18 @@ body.map-page .btn-ghost:hover { background: #1e222a; }
 .map-legend-row { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--map-text-muted); }
 .map-legend-well-icon { flex: 0 0 auto; width: 15px; height: 15px; display: flex; align-items: center; justify-content: center; }
 
+/* Sliders do painel "Controles" (zoom mínimo dos poços, filtro de ano) */
+.map-slider-row { margin-bottom: 10px; }
+.map-slider-row:last-of-type { margin-bottom: 0; }
+.map-slider-label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 12px; color: var(--map-text); margin-bottom: 5px;
+}
+.map-slider-label span:last-child { color: var(--map-text-muted); font-variant-numeric: tabular-nums; }
+.map-slider-row input[type="range"] {
+  width: 100%; display: block; accent-color: #5b8def; cursor: pointer; margin: 0;
+}
+
 /* Controles do Leaflet (zoom, atribuição) e popup — a skin padrão é clara
    e destoaria do resto da página. */
 body.map-page .leaflet-bar, body.map-page .leaflet-bar a {

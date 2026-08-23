@@ -94,8 +94,11 @@ let outrosPocosVisible = true;
 // poço é só um pontinho sem contexto, e com centenas deles a tela vira uma
 // nuvem. Um zoom intermediário — nem tão baixo quanto essa visão geral nem
 // tão alto quanto focar um contrato específico — é o ponto em que já dá
-// pra ver a região (Santos, Campos) sem poluir.
-const WELLS_MIN_ZOOM = 8;
+// pra ver a região (Santos, Campos) sem poluir. Ajustável pelo usuário
+// (ver painel "Controles"), por isso variável em vez de const.
+const WELLS_MIN_ZOOM_DEFAULT = 8;
+const WELLS_MIN_ZOOM_RANGE = [3, 14];
+let wellsMinZoom = WELLS_MIN_ZOOM_DEFAULT;
 
 const groupLayers = {};
 for (const g of GROUP_DEFS) groupLayers[g.id] = L.layerGroup().addTo(map);
@@ -254,6 +257,52 @@ function wellItemsOf(project) {
   return wells;
 }
 
+// Ano (número) de uma data ISO "AAAA-MM-DD", ou null se não houver data —
+// usado pelo filtro de ano (ver applyYearFilter).
+function yearOf(iso) {
+  if (!iso) return null;
+  const y = parseInt(String(iso).slice(0, 4), 10);
+  return Number.isFinite(y) ? y : null;
+}
+
+// Ano do contrato de um projeto: o marco mais antigo com icon 'contract'
+// na workstream "Marcos do Contrato" (normalmente "Leilão", às vezes só
+// "Assinatura" quando não há leilão distinto) — os 29 projetos têm essa
+// workstream, então cobre até os 8 sem poligonal na ANP. null se por
+// algum motivo não achar nenhum marco de contrato.
+function projectContractYear(project) {
+  for (const ws of project.workstreams) {
+    if (ws.name !== 'Marcos do Contrato') continue;
+    const years = ws.items
+      .filter((item) => item.type === 'milestone' && item.icon === 'contract')
+      .map((item) => yearOf(item.date))
+      .filter((y) => y != null);
+    if (years.length) return Math.min(...years);
+  }
+  return null;
+}
+
+// Todo marcador de poço colocado no mapa (ver addWellMarker) entra aqui
+// junto com o ano do poço mais antigo que ele representa — é o que
+// applyYearFilter usa pra decidir mostrar/esconder cada um.
+const wellMarkerRegistry = [];
+function registerWellMarker(marker, targetLayer, year) {
+  wellMarkerRegistry.push({ marker, targetLayer, year });
+}
+
+// Ano do contrato de cada projeto, por id — calculado uma vez em init()
+// (ver projectContractYear) e consultado por applyYearFilter a cada
+// movimento do slider, sem recalcular toda vez.
+const projectYearById = {};
+
+// Intervalo [min, max] e valor atual do filtro de ano — null até init()
+// carregar os dados e calcular o intervalo real (ver o fim de init()); até
+// lá o filtro fica inativo (tudo visível). yearFilterValue começa igual a
+// yearFilterMax: nada fica escondido até o usuário mexer no slider.
+let yearFilterMin = null;
+let yearFilterMax = null;
+let yearFilterValue = null;
+
 // Código do poço dentro do nome do marco no roadmap ("Poço pioneiro
 // 1-BRSA-1363-RJS (gás com CO2...)" -> "1-BRSA-1363-RJS"), pra casar o
 // marco com o registro da ANP e manter o rótulo curado do roadmap, que
@@ -315,6 +364,8 @@ function addWellMarker(targetLayer, latlng, color, entries) {
   );
   if (first.info) marker.bindPopup(wellPopupHTML(first.label, first.info, color, entries.slice(1)));
   targetLayer.addLayer(marker);
+  const years = entries.map((e) => yearOf(e.date)).filter((y) => y != null);
+  registerWellMarker(marker, targetLayer, years.length ? Math.min(...years) : null);
 }
 
 // Monta e adiciona (direto em targetLayer — a mesma camada do polígono do
@@ -515,6 +566,7 @@ async function init() {
     layerByProjectId[project.id] = layer;
     allBounds.push(bounds);
   }
+  for (const project of state.projects) projectYearById[project.id] = projectContractYear(project);
 
   // Poços de TODOS os contratos que tenham poço cadastrado — inclusive os
   // campos em produção (Búzios, Mero/Libra, Bacalhau/Norte de Carcará…) e
@@ -544,7 +596,39 @@ async function init() {
   map.on('zoomend', updateWellsVisibility);
   updateWellsVisibility();
 
+  const years = [
+    ...Object.values(projectYearById),
+    ...wellMarkerRegistry.map((e) => e.year),
+  ].filter((y) => y != null);
+  if (years.length) {
+    yearFilterMin = Math.min(...years);
+    yearFilterMax = Math.max(...years);
+    yearFilterValue = yearFilterMax;
+  }
+
   renderPanel();
+}
+
+// Esconde contrato/poço com data depois do ano escolhido no slider — "como
+// era o mapa até esse ano". Sem data conhecida (poço sem data no cadastro,
+// ou projeto sem marco de contrato reconhecido) sempre aparece: melhor
+// mostrar de mais do que esconder por engano algo que não sabemos datar.
+function applyYearFilter() {
+  if (yearFilterValue == null) return;
+  for (const project of state.projects) {
+    const layer = layerByProjectId[project.id];
+    if (!layer) continue;
+    const year = projectYearById[project.id];
+    const target = groupLayers[project.group] || groupLayers[GROUP_FALLBACK];
+    const visible = year == null || year <= yearFilterValue;
+    if (visible && !target.hasLayer(layer)) target.addLayer(layer);
+    else if (!visible && target.hasLayer(layer)) target.removeLayer(layer);
+  }
+  for (const entry of wellMarkerRegistry) {
+    const visible = entry.year == null || entry.year <= yearFilterValue;
+    if (visible && !entry.targetLayer.hasLayer(entry.marker)) entry.targetLayer.addLayer(entry.marker);
+    else if (!visible && entry.targetLayer.hasLayer(entry.marker)) entry.targetLayer.removeLayer(entry.marker);
+  }
 }
 
 function setColorMode(mode) {
@@ -561,8 +645,10 @@ function setColorMode(mode) {
 }
 
 // Basta enquadrar o alvo (como flyToBounds faria): focar um contrato
-// específico sempre passa do zoom mínimo dos poços (ver WELLS_MIN_ZOOM),
-// então não precisa de nenhum ajuste extra pra garantir que eles apareçam.
+// específico sempre passa do zoom mínimo dos poços (ver wellsMinZoom),
+// então não precisa de nenhum ajuste extra pra garantir que eles apareçam
+// — a menos que o usuário tenha subido o slider além do zoom do próprio
+// contrato, caso em que nem voar resolve (fica assim mesmo).
 function flyToProject(project) {
   const layer = layerByProjectId[project.id];
   if (layer) {
@@ -571,7 +657,15 @@ function flyToProject(project) {
     // tamparia poços que estejam por ali (o balão do Leaflet sobe a partir
     // do ponto).
     const anchor = L.latLng(bounds.getNorth(), bounds.getCenter().lng);
-    map.once('moveend', () => layer.eachLayer((l) => l.openPopup(anchor)));
+    // Filtro de ano pode ter tirado esse polígono do grupo (ver
+    // applyYearFilter) — abrir popup nele daria um marcador fantasma sem
+    // contorno visível, então só avisa em vez de tentar.
+    const target = groupLayers[project.group] || groupLayers[GROUP_FALLBACK];
+    if (target.hasLayer(layer)) {
+      map.once('moveend', () => layer.eachLayer((l) => l.openPopup(anchor)));
+    } else {
+      showToast(`"${project.name}" está fora do filtro de ano atual (Controles → Mostrar até o ano).`);
+    }
     map.flyToBounds(bounds, { padding: [40, 40], duration: 0.6 });
     return;
   }
@@ -607,11 +701,11 @@ function toggleOutrosPocos(visible) {
 }
 
 // Um único lugar decidindo a visibilidade de TODO poço no mapa — nomeado
-// ou genérico —, com a mesma regra pros dois: zoom >= WELLS_MIN_ZOOM E a
+// ou genérico —, com a mesma regra pros dois: zoom >= wellsMinZoom E a
 // camada correspondente ligada no painel (grupo do contrato, campos de
 // contexto, ou "todos os poços do pré-sal"). O polígono do contrato não
-// entra aqui — esse continua visível em qualquer zoom, só os poços têm
-// esse corte.
+// entra aqui — esse continua visível em qualquer zoom (o filtro de ano,
+// não o de zoom, é quem decide se ele aparece — ver applyYearFilter).
 function showOrHide(layer, visible) {
   const shown = map.hasLayer(layer);
   if (visible && !shown) map.addLayer(layer);
@@ -619,7 +713,7 @@ function showOrHide(layer, visible) {
 }
 
 function updateWellsVisibility() {
-  const zoomOk = map.getZoom() >= WELLS_MIN_ZOOM;
+  const zoomOk = map.getZoom() >= wellsMinZoom;
   for (const g of GROUP_DEFS) showOrHide(wellGroupLayers[g.id], zoomOk && groupVisible[g.id]);
   showOrHide(wellPresaltLayer, zoomOk && presaltFieldsVisible);
   showOrHide(outrosPocosLayer, zoomOk && outrosPocosVisible);
@@ -651,6 +745,77 @@ function renderColorModeControl(container) {
   } else if (colorMode === 'rodada') {
     container.appendChild(buildLegend(rodadaOrder.map((r) => [r, rodadaColorMap[r]])));
   }
+}
+
+function buildSliderRow(labelText, valueText, min, max, value, step, onInput) {
+  const row = document.createElement('div');
+  row.className = 'map-slider-row';
+  const label = document.createElement('div');
+  label.className = 'map-slider-label';
+  const nameEl = document.createElement('span');
+  nameEl.textContent = labelText;
+  const valueEl = document.createElement('span');
+  valueEl.textContent = valueText;
+  label.appendChild(nameEl);
+  label.appendChild(valueEl);
+  row.appendChild(label);
+  const input = document.createElement('input');
+  input.type = 'range';
+  input.min = String(min);
+  input.max = String(max);
+  input.step = String(step);
+  input.value = String(value);
+  input.addEventListener('input', () => onInput(Number(input.value), valueEl));
+  row.appendChild(input);
+  return row;
+}
+
+// "Controles": dois sliders independentes — zoom mínimo dos poços (sempre
+// disponível) e ano do filtro (só depois que init() calcular o intervalo
+// real a partir dos dados — ver yearFilterMin/Max no fim de init()).
+function renderControlsSection(container) {
+  const wrap = document.createElement('div');
+  wrap.className = 'map-panel-section';
+  const label = document.createElement('div');
+  label.className = 'map-mode-label';
+  label.textContent = 'Controles';
+  wrap.appendChild(label);
+
+  wrap.appendChild(buildSliderRow(
+    'Zoom mínimo dos poços', String(wellsMinZoom),
+    WELLS_MIN_ZOOM_RANGE[0], WELLS_MIN_ZOOM_RANGE[1], wellsMinZoom, 1,
+    (value, valueEl) => {
+      wellsMinZoom = value;
+      valueEl.textContent = String(value);
+      updateWellsVisibility();
+    },
+  ));
+
+  if (yearFilterMin != null && yearFilterMax != null) {
+    if (yearFilterMin === yearFilterMax) {
+      const note = document.createElement('p');
+      note.className = 'map-panel-note';
+      note.textContent = `Todos os dados são de ${yearFilterMin} — nada pra filtrar por ano.`;
+      wrap.appendChild(note);
+    } else {
+      wrap.appendChild(buildSliderRow(
+        'Mostrar até o ano', String(yearFilterValue),
+        yearFilterMin, yearFilterMax, yearFilterValue, 1,
+        (value, valueEl) => {
+          yearFilterValue = value;
+          valueEl.textContent = String(value);
+          applyYearFilter();
+        },
+      ));
+      const note = document.createElement('p');
+      note.className = 'map-panel-note';
+      note.style.marginTop = '0';
+      note.textContent = 'Esconde contrato (pelo ano do leilão) e poço (pelo ano de conclusão) mais recente que o ano escolhido. Sem data conhecida, sempre aparece.';
+      wrap.appendChild(note);
+    }
+  }
+
+  container.appendChild(wrap);
 }
 
 // Ordem de exibição na legenda — do resultado mais positivo (achou e
@@ -739,6 +904,7 @@ function renderPanel() {
   panelEl.appendChild(el);
 
   renderColorModeControl(el);
+  renderControlsSection(el);
 
   const presaltSection = document.createElement('div');
   presaltSection.className = 'map-panel-section';
