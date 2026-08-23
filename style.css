@@ -648,6 +648,113 @@ body.map-page .leaflet-tooltip.map-well-tooltip {
 }
 body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: var(--map-border); }
 
+/* ==================== Análises (página analises.html) ==================== */
+/* Paleta categórica validada (CVD-safe) pra distinguir as 7 categorias de
+   poço lado a lado numa barra empilhada — ordem fixa, nunca ciclada (ver
+   skill de dataviz). O gráfico de STOIIP usa --accent (já usado no resto do
+   app) porque ali é uma única série por magnitude, não identidade. */
+:root {
+  --viz-cat-1: #3987e5; /* produção */
+  --viz-cat-2: #d95926; /* gás */
+  --viz-cat-3: #199e70; /* injeção */
+  --viz-cat-4: #c98500; /* indício */
+  --viz-cat-5: #d55181; /* seco */
+  --viz-cat-6: #008300; /* abandonado */
+  --viz-cat-7: #9085e9; /* indefinido */
+  --viz-surface-gap: 2px;
+}
+
+.analytics-wrapper { flex: 1 1 auto; overflow: auto; padding: 18px 20px 40px; }
+.analytics-section { max-width: 1180px; margin: 0 auto 28px; }
+.analytics-section:last-child { margin-bottom: 0; }
+.analytics-section-title {
+  font-size: 12.5px; font-weight: 700; color: var(--text-faint);
+  text-transform: uppercase; letter-spacing: .05em; margin: 0 0 10px;
+}
+
+/* ---- KPI: linha de "stat tiles" ---- */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.stat-tile {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+}
+.stat-tile-label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.stat-tile-value { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; }
+.stat-tile-sub { font-size: 11px; color: var(--text-faint); line-height: 1.4; }
+
+/* ---- Cartão de gráfico ---- */
+.chart-card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 18px 14px;
+}
+.chart-card + .chart-card { margin-top: 14px; }
+.chart-card-title { font-size: 13px; font-weight: 700; margin: 0 0 2px; }
+.chart-card-subtitle { font-size: 11px; color: var(--text-faint); margin: 0 0 14px; }
+
+/* ---- Legenda (categórica, ≥2 séries sempre visível — ver dataviz skill) ---- */
+.viz-legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-bottom: 14px; }
+.viz-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
+.viz-legend-swatch { width: 10px; height: 10px; border-radius: 2.5px; flex: 0 0 auto; }
+
+/* ---- Barra horizontal (STOIIP, poços por categoria) ---- */
+.hbar-list { display: flex; flex-direction: column; gap: 9px; }
+.hbar-row { display: grid; grid-template-columns: 152px 1fr; align-items: center; gap: 10px; }
+.hbar-name {
+  font-size: 11.5px; color: var(--text-muted); text-align: right;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hbar-track {
+  position: relative; height: 20px; background: var(--surface); border-radius: 4px;
+  display: flex; align-items: center; overflow: hidden;
+}
+.hbar-fill {
+  height: 100%; border-radius: 4px 0 0 4px; display: flex; align-items: center;
+  min-width: 2px; cursor: default;
+}
+.hbar-fill:first-child { border-radius: 4px; }
+.hbar-seg {
+  height: 100%; box-sizing: border-box; border-right: var(--viz-surface-gap) solid var(--panel);
+  cursor: default;
+}
+.hbar-seg:last-child { border-right: none; }
+.hbar-seg.is-hovered, .hbar-fill.is-hovered, .vbar-fill.is-hovered { filter: brightness(1.25); }
+.hbar-value {
+  font-size: 11px; color: var(--text); font-weight: 600; white-space: nowrap;
+  margin-left: 8px; font-variant-numeric: tabular-nums;
+}
+.hbar-row-total { display: flex; align-items: center; }
+
+/* ---- Colunas verticais (FPSOs por ano) ---- */
+.vbar-chart { display: flex; align-items: flex-end; gap: 6px; height: 160px; padding-top: 20px; }
+.vbar-col { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
+.vbar-value { font-size: 10.5px; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+.vbar-fill { width: 100%; max-width: 24px; background: var(--viz-cat-1); border-radius: 4px 4px 0 0; cursor: default; }
+.vbar-fill.is-zero { background: var(--border); max-width: 24px; }
+.vbar-label { font-size: 10px; color: var(--text-faint); margin-top: 6px; white-space: nowrap; }
+
+/* Tooltip simples de hover pras marcas dos gráficos (mesmo #popover
+   reaproveitado no roadmap pro tooltip de marco — ver app.js). */
+.viz-tooltip {
+  position: fixed; z-index: 500; pointer-events: none;
+  background: var(--panel); border: 1px solid var(--border-strong); border-radius: 6px;
+  padding: 6px 10px; font-size: 11.5px; box-shadow: var(--shadow);
+  max-width: 240px;
+}
+.viz-tooltip strong { color: var(--text); font-weight: 700; }
+.viz-tooltip-row { display: flex; justify-content: space-between; gap: 12px; }
+.viz-tooltip-row + .viz-tooltip-row { margin-top: 2px; }
+
+/* ---- Tabela por projeto: agrupada por status, como o resto do app ---- */
+.analytics-table .group-row td {
+  background: var(--bg); font-weight: 700; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--text-muted); padding: 8px 10px; border-top: 2px solid var(--border-strong);
+}
+.analytics-table td.num, .analytics-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.analytics-table .proj-name-cell { display: flex; align-items: center; gap: 8px; }
+.analytics-table .proj-dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 9px; }
+.analytics-table td.muted { color: var(--text-faint); }
+.analytics-table-note { font-size: 11px; color: var(--text-faint); margin-top: 10px; line-height: 1.5; }
+
 /* ---------- Telas estreitas (celular), incluindo paisagem: usa a
    condição de altura curta + orientação para pegar o celular deitado, que
    tem largura grande mas continua sendo uma tela pequena. ---------- */
@@ -720,4 +827,13 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   /* Painel flutuante do mapa: em telas estreitas, 280px fixos deixam
      pouco mapa visível — encolhe e some com a margem direita. */
   .map-panel { top: 8px; right: 8px; width: min(240px, calc(100vw - 60px)); }
+
+  /* Análises: nome do projeto some da barra horizontal (cabe só a barra +
+     valor) e o gráfico de colunas por ano rola na horizontal em vez de
+     espremer cada coluna até sumir. */
+  .hbar-row { grid-template-columns: 74px 1fr; }
+  .hbar-name { font-size: 10.5px; }
+  .kpi-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .vbar-chart { overflow-x: auto; }
+  .vbar-col { min-width: 34px; }
 }

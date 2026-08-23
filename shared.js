@@ -125,6 +125,68 @@ function progressStatusClass(actualProgress, expectedProgress) {
   return 'behind';
 }
 
+/* ---------------------------- Poços (ANP/BDEP) --------------------------- */
+// Compartilhado entre mapa.js, app.js e analises.js — as três páginas usam a
+// mesma classificação de poço (data/pocos.json) e o mesmo jeito de casar um
+// código de poço com o marco do roadmap que o cita.
+
+// Código do poço dentro do nome de um marco ("Poço pioneiro 1-BRSA-1363-RJS
+// (gás com CO2...)" -> "1-BRSA-1363-RJS"), pra casar o marco com o registro
+// da ANP. Marco sem código (ex.: "Poço exploratório (previsto)") não casa
+// com nada.
+const WELL_CODE_RE = /\b\d+-[A-Z]{2,6}-\d+[A-Z]*-[A-Z]{3}\b/;
+function wellCodeOf(name) {
+  const m = String(name).match(WELL_CODE_RE);
+  return m ? m[0] : null;
+}
+
+// Categoria de um poço a partir do registro da ANP/BDEP (info = um item de
+// data/pocos.json: { rec: RECLASSIFICACAO, sit: SITUACAO, ... }).
+// RECLASSIFICACAO (resultado apurado) manda antes de SITUACAO (estado
+// atual) — mas produtor/injetor só conta se o poço ainda estiver ativo:
+// RECLASSIFICACAO é um veredito histórico que não muda quando o poço é
+// desativado depois; SITUACAO, sim. Sem essa checagem, quase metade dos
+// poços "produtor" na base tinham SITUACAO abandonado e apareciam como
+// óleo/injeção ativos indevidamente no mapa.
+function wellCategory(info) {
+  if (!info) return 'indefinido';
+  const rec = info.rec || '';
+  const sit = info.sit || '';
+  const sitAbandoned = sit.includes('ABANDONADO') || sit === 'ARRASADO' || sit === 'FECHADO' || sit === 'DEVOLVIDO';
+  if (rec.includes('INJEÇÃO')) return sitAbandoned ? 'abandonado' : 'injecao';
+  if (rec.includes('ABANDONADO')) return 'abandonado';
+  if (rec === 'SECO SEM INDÍCIOS') return 'seco';
+  if (rec.includes('INDÍCIOS')) return rec.includes('PETRÓLEO') ? 'indicio' : 'gas';
+  if (rec.includes('GÁS') && !rec.includes('PETRÓLEO')) return 'gas';
+  if (rec.includes('PRODUTOR') || rec.includes('PORTADOR') || rec.includes('DESCOBRIDOR') || rec.includes('EXTENSÃO')) {
+    return sitAbandoned ? 'abandonado' : 'producao';
+  }
+  if (sit === 'PRODUZINDO') return 'producao';
+  if (sit === 'INJETANDO') return 'injecao';
+  if (sitAbandoned) return 'abandonado';
+  return 'indefinido';
+}
+
+// Sub-tipo de injeção (água ou gás), pro selo do ícone do poço injetor no
+// mapa — só faz sentido quando wellCategory(info) já deu 'injecao'. Os
+// únicos dois valores de RECLASSIFICACAO observados na base são "INJEÇÃO DE
+// ÁGUA" e "INJEÇÃO DE GÁS NATURAL".
+function wellInjectionType(info) {
+  const rec = (info && info.rec) || '';
+  if (rec.includes('GÁS')) return 'gas';
+  if (rec.includes('ÁGUA')) return 'agua';
+  return null;
+}
+
+// Escapa texto pra uso seguro em template string de HTML — compartilhada
+// entre app.js, mapa.js e analises.js (todas montam HTML por concatenação
+// de string, sem framework).
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
 /* ------------------------------- Seed data ------------------------------ */
 
 // Contratos reais de Partilha de Produção (CPP) do polígono do pré-sal,

@@ -272,44 +272,10 @@ function simplifyMilestoneLabel(name) {
   return s || String(name).trim();
 }
 
-// Base de poços da ANP/BDEP (data/pocos.json), a mesma usada pelo mapa —
-// mapa.js tem uma cópia independente destas mesmas funções (wellCategory,
-// wellCodeOf) porque as duas páginas carregam scripts separados sem
-// bundler; mudar a classificação num lugar exige mudar no outro igual.
+// Base de poços da ANP/BDEP (data/pocos.json) — wellCategory e wellCodeOf
+// agora vêm de shared.js (compartilhadas com mapa.js e analises.js).
 const POCOS_URL = 'data/pocos.json';
 let pocosDataApp = {};
-
-const WELL_CODE_RE = /\b\d+-[A-Z]{2,6}-\d+[A-Z]*-[A-Z]{3}\b/;
-function wellCodeOf(name) {
-  const m = String(name).match(WELL_CODE_RE);
-  return m ? m[0] : null;
-}
-
-// Mesma prioridade de classificação do mapa.js: RECLASSIFICACAO (resultado
-// apurado) antes de SITUACAO (estado atual), pra não achar "produtor" só
-// porque o poço está tecnicamente "produzindo" num sentido genérico.
-// Produtor/injetor só conta se o poço ainda estiver ativo — RECLASSIFICACAO
-// é um veredito histórico que não muda quando o poço é desativado depois;
-// SITUACAO, sim (ver mapa.js para o caso real que motivou isso: quase
-// metade dos poços "produtor" na base tinham SITUACAO abandonado).
-function wellCategory(info) {
-  if (!info) return 'indefinido';
-  const rec = info.rec || '';
-  const sit = info.sit || '';
-  const sitAbandoned = sit.includes('ABANDONADO') || sit === 'ARRASADO' || sit === 'FECHADO' || sit === 'DEVOLVIDO';
-  if (rec.includes('INJEÇÃO')) return sitAbandoned ? 'abandonado' : 'injecao';
-  if (rec.includes('ABANDONADO')) return 'abandonado';
-  if (rec === 'SECO SEM INDÍCIOS') return 'seco';
-  if (rec.includes('INDÍCIOS')) return rec.includes('PETRÓLEO') ? 'indicio' : 'gas';
-  if (rec.includes('GÁS') && !rec.includes('PETRÓLEO')) return 'gas';
-  if (rec.includes('PRODUTOR') || rec.includes('PORTADOR') || rec.includes('DESCOBRIDOR') || rec.includes('EXTENSÃO')) {
-    return sitAbandoned ? 'abandonado' : 'producao';
-  }
-  if (sit === 'PRODUZINDO') return 'producao';
-  if (sit === 'INJETANDO') return 'injecao';
-  if (sitAbandoned) return 'abandonado';
-  return 'indefinido';
-}
 
 // Marco agregado ("17 poços perfurados em 2024", workstream "Poços
 // Perfurados" dos campos em produção) — casa só o número no início do
@@ -1290,11 +1256,7 @@ function confirmDeleteWorkstream(project, ws) {
 
 /* --------------------------------- Utils ----------------------------------- */
 
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
-}
+// escapeHtml vem de shared.js (compartilhada com mapa.js e analises.js).
 function escapeAttr(str) { return escapeHtml(str); }
 
 /* ------------------------------- Toolbar wiring ----------------------------- */

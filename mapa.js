@@ -132,11 +132,7 @@ function formatAnpDate(s) {
   return s ? s.replaceAll('-', '/') : '—';
 }
 
-function escapeHtml(s) {
-  const div = document.createElement('div');
-  div.textContent = s;
-  return div.innerHTML;
-}
+// escapeHtml vem de shared.js (compartilhada com app.js e analises.js).
 
 function colorForProject(project) {
   if (colorMode === 'status') return GROUP_COLORS[project.group] || '#5c6470';
@@ -172,43 +168,9 @@ function popupHTML(project, props) {
   </div>`;
 }
 
-// Classifica um poço da base ANP/BDEP numa das 6 situações que o mapa
-// desenha com ícone próprio (ver WELL_SHAPES) — prioridade em cima de
-// RECLASSIFICACAO (o resultado apurado do poço), caindo pra SITUACAO (o
-// estado atual, "produzindo"/"injetando"/etc.) só quando não há
-// reclassificação confiável (poço muito antigo, ou sob confidencialidade).
-// 'indefinido' é o poço sem nenhum registro de resultado — a maioria dos
-// marcos curados do roadmap (ver addWellMarker), que carregam o resultado
-// no próprio nome em vez de num campo separado.
-//
-// Produtor/injetor SÓ conta se o poço ainda estiver ativo: RECLASSIFICACAO
-// é um veredito histórico (o que o poço chegou a ser um dia) e não muda
-// quando ele é desativado depois — SITUACAO, sim. Sem checar isso, um
-// poço que produziu por anos e foi abandonado continua com ícone de
-// "produção" pra sempre (quase metade dos poços marcados como produtor na
-// base tinham SITUACAO abandonado/fechado — foi reportado como "poço
-// abandonado aparecendo como poço de óleo" e é exatamente essa a causa).
-// Os outros resultados (seco/indício/gás) não sofrem essa correção: já
-// são, por definição, poços que não viraram produtor nem injetor, então
-// não têm o mesmo risco de "parecer ativo" indevidamente.
-function wellCategory(info) {
-  if (!info) return 'indefinido';
-  const rec = info.rec || '';
-  const sit = info.sit || '';
-  const sitAbandoned = sit.includes('ABANDONADO') || sit === 'ARRASADO' || sit === 'FECHADO' || sit === 'DEVOLVIDO';
-  if (rec.includes('INJEÇÃO')) return sitAbandoned ? 'abandonado' : 'injecao';
-  if (rec.includes('ABANDONADO')) return 'abandonado';
-  if (rec === 'SECO SEM INDÍCIOS') return 'seco';
-  if (rec.includes('INDÍCIOS')) return rec.includes('PETRÓLEO') ? 'indicio' : 'gas';
-  if (rec.includes('GÁS') && !rec.includes('PETRÓLEO')) return 'gas';
-  if (rec.includes('PRODUTOR') || rec.includes('PORTADOR') || rec.includes('DESCOBRIDOR') || rec.includes('EXTENSÃO')) {
-    return sitAbandoned ? 'abandonado' : 'producao';
-  }
-  if (sit === 'PRODUZINDO') return 'producao';
-  if (sit === 'INJETANDO') return 'injecao';
-  if (sitAbandoned) return 'abandonado';
-  return 'indefinido';
-}
+// wellCategory (classifica um poço da base ANP/BDEP numa das situações que
+// o mapa desenha com ícone próprio, ver WELL_SHAPES) agora vive em
+// shared.js, compartilhada com app.js e analises.js.
 
 // Um desenho por situação, todos no mesmo viewBox 16×16 (assim o mesmo
 // iconAnchor serve pra todos). Vocabulário de símbolo de poço mais comum em
@@ -250,17 +212,8 @@ const INJECTION_BADGES = {
   gas: `<path d="M13.4 0.5C13.7 2.1 14.7 2.9 15.4 3.8A2.6 2.6 0 1 1 10.5 4.9C10.5 4.4 10.65 4.0 10.9 3.6C11.0 4.1 11.25 4.3 11.6 4.1C11.35 3.0 11.75 1.9 13.4 0.5Z" fill="#ff6b35" stroke="#0b0d10" stroke-width="0.6"/>`,
 };
 
-// Sub-tipo de injeção pro selo do ícone (ver INJECTION_BADGES) — só faz
-// sentido quando wellCategory(info) já deu 'injecao'. null quando o
-// RECLASSIFICACAO não bate com nenhum dos dois valores conhecidos (não
-// deveria acontecer com os dados atuais, mas fica sem selo em vez de
-// assumir errado).
-function wellInjectionType(info) {
-  const rec = (info && info.rec) || '';
-  if (rec.includes('GÁS')) return 'gas';
-  if (rec.includes('ÁGUA')) return 'agua';
-  return null;
-}
+// wellInjectionType (qual fluido, pra escolher o selo em INJECTION_BADGES)
+// agora vive em shared.js, compartilhada com analises.js.
 
 // Ícone de poço no mapa: uma silhueta por situação (ver WELL_SHAPES e
 // wellCategory), como divIcon do Leaflet (contorno escuro pra destacar
@@ -357,16 +310,9 @@ let yearFilterMin = null;
 let yearFilterMax = null;
 let yearFilterValue = null;
 
-// Código do poço dentro do nome do marco no roadmap ("Poço pioneiro
-// 1-BRSA-1363-RJS (gás com CO2...)" -> "1-BRSA-1363-RJS"), pra casar o
-// marco com o registro da ANP e manter o rótulo curado do roadmap, que
-// carrega o resultado do poço. Marco sem código (ex.: "Poço exploratório
-// (previsto)") não casa com nada e é desenhado à parte.
-const WELL_CODE_RE = /\b\d+-[A-Z]{2,6}-\d+[A-Z]*-[A-Z]{3}\b/;
-function wellCodeOf(name) {
-  const m = String(name).match(WELL_CODE_RE);
-  return m ? m[0] : null;
-}
+// wellCodeOf (código do poço dentro do nome de um marco, pra casar com o
+// registro da ANP) agora vive em shared.js, compartilhada com app.js e
+// analises.js.
 
 let pocosData = {};
 let outrosPocos = [];
