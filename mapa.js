@@ -105,7 +105,7 @@ let outrosPocosVisible = true;
 // tão alto quanto focar um contrato específico — é o ponto em que já dá
 // pra ver a região (Santos, Campos) sem poluir. Ajustável pelo usuário
 // (ver painel "Controles"), por isso variável em vez de const.
-const WELLS_MIN_ZOOM_DEFAULT = 8;
+const WELLS_MIN_ZOOM_DEFAULT = 10;
 const WELLS_MIN_ZOOM_RANGE = [3, 14];
 let wellsMinZoom = WELLS_MIN_ZOOM_DEFAULT;
 
