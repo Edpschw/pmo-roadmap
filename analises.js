@@ -34,7 +34,22 @@ const WELL_CATEGORY_ORDER = [
   ['indefinido', 'Sem registro', 'var(--viz-cat-7)'],
 ];
 
-const GROUP_ORDER = ['exploracao', 'producao', 'devolvidos'];
+// Cor neutra pros campos de contexto e pro balde "outros poços" nos
+// gráficos/tabelas unificados — só os 29 contratos rastreados têm cor
+// própria (a mesma do roadmap/mapa, project.color); tudo que não é
+// contrato usa este cinza, pra "colorindo só quem tem contrato" ficar
+// óbvio à primeira vista em qualquer gráfico.
+const CONTEXT_FIELD_COLOR = '#7a828f';
+
+// MERO (campo de contexto) e Libra (contrato) casam quase o mesmo poço —
+// ver PLAN em scripts/build_pocos.py: Libra inclui SIG_CAMPO 'MRO' (o
+// código do campo Mero) + 'AnC6' + BLOCO 'LIBRA'. Nas tabelas/gráficos por
+// entidade os dois aparecem separados de propósito (é informação real:
+// "aqui está o contrato todo, aqui está só o campo"), mas em qualquer
+// AGREGADO (poços por ano, total de produtores/injetores) incluir os dois
+// contaria o mesmo poço duas vezes — por isso MERO fica de fora desses
+// agregados especificamente.
+const AGGREGATE_DEDUP_EXCLUDE = ['MERO'];
 
 let featureByProject = {};
 let pocosData = {};
@@ -64,8 +79,9 @@ function participacaoText(pd) {
 // Partilha de Produção explicitamente; "Cessão Onerosa" é regime próprio
 // (2010); qualquer outra rodada numerada (0, 1, 2, 6, 7...) sem "(PP)" é
 // uma rodada de Concessão, de antes da Lei do Partilha (2010). Usado só
-// nos campos de contexto (ver renderFieldsSection) — os 29 projetos
-// rastreados são todos CPP, então essa distinção não se aplica a eles.
+// nos campos de contexto (ver computeFieldRow) — os 29 projetos
+// rastreados são todos CPP/Partilha, então essa distinção não se aplica
+// a eles (renderProducaoTable já rotula todo contrato como "Partilha").
 function regimeOf(rodada) {
   if (!rodada) return null;
   if (rodada.includes('(PP)')) return 'Partilha';
@@ -189,6 +205,7 @@ function computeProjectRow(project) {
   return {
     name: project.name,
     color: project.color,
+    isContract: true,
     group: project.group,
     operador: props ? props.operador : null,
     bacia: props ? props.bacia : null,
@@ -311,10 +328,10 @@ function renderStoiipChart(container, rows) {
   card.className = 'chart-card';
   const title = document.createElement('h3');
   title.className = 'chart-card-title';
-  title.textContent = 'STOIIP por projeto (óleo in situ)';
+  title.textContent = 'STOIIP por contrato/campo (óleo in situ)';
   const sub = document.createElement('p');
   sub.className = 'chart-card-subtitle';
-  sub.textContent = `Só os ${withStoiip.length} projetos com Plano de Desenvolvimento público — os demais ainda não têm PD aprovado/divulgado.`;
+  sub.textContent = `Só as ${withStoiip.length} entidades com Plano de Desenvolvimento público — as demais ainda não têm PD aprovado/divulgado. Cor própria = contrato rastreado; cinza = campo de contexto (sem contrato próprio).`;
   card.appendChild(title);
   card.appendChild(sub);
 
@@ -333,7 +350,7 @@ function renderStoiipChart(container, rows) {
     const fill = document.createElement('div');
     fill.className = 'hbar-fill';
     fill.style.width = Math.max(3, (r.stoiip / max) * 100) + '%';
-    fill.style.background = 'var(--accent)';
+    fill.style.background = r.color;
     fill.tabIndex = 0;
     attachTooltip(fill, () => `<strong>${escapeHtml(r.name)}</strong>` + tooltipRowHTML('STOIIP', `${fmtNum(r.stoiip)} MMbbl`));
     track.appendChild(fill);
@@ -435,31 +452,24 @@ function buildWellsStackedCard(rows, title, subtitle) {
   return card;
 }
 
-function renderWellsStackedChart(container, rows) {
-  container.appendChild(buildWellsStackedCard(
-    rows,
-    'Poços por categoria, por projeto',
-    'Base ANP/BDEP — o comprimento da barra é o total de poços; os segmentos mostram a composição por categoria.',
-  ));
-}
-
-function renderFpsoByYearChart(container, projects) {
-  const byYear = computeFpsoByYear(projects);
+// Cartão de colunas por ano — reaproveitado por "FPSOs por ano" e "poços
+// por ano" (mesma forma de coluna, só muda a série de contagem e o rótulo
+// do tooltip).
+function buildYearColumnCard(byYear, title, subtitle, tooltipLabel) {
   const years = Object.keys(byYear).map(Number);
-  if (!years.length) return;
+  if (!years.length) return null;
   const minY = Math.min(...years);
   const maxY = Math.max(...years);
-  const total = years.reduce((s, y) => s + byYear[y], 0);
 
   const card = document.createElement('div');
   card.className = 'chart-card';
-  const title = document.createElement('h3');
-  title.className = 'chart-card-title';
-  title.textContent = 'Primeiro óleo por FPSO, por ano';
+  const titleEl = document.createElement('h3');
+  titleEl.className = 'chart-card-title';
+  titleEl.textContent = title;
   const sub = document.createElement('p');
   sub.className = 'chart-card-subtitle';
-  sub.textContent = `${total} FPSOs em operação entre ${minY} e ${maxY}.`;
-  card.appendChild(title);
+  sub.textContent = subtitle;
+  card.appendChild(titleEl);
   card.appendChild(sub);
 
   const chart = document.createElement('div');
@@ -476,7 +486,7 @@ function renderFpsoByYearChart(container, projects) {
     fill.className = 'vbar-fill' + (count === 0 ? ' is-zero' : '');
     fill.style.height = count === 0 ? '3px' : Math.max(6, (count / maxCount) * 130) + 'px';
     fill.tabIndex = 0;
-    attachTooltip(fill, () => `<strong>${y}</strong>` + tooltipRowHTML('FPSOs com 1º óleo', String(count)));
+    attachTooltip(fill, () => `<strong>${y}</strong>` + tooltipRowHTML(tooltipLabel, String(count)));
     const label = document.createElement('div');
     label.className = 'vbar-label';
     label.textContent = String(y);
@@ -486,72 +496,150 @@ function renderFpsoByYearChart(container, projects) {
     chart.appendChild(col);
   }
   card.appendChild(chart);
+  return card;
+}
+
+function renderFpsoByYearChart(container, projects) {
+  const byYear = computeFpsoByYear(projects);
+  const years = Object.keys(byYear).map(Number);
+  if (!years.length) return;
+  const total = years.reduce((s, y) => s + byYear[y], 0);
+  const minY = Math.min(...years);
+  const maxY = Math.max(...years);
+  const card = buildYearColumnCard(
+    byYear,
+    'Primeiro óleo por FPSO, por ano',
+    `${total} FPSOs em operação entre ${minY} e ${maxY}.`,
+    'FPSOs com 1º óleo',
+  );
+  if (card) container.appendChild(card);
+}
+
+// Dedup — ver AGGREGATE_DEDUP_EXCLUDE: soma poços dos contratos de
+// produção rastreados + campos de contexto (menos os excluídos) + poços
+// sem campo nomeado, sem contar o mesmo poço duas vezes (Mero dentro de
+// Libra). Só serve pra agregados de portfólio — a tabela e os gráficos
+// por entidade continuam mostrando cada contrato/campo separado.
+function dedupedProducaoWells(producaoProjectRows, fieldRows, outrosPocos) {
+  const wells = [];
+  for (const r of producaoProjectRows) wells.push(...(pocosData[r.name] || []));
+  for (const r of fieldRows) {
+    if (r.isOutros || AGGREGATE_DEDUP_EXCLUDE.includes(r.name)) continue;
+    wells.push(...(pocosData[r.name] || []));
+  }
+  wells.push(...outrosPocos);
+  return wells;
+}
+
+function computeProdInjStats(wells) {
+  let produtores = 0;
+  let injAgua = 0;
+  let injGas = 0;
+  let injOutro = 0;
+  for (const w of wells) {
+    const cat = wellCategory(w);
+    if (cat === 'producao') produtores++;
+    else if (cat === 'injecao') {
+      const t = wellInjectionType(w);
+      if (t === 'agua') injAgua++;
+      else if (t === 'gas') injGas++;
+      else injOutro++;
+    }
+  }
+  return { produtores, injAgua, injGas, injOutro, injetores: injAgua + injGas + injOutro };
+}
+
+// "Poços perfurados por ano" — usa a data de conclusão/início de cada
+// poço (w.d). Corta em MIN_YEAR: a base tem uns poucos poços de 1980-1999
+// (8 no total) bem espalhados, que só esticariam o eixo sem acrescentar
+// leitura — ficam resumidos numa nota em vez de 20 colunas quase vazias.
+const WELLS_BY_YEAR_MIN = 2000;
+function renderWellsByYearChart(container, wells) {
+  const byYear = {};
+  let early = 0;
+  for (const w of wells) {
+    if (!w.d) continue;
+    const y = yearOfISO(w.d);
+    if (y == null) continue;
+    if (y < WELLS_BY_YEAR_MIN) { early++; continue; }
+    byYear[y] = (byYear[y] || 0) + 1;
+  }
+  const years = Object.keys(byYear).map(Number);
+  if (!years.length) return;
+  const total = years.reduce((s, y) => s + byYear[y], 0);
+  const minY = Math.min(...years);
+  const maxY = Math.max(...years);
+  const card = buildYearColumnCard(
+    byYear,
+    'Poços perfurados por ano',
+    `${fmtNum(total)} poços entre ${minY} e ${maxY}${early ? ` — mais ${early} antes de ${WELLS_BY_YEAR_MIN}, fora do gráfico` : ''}. Contratos de produção + campos de contexto (sem Mero, já contado em Libra) + poços sem campo nomeado.`,
+    'Poços perfurados',
+  );
+  if (card) container.appendChild(card);
+}
+
+// "Poços por FPSO instalado" — total de poços do contrato dividido pelo
+// número de FPSOs já instalados. É densidade média por projeto, não
+// poço-a-poço por unidade (a base ANP não registra a qual FPSO cada poço
+// está ligado).
+function renderWellsPerFpsoChart(container, projectRows) {
+  const withFpso = projectRows
+    .filter((r) => r.fpsoInstalled > 0)
+    .map((r) => ({ ...r, perFpso: r.wellsTotal / r.fpsoInstalled }))
+    .sort((a, b) => b.perFpso - a.perFpso);
+  if (!withFpso.length) return;
+
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+  const title = document.createElement('h3');
+  title.className = 'chart-card-title';
+  title.textContent = 'Poços por FPSO instalado (média)';
+  const sub = document.createElement('p');
+  sub.className = 'chart-card-subtitle';
+  sub.textContent = 'Poços do contrato (base ANP/BDEP) dividido pelo número de FPSOs já instalados — densidade média por projeto; a base não liga poço individual a FPSO individual.';
+  card.appendChild(title);
+  card.appendChild(sub);
+
+  const list = document.createElement('div');
+  list.className = 'hbar-list';
+  const max = Math.max(...withFpso.map((r) => r.perFpso));
+  for (const r of withFpso) {
+    const row = document.createElement('div');
+    row.className = 'hbar-row';
+    const name = document.createElement('div');
+    name.className = 'hbar-name';
+    name.textContent = r.name;
+    name.title = r.name;
+    const track = document.createElement('div');
+    track.className = 'hbar-track';
+    const fill = document.createElement('div');
+    fill.className = 'hbar-fill';
+    fill.style.width = Math.max(3, (r.perFpso / max) * 100) + '%';
+    fill.style.background = r.color;
+    fill.tabIndex = 0;
+    attachTooltip(fill, () => `<strong>${escapeHtml(r.name)}</strong>`
+      + tooltipRowHTML('Poços', String(r.wellsTotal))
+      + tooltipRowHTML('FPSOs instalados', String(r.fpsoInstalled))
+      + tooltipRowHTML('Poços/FPSO', fmtNum(r.perFpso, { maximumFractionDigits: 1 })));
+    track.appendChild(fill);
+    const value = document.createElement('div');
+    value.className = 'hbar-value';
+    value.textContent = fmtNum(r.perFpso, { maximumFractionDigits: 1 }) + ' poços/FPSO';
+    track.appendChild(value);
+    row.appendChild(name);
+    row.appendChild(track);
+    list.appendChild(row);
+  }
+  card.appendChild(list);
   container.appendChild(card);
 }
 
-function renderProjectTable(container, rows) {
-  const wrap = document.createElement('div');
-  wrap.className = 'table-wrapper';
-  wrap.style.padding = '0';
-  const table = document.createElement('table');
-  table.className = 'data-table analytics-table';
-  const thead = document.createElement('thead');
-  thead.innerHTML = `<tr>
-    <th>Projeto</th>
-    <th>Operador</th>
-    <th>Parceiros (%)</th>
-    <th>Bacia</th>
-    <th class="num">Leilão</th>
-    <th class="num">Poços (ANP)</th>
-    <th class="num">FPSOs</th>
-    <th class="num">1º óleo</th>
-    <th class="num">Lead time</th>
-    <th class="num">STOIIP (MMbbl)</th>
-    <th class="num">Vol. recuperável (MMbbl)</th>
-    <th class="num">Área (km²)</th>
-  </tr>`;
-  table.appendChild(thead);
-
-  const tbody = document.createElement('tbody');
-  for (const groupId of GROUP_ORDER) {
-    const groupRows = rows.filter((r) => r.group === groupId);
-    if (!groupRows.length) continue;
-    const groupDef = GROUP_DEFS.find((g) => g.id === groupId);
-    const gtr = document.createElement('tr');
-    gtr.className = 'group-row';
-    const gtd = document.createElement('td');
-    gtd.colSpan = 12;
-    gtd.textContent = `${groupDef ? groupDef.label : groupId} (${groupRows.length})`;
-    gtr.appendChild(gtd);
-    tbody.appendChild(gtr);
-
-    for (const r of groupRows) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span>${escapeHtml(r.name)}</div></td>
-        <td class="${r.operador ? '' : 'muted'}">${escapeHtml(r.operador || '—')}</td>
-        <td class="${r.participacao ? '' : 'muted'} participacao-cell">${escapeHtml(r.participacao || '—')}</td>
-        <td class="${r.bacia ? '' : 'muted'}">${escapeHtml(r.bacia || '—')}</td>
-        <td class="num">${r.leilaoYear != null ? r.leilaoYear : '—'}</td>
-        <td class="num">${r.wellsTotal || '—'}</td>
-        <td class="num">${r.fpsoInstalled}${r.fpsoPlanned ? ` (+${r.fpsoPlanned})` : ''}</td>
-        <td class="num">${r.firstOilYear != null ? r.firstOilYear : '—'}</td>
-        <td class="num">${r.leadTimeYears != null ? r.leadTimeYears : '—'}</td>
-        <td class="num">${r.stoiip != null ? fmtNum(r.stoiip) : '—'}</td>
-        <td class="num">${r.recOleo != null ? fmtNum(r.recOleo) : '—'}</td>
-        <td class="num">${r.areaKm2 != null ? fmtNum(r.areaKm2) : '—'}</td>
-      `;
-      tbody.appendChild(tr);
-    }
-  }
-  table.appendChild(tbody);
-  wrap.appendChild(table);
-  container.appendChild(wrap);
-
-  const note = document.createElement('p');
-  note.className = 'analytics-table-note';
-  note.textContent = 'Parceiros: só onde o sumário executivo de PD publicado trouxe a tabela de participação. FPSOs: instalados (+ previstos entre parênteses). Lead time = anos entre o leilão e o 1º óleo instalado; negativo indica que o campo já produzia num contrato anterior (Cessão Onerosa/unitização) antes do leilão deste contrato específico — Búzios, Itapu, Sépia, Atapu e Entorno de Sapinhoá.';
-  container.appendChild(note);
+// Nome com uma bolinha da cor da entidade — cor própria pra contrato
+// rastreado, CONTEXT_FIELD_COLOR (cinza) pra campo de contexto ou poço
+// sem campo nomeado. É o "colorindo só quem tem contrato" pedido, num só
+// lugar reaproveitado pela tabela de produção e pela de exploração.
+function nameCellHTML(r) {
+  return `<div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span>${escapeHtml(r.name)}</div>`;
 }
 
 /* ------------------------ Campos de contexto (não-CPP) --------------------- */
@@ -559,8 +647,9 @@ function renderProjectTable(container, rows) {
 // acima (ver PRESALT_FIELDS_URL) — a maioria em regime de Concessão ou
 // Cessão Onerosa, bem anterior à Lei da Partilha (2010); só Mero é
 // Partilha. Alguns ficam dentro da área de um contrato rastreado (Mero
-// dentro do bloco de Libra, por exemplo) — por isso entram numa seção à
-// parte em vez de nos KPIs do topo: somar contaria poço/volume em dobro.
+// dentro do bloco de Libra, por exemplo) — daí entrarem na mesma tabela/
+// gráfico dos contratos de produção só com uma cor diferente, em vez de
+// somados nos KPIs do topo: somar contaria poço/volume em dobro.
 
 function computeFieldRow(feature) {
   const props = feature.properties;
@@ -570,6 +659,8 @@ function computeFieldRow(feature) {
   const volumes = pd && pd.volumes ? pd.volumes : null;
   return {
     name,
+    color: CONTEXT_FIELD_COLOR,
+    isContract: false,
     operador: props.operador || null,
     bacia: props.bacia || null,
     regime: regimeOf(props.rodada),
@@ -595,6 +686,8 @@ function computeOutrosRow(outrosPocos) {
   for (const w of outrosPocos) counts[wellCategory(w)]++;
   return {
     name: 'Outros poços do pré-sal (sem campo nomeado)',
+    color: CONTEXT_FIELD_COLOR,
+    isContract: false,
     operador: null,
     bacia: null,
     regime: null,
@@ -607,7 +700,13 @@ function computeOutrosRow(outrosPocos) {
   };
 }
 
-function renderFieldsTable(container, fieldRows) {
+// Tabela unificada da seção "Campos em Produção": contratos rastreados do
+// grupo produção + campos de contexto + poços sem campo nomeado, cada
+// grupo com seu próprio cabeçalho (como as duas tabelas separadas faziam
+// antes), mas agora numa tabela só — dá pra comparar contrato e campo
+// lado a lado, e o ponto pedido ("colorindo só quem tem contrato") fica
+// visível linha a linha.
+function renderProducaoTable(container, contractRows, fieldRows) {
   const wrap = document.createElement('div');
   wrap.className = 'table-wrapper';
   wrap.style.padding = '0';
@@ -615,33 +714,152 @@ function renderFieldsTable(container, fieldRows) {
   table.className = 'data-table analytics-table';
   const thead = document.createElement('thead');
   thead.innerHTML = `<tr>
-    <th>Campo</th>
+    <th>Nome</th>
     <th>Regime</th>
     <th>Operador</th>
     <th>Parceiros (%)</th>
     <th>Bacia</th>
     <th class="num">Poços (ANP)</th>
+    <th class="num">Produtores</th>
+    <th class="num">Injetores</th>
+    <th class="num">FPSOs</th>
     <th class="num">STOIIP (MMbbl)</th>
+    <th class="num">Vol. recuperável (MMbbl)</th>
     <th class="num">Área (km²)</th>
   </tr>`;
   table.appendChild(thead);
 
   const tbody = document.createElement('tbody');
-  // "Outros" não é um campo nomeado — fica sempre por último em vez de
-  // entrar na ordem alfabética junto dos campos de verdade.
+  const contracts = [...contractRows].sort((a, b) => b.wellsTotal - a.wellsTotal);
   const named = fieldRows.filter((r) => !r.isOutros).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   const outros = fieldRows.filter((r) => r.isOutros);
-  for (const r of [...named, ...outros]) {
+  const groups = [
+    ['Contratos rastreados (Partilha)', contracts],
+    ['Campos de contexto', named],
+    ['Poços sem campo nomeado', outros],
+  ];
+  for (const [label, groupRows] of groups) {
+    if (!groupRows.length) continue;
+    const gtr = document.createElement('tr');
+    gtr.className = 'group-row';
+    const gtd = document.createElement('td');
+    gtd.colSpan = 12;
+    gtd.textContent = `${label} (${groupRows.length})`;
+    gtr.appendChild(gtd);
+    tbody.appendChild(gtr);
+    for (const r of groupRows) {
+      const tr = document.createElement('tr');
+      if (r.isOutros) tr.className = 'muted';
+      const regimeLabel = r.isContract ? 'Partilha' : (r.regime || '—');
+      tr.innerHTML = `
+        <td>${nameCellHTML(r)}</td>
+        <td class="${r.isContract || r.regime === 'Partilha' ? '' : 'muted'}">${escapeHtml(regimeLabel)}</td>
+        <td class="${r.operador ? '' : 'muted'}">${escapeHtml(r.operador || '—')}</td>
+        <td class="${r.participacao ? '' : 'muted'} participacao-cell">${escapeHtml(r.participacao || '—')}</td>
+        <td class="${r.bacia ? '' : 'muted'}">${escapeHtml(r.bacia || '—')}</td>
+        <td class="num">${r.wellsTotal || '—'}</td>
+        <td class="num">${r.wellCounts.producao || '—'}</td>
+        <td class="num">${r.wellCounts.injecao || '—'}</td>
+        <td class="num">${r.isContract ? `${r.fpsoInstalled}${r.fpsoPlanned ? ` (+${r.fpsoPlanned})` : ''}` : '—'}</td>
+        <td class="num">${r.stoiip != null ? fmtNum(r.stoiip) : '—'}</td>
+        <td class="num">${r.recOleo != null ? fmtNum(r.recOleo) : '—'}</td>
+        <td class="num">${r.areaKm2 != null ? fmtNum(r.areaKm2) : '—'}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  container.appendChild(wrap);
+
+  const note = document.createElement('p');
+  note.className = 'analytics-table-note';
+  note.textContent = 'Cor do nome = cor do contrato (a mesma do roadmap/mapa); cinza = campo de contexto ou poço sem campo nomeado, sem contrato próprio. Parceiros: só onde o sumário executivo de PD publicado trouxe a tabela de participação. FPSOs: instalados (+ previstos entre parênteses) — só contrato rastreado tem essa informação. Mero soma poço em dobro com Libra de propósito (é o campo dentro do bloco) — os KPIs do topo e os gráficos de poços por ano/produtores-injetores excluem esse dobro; esta tabela mostra os dois porque aqui cada linha é uma entidade, não uma soma.';
+  container.appendChild(note);
+}
+
+function renderProducaoSection(container, contractRows, fieldRows, outrosPocos, allProjects) {
+  const allEntities = [...contractRows, ...fieldRows];
+  const wells = dedupedProducaoWells(contractRows, fieldRows, outrosPocos);
+  const stats = computeProdInjStats(wells);
+  const namedFields = fieldRows.filter((r) => !r.isOutros);
+
+  const intro = document.createElement('p');
+  intro.className = 'chart-card-subtitle';
+  intro.style.margin = '0 0 14px';
+  intro.textContent = `Os ${contractRows.length} contratos rastreados já em produção, mais os ${namedFields.length} campos de contexto do pré-sal (Concessão, Cessão Onerosa e só Mero em Partilha) e os poços sem campo nomeado — o play de produção inteiro. Cor própria = contrato rastreado; cinza = campo de contexto ou poço avulso, sem contrato próprio.`;
+  container.appendChild(intro);
+
+  const statsRow = document.createElement('div');
+  statsRow.className = 'kpi-row';
+  statsRow.style.marginBottom = '18px';
+  statsRow.appendChild(statTile(
+    'Poços produtores', fmtNum(stats.produtores),
+    'Contratos de produção + campos de contexto + poços avulsos, sem contar Mero duas vezes',
+  ));
+  statsRow.appendChild(statTile(
+    'Poços injetores', fmtNum(stats.injetores),
+    `${fmtNum(stats.injAgua)} água · ${fmtNum(stats.injGas)} gás${stats.injOutro ? ` · ${fmtNum(stats.injOutro)} outro` : ''}`,
+  ));
+  container.appendChild(statsRow);
+
+  renderStoiipChart(container, allEntities);
+  container.appendChild(buildWellsStackedCard(
+    allEntities,
+    'Poços por categoria, por contrato/campo',
+    'Base ANP/BDEP — contratos de produção rastreados + campos de contexto + poços sem campo nomeado.',
+  ));
+  renderWellsPerFpsoChart(container, contractRows);
+  renderFpsoByYearChart(container, allProjects);
+  renderWellsByYearChart(container, wells);
+  renderProducaoTable(container, contractRows, fieldRows);
+}
+
+function renderExploracaoSection(container, explorationRows) {
+  const exploracaoCount = explorationRows.filter((r) => r.group === 'exploracao').length;
+  const devolvidosCount = explorationRows.filter((r) => r.group === 'devolvidos').length;
+
+  const intro = document.createElement('p');
+  intro.className = 'chart-card-subtitle';
+  intro.style.margin = '0 0 14px';
+  intro.textContent = `Os ${explorationRows.length} contratos que ainda não chegaram à produção — ${exploracaoCount} em exploração e ${devolvidosCount} devolvidos (sem descoberta comercial). Nenhum tem Plano de Desenvolvimento, FPSO ou STOIIP — só o que a exploração já perfurou até agora.`;
+  container.appendChild(intro);
+
+  container.appendChild(buildWellsStackedCard(
+    explorationRows,
+    'Poços por categoria, por contrato de exploração',
+    'Base ANP/BDEP — poços pioneiros e de avaliação; a maioria acaba abandonada (rotina de poço exploratório) independente do resultado geológico, ver nota em shared.js/wellCategory.',
+  ));
+
+  const wrap = document.createElement('div');
+  wrap.className = 'table-wrapper';
+  wrap.style.padding = '0';
+  const table = document.createElement('table');
+  table.className = 'data-table analytics-table';
+  const thead = document.createElement('thead');
+  thead.innerHTML = `<tr>
+    <th>Contrato</th>
+    <th>Status</th>
+    <th>Operador</th>
+    <th>Parceiros (%)</th>
+    <th>Bacia</th>
+    <th class="num">Leilão</th>
+    <th class="num">Poços (ANP)</th>
+    <th class="num">Área (km²)</th>
+  </tr>`;
+  table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  const sorted = [...explorationRows].sort((a, b) => (a.leilaoYear || 9999) - (b.leilaoYear || 9999));
+  for (const r of sorted) {
     const tr = document.createElement('tr');
-    if (r.isOutros) tr.className = 'muted';
     tr.innerHTML = `
-      <td>${escapeHtml(r.name)}</td>
-      <td class="${r.regime === 'Partilha' ? '' : 'muted'}">${escapeHtml(r.regime || '—')}</td>
+      <td>${nameCellHTML(r)}</td>
+      <td>${r.group === 'devolvidos' ? 'Devolvido' : 'Em exploração'}</td>
       <td class="${r.operador ? '' : 'muted'}">${escapeHtml(r.operador || '—')}</td>
       <td class="${r.participacao ? '' : 'muted'} participacao-cell">${escapeHtml(r.participacao || '—')}</td>
       <td class="${r.bacia ? '' : 'muted'}">${escapeHtml(r.bacia || '—')}</td>
+      <td class="num">${r.leilaoYear != null ? r.leilaoYear : '—'}</td>
       <td class="num">${r.wellsTotal || '—'}</td>
-      <td class="num">${r.stoiip != null ? fmtNum(r.stoiip) : '—'}</td>
       <td class="num">${r.areaKm2 != null ? fmtNum(r.areaKm2) : '—'}</td>
     `;
     tbody.appendChild(tr);
@@ -649,22 +867,6 @@ function renderFieldsTable(container, fieldRows) {
   table.appendChild(tbody);
   wrap.appendChild(table);
   container.appendChild(wrap);
-}
-
-function renderFieldsSection(container, fieldRows) {
-  const named = fieldRows.filter((r) => !r.isOutros);
-  const outros = fieldRows.find((r) => r.isOutros);
-  const intro = document.createElement('p');
-  intro.className = 'chart-card-subtitle';
-  intro.style.margin = '0 0 14px';
-  intro.textContent = `Campos do pré-sal que não são nenhum dos 29 contratos rastreados acima — a maioria em regime de Concessão ou Cessão Onerosa (${named.filter((r) => r.regime !== 'Partilha').length} de ${named.length}), bem anterior à Lei da Partilha (2010); só Mero é Partilha. Alguns ficam dentro da área de um contrato já rastreado (ex.: Mero fica dentro do bloco de Libra) — por isso os poços e o STOIIP daqui não entram nos KPIs do topo, pra não contar em dobro.${outros ? ` Inclui também os ${fmtNum(outros.wellsTotal)} poços do play do pré-sal (ATINGIU_PRESAL=S na base ANP/BDEP) que não pertencem a nenhum campo nomeado nem contrato rastreado — a mesma camada "outros poços" já desenhada no mapa.` : ''}`;
-  container.appendChild(intro);
-  container.appendChild(buildWellsStackedCard(
-    fieldRows,
-    'Poços por categoria, por campo',
-    'Base ANP/BDEP — mesma leitura do gráfico de projetos, agora pros 13 campos de contexto do play do pré-sal.',
-  ));
-  renderFieldsTable(container, fieldRows);
 }
 
 /* ---------------------------------- Init ----------------------------------- */
@@ -701,36 +903,31 @@ async function init() {
   renderKPIRow(kpiSection, agg);
   wrapper.appendChild(kpiSection);
 
-  const chartsSection = document.createElement('section');
-  chartsSection.className = 'analytics-section';
-  const chartsTitle = document.createElement('h2');
-  chartsTitle.className = 'analytics-section-title';
-  chartsTitle.textContent = 'Gráficos';
-  chartsSection.appendChild(chartsTitle);
-  renderStoiipChart(chartsSection, rows);
-  renderWellsStackedChart(chartsSection, rows);
-  renderFpsoByYearChart(chartsSection, state.projects);
-  wrapper.appendChild(chartsSection);
+  // Duas seções, cada uma com seus próprios gráficos e tabela — em vez de
+  // "Gráficos" + "Projetos" + "Campos" genéricos, a análise agora segue o
+  // ciclo de vida do contrato: campos que já produzem (rastreados +
+  // contexto, juntos) de um lado, contratos que ainda estão em exploração
+  // (ou devolvidos sem descoberta) do outro.
+  const producaoRows = rows.filter((r) => r.group === 'producao');
+  const exploracaoRows = rows.filter((r) => r.group === 'exploracao' || r.group === 'devolvidos');
 
-  const tableSection = document.createElement('section');
-  tableSection.className = 'analytics-section';
-  const tableTitle = document.createElement('h2');
-  tableTitle.className = 'analytics-section-title';
-  tableTitle.textContent = 'Projetos';
-  tableSection.appendChild(tableTitle);
-  renderProjectTable(tableSection, rows);
-  wrapper.appendChild(tableSection);
+  const producaoSection = document.createElement('section');
+  producaoSection.className = 'analytics-section';
+  const producaoTitle = document.createElement('h2');
+  producaoTitle.className = 'analytics-section-title';
+  producaoTitle.textContent = 'Campos em produção';
+  producaoSection.appendChild(producaoTitle);
+  renderProducaoSection(producaoSection, producaoRows, fieldRows, outrosPocos, state.projects);
+  wrapper.appendChild(producaoSection);
 
-  if (fieldRows.length) {
-    const fieldsSection = document.createElement('section');
-    fieldsSection.className = 'analytics-section';
-    const fieldsTitle = document.createElement('h2');
-    fieldsTitle.className = 'analytics-section-title';
-    fieldsTitle.textContent = 'Campos (inclusive fora da Partilha)';
-    fieldsSection.appendChild(fieldsTitle);
-    renderFieldsSection(fieldsSection, fieldRows);
-    wrapper.appendChild(fieldsSection);
-  }
+  const exploracaoSection = document.createElement('section');
+  exploracaoSection.className = 'analytics-section';
+  const exploracaoTitle = document.createElement('h2');
+  exploracaoTitle.className = 'analytics-section-title';
+  exploracaoTitle.textContent = 'Contratos de exploração';
+  exploracaoSection.appendChild(exploracaoTitle);
+  renderExploracaoSection(exploracaoSection, exploracaoRows);
+  wrapper.appendChild(exploracaoSection);
 }
 
 init();
