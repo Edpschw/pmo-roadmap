@@ -66,11 +66,25 @@ PLAN = {
 }
 
 # Campos da camada de contexto (campos_presal.geojson), casados pelo nome do
-# campo exatamente como aparece lá.
+# campo exatamente como aparece lá. Mero, Jubarte, Raia e Wahoo entraram
+# depois (v2 da lista em build_geojson.py, 22/08/2026) — não têm contrato
+# rastreado próprio, exceto Mero, que é o campo âncora do bloco Libra (ver
+# PLAN acima): os mesmos poços aparecem então nas duas camadas (grupo do
+# Libra e aqui), o que é esperado — uma é o contrato/bloco todo, a outra é
+# só o campo em si, mais preciso.
 CAMPOS_CONTEXTO = [
     'TUPI', 'LAPA', 'SAPINHOÁ', 'OESTE DE ATAPU', 'SUL DE TUPI',
     'BERBIGÃO', 'NORTE DE BERBIGÃO', 'SUL DE BERBIGÃO',
+    'MERO', 'JUBARTE', 'RAIA', 'WAHOO',
 ]
+
+# Nomes alternativos de CAMPO que devem contar como o mesmo campo de
+# contexto. Mero perdeu o código do bloco Libra pra alguns poços recentes,
+# que ficaram registrados como "AnC_MERO" (Área Não Concedida) em vez de
+# "MERO" — geograficamente é a mesma área, então entram junto.
+CAMPOS_CONTEXTO_ALIASES = {
+    'MERO': ['MERO', 'AnC_MERO'],
+}
 
 # Todo contrato rastreado fica no polígono do pré-sal, que só cruza estas
 # duas bacias. Serve de rede de segurança contra códigos de campo/bloco que
@@ -170,9 +184,10 @@ def main(csv_path, out_path):
         report.append((name, len(matched)))
 
     for campo in CAMPOS_CONTEXTO:
+        aliases = set(CAMPOS_CONTEXTO_ALIASES.get(campo, [campo]))
         matched = []
         for r in rows:
-            if (r['BACIA'] or '').strip() not in BACIAS or (r['CAMPO'] or '').strip() != campo:
+            if (r['BACIA'] or '').strip() not in BACIAS or (r['CAMPO'] or '').strip() not in aliases:
                 continue
             w = build_well(r)
             if w:
