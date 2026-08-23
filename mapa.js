@@ -164,19 +164,33 @@ function popupHTML(project, props) {
 // 'indefinido' é o poço sem nenhum registro de resultado — a maioria dos
 // marcos curados do roadmap (ver addWellMarker), que carregam o resultado
 // no próprio nome em vez de num campo separado.
+//
+// Produtor/injetor SÓ conta se o poço ainda estiver ativo: RECLASSIFICACAO
+// é um veredito histórico (o que o poço chegou a ser um dia) e não muda
+// quando ele é desativado depois — SITUACAO, sim. Sem checar isso, um
+// poço que produziu por anos e foi abandonado continua com ícone de
+// "produção" pra sempre (quase metade dos poços marcados como produtor na
+// base tinham SITUACAO abandonado/fechado — foi reportado como "poço
+// abandonado aparecendo como poço de óleo" e é exatamente essa a causa).
+// Os outros resultados (seco/indício/gás) não sofrem essa correção: já
+// são, por definição, poços que não viraram produtor nem injetor, então
+// não têm o mesmo risco de "parecer ativo" indevidamente.
 function wellCategory(info) {
   if (!info) return 'indefinido';
   const rec = info.rec || '';
-  if (rec.includes('INJEÇÃO')) return 'injecao';
+  const sit = info.sit || '';
+  const sitAbandoned = sit.includes('ABANDONADO') || sit === 'ARRASADO' || sit === 'FECHADO' || sit === 'DEVOLVIDO';
+  if (rec.includes('INJEÇÃO')) return sitAbandoned ? 'abandonado' : 'injecao';
   if (rec.includes('ABANDONADO')) return 'abandonado';
   if (rec === 'SECO SEM INDÍCIOS') return 'seco';
   if (rec.includes('INDÍCIOS')) return rec.includes('PETRÓLEO') ? 'indicio' : 'gas';
   if (rec.includes('GÁS') && !rec.includes('PETRÓLEO')) return 'gas';
-  if (rec.includes('PRODUTOR') || rec.includes('PORTADOR') || rec.includes('DESCOBRIDOR') || rec.includes('EXTENSÃO')) return 'producao';
-  const sit = info.sit || '';
+  if (rec.includes('PRODUTOR') || rec.includes('PORTADOR') || rec.includes('DESCOBRIDOR') || rec.includes('EXTENSÃO')) {
+    return sitAbandoned ? 'abandonado' : 'producao';
+  }
   if (sit === 'PRODUZINDO') return 'producao';
   if (sit === 'INJETANDO') return 'injecao';
-  if (sit.includes('ABANDONADO') || sit === 'ARRASADO' || sit === 'FECHADO' || sit === 'DEVOLVIDO') return 'abandonado';
+  if (sitAbandoned) return 'abandonado';
   return 'indefinido';
 }
 

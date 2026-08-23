@@ -288,19 +288,26 @@ function wellCodeOf(name) {
 // Mesma prioridade de classificação do mapa.js: RECLASSIFICACAO (resultado
 // apurado) antes de SITUACAO (estado atual), pra não achar "produtor" só
 // porque o poço está tecnicamente "produzindo" num sentido genérico.
+// Produtor/injetor só conta se o poço ainda estiver ativo — RECLASSIFICACAO
+// é um veredito histórico que não muda quando o poço é desativado depois;
+// SITUACAO, sim (ver mapa.js para o caso real que motivou isso: quase
+// metade dos poços "produtor" na base tinham SITUACAO abandonado).
 function wellCategory(info) {
   if (!info) return 'indefinido';
   const rec = info.rec || '';
-  if (rec.includes('INJEÇÃO')) return 'injecao';
+  const sit = info.sit || '';
+  const sitAbandoned = sit.includes('ABANDONADO') || sit === 'ARRASADO' || sit === 'FECHADO' || sit === 'DEVOLVIDO';
+  if (rec.includes('INJEÇÃO')) return sitAbandoned ? 'abandonado' : 'injecao';
   if (rec.includes('ABANDONADO')) return 'abandonado';
   if (rec === 'SECO SEM INDÍCIOS') return 'seco';
   if (rec.includes('INDÍCIOS')) return rec.includes('PETRÓLEO') ? 'indicio' : 'gas';
   if (rec.includes('GÁS') && !rec.includes('PETRÓLEO')) return 'gas';
-  if (rec.includes('PRODUTOR') || rec.includes('PORTADOR') || rec.includes('DESCOBRIDOR') || rec.includes('EXTENSÃO')) return 'producao';
-  const sit = info.sit || '';
+  if (rec.includes('PRODUTOR') || rec.includes('PORTADOR') || rec.includes('DESCOBRIDOR') || rec.includes('EXTENSÃO')) {
+    return sitAbandoned ? 'abandonado' : 'producao';
+  }
   if (sit === 'PRODUZINDO') return 'producao';
   if (sit === 'INJETANDO') return 'injecao';
-  if (sit.includes('ABANDONADO') || sit === 'ARRASADO' || sit === 'FECHADO' || sit === 'DEVOLVIDO') return 'abandonado';
+  if (sitAbandoned) return 'abandonado';
   return 'indefinido';
 }
 
@@ -310,22 +317,32 @@ function wellCategory(info) {
 // ("1 poço perfurado" vs "17 poços perfurados").
 const WELL_COUNT_MILESTONE_RE = /^(\d+)\s+poços?\s+perfurados?\s+em\s+\d{4}/i;
 
-// Produtores (categoria 'producao' ou 'gas' — os dois efetivamente
-// produzem, óleo ou gás) e injetores ('injecao') entre os poços do
-// projeto cadastrados na ANP com data de conclusão naquele ano. Não soma
-// os outros (seco/indício/abandonado/indefinido) de propósito: nenhum
-// dos dois está ativo produzindo ou injetando.
+// Ordem/rótulo de exibição da quebra por tipo no tooltip — mesma
+// categorização do mapa (ver wellCategory), do resultado mais positivo
+// (produz) ao mais neutro (sem registro).
+const WELL_COUNT_LABELS = [
+  ['producao', 'Produtores'],
+  ['gas', 'Gás'],
+  ['injecao', 'Injetores'],
+  ['indicio', 'Indícios'],
+  ['seco', 'Secos'],
+  ['abandonado', 'Abandonados'],
+  ['indefinido', 'Sem registro'],
+];
+
+// Conta todos os poços do projeto cadastrados na ANP com data de
+// conclusão naquele ano, por categoria (ver wellCategory) — não só
+// produtor/injetor, também seco/indício/abandonado/sem registro, pra dar
+// o quadro completo do que os "X poços perfurados" daquele ano viraram.
 function wellCountBreakdown(project, year) {
   const wells = pocosDataApp[project.name] || [];
-  let produtores = 0;
-  let injetores = 0;
+  const counts = {};
   for (const w of wells) {
     if (!w.d || w.d.slice(0, 4) !== year) continue;
     const cat = wellCategory(w);
-    if (cat === 'producao' || cat === 'gas') produtores++;
-    else if (cat === 'injecao') injetores++;
+    counts[cat] = (counts[cat] || 0) + 1;
   }
-  return { produtores, injetores };
+  return counts;
 }
 
 // Rótulo sempre visível de um marco de poço: só o essencial, direto da
@@ -1038,10 +1055,12 @@ const MILESTONE_TYPE_LABELS = { contract: 'Marco de contrato', fpso: 'FPSO', wel
 // sempre visível no gráfico é o simplificado, ver milestoneLabelOf) e os
 // detalhes que antes só davam pra ver editando o marco (agora só leitura,
 // ver "retirar edição" no histórico do repositório). Marco agregado de
-// poços perfurados no ano ganha a quebra por produtor/injetor, calculada
-// na hora a partir da base da ANP (ver wellCountBreakdown) — só aparece
-// quando pocosDataApp já carregou, pra não mostrar "0 · 0" enganoso
-// antes do fetch terminar. Reaproveita o #popover, que não tinha nenhum
+// poços perfurados no ano ganha a quebra completa por tipo (produtor,
+// gás, injetor, indício, seco, abandonado, sem registro — só as
+// categorias com poço), calculada na hora a partir da base da ANP (ver
+// wellCountBreakdown) — só aparece quando pocosDataApp já carregou, pra
+// não mostrar contagem zerada enganosa antes do fetch terminar.
+// Reaproveita o #popover, que não tinha nenhum
 // outro uso na página.
 function showMilestoneTooltip(dia, project, item, isPast) {
   const typeLabel = MILESTONE_TYPE_LABELS[item.icon] || 'Marco';
@@ -1059,8 +1078,13 @@ function showMilestoneTooltip(dia, project, item, isPast) {
   let breakdownHTML = '';
   const countMatch = item.name.match(WELL_COUNT_MILESTONE_RE);
   if (countMatch && Object.keys(pocosDataApp).length) {
-    const { produtores, injetores } = wellCountBreakdown(project, item.date.slice(0, 4));
-    breakdownHTML = `<p class="milestone-tooltip-meta">Produtores: ${produtores} · Injetores: ${injetores}</p>`;
+    const counts = wellCountBreakdown(project, item.date.slice(0, 4));
+    const parts = WELL_COUNT_LABELS
+      .filter(([cat]) => counts[cat] > 0)
+      .map(([cat, label]) => `${label}: ${counts[cat]}`);
+    if (parts.length) {
+      breakdownHTML = `<p class="milestone-tooltip-meta">${escapeHtml(parts.join(' · '))}</p>`;
+    }
   }
   popoverEl.innerHTML = `
     <div class="milestone-tooltip">
