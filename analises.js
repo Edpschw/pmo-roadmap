@@ -429,6 +429,86 @@ function renderStoiipChart(container, rows) {
   container.appendChild(card);
 }
 
+// CATEGORIA (ANP/BDEP) é um campo cru que nunca virou estatística até
+// agora — só aparecia em texto no popup do mapa e na aba Poços. É um eixo
+// diferente do "resultado" que os gráficos de poços por categoria já
+// mostram (wellCategory, calculado a partir de RECLASSIFICACAO/SITUACAO):
+// CATEGORIA é o que o poço foi PROJETADO PRA SER (Desenvolvimento,
+// Extensão, Pioneiro, Injeção, Especial, Jazida Mais Profunda, Pioneiro
+// Adjacente, Estratigráfico), não o que ele achou. Dá o perfil do programa
+// de perfuração — quanto é poço de avaliação/exploração vs. já é
+// desenvolvimento/injeção — informação que nenhum gráfico existente
+// mostra. Cor única (var(--accent), não uma das --viz-cat-N): é comparação
+// de totais numa lista só, sem outra série na mesma barra, então uma cor
+// da paleta categórica do resultado ao lado só criaria associação errada
+// (ex.: essa barra usar o azul de "produção" não quer dizer que é sobre
+// resultado de produção).
+function computeWellTypeTotals(pocosData, outrosPocos) {
+  const wells = [];
+  for (const [name, arr] of Object.entries(pocosData)) {
+    if (AGGREGATE_DEDUP_EXCLUDE.includes(name)) continue;
+    wells.push(...arr);
+  }
+  wells.push(...outrosPocos);
+  const totals = new Map();
+  for (const w of wells) {
+    const cat = w.cat || 'Sem categoria registrada';
+    totals.set(cat, (totals.get(cat) || 0) + 1);
+  }
+  return [...totals.entries()]
+    .map(([cat, count]) => ({ cat, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+function renderWellTypeChart(container, pocosData, outrosPocos) {
+  const totals = computeWellTypeTotals(pocosData, outrosPocos);
+  if (!totals.length) return;
+  const grandTotal = totals.reduce((s, t) => s + t.count, 0);
+
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+  const title = document.createElement('h3');
+  title.className = 'chart-card-title';
+  title.textContent = 'Poços por categoria de perfuração (ANP/BDEP)';
+  const sub = document.createElement('p');
+  sub.className = 'chart-card-subtitle';
+  sub.textContent = `${fmtNum(grandTotal)} poços — todo o play do pré-sal (contratos rastreados + campos de contexto, sem contar Mero duas vezes + poços sem campo nomeado). O que o poço foi projetado pra ser, não o resultado que achou (isso já está nos gráficos "poços por categoria" de cada seção abaixo).`;
+  card.appendChild(title);
+  card.appendChild(sub);
+
+  const list = document.createElement('div');
+  list.className = 'hbar-list';
+  const max = Math.max(...totals.map((t) => t.count));
+  for (const t of totals) {
+    const row = document.createElement('div');
+    row.className = 'hbar-row';
+    const name = document.createElement('div');
+    name.className = 'hbar-name';
+    name.textContent = t.cat;
+    name.title = t.cat;
+    const track = document.createElement('div');
+    track.className = 'hbar-track';
+    const fill = document.createElement('div');
+    fill.className = 'hbar-fill';
+    fill.style.width = Math.max(3, (t.count / max) * 100) + '%';
+    fill.style.background = 'var(--accent)';
+    fill.tabIndex = 0;
+    attachTooltip(fill, () => `<strong>${escapeHtml(t.cat)}</strong>`
+      + tooltipRowHTML('Poços', fmtNum(t.count))
+      + tooltipRowHTML('% do total', `${Math.round((t.count / grandTotal) * 100)}%`));
+    track.appendChild(fill);
+    const value = document.createElement('div');
+    value.className = 'hbar-value';
+    value.textContent = fmtNum(t.count);
+    track.appendChild(value);
+    row.appendChild(name);
+    row.appendChild(track);
+    list.appendChild(row);
+  }
+  card.appendChild(list);
+  container.appendChild(card);
+}
+
 function buildStackedBarRow(row, maxTotal, categoryOrder) {
   const wrap = document.createElement('div');
   wrap.className = 'hbar-row';
@@ -971,6 +1051,7 @@ async function init() {
   const kpiSection = document.createElement('section');
   kpiSection.className = 'analytics-section';
   renderKPIRow(kpiSection, agg);
+  renderWellTypeChart(kpiSection, pocosData, outrosPocos);
   wrapper.appendChild(kpiSection);
 
   // Duas seções, cada uma com seus próprios gráficos e tabela — em vez de

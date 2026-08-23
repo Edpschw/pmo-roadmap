@@ -163,9 +163,26 @@ function wellCodeOf(name) {
 // deveria mostrar — por isso só entram no sitAbandoned os estados
 // realmente finais; FECHADO continua contando (é o caso identificado no
 // bug original: poço fechado é poço que não está operando agora).
+// Revisão (situação/resultado/classificação, análise completa dos três
+// campos brutos da ANP): RECLASSIFICACAO só existe pra ~78% dos poços —
+// os ~22% sem ela ficavam por conta só de SITUACAO, que também falta ou é
+// um estado transitório (equipado aguardando operação, em perfuração/
+// completação, pausa temporária) pra boa parte deles. Isso inflava
+// "indefinido" com poço que na verdade tem um sinal claro: quando
+// CATEGORIA (info.cat, o que a ANP registrou que o poço FOI PROJETADO PRA
+// SER) é "Injeção", é fato de cadastro, não resultado incerto — poço
+// injetor de desenvolvimento em geral nem passa por reclassificação
+// geológica (essa é uma verificação de resultado exploratório: achou
+// óleo/gás/nada), daí o rec vazio. As outras 7 categorias (Desenvolvimento,
+// Extensão, Pioneiro...) não valem o mesmo truque: elas dizem o TIPO de
+// poço, não se achou óleo, gás ou nada — usar isso de fallback seria
+// inventar resultado. Efeito medido na base inteira: indefinido cai de 82
+// pra 52 poços (os 30 que saem eram mesmo injetor sem outro sinal), sem
+// tocar em nenhum poço que já tinha veredito por rec/sit.
 function wellCategory(info) {
   if (!info) return 'indefinido';
   const rec = info.rec || '';
+  const cat = info.cat || '';
   const sit = info.sit || '';
   const sitAbandoned = sit === 'ABANDONADO PERMANENTEMENTE' || sit === 'ARRASADO' || sit === 'FECHADO'
     || sit === 'DEVOLVIDO' || sit === 'ABANDONADO AGUARDANDO ABANDONO DEFINITIVO/ARRASAMENTO';
@@ -180,6 +197,7 @@ function wellCategory(info) {
   if (sit === 'PRODUZINDO') return 'producao';
   if (sit === 'INJETANDO') return 'injecao';
   if (sitAbandoned) return 'abandonado';
+  if (cat === 'Injeção') return 'injecao';
   return 'indefinido';
 }
 
