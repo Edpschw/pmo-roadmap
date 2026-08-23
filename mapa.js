@@ -212,11 +212,20 @@ const WELL_SHAPES = {
 // polígono). Pequeno de propósito: contratos densos (Búzios chega a 137
 // marcadores) já ficam cheios mesmo assim — um ícone maior só empilharia
 // mais um em cima do outro.
-function wellDivIcon(color, category) {
+// Anel tracejado laranja em volta do símbolo normal — não troca o símbolo
+// (a categoria do poço continua valendo), só avisa que ele fica numa Área
+// Não Concedida (AnC): a ANP ainda não deu um nome/contrato formal a essa
+// área específica, então ela não tem polígono nenhum no mapa (ver
+// CAMPOS_CONTEXTO_ALIASES em build_pocos.py) — o anel é a única pista
+// visual de que aquele ponto está fora de qualquer contorno desenhado.
+const ANC_RING_COLOR = '#e8a33d';
+
+function wellDivIcon(color, category, anc) {
   const shape = WELL_SHAPES[category] || WELL_SHAPES.indefinido;
+  const ring = anc ? `<circle cx="8" cy="8" r="7.2" fill="none" stroke="${ANC_RING_COLOR}" stroke-width="1.1" stroke-dasharray="2 1.4"/>` : '';
   return L.divIcon({
     className: 'map-well-icon',
-    html: `<svg viewBox="0 0 16 16" width="13" height="13" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,0.7))">${shape(color)}</svg>`,
+    html: `<svg viewBox="0 0 16 16" width="13" height="13" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,0.7))">${shape(color)}${ring}</svg>`,
     iconSize: [13, 13],
     iconAnchor: [6.5, 6.5],
   });
@@ -272,6 +281,9 @@ function wellPopupHTML(label, w, color, others) {
   if (w.sonda) rows.push(['Sonda', w.sonda]);
   const rowsHTML = rows.map(([k, v]) => `<tr><td class="k">${k}</td><td>${escapeHtml(v)}</td></tr>`).join('');
   const sub = label !== w.n ? `<p class="map-popup-source">Poço ${escapeHtml(w.n)}</p>` : '';
+  const ancNote = w.anc
+    ? '<p class="map-popup-source">Registrado numa Área Não Concedida (AnC) — sem contrato/nome formal específico ainda no cadastro da ANP.</p>'
+    : '';
   let merged = '';
   if (others && others.length) {
     const list = others.map((e) => {
@@ -285,17 +297,20 @@ function wellPopupHTML(label, w, color, others) {
     ${sub}
     <table>${rowsHTML}</table>
     ${merged}
+    ${ancNote}
     <p class="map-popup-source">Fonte: ANP/BDEP — cadastro de poços</p>
   </div>`;
 }
 
 function addWellMarker(targetLayer, latlng, color, entries) {
   const first = entries[0];
-  const marker = L.marker(latlng, { icon: wellDivIcon(color, wellCategory(first.info)), zIndexOffset: 500 });
+  const anc = !!(first.info && first.info.anc);
+  const marker = L.marker(latlng, { icon: wellDivIcon(color, wellCategory(first.info), anc), zIndexOffset: 500 });
   const when = first.date ? formatBR(first.date) : '';
   const extra = entries.length > 1 ? `<br>+ ${entries.length - 1} poço(s) no mesmo ponto` : '';
+  const ancNote = anc ? '<br>Área não concedida (AnC)' : '';
   marker.bindTooltip(
-    `${escapeHtml(first.label)}${when ? '<br>' + when : ''}${first.approx ? ' (aprox.)' : ''}${extra}`,
+    `${escapeHtml(first.label)}${when ? '<br>' + when : ''}${first.approx ? ' (aprox.)' : ''}${extra}${ancNote}`,
     { direction: 'top', offset: [0, -6], className: 'map-well-tooltip' },
   );
   if (first.info) marker.bindPopup(wellPopupHTML(first.label, first.info, color, entries.slice(1)));
@@ -665,6 +680,14 @@ function buildWellShapeLegend() {
     row.appendChild(document.createTextNode(label));
     legend.appendChild(row);
   }
+  const ancRow = document.createElement('div');
+  ancRow.className = 'map-legend-row';
+  const ancIcon = document.createElement('span');
+  ancIcon.className = 'map-legend-well-icon';
+  ancIcon.innerHTML = `<svg viewBox="0 0 16 16" width="15" height="15">${WELL_SHAPES.indefinido(WELL_LEGEND_COLOR)}<circle cx="8" cy="8" r="7.2" fill="none" stroke="${ANC_RING_COLOR}" stroke-width="1.1" stroke-dasharray="2 1.4"/></svg>`;
+  ancRow.appendChild(ancIcon);
+  ancRow.appendChild(document.createTextNode('Anel laranja: área não concedida (AnC), sem contrato formal'));
+  legend.appendChild(ancRow);
   return legend;
 }
 

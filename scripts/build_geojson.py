@@ -167,9 +167,12 @@ for s in summary:
 # Berbigão, os dois com poços confirmados) fica embora não tenha nenhum
 # poço registrado com esse nome exato de campo na exportação atual — campo
 # declarado (ETAPA=Desenvolvimento no cadastro da ANP), só ainda sem poço
-# atribuído a ele especificamente.
+# atribuído a ele especificamente. Caxareu (CXR) entrou depois, também por
+# pedido manual: só 2 dos 6 poços confirmam pré-sal (33%, dentro do corte de
+# 20%, mas abaixo do mínimo de 3 poços usado nos outros) — evidência mais
+# fraca que o resto da lista, mas suficiente pra valer o contexto.
 EXTRA_PRESALT_FIELDS = [
-    'LPA', 'TUP', 'STUP', 'BBG', 'NBBG', 'SBBG', 'OATP', 'SPH', 'MRO', 'JUB', 'RMT', 'WAH',
+    'LPA', 'TUP', 'STUP', 'BBG', 'NBBG', 'SBBG', 'OATP', 'SPH', 'MRO', 'JUB', 'RMT', 'WAH', 'CXR',
 ]
 
 extra_idxs = records_matching(campos, 'SIG_CAMPO', EXTRA_PRESALT_FIELDS)

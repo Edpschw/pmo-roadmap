@@ -76,6 +76,10 @@ CAMPOS_CONTEXTO = [
     'TUPI', 'LAPA', 'SAPINHOÁ', 'OESTE DE ATAPU', 'SUL DE TUPI',
     'BERBIGÃO', 'NORTE DE BERBIGÃO', 'SUL DE BERBIGÃO',
     'MERO', 'JUBARTE', 'RAIA', 'WAHOO',
+    # Caxareu não bate o critério automático (só 2 dos 6 poços confirmam
+    # pré-sal, abaixo do mínimo de 3 usado nos outros) — inclusão manual,
+    # pedida por nome, igual à exceção do Norte de Berbigão.
+    'CAXAREU',
 ]
 
 # Nomes alternativos de CAMPO que devem contar como o mesmo campo de
@@ -191,6 +195,12 @@ def main(csv_path, out_path):
                 continue
             w = build_well(r)
             if w:
+                # Poço registrado numa Área Não Concedida (prefixo "AnC" no
+                # cadastro da ANP) em vez de sob o nome definitivo do campo —
+                # sinaliza isso pro mapa.js desenhar um símbolo diferente,
+                # já que a área ainda não tem um contrato formal específico.
+                if (r['CAMPO'] or '').strip().upper().startswith('ANC'):
+                    w['anc'] = True
                 matched.append(w)
                 used_poco_codes.add(r['POCO'].strip())
         matched.sort(key=lambda w: (w.get('d') or '9999', w['n']))
