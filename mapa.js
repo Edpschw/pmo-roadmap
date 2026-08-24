@@ -91,6 +91,33 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   maxZoom: 20,
 }).addTo(map);
 
+// Todo popup (projeto, campo de contexto, poço) abre ancorado num ponto
+// fixo e cresce PRA CIMA a partir dele (o triângulo de baixo aponta pro
+// ponto) — com autoPan desligado de propósito em todo lugar que chama
+// bindPopup (não pode mudar zoom/posição do mapa ao abrir, ver nota em
+// popupHTML), um popup alto o bastante simplesmente vazava por cima da
+// tela quando o ponto de ancoragem já estava perto do topo (comum logo
+// depois de flyToProject, ancorado na borda norte do polígono). Um
+// max-height fixo (ver CSS) não resolve isso: o espaço disponível ACIMA
+// do ponto varia por popup, não por conteúdo. Aqui, a cada abertura, mede
+// esse espaço de verdade (em pixels de tela, não de mapa) e limita a
+// altura do conteúdo a ele — sobra rolagem interna em vez de vazamento.
+map.on('popupopen', (e) => {
+  const popup = e.popup;
+  const content = popup.getElement() && popup.getElement().querySelector('.leaflet-popup-content');
+  if (!content) return;
+  const anchorY = map.latLngToContainerPoint(popup.getLatLng()).y;
+  // Sobra de "moldura" do popup que não é o conteúdo em si (a margem de
+  // 13px em cima/embaixo do .leaflet-popup-content, o triângulo debaixo,
+  // a folga do wrapper) — sem descontar isso, o cálculo só olhando pro
+  // conteúdo deixa a moldura inteira vazar por cima mesmo com a altura
+  // "certa": ~13+13px de margem + ~20px de triângulo/wrapper.
+  const chrome = 50;
+  const margin = 16;
+  content.style.maxHeight = Math.max(90, Math.round(anchorY - chrome - margin)) + 'px';
+  popup.update();
+});
+
 // Adicionadas antes das camadas de projeto para ficarem visualmente por
 // baixo delas (Leaflet empilha na ordem de addTo).
 const presaltFieldsLayer = L.layerGroup().addTo(map);
@@ -134,6 +161,21 @@ const projectLabelByProjectId = {};
 // Guardado à parte (não em layerByProjectId, que é só pros 29 contratos)
 // pra setColorMode saber repintar também quando o modo de cor muda.
 const linkedPresaltLayers = [];
+
+// Nome de campo de contexto vem TUDO MAIÚSCULO no GeoJSON (MERO, SAPINHOÁ,
+// OESTE DE ATAPU...) — certo pra distinguir de contrato rastreado nas
+// tabelas/listas (convenção mantida em analises.js/pocos.js), mas errado
+// bem aqui: rótulo de projeto no mapa (ver projectLabelByProjectId) é
+// Título Case ("Norte de Carcará"), então "MERO" gritando ao lado de
+// "Libra" destoava do resto — só o rótulo do mapa usa isto, popup/tabela
+// continuam mostrando o nome como veio da fonte.
+const TITLE_CASE_LOWERCASE_WORDS = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
+function titleCasePt(name) {
+  return name.split(' ').map((word, i) => {
+    const lower = word.toLowerCase();
+    return i > 0 && TITLE_CASE_LOWERCASE_WORDS.has(lower) ? lower : lower.charAt(0).toUpperCase() + lower.slice(1);
+  }).join(' ');
+}
 
 function formatAnpDate(s) {
   return s ? s.replaceAll('-', '/') : '—';
@@ -776,7 +818,7 @@ async function init() {
         const labelMarker = L.marker(layer.getBounds().getCenter(), {
           icon: L.divIcon({
             className: 'map-project-label-icon',
-            html: `<span class="map-project-label">${escapeHtml(props.nome)}</span>`,
+            html: `<span class="map-project-label">${escapeHtml(titleCasePt(props.nome))}</span>`,
             iconSize: null,
           }),
           interactive: false,
