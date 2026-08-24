@@ -290,11 +290,16 @@ function projectContractYear(project) {
 }
 
 // Todo marcador de poço colocado no mapa (ver addWellMarker) entra aqui
-// junto com o ano do poço mais antigo que ele representa — é o que
-// applyYearFilter usa pra decidir mostrar/esconder cada um.
+// junto com o ano do poço mais antigo que ele representa e a lista de
+// SITUACAO/CATEGORIA de cada poço real que ele agrupa (sits/cats — um
+// marcador pode juntar vários poços do mesmo ponto, ver WELL_MERGE_GRID) —
+// é o que applyWellFilters usa pra decidir mostrar/esconder cada um. Marco
+// de roadmap sem poço da ANP por trás (info null) não entra nem em sits
+// nem em cats: não tem o que filtrar, então nunca é ele quem esconde o
+// marcador (mesmo espírito do ano sem data — ver applyWellFilters).
 const wellMarkerRegistry = [];
-function registerWellMarker(marker, targetLayer, year) {
-  wellMarkerRegistry.push({ marker, targetLayer, year });
+function registerWellMarker(marker, targetLayer, year, sits, cats) {
+  wellMarkerRegistry.push({ marker, targetLayer, year, sits, cats });
 }
 
 // Ano do contrato de cada projeto, por id — calculado uma vez em init()
@@ -309,6 +314,38 @@ const projectYearById = {};
 let yearFilterMin = null;
 let yearFilterMax = null;
 let yearFilterValue = null;
+
+// Filtro por SITUAÇÃO e CATEGORIA (campos brutos da ANP, ver wellPopupHTML)
+// — dois eixos diferentes de wellCategory (que já colore/dá forma ao ícone
+// a partir de RECLASSIFICACAO+SITUACAO, ver shared.js): aqui é o texto cru
+// do cadastro, não o resultado apurado. Conjunto de EXCLUÍDOS (não de
+// incluídos) pra o estado inicial — nada filtrado — ser um Set vazio, sem
+// precisar populá-lo com todos os valores possíveis antes dos dados
+// carregarem. Chave-sentinela pros ~2% dos poços sem SITUACAO no cadastro
+// (nenhum poço observado está sem CATEGORIA, mas trata o caso mesmo assim).
+const SIT_NONE_KEY = '(sem situação registrada)';
+const CAT_NONE_KEY = '(sem categoria registrada)';
+function normSit(w) { return (w && w.sit) || SIT_NONE_KEY; }
+function normCat(w) { return (w && w.cat) || CAT_NONE_KEY; }
+const situacaoFilterExcluded = new Set();
+const categoriaFilterExcluded = new Set();
+// [[valor, contagem], ...] ordenado do mais comum ao mais raro — calculado
+// uma vez em init() depois que pocosData/outrosPocos carregam (ver
+// computeFieldValueCounts), consultado só pra desenhar os chips do painel.
+let situacaoValues = [];
+let categoriaValues = [];
+
+// Conta poços por valor normalizado (normSit ou normCat) em toda a base —
+// pocosData (os 24 contratos/campos nomeados) + outrosPocos (o resto do
+// play do pré-sal) — pra popular os chips do painel de filtro com a
+// contagem real de cada valor.
+function computeFieldValueCounts(normFn) {
+  const counts = new Map();
+  const bump = (w) => { const k = normFn(w); counts.set(k, (counts.get(k) || 0) + 1); };
+  for (const arr of Object.values(pocosData)) for (const w of arr) bump(w);
+  for (const w of outrosPocos) bump(w);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+}
 
 // wellCodeOf (código do poço dentro do nome de um marco, pra casar com o
 // registro da ANP) agora vive em shared.js, compartilhada com app.js e
@@ -422,7 +459,11 @@ function addWellMarker(targetLayer, latlng, color, entries) {
   if (first.info) marker.bindPopup(wellPopupHTML(first.label, first.info, color, entries.slice(1)));
   targetLayer.addLayer(marker);
   const years = entries.map((e) => yearOf(e.date)).filter((y) => y != null);
-  registerWellMarker(marker, targetLayer, years.length ? Math.min(...years) : null);
+  const infos = entries.map((e) => e.info).filter(Boolean);
+  registerWellMarker(
+    marker, targetLayer, years.length ? Math.min(...years) : null,
+    infos.map(normSit), infos.map(normCat),
+  );
 }
 
 // Monta e adiciona (direto em targetLayer — a mesma camada do polígono do
@@ -582,6 +623,8 @@ async function init() {
     // Sem a base de poços o mapa segue mostrando só as poligonais.
     showToast('Não foi possível carregar data/pocos.json — mapa sem poços.');
   }
+  situacaoValues = computeFieldValueCounts(normSit);
+  categoriaValues = computeFieldValueCounts(normCat);
 
   // Precisa carregar antes dos popups serem montados (popupHTML e
   // presaltFieldPopupHTML chamam pdSectionHTML na hora do bindPopup, não
@@ -693,11 +736,11 @@ async function init() {
   renderPanel();
 }
 
-// Esconde contrato/poço com data depois do ano escolhido no slider — "como
-// era o mapa até esse ano". Sem data conhecida (poço sem data no cadastro,
-// ou projeto sem marco de contrato reconhecido) sempre aparece: melhor
-// mostrar de mais do que esconder por engano algo que não sabemos datar.
-function applyYearFilter() {
+// Esconde contrato com data depois do ano escolhido no slider — "como era
+// o mapa até esse ano". Sem data conhecida (projeto sem marco de contrato
+// reconhecido) sempre aparece: melhor mostrar de mais do que esconder por
+// engano algo que não sabemos datar.
+function applyProjectYearFilter() {
   if (yearFilterValue == null) return;
   for (const project of state.projects) {
     const layer = layerByProjectId[project.id];
@@ -708,12 +751,30 @@ function applyYearFilter() {
     if (visible && !target.hasLayer(layer)) target.addLayer(layer);
     else if (!visible && target.hasLayer(layer)) target.removeLayer(layer);
   }
+}
+
+// Esconde poço pelos três filtros juntos — ano (slider "Mostrar até o
+// ano"), SITUACAO e CATEGORIA (chips do painel, ver renderWellFilterSection)
+// — cada um só esconde o que sabe classificar: sem ano conhecido, sem
+// poço real por trás (sits/cats vazio, ver registerWellMarker), sempre
+// aparece; com poço(s) real(is), basta UM dos que o marcador agrupa passar
+// no filtro pra ele continuar visível (mesclar não deveria esconder um
+// poço que sozinho apareceria — ver WELL_MERGE_GRID).
+function applyWellFilters() {
   for (const entry of wellMarkerRegistry) {
-    const visible = entry.year == null || entry.year <= yearFilterValue;
+    const yearOk = yearFilterValue == null || entry.year == null || entry.year <= yearFilterValue;
+    const sitOk = entry.sits.length === 0 || entry.sits.some((s) => !situacaoFilterExcluded.has(s));
+    const catOk = entry.cats.length === 0 || entry.cats.some((c) => !categoriaFilterExcluded.has(c));
+    const visible = yearOk && sitOk && catOk;
     if (visible && !entry.targetLayer.hasLayer(entry.marker)) entry.targetLayer.addLayer(entry.marker);
     else if (!visible && entry.targetLayer.hasLayer(entry.marker)) entry.targetLayer.removeLayer(entry.marker);
   }
   updateProjectLabels();
+}
+
+function applyYearFilter() {
+  applyProjectYearFilter();
+  applyWellFilters();
 }
 
 function setColorMode(mode) {
@@ -928,6 +989,84 @@ function renderControlsSection(container) {
   container.appendChild(wrap);
 }
 
+// Um grupo de chips (SITUACAO ou CATEGORIA) — chip ativo (cor) é valor
+// visível, chip apagado é valor escondido; clique alterna sem re-render
+// do painel inteiro (perderia a posição do scroll numa lista de até 15
+// chips), só troca a classe do próprio botão. "Todos"/"Nenhum" mexem em
+// vários de uma vez, aí sim precisam re-render pra refletir na classe de
+// cada chip.
+function renderAttributeFilterGroup(container, title, values, excludedSet) {
+  const wrap = document.createElement('div');
+  wrap.className = 'map-panel-section map-filter-group';
+
+  const header = document.createElement('div');
+  header.className = 'map-filter-group-header';
+  const label = document.createElement('span');
+  label.className = 'map-mode-label';
+  label.style.marginBottom = '0';
+  label.textContent = title;
+  header.appendChild(label);
+
+  const actions = document.createElement('span');
+  actions.className = 'map-filter-actions';
+  const allBtn = document.createElement('button');
+  allBtn.type = 'button';
+  allBtn.textContent = 'Todos';
+  allBtn.addEventListener('click', () => { excludedSet.clear(); applyWellFilters(); renderPanel(); });
+  const noneBtn = document.createElement('button');
+  noneBtn.type = 'button';
+  noneBtn.textContent = 'Nenhum';
+  noneBtn.addEventListener('click', () => {
+    for (const [value] of values) excludedSet.add(value);
+    applyWellFilters();
+    renderPanel();
+  });
+  actions.appendChild(allBtn);
+  actions.appendChild(noneBtn);
+  header.appendChild(actions);
+  wrap.appendChild(header);
+
+  const pills = document.createElement('div');
+  pills.className = 'map-filter-pills';
+  for (const [value, count] of values) {
+    const isNone = value === SIT_NONE_KEY || value === CAT_NONE_KEY;
+    const pill = document.createElement('button');
+    pill.type = 'button';
+    pill.className = 'map-filter-pill' + (excludedSet.has(value) ? '' : ' active') + (isNone ? ' is-none' : '');
+    pill.textContent = `${value} (${count})`;
+    pill.addEventListener('click', () => {
+      if (excludedSet.has(value)) excludedSet.delete(value); else excludedSet.add(value);
+      pill.classList.toggle('active');
+      applyWellFilters();
+    });
+    pills.appendChild(pill);
+  }
+  wrap.appendChild(pills);
+  container.appendChild(wrap);
+}
+
+// Filtro de poço por SITUACAO e CATEGORIA — ver applyWellFilters. Só
+// aparece depois que os dados carregam (situacaoValues/categoriaValues
+// calculados em init(), ver computeFieldValueCounts); sem poço nenhuma
+// base carregada os dois ficam vazios e a seção não teria o que mostrar.
+function renderWellFilterSection(container) {
+  if (!situacaoValues.length && !categoriaValues.length) return;
+  const section = document.createElement('div');
+  section.className = 'map-panel-section';
+  const label = document.createElement('div');
+  label.className = 'map-mode-label';
+  label.textContent = 'Filtrar poços';
+  section.appendChild(label);
+  const note = document.createElement('p');
+  note.className = 'map-panel-note';
+  note.style.margin = '0 0 8px';
+  note.textContent = 'Campos brutos do cadastro ANP/BDEP — diferente da forma do ícone (Resultado do poço, abaixo), que já é apurado. Poço mesclado no mesmo ponto some só se nenhum dos que ele agrupa passar no filtro.';
+  section.appendChild(note);
+  if (situacaoValues.length) renderAttributeFilterGroup(section, 'Situação', situacaoValues, situacaoFilterExcluded);
+  if (categoriaValues.length) renderAttributeFilterGroup(section, 'Categoria', categoriaValues, categoriaFilterExcluded);
+  container.appendChild(section);
+}
+
 // Ordem de exibição na legenda — do resultado mais positivo (achou e
 // produz) ao mais neutro (sem registro), agrupando injeção/abandonado
 // (intervenção/descontinuado) no meio.
@@ -1024,6 +1163,7 @@ function renderPanel() {
 
   renderColorModeControl(el);
   renderControlsSection(el);
+  renderWellFilterSection(el);
 
   const presaltSection = document.createElement('div');
   presaltSection.className = 'map-panel-section';
@@ -1065,7 +1205,7 @@ function renderPanel() {
   shapeSection.className = 'map-panel-section';
   const shapeHeader = document.createElement('div');
   shapeHeader.className = 'map-mode-label';
-  shapeHeader.textContent = 'Situação do poço';
+  shapeHeader.textContent = 'Resultado do poço';
   shapeSection.appendChild(shapeHeader);
   shapeSection.appendChild(buildWellShapeLegend());
   el.appendChild(shapeSection);
