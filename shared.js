@@ -294,6 +294,29 @@ function jazidaNome(pd) {
   return pd.titulo.replace(/\s*(?:\(?(?:AIP|PD)\)?\s*)?\d{4}\s*$/, '').trim();
 }
 
+// Projeto rastreado dono da MESMA jazida de um campo de contexto, quando
+// exatamente um projeto usa o pd.fonte desse campo (ex.: Atapu <- OESTE DE
+// ATAPU, Entorno de Sapinhoá <- SAPINHOÁ — os dois PDs citam os dois lados
+// da mesma jazida). Usado pelo mapa (ver mapa.js) pra colorir o campo como
+// parte do contrato em vez de neutro, já que visualmente ele "pertence" ao
+// mesmo contrato. Ambíguo (fonte usada por mais de um projeto, ou por
+// nenhum) devolve null — não dá pra saber a qual contrato o campo
+// pertence.
+function projectByPdFonte(projects, pdData) {
+  const fonteToProjects = new Map();
+  for (const p of projects) {
+    const pd = byNameOrUpper(pdData, p.name);
+    if (!pd || !pd.fonte) continue;
+    if (!fonteToProjects.has(pd.fonte)) fonteToProjects.set(pd.fonte, []);
+    fonteToProjects.get(pd.fonte).push(p);
+  }
+  const map = new Map();
+  for (const [fonte, projs] of fonteToProjects) {
+    if (projs.length === 1) map.set(fonte, projs[0]);
+  }
+  return map;
+}
+
 // Agrupa uma lista de { name, pd } por pd.fonte — a URL do PD é a chave
 // real de "é o mesmo documento, logo a mesma jazida", já que o PD é o
 // documento POR JAZIDA (não por campo/contrato). Grupo com mais de um

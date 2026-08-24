@@ -127,6 +127,11 @@ let presaltFieldsVisible = true;
 // visibilidade segue presaltFieldsLayer (ver updateProjectLabels), não um
 // grupo de projeto: campo de contexto não tem grupo nem projeto por trás.
 const presaltFieldLabelMarkers = [];
+// Campo de contexto colorido como um projeto rastreado por citar o mesmo
+// PD (ver linkedProjectByFonte em init()) — guardado à parte (não em
+// layerByProjectId, que é só pros 30 projetos) pra setColorMode saber
+// repintar também quando o modo de cor muda.
+const linkedPresaltLayers = [];
 const outrosPocosLayer = L.layerGroup();
 let outrosPocosVisible = true;
 // Zoom mínimo pra QUALQUER poço aparecer no mapa — mesma regra pros
@@ -795,6 +800,14 @@ async function init() {
   // laço de state.projects mais abaixo), não teria por que desenhar os
   // dois.
   const trackedProjectByUpperName = new Map(state.projects.map((p) => [p.name.toUpperCase(), p]));
+  // Campo de contexto que cita o MESMO PD (pd.fonte) de um único projeto
+  // rastreado (hoje Atapu <- OESTE DE ATAPU, Entorno de Sapinhoá <-
+  // SAPINHOÁ) é a mesma jazida vista do lado do campo — colorido como o
+  // projeto (não neutro) no laço abaixo, pra ficar visualmente "dentro"
+  // dele em vez de um campo qualquer sem relação. Ver projectByPdFonte em
+  // shared.js e a nota em jazidaComposicao/groupByPdFonte (mesmo critério
+  // usado no card "Jazidas Compartilhadas" de analises.js).
+  const linkedProjectByFonte = projectByPdFonte(state.projects, pdData);
 
   try {
     const presRes = await fetch(PRESALT_FIELDS_URL);
@@ -806,7 +819,13 @@ async function init() {
         featureByProject[trackedProject.name] = feat;
         continue;
       }
-      const layer = L.geoJSON(feat, { style: PRESALT_FIELD_STYLE });
+      const fieldPd = byNameOrUpper(pdData, props.nome);
+      const linkedProject = fieldPd && fieldPd.fonte ? linkedProjectByFonte.get(fieldPd.fonte) : null;
+      const color = linkedProject ? colorForProject(linkedProject) : PRESALT_FIELD_STYLE.color;
+      const style = linkedProject
+        ? { color, weight: 1.5, fillColor: color, fillOpacity: 0.22, dashArray: '4 3' }
+        : PRESALT_FIELD_STYLE;
+      const layer = L.geoJSON(feat, { style });
       layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(props), { maxWidth: 320 }));
       layer.addTo(presaltFieldsLayer);
       presaltFieldLabelMarkers.push(L.marker(layer.getBounds().getCenter(), {
@@ -819,7 +838,8 @@ async function init() {
         keyboard: false,
         zIndexOffset: -100,
       }));
-      registerWellSet(props.nome, null, layer.getBounds(), PRESALT_FIELD_STYLE.color, wellPresaltLayer);
+      if (linkedProject) linkedPresaltLayers.push({ layer, project: linkedProject });
+      registerWellSet(props.nome, null, layer.getBounds(), color, wellPresaltLayer);
     }
   } catch (e) {
     // Camada de contexto é opcional — segue sem ela se não carregar.
@@ -1001,6 +1021,14 @@ function setColorMode(mode) {
     layer.setStyle({ color: c, fillColor: c });
     const feat = featureByProject[project.name];
     if (feat) layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties), { autoPan: false, maxWidth: 320 }));
+  }
+  // Campo de contexto colorido como um projeto rastreado (ver
+  // linkedPresaltLayers) segue a cor do projeto em qualquer modo — sem
+  // isso, "Colorir por Status" repintava Atapu mas deixava OESTE DE ATAPU
+  // parado na cor de Partilha original.
+  for (const { layer, project } of linkedPresaltLayers) {
+    const c = colorForProject(project);
+    layer.setStyle({ color: c, fillColor: c });
   }
   renderPanel();
 }
