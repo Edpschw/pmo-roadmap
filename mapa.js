@@ -122,6 +122,11 @@ map.on('popupopen', (e) => {
 // baixo delas (Leaflet empilha na ordem de addTo).
 const presaltFieldsLayer = L.layerGroup().addTo(map);
 let presaltFieldsVisible = true;
+// Rótulo do nome de cada campo de contexto (ver laço em init()) — mesmo
+// padrão do rótulo de projeto rastreado (projectLabelByProjectId), mas
+// visibilidade segue presaltFieldsLayer (ver updateProjectLabels), não um
+// grupo de projeto: campo de contexto não tem grupo nem projeto por trás.
+const presaltFieldLabelMarkers = [];
 const outrosPocosLayer = L.layerGroup();
 let outrosPocosVisible = true;
 // Zoom mínimo pra QUALQUER poço aparecer no mapa — mesma regra pros
@@ -154,6 +159,20 @@ const featureByProject = {};
 // polígono. Adicionado direto no mapa (não num layerGroup), então
 // showOrHide funciona nele igual funciona nos outros.
 const projectLabelByProjectId = {};
+
+// Nome de campo de contexto vem TUDO MAIÚSCULO no GeoJSON (MERO, SAPINHOÁ,
+// OESTE DE ATAPU...) — certo pra distinguir de contrato rastreado nas
+// tabelas/listas (convenção mantida em analises.js/pocos.js), mas errado
+// no rótulo do mapa (ver presaltFieldLabelMarkers/projectLabelByProjectId),
+// que é sempre Título Case ("Norte de Carcará") — só o rótulo do mapa usa
+// isto, popup/tabela continuam mostrando o nome como veio da fonte.
+const TITLE_CASE_LOWERCASE_WORDS = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
+function titleCasePt(name) {
+  return name.split(' ').map((word, i) => {
+    const lower = word.toLowerCase();
+    return i > 0 && TITLE_CASE_LOWERCASE_WORDS.has(lower) ? lower : lower.charAt(0).toUpperCase() + lower.slice(1);
+  }).join(' ');
+}
 
 function formatAnpDate(s) {
   return s ? s.replaceAll('-', '/') : '—';
@@ -784,6 +803,16 @@ async function init() {
       const layer = L.geoJSON(feat, { style: PRESALT_FIELD_STYLE });
       layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(props), { maxWidth: 320 }));
       layer.addTo(presaltFieldsLayer);
+      presaltFieldLabelMarkers.push(L.marker(layer.getBounds().getCenter(), {
+        icon: L.divIcon({
+          className: 'map-project-label-icon',
+          html: `<span class="map-project-label">${escapeHtml(titleCasePt(props.nome))}</span>`,
+          iconSize: null,
+        }),
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: -100,
+      }));
       registerWellSet(props.nome, null, layer.getBounds(), PRESALT_FIELD_STYLE.color, wellPresaltLayer);
     }
   } catch (e) {
@@ -1067,6 +1096,13 @@ function updateProjectLabels() {
     const groupId = groupLayers[project.group] ? project.group : GROUP_FALLBACK;
     const target = groupLayers[groupId];
     showOrHide(marker, zoomOk && groupVisible[groupId] && target.hasLayer(layer));
+  }
+  // Rótulo de campo de contexto (ver presaltFieldLabelMarkers) — mesmo
+  // corte de zoom, mas segue a visibilidade da camada de campos de
+  // contexto (presaltFieldsLayer), não a de grupo de projeto: campo de
+  // contexto não tem grupo nem projeto por trás.
+  for (const marker of presaltFieldLabelMarkers) {
+    showOrHide(marker, zoomOk && map.hasLayer(presaltFieldsLayer));
   }
 }
 
