@@ -418,6 +418,7 @@ function pdSectionHTML(key) {
   if (!pd) return '';
   const rows = [
     ['Situação', pd.situacao],
+    ['Resolução (PD)', pd.resolucao],
     ['Descoberta', pd.descoberta ? formatBR(pd.descoberta) + (pd.descobertaObs ? ` (${pd.descobertaObs})` : '') : null],
     ['Comercialidade', pd.comercialidade ? formatBR(pd.comercialidade) + (pd.comercialidadeObs ? ` (${pd.comercialidadeObs})` : '') : null],
     ['Início produção', formatMaybeISO(pd.inicioProducao)],
@@ -448,9 +449,14 @@ function pdSectionHTML(key) {
   const participacaoHTML = pd.participacao && pd.participacao.length
     ? `<p class="map-popup-pd-text"><strong>Parceiros:</strong> ${pd.participacao.map((p) => `${escapeHtml(p.empresa)} ${p.pct.toLocaleString('pt-BR')}%`).join(' · ')}${pd.participacaoObs ? ` (${escapeHtml(pd.participacaoObs)})` : ''}</p>`
     : '';
+  const composicao = jazidaComposicao(pd);
+  const jazidaHTML = composicao
+    ? `<p class="map-popup-pd-text"><strong>Jazida compartilhada:</strong> ${escapeHtml(composicao)}</p>`
+    : '';
   return `<div class="map-popup-pd">
     <h4>Plano de Desenvolvimento${pd.titulo ? ` — ${escapeHtml(pd.titulo)}` : ''}</h4>
     <table>${rowsHTML}</table>
+    ${jazidaHTML}
     ${participacaoHTML}
     ${pd.sistemaResumo ? `<p class="map-popup-pd-text"><strong>Sistema:</strong> ${escapeHtml(pd.sistemaResumo)}</p>` : ''}
     ${pd.geologiaResumo ? `<p class="map-popup-pd-text"><strong>Geologia:</strong> ${escapeHtml(pd.geologiaResumo)}</p>` : ''}

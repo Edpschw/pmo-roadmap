@@ -264,6 +264,55 @@ function contractOwnWells(pocosData, name) {
   return wells.filter((w) => !excluded.has(w.n));
 }
 
+/* ------------------------------ Jazida compartilhada --------------------- */
+// Modelo do domínio (ANP): CONTRATO vem do leilão/rodada (Marcos do
+// Contrato no seed, ver seedState); CAMPO é declarado depois, quando a
+// comercialidade é declarada e o Plano de Desenvolvimento (PD) é enviado —
+// dentro de um contrato, ou em Área Não Contratada (ANC); JAZIDA é o
+// reservatório físico que o PD descreve, e pode ser compartilhada por mais
+// de um campo (ex.: a jazida de Bacalhau é formada pelos campos Bacalhau e
+// Bacalhau Norte, um só PD cobrindo os dois). Compartilhada entre
+// analises.js e mapa.js.
+
+// pd.areaObs, quando existe, descreve a composição em prosa ("Jazida
+// compartilhada — 48% Bacalhau / 52% Bacalhau Norte") — mas nem todo PD
+// composto preenche esse campo (ex.: Berbigão/Norte/Sul de Berbigão não
+// tem), por isso NÃO é o sinal principal de "é uma jazida compartilhada"
+// (ver groupByPdFonte abaixo, que não depende dele); serve só pra mostrar
+// a composição quando o sumário a publicou.
+function jazidaComposicao(pd) {
+  if (!pd || !pd.areaObs || !pd.areaObs.startsWith('Jazida compartilhada')) return null;
+  return pd.areaObs.replace(/^Jazida compartilhada\s*[—-]?\s*/, '').trim();
+}
+
+// Nome de exibição da jazida a partir do título do PD ("Bacalhau e
+// Bacalhau Norte (AIP) 2021" -> "Bacalhau e Bacalhau Norte") — tira o ano
+// e a sigla do tipo de sumário (AIP/PD) do final, que não fazem parte do
+// nome da jazida.
+function jazidaNome(pd) {
+  if (!pd || !pd.titulo) return null;
+  return pd.titulo.replace(/\s*(?:\(?(?:AIP|PD)\)?\s*)?\d{4}\s*$/, '').trim();
+}
+
+// Agrupa uma lista de { name, pd } por pd.fonte — a URL do PD é a chave
+// real de "é o mesmo documento, logo a mesma jazida", já que o PD é o
+// documento POR JAZIDA (não por campo/contrato). Grupo com mais de um
+// membro é uma jazida compartilhada entre mais de um campo/contrato —
+// esse é o sinal confiável (ver nota em jazidaComposicao); grupo de um
+// membro só é jazida compartilhada quando pd.areaObs diz isso em prosa
+// (caso Mero: campo + Área Não Contratada, que não é uma entidade própria
+// nesta base).
+function groupByPdFonte(entries) {
+  const groups = new Map();
+  for (const entry of entries) {
+    const pd = entry.pd;
+    if (!pd || !pd.fonte) continue;
+    if (!groups.has(pd.fonte)) groups.set(pd.fonte, []);
+    groups.get(pd.fonte).push(entry);
+  }
+  return [...groups.values()];
+}
+
 /* ------------------------------- Seed data ------------------------------ */
 
 // Contratos reais de Partilha de Produção (CPP) do polígono do pré-sal,

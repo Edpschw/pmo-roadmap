@@ -784,7 +784,18 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .analytics-table td.muted { color: var(--text-faint); }
 .analytics-table tr.muted td:not(.num) { color: var(--text-faint); font-style: italic; }
 .analytics-table .participacao-cell { max-width: 260px; white-space: normal; line-height: 1.4; font-size: 11px; }
+.analytics-table .nowrap-cell { white-space: nowrap; }
+.analytics-table { min-width: 1300px; }
 .analytics-table-note { font-size: 11px; color: var(--text-faint); margin-top: 10px; line-height: 1.5; }
+
+/* ---- Jazidas compartilhadas (ver buildJazidasCard em analises.js) ---- */
+.jazida-list { display: flex; flex-direction: column; gap: 10px; }
+.jazida-item { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.jazida-item-title { font-size: 12.5px; font-weight: 700; margin-bottom: 6px; }
+.jazida-item-members { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 4px; }
+.jazida-member { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-muted); }
+.jazida-member .proj-dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 9px; }
+.jazida-item-detail { font-size: 11px; color: var(--text-faint); line-height: 1.5; }
 
 /* ---------- Visão em poços (pocos.html) ---------- */
 .pocos-wrapper { flex: 1 1 auto; overflow: auto; padding: 0 20px 40px; }
