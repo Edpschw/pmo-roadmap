@@ -290,16 +290,18 @@ function projectContractYear(project) {
 }
 
 // Todo marcador de poço colocado no mapa (ver addWellMarker) entra aqui
-// junto com o ano do poço mais antigo que ele representa e a lista de
+// junto com o ano do poço mais antigo que ele representa, a lista de
 // SITUACAO/CATEGORIA de cada poço real que ele agrupa (sits/cats — um
 // marcador pode juntar vários poços do mesmo ponto, ver WELL_MERGE_GRID) —
-// é o que applyWellFilters usa pra decidir mostrar/esconder cada um. Marco
-// de roadmap sem poço da ANP por trás (info null) não entra nem em sits
-// nem em cats: não tem o que filtrar, então nunca é ele quem esconde o
-// marcador (mesmo espírito do ano sem data — ver applyWellFilters).
+// é o que applyWellFilters usa pra decidir mostrar/esconder cada um —, as
+// entries originais (entries, nunca reordenadas — ver reorderEntriesByFilter)
+// e qual delas está sendo exibida agora (primary, ver setMarkerContent).
+// Marco de roadmap sem poço da ANP por trás (info null) não entra nem em
+// sits nem em cats: não tem o que filtrar, então nunca é ele quem esconde
+// o marcador (mesmo espírito do ano sem data — ver applyWellFilters).
 const wellMarkerRegistry = [];
-function registerWellMarker(marker, targetLayer, year, sits, cats) {
-  wellMarkerRegistry.push({ marker, targetLayer, year, sits, cats });
+function registerWellMarker(marker, targetLayer, color, entries, year, sits, cats) {
+  wellMarkerRegistry.push({ marker, targetLayer, color, entries, primary: entries[0], year, sits, cats });
 }
 
 // Ano do contrato de cada projeto, por id — calculado uma vez em init()
@@ -445,23 +447,38 @@ function wellPopupHTML(label, w, color, others) {
   </div>`;
 }
 
-function addWellMarker(targetLayer, latlng, color, entries) {
+// Ícone + tooltip + popup a partir da entrada "primária" (entries[0]) —
+// extraído de addWellMarker pra ser reaproveitado também quando o filtro
+// de Situação/Categoria muda (ver reorderEntriesByFilter em
+// applyWellFilters): sem isso, um marcador mesclado que continuasse
+// visível só por causa de um poço não-abandonado (ver sameWellhead) ficava
+// com CARA de abandonado — ícone e popup do poço que o filtro tirou, que é
+// quem entrou primeiro na lista — mesmo depois do usuário desmarcar
+// "abandonado" no painel. Marca de novo o ícone/tooltip/popup do zero
+// sempre que a entrada primária muda, não só na criação.
+function setMarkerContent(marker, color, entries) {
   const first = entries[0];
   const anc = !!(first.info && first.info.anc);
-  const marker = L.marker(latlng, { icon: wellDivIcon(color, wellCategory(first.info), anc, wellInjectionType(first.info)), zIndexOffset: 500 });
+  marker.setIcon(wellDivIcon(color, wellCategory(first.info), anc, wellInjectionType(first.info)));
   const when = first.date ? formatBR(first.date) : '';
   const extra = entries.length > 1 ? `<br>+ ${entries.length - 1} poço(s) no mesmo ponto` : '';
   const ancNote = anc ? '<br>Área não concedida (AnC)' : '';
-  marker.bindTooltip(
+  marker.setTooltipContent(
     `${escapeHtml(first.label)}${when ? '<br>' + when : ''}${first.approx ? ' (aprox.)' : ''}${extra}${ancNote}`,
-    { direction: 'top', offset: [0, -6], className: 'map-well-tooltip' },
   );
+  marker.unbindPopup();
   if (first.info) marker.bindPopup(wellPopupHTML(first.label, first.info, color, entries.slice(1)));
+}
+
+function addWellMarker(targetLayer, latlng, color, entries) {
+  const marker = L.marker(latlng, { zIndexOffset: 500 });
+  marker.bindTooltip('', { direction: 'top', offset: [0, -6], className: 'map-well-tooltip' });
+  setMarkerContent(marker, color, entries);
   targetLayer.addLayer(marker);
   const years = entries.map((e) => yearOf(e.date)).filter((y) => y != null);
   const infos = entries.map((e) => e.info).filter(Boolean);
   registerWellMarker(
-    marker, targetLayer, years.length ? Math.min(...years) : null,
+    marker, targetLayer, color, entries, years.length ? Math.min(...years) : null,
     infos.map(normSit), infos.map(normCat),
   );
 }
@@ -828,13 +845,38 @@ function applyProjectYearFilter() {
   }
 }
 
+function passesWellFilters(info) {
+  if (!info) return true;
+  return !situacaoFilterExcluded.has(normSit(info)) && !categoriaFilterExcluded.has(normCat(info));
+}
+
+// Poço mesclado no mesmo ponto (ver sameWellhead) pode ter uma entrada que
+// passa no filtro atual e outra que não — bota a que passa primeiro, sem
+// tirar a outra da lista (ela continua em "Mesmo ponto" no popup, só não é
+// mais quem dá a cara do marcador). Sempre a partir de entries original
+// (nunca do resultado de uma reordenação anterior — ver o campo `entries`
+// em registerWellMarker), pra não "grudar" numa ordem só porque um filtro
+// mais restritivo passou por ali antes. Se nenhuma entrada passa nas duas
+// (SITUACAO e CATEGORIA podem aprovar entradas DIFERENTES — ver sitOk/catOk
+// abaixo — sem nenhuma aprovar as duas ao mesmo tempo, caso raro) ou se
+// todas passam, mantém a ordem original.
+function reorderEntriesByFilter(entries) {
+  const passing = entries.filter((e) => passesWellFilters(e.info));
+  if (!passing.length || passing.length === entries.length) return entries;
+  return [...passing, ...entries.filter((e) => !passesWellFilters(e.info))];
+}
+
 // Esconde poço pelos três filtros juntos — ano (slider "Mostrar até o
 // ano"), SITUACAO e CATEGORIA (chips do painel, ver renderWellFilterSection)
 // — cada um só esconde o que sabe classificar: sem ano conhecido, sem
 // poço real por trás (sits/cats vazio, ver registerWellMarker), sempre
 // aparece; com poço(s) real(is), basta UM dos que o marcador agrupa passar
 // no filtro pra ele continuar visível (mesclar não deveria esconder um
-// poço que sozinho apareceria — ver WELL_MERGE_GRID).
+// poço que sozinho apareceria — ver WELL_MERGE_GRID). Visível não é o
+// bastante, porém: reordena a exibição pra mostrar uma entrada que passa
+// (ver reorderEntriesByFilter) — senão o marcador ficava vivo mas com
+// ícone/popup de um poço que o filtro tirou, parecendo que o filtro não
+// funcionou.
 function applyWellFilters() {
   for (const entry of wellMarkerRegistry) {
     const yearOk = yearFilterValue == null || entry.year == null || entry.year <= yearFilterValue;
@@ -843,6 +885,13 @@ function applyWellFilters() {
     const visible = yearOk && sitOk && catOk;
     if (visible && !entry.targetLayer.hasLayer(entry.marker)) entry.targetLayer.addLayer(entry.marker);
     else if (!visible && entry.targetLayer.hasLayer(entry.marker)) entry.targetLayer.removeLayer(entry.marker);
+    if (visible) {
+      const reordered = reorderEntriesByFilter(entry.entries);
+      if (reordered[0] !== entry.primary) {
+        entry.primary = reordered[0];
+        setMarkerContent(entry.marker, entry.color, reordered);
+      }
+    }
   }
   updateProjectLabels();
 }
