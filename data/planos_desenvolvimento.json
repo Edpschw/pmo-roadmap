@@ -24,6 +24,30 @@
     "volumes": { "dataRef": "BAR 2020 (31/12/2020)", "oleoInSituMMbbl": 4044, "gasInSituMMm3": 213458, "oleoAcumMMbbl": 0.05, "gasAcumMMm3": 2.72 },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sumario-executivo-bacalhau.pdf"
   },
+  "BACALHAU": {
+    "titulo": "Bacalhau e Bacalhau Norte (AIP) 2021",
+    "resolucao": "RD 163/2021",
+    "contrato": "48610.003883/2000 (CSS) + 48610.012964/2017-03 (CPP)",
+    "participacao": [
+      { "empresa": "Equinor Brasil Energia Ltda.", "pct": 40 },
+      { "empresa": "ExxonMobil Exploração Brasil Ltda.", "pct": 40 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 20 }
+    ],
+    "situacao": "Em desenvolvimento",
+    "descoberta": "2012-03-19",
+    "descobertaObs": "poço 4-BRSA-971B-SPS, bloco BM-S-8",
+    "comercialidade": "2019-12-26",
+    "inicioProducao": "Previsão 01/07/2024 (PD aprovado)",
+    "previsaoTermino": "2053 (vinculado ao CPP Norte de Carcará)",
+    "laminaDagua": "2.050 m",
+    "areaKm2": 475,
+    "areaObs": "Jazida compartilhada — 48% Bacalhau / 52% Bacalhau Norte",
+    "sistemaResumo": "FPSO (em projeto), 220.000 bbl/d líquido, 15.000 Mm³/d gás; Fase 1: transferência tandem para navios-tanque com posicionamento dinâmico",
+    "pocos": { "dataRef": "2021", "abandonados": 5, "produtores": 11, "injetores": 8, "obs": "5 abandonados (2 permanentes + 3 temporários) são os poços atuais na data; 11 produtores + 4 injetores de gás + 4 injetores de água são previstos no projeto completo" },
+    "geologiaResumo": "Dois reservatórios da Fm. Barra Velha (Aptiano) — zona superior carbonática e zona inferior rica em sílica com vugs/fraturas; óleo 32° API, porosidade 13%, permeabilidade 100 mD",
+    "volumes": { "dataRef": "BAR 2020 (31/12/2020)", "oleoInSituMMbbl": 4044, "gasInSituMMm3": 213458, "oleoAcumMMbbl": 0.05, "gasAcumMMm3": 2.72 },
+    "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sumario-executivo-bacalhau.pdf"
+  },
   "Búzios": {
     "titulo": "Búzios 2016",
     "resolucao": "RD 832 de 18/02/2016 — Resolução nº 093/2016",

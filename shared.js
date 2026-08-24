@@ -457,6 +457,18 @@ function seedState() {
           m('FPSO Gato do Mato (previsto)', '2029-01-01', false, 'fpso', true),
         ]),
       ]),
+      // Norte de Carcará (CPP/Partilha, este projeto) é só a metade norte
+      // da jazida — "Bacalhau Norte". A metade sul ("Bacalhau" propriamente
+      // dito) é Concessão (contrato 48610.003883/2000, Rodada 2, anterior
+      // e separado do CPP) e não é deste contrato — ver campo de contexto
+      // "BACALHAU" no mapa, colorido igual a este por citar o mesmo PD
+      // (jazida compartilhada). contratos.geojson tinha os dois lados
+      // fundidos num MultiPolygon só sob "Norte de Carcará" (erro:
+      // Bacalhau nunca foi parte do bloco/contrato de Partilha) — corrigido
+      // junto com a poligonal (ver scripts/build_geojson.py) e a base de
+      // poços (17 dos 22 poços do bloco fundido eram na verdade de
+      // Bacalhau/Concessão, não deste contrato — ver scripts/build_pocos.py
+      // e data/pocos.json).
       proj('Norte de Carcará', PALETTE[5], 'producao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2017-10-27', true, 'contract'),
@@ -465,16 +477,10 @@ function seedState() {
           m('Comercialidade', '2019-12-26', true, 'contract'),
         ]),
         ws('Poços Perfurados', [
-          m('2 poços perfurados em 2011', '2011-12-31', true, 'well'),
-          m('1 poço perfurado em 2012', '2012-12-31', true, 'well'),
-          m('1 poço perfurado em 2013', '2013-12-31', true, 'well'),
-          m('2 poços perfurados em 2015', '2015-12-31', true, 'well'),
           m('1 poço perfurado em 2018', '2018-12-31', true, 'well'),
           m('2 poços perfurados em 2019', '2019-12-31', true, 'well'),
-          m('3 poços perfurados em 2023', '2023-12-31', true, 'well'),
-          m('4 poços perfurados em 2024', '2024-12-31', true, 'well'),
-          m('4 poços perfurados em 2025', '2025-12-31', true, 'well'),
-          m('2 poços perfurados em 2026 (até agora)', '2026-07-07', true, 'well'),
+          m('1 poço perfurado em 2024', '2024-12-31', true, 'well'),
+          m('1 poço perfurado em 2025', '2025-12-31', true, 'well'),
         ]),
         ws('Primeiro Óleo por FPSO', [
           m('Bacalhau', '2025-10-16', true, 'fpso'),
@@ -886,7 +892,13 @@ function seedState() {
 // erro, é o mesmo "lead time negativo" documentado em analises.js
 // (leilaoYearOf/computeProjectRow): esses campos já produziam sob o
 // regime anterior antes do leilão do contrato de partilha rastreado aqui.
-const SEED_VERSION = 9;
+// v10: corrige Norte de Carcará — a poligonal e a base de poços tinham
+// Bacalhau (Concessão) fundido com Bacalhau Norte (o CPP/Partilha
+// realmente rastreado aqui), como se fossem o mesmo contrato (ver nota no
+// seed, junto de "Norte de Carcará"). "Poços Perfurados" recontado só com
+// os 5 poços de Bacalhau Norte (RENAMED_MILESTONES remove a lista antiga,
+// fundida com os poços de Bacalhau).
+const SEED_VERSION = 10;
 
 // Nomes antigos de marco que migraram para um nome novo em seedState() —
 // sem isso, o merge abaixo (que só adiciona, nunca substitui) deixaria o
@@ -904,6 +916,15 @@ const RENAMED_MILESTONES = {
   'Uirapuru': ['Poço pioneiro (descoberta)'],
   'Dois Irmãos': ['Poço pioneiro (poço seco, navio Ocean Courage) — bloco devolvido'],
   'Água Marinha': ['Início da perfuração (poço 1-BRSA-1401D/DA-RJS) — resultado ainda não divulgado'],
+  // Recontagem de "Poços Perfurados" depois de separar Bacalhau (Concessão,
+  // fora do contrato) de Bacalhau Norte (ver nota no seed) — a lista antiga
+  // incluía poços das duas metades fundidas.
+  'Norte de Carcará': [
+    '2 poços perfurados em 2011', '1 poço perfurado em 2012', '1 poço perfurado em 2013',
+    '2 poços perfurados em 2015', '1 poço perfurado em 2018', '2 poços perfurados em 2019',
+    '3 poços perfurados em 2023', '4 poços perfurados em 2024', '4 poços perfurados em 2025',
+    '2 poços perfurados em 2026 (até agora)',
+  ],
 };
 
 // Nome de workstream inteira que saiu de um projeto em seedState() — sem

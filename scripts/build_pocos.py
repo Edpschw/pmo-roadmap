@@ -34,7 +34,10 @@ PLAN = {
     # estado, não de sudeste) — é justamente o tipo de colisão que o filtro
     # por bacia abaixo evita.
     'Libra': {'campos': ['MRO', 'AnC6'], 'blocos': ['LIBRA']},
-    'Norte de Carcará': {'campos': ['BAC', 'BACN']},
+    # Só BACN (Bacalhau Norte) — BAC (Bacalhau) é Concessão, fora deste CPP
+    # (ver mesma nota em PLAN de build_geojson.py); entra em CAMPOS_CONTEXTO
+    # abaixo, como campo de contexto próprio.
+    'Norte de Carcará': {'campos': ['BACN']},
     'Entorno de Sapinhoá': {'campos': ['SWSH', 'NWSH', 'NESH']},
     'Búzios': {'campos': ['BUZ', 'BUZE']},
     'Itapu': {'campos': ['ITP', 'ITPE']},
@@ -80,6 +83,10 @@ CAMPOS_CONTEXTO = [
     # pré-sal, abaixo do mínimo de 3 usado nos outros) — inclusão manual,
     # pedida por nome, igual à exceção do Norte de Berbigão.
     'CAXAREU',
+    # Bacalhau: Concessão, fora do CPP de Norte de Carcará (ver PLAN acima)
+    # — mesmo padrão de Oeste de Atapu/Sapinhoá, campo de contexto que cita
+    # o mesmo PD (jazida compartilhada) de um contrato rastreado.
+    'BACALHAU',
 ]
 
 # Nomes alternativos de CAMPO que devem contar como o mesmo campo de

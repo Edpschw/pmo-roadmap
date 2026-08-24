@@ -7,7 +7,12 @@ campos = shapefile.Reader('campos_producao/CAMPOS_PRODUCAO_SIRGASPolygon.shp', e
 # project name -> (source reader, key field, [key values]) source: 'bloco' | 'campo'
 PLAN = {
     'Libra': ('bloco', 'COD_BLOCO', ['LIBRA']),
-    'Norte de Carcará': ('campo', 'SIG_CAMPO', ['BAC', 'BACN']),
+    # Só BACN (Bacalhau Norte) — BAC (Bacalhau) é Concessão (contrato
+    # 48610.003883/2000, Rodada 2), não faz parte deste CPP/Partilha, apesar
+    # de citar o mesmo PD (jazida compartilhada). Ver 'BAC' em
+    # EXTRA_PRESALT_FIELDS abaixo, tratado como campo de contexto (mesmo
+    # padrão de OATP/Oeste de Atapu e SPH/Sapinhoá).
+    'Norte de Carcará': ('campo', 'SIG_CAMPO', ['BACN']),
     'Entorno de Sapinhoá': ('campo', 'SIG_CAMPO', ['SWSH', 'NWSH', 'NESH']),
     'Alto de Cabo Frio Central': ('bloco', 'COD_BLOCO', ['ALTO_CF_CE']),
     'Uirapuru': ('bloco', 'COD_BLOCO', ['BLC_UIRAPR']),
@@ -173,6 +178,10 @@ for s in summary:
 # fraca que o resto da lista, mas suficiente pra valer o contexto.
 EXTRA_PRESALT_FIELDS = [
     'LPA', 'TUP', 'STUP', 'BBG', 'NBBG', 'SBBG', 'OATP', 'SPH', 'MRO', 'JUB', 'RMT', 'WAH', 'CXR',
+    # BAC (Bacalhau): Concessão, ver nota em PLAN acima — mesmo padrão de
+    # OATP/SPH (campo de contexto do mesmo PD/jazida de um contrato
+    # rastreado, mas de regime/contrato diferente).
+    'BAC',
 ]
 
 extra_idxs = records_matching(campos, 'SIG_CAMPO', EXTRA_PRESALT_FIELDS)
