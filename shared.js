@@ -399,6 +399,8 @@ function seedState() {
         ws('Marcos do Contrato', [
           m('Leilão', '2013-10-21', true, 'contract'),
           m('Assinatura', '2013-12-02', true, 'contract'),
+          m('Comercialidade', '2017-11-30', true, 'contract'),
+          m('PD aprovado (RD 0758/2021)', '2021-12-09', true, 'contract'),
         ]),
         ws('Poços Perfurados', [
           m('2 poços perfurados em 2010', '2010-12-31', true, 'well'),
@@ -460,6 +462,7 @@ function seedState() {
           m('Leilão', '2017-10-27', true, 'contract'),
           m('Assinatura', '2018-01-31', true, 'contract'),
           m('FID', '2021-06-01', true, 'contract', true),
+          m('Comercialidade', '2019-12-26', true, 'contract'),
         ]),
         ws('Poços Perfurados', [
           m('2 poços perfurados em 2011', '2011-12-31', true, 'well'),
@@ -481,6 +484,8 @@ function seedState() {
         ws('Marcos do Contrato', [
           m('Leilão', '2017-10-27', true, 'contract'),
           m('Assinatura (unitização)', '2018-01-31', true, 'contract'),
+          m('Comercialidade', '2011-12-29', true, 'contract'),
+          m('PD aprovado (RD 1.140/2024)', '2024-07-11', true, 'contract'),
         ]),
         ws('Poços Perfurados', [
           m('1 poço perfurado em 2021', '2021-12-31', true, 'well'),
@@ -625,6 +630,13 @@ function seedState() {
         ws('Marcos do Contrato', [
           m('Leilão', '2019-11-06', true, 'contract'),
           m('Assinatura', '2020-03-30', true, 'contract'),
+          // Comercialidade sob a Cessão Onerosa anterior, bem antes do
+          // leilão do CPP específico rastreado aqui — mesmo padrão de
+          // "lead time negativo" já documentado em analises.js (Búzios,
+          // Itapu, Sépia, Atapu e Entorno de Sapinhoá já produziam sob o
+          // regime anterior antes do leilão do CPP).
+          m('Comercialidade (Cessão Onerosa)', '2013-12-19', true, 'contract'),
+          m('PD aprovado (RD 832/2016)', '2016-02-18', true, 'contract'),
         ]),
         ws('Poços Perfurados', [
           m('1 poço perfurado em 2010', '2010-12-31', true, 'well'),
@@ -663,6 +675,10 @@ function seedState() {
         ws('Marcos do Contrato', [
           m('Leilão', '2019-11-06', true, 'contract'),
           m('Assinatura', '2020-03-30', true, 'contract'),
+          // Sem data de comercialidade no sumário do PD (só descoberta e
+          // resolução) — diferente dos outros campos de origem Cessão
+          // Onerosa deste seed, que trazem os dois.
+          m('PD aprovado (RD 885/2017)', '2017-05-17', true, 'contract'),
         ]),
         ws('Poços Perfurados', [
           m('1 poço perfurado em 2013', '2013-12-31', true, 'well'),
@@ -682,6 +698,7 @@ function seedState() {
           m('Leilão', '2021-12-17', true, 'contract'),
           m('Assinatura', '2022-04-27', true, 'contract'),
           m('FID Sépia-2', '2024-05-27', true, 'contract'),
+          m('Comercialidade (Cessão Onerosa)', '2014-09-03', true, 'contract'),
         ]),
         ws('Poços Perfurados', [
           m('1 poço perfurado em 2011', '2011-12-31', true, 'well'),
@@ -706,6 +723,8 @@ function seedState() {
           m('Leilão', '2021-12-17', true, 'contract'),
           m('Assinatura', '2022-04-27', true, 'contract'),
           m('FID Atapu-2', '2024-05-27', true, 'contract'),
+          m('Comercialidade (Cessão Onerosa)', '2014-12-29', true, 'contract'),
+          m('PD aprovado (RD 355/2024)', '2024-05-29', true, 'contract'),
         ]),
         ws('Poços Perfurados', [
           m('2 poços perfurados em 2013', '2013-12-31', true, 'well'),
@@ -854,7 +873,20 @@ function seedState() {
 // "Mero" não ganha o projeto novo automaticamente (mergeSeedUpdates só
 // atualiza projeto que o usuário já tem — ver nota ali); só estado novo
 // (sem localStorage prévio) parte de seedState() já com os dois.
-const SEED_VERSION = 8;
+// v9: datas do Plano de Desenvolvimento (Comercialidade e/ou PD aprovado,
+// ver data/planos_desenvolvimento.json) na workstream "Marcos do
+// Contrato" dos 7 projetos com PD publicado (Mero, Norte de Carcará,
+// Entorno de Sapinhoá, Búzios, Itapu, Sépia, Atapu) — só quando a data
+// exata existe na fonte (comercialidade sempre vem com dia; a data de
+// aprovação do PD só quando a resolução citada no sumário traz o dia,
+// nem toda traz — Norte de Carcará e Sépia ficam sem "PD aprovado", Itapu
+// fica sem "Comercialidade": o sumário de cada uma não publicou a data
+// que falta). "Comercialidade" já sob a Cessão Onerosa (Búzios, Sépia,
+// Atapu) fica ANTES do Leilão do CPP atual na mesma workstream — não é
+// erro, é o mesmo "lead time negativo" documentado em analises.js
+// (leilaoYearOf/computeProjectRow): esses campos já produziam sob o
+// regime anterior antes do leilão do contrato de partilha rastreado aqui.
+const SEED_VERSION = 9;
 
 // Nomes antigos de marco que migraram para um nome novo em seedState() —
 // sem isso, o merge abaixo (que só adiciona, nunca substitui) deixaria o
