@@ -767,7 +767,24 @@ async function init() {
       const layer = L.geoJSON(feat, { style });
       layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(props, linkedProject), { maxWidth: 320 }));
       layer.addTo(presaltFieldsLayer);
-      if (linkedProject) linkedPresaltLayers.push({ layer, project: linkedProject });
+      if (linkedProject) {
+        // Rótulo com o nome do CAMPO (não do contrato — Libra já tem o
+        // seu próprio, da lista de state.projects abaixo) sobre o centro
+        // da poligonal de Mero, mesmo padrão do rótulo de projeto (só no
+        // zoom em que os poços ainda não apareceram — ver
+        // updateProjectLabels).
+        const labelMarker = L.marker(layer.getBounds().getCenter(), {
+          icon: L.divIcon({
+            className: 'map-project-label-icon',
+            html: `<span class="map-project-label">${escapeHtml(props.nome)}</span>`,
+            iconSize: null,
+          }),
+          interactive: false,
+          keyboard: false,
+          zIndexOffset: -100,
+        });
+        linkedPresaltLayers.push({ layer, project: linkedProject, labelMarker });
+      }
       registerWellSet(props.nome, null, layer.getBounds(), color, wellPresaltLayer);
     }
     // Precisa estar pronto antes do laço de state.projects logo abaixo —
@@ -1055,6 +1072,12 @@ function updateProjectLabels() {
     const groupId = groupLayers[project.group] ? project.group : GROUP_FALLBACK;
     const target = groupLayers[groupId];
     showOrHide(marker, zoomOk && groupVisible[groupId] && target.hasLayer(layer));
+  }
+  // Campo de contexto ligado a um contrato (ver linkedPresaltLayers) —
+  // mesmo corte de zoom, mas segue a visibilidade da camada de campos de
+  // contexto (presaltFieldsLayer), não a de grupo de projeto.
+  for (const entry of linkedPresaltLayers) {
+    if (entry.labelMarker) showOrHide(entry.labelMarker, zoomOk && map.hasLayer(presaltFieldsLayer));
   }
 }
 
