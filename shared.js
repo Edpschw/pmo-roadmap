@@ -466,9 +466,13 @@ function seedState() {
       // fundidos num MultiPolygon só sob "Norte de Carcará" (erro:
       // Bacalhau nunca foi parte do bloco/contrato de Partilha) — corrigido
       // junto com a poligonal (ver scripts/build_geojson.py) e a base de
-      // poços (17 dos 22 poços do bloco fundido eram na verdade de
-      // Bacalhau/Concessão, não deste contrato — ver scripts/build_pocos.py
-      // e data/pocos.json).
+      // poços (data/pocos.json separa os 22 poços do bloco fundido entre
+      // os dois: só 5 são de Bacalhau Norte, 17 de Bacalhau).
+      // "Poços Perfurados" abaixo, ao contrário do mapa, conta os 22 juntos
+      // de propósito — pedido explícito: no roadmap a perfuração da jazida
+      // inteira (as duas metades, mesmo operador/projeto de
+      // desenvolvimento) é o que importa acompanhar, não só a metade sob
+      // contrato de partilha.
       proj('Norte de Carcará', PALETTE[5], 'producao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2017-10-27', true, 'contract'),
@@ -477,10 +481,16 @@ function seedState() {
           m('Comercialidade', '2019-12-26', true, 'contract'),
         ]),
         ws('Poços Perfurados', [
+          m('2 poços perfurados em 2011', '2011-12-31', true, 'well'),
+          m('1 poço perfurado em 2012', '2012-12-31', true, 'well'),
+          m('1 poço perfurado em 2013', '2013-12-31', true, 'well'),
+          m('2 poços perfurados em 2015', '2015-12-31', true, 'well'),
           m('1 poço perfurado em 2018', '2018-12-31', true, 'well'),
           m('2 poços perfurados em 2019', '2019-12-31', true, 'well'),
-          m('1 poço perfurado em 2024', '2024-12-31', true, 'well'),
-          m('1 poço perfurado em 2025', '2025-12-31', true, 'well'),
+          m('3 poços perfurados em 2023', '2023-12-31', true, 'well'),
+          m('4 poços perfurados em 2024', '2024-12-31', true, 'well'),
+          m('4 poços perfurados em 2025', '2025-12-31', true, 'well'),
+          m('2 poços perfurados em 2026 (até agora)', '2026-07-07', true, 'well'),
         ]),
         ws('Primeiro Óleo por FPSO', [
           m('Bacalhau', '2025-10-16', true, 'fpso'),
@@ -898,7 +908,12 @@ function seedState() {
 // seed, junto de "Norte de Carcará"). "Poços Perfurados" recontado só com
 // os 5 poços de Bacalhau Norte (RENAMED_MILESTONES remove a lista antiga,
 // fundida com os poços de Bacalhau).
-const SEED_VERSION = 10;
+// v11: "Poços Perfurados" de Norte de Carcará volta a contar Bacalhau
+// Norte + Bacalhau juntos (22 poços) — pedido explícito: no roadmap a
+// perfuração da jazida inteira é o que importa acompanhar, mesmo com
+// Bacalhau fora do contrato de partilha (mapa e análises continuam
+// separando os dois, só o roadmap soma).
+const SEED_VERSION = 11;
 
 // Nomes antigos de marco que migraram para um nome novo em seedState() —
 // sem isso, o merge abaixo (que só adiciona, nunca substitui) deixaria o
@@ -916,15 +931,14 @@ const RENAMED_MILESTONES = {
   'Uirapuru': ['Poço pioneiro (descoberta)'],
   'Dois Irmãos': ['Poço pioneiro (poço seco, navio Ocean Courage) — bloco devolvido'],
   'Água Marinha': ['Início da perfuração (poço 1-BRSA-1401D/DA-RJS) — resultado ainda não divulgado'],
-  // Recontagem de "Poços Perfurados" depois de separar Bacalhau (Concessão,
-  // fora do contrato) de Bacalhau Norte (ver nota no seed) — a lista antiga
-  // incluía poços das duas metades fundidas.
-  'Norte de Carcará': [
-    '2 poços perfurados em 2011', '1 poço perfurado em 2012', '1 poço perfurado em 2013',
-    '2 poços perfurados em 2015', '1 poço perfurado em 2018', '2 poços perfurados em 2019',
-    '3 poços perfurados em 2023', '4 poços perfurados em 2024', '4 poços perfurados em 2025',
-    '2 poços perfurados em 2026 (até agora)',
-  ],
+  // v10 recontou "Poços Perfurados" só com os poços de Bacalhau Norte
+  // (separando de Bacalhau/Concessão, ver nota no seed) — v11 volta a
+  // contar os dois juntos (pedido explícito: no roadmap a perfuração da
+  // jazida inteira é o que importa, ver nota no seed). Remove só os 2
+  // nomes que só existiram em v10, pra quem já tinha migrado pra lá nesse
+  // meio-tempo não ficar com os dois ao mesmo tempo (o resto da lista
+  // v11 é idêntico ao de antes do v10, então não precisa de remoção).
+  'Norte de Carcará': ['1 poço perfurado em 2024', '1 poço perfurado em 2025'],
 };
 
 // Nome de workstream inteira que saiu de um projeto em seedState() — sem
