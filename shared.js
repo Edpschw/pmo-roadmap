@@ -221,6 +221,61 @@ function escapeHtml(str) {
   }[c]));
 }
 
+/* ------------------- Campo de contexto ligado a um contrato -------------- */
+// Compartilhada entre analises.js, mapa.js e pocos.js — as três telas
+// precisam da mesma resposta pra "esse campo de contexto é, na verdade, o
+// mesmo contrato de partilha de um projeto rastreado, só visto do lado do
+// campo?" (hoje só MERO, dentro do bloco de Libra — contrato
+// 48610.011150/2013-10, MRO-PP, idêntico no PD dos dois). Ter isso nas
+// três em vez de uma cópia em cada evita que uma fique com uma regra
+// diferente das outras.
+//
+// "Mesmo contrato" é mais estreito que "mesma string pd.contrato": essa
+// string às vezes é composta, citando VÁRIOS números de contrato/regime
+// pra áreas diferentes descritas junto num sumário só — Atapu ("Cessão
+// Onerosa X + Partilha Y — Oeste de Atapu: Concessão Z") e Sapinhoá/
+// Entorno de Sapinhoá são exemplos, e bateriam string-a-string na
+// primeira tentativa sem serem o mesmo contrato, só documentados juntos.
+// E o INVERSO também acontece: '48610.012913/2010-05' sozinha é a Cessão
+// Onerosa original de 2010, citada como origem histórica por TRÊS
+// contratos de partilha diferentes hoje (Búzios, Sépia, e dentro da
+// string composta de Atapu) — mesma raiz, contratos diferentes agora. Só
+// conta como "mesmo contrato" quando a string cita UM SÓ número
+// (contractNumbersIn) E esse número não aparece em nenhum OUTRO contrato
+// rastreado (senão a ligação seria ambígua) — critério validado contra a
+// base inteira antes de implementar: isola exatamente Mero/Libra, mais
+// nenhum outro par.
+function contractNumbersIn(contrato) {
+  return contrato ? [...new Set(contrato.match(/48610\.\d+/g) || [])] : [];
+}
+
+// Mapa contrato-string -> projeto, só com as strings de contrato único
+// (ver contractNumbersIn) usadas por exatamente um projeto rastreado.
+function buildContractByContrato(projects, pdData) {
+  const useCount = new Map();
+  for (const p of projects) {
+    const pd = pdData[p.name];
+    if (pd && pd.contrato) useCount.set(pd.contrato, (useCount.get(pd.contrato) || 0) + 1);
+  }
+  const map = new Map();
+  for (const p of projects) {
+    const pd = pdData[p.name];
+    if (pd && pd.contrato && contractNumbersIn(pd.contrato).length === 1 && useCount.get(pd.contrato) === 1) {
+      map.set(pd.contrato, p);
+    }
+  }
+  return map;
+}
+
+// pd aqui é o PD do CAMPO DE CONTEXTO (não do projeto) — devolve o
+// projeto rastreado dono do mesmo contrato, ou null se o campo não tem PD,
+// não cita contrato, cita mais de um número, ou não bate com nenhum
+// projeto em contractByContrato.
+function findLinkedContract(pd, contractByContrato) {
+  if (!pd || !pd.contrato || contractNumbersIn(pd.contrato).length !== 1) return null;
+  return contractByContrato.get(pd.contrato) || null;
+}
+
 /* ------------------------------- Seed data ------------------------------ */
 
 // Contratos reais de Partilha de Produção (CPP) do polígono do pré-sal,

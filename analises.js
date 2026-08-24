@@ -784,9 +784,16 @@ function renderWellsPerFpsoChart(container, projectRows) {
 // Nome com uma bolinha da cor da entidade — cor própria pra contrato
 // rastreado, CONTEXT_FIELD_COLOR (cinza) pra campo de contexto ou poço
 // sem campo nomeado. É o "colorindo só quem tem contrato" pedido, num só
-// lugar reaproveitado pela tabela de produção e pela de exploração.
+// lugar reaproveitado pela tabela de produção e pela de exploração. Campo
+// de contexto ligado a um contrato rastreado (linkedContractName — hoje só
+// MERO/Libra, ver findLinkedContract) herda a cor dele e ganha uma nota
+// deixando a ligação explícita, já que o nome sozinho ("MERO") não deixa
+// óbvio que é o mesmo contrato de "Libra".
 function nameCellHTML(r) {
-  return `<div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span>${escapeHtml(r.name)}</div>`;
+  const note = r.linkedContractName
+    ? ` <span class="proj-name-note">(contrato de ${escapeHtml(r.linkedContractName)})</span>`
+    : '';
+  return `<div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span>${escapeHtml(r.name)}${note}</div>`;
 }
 
 /* ------------------------ Campos de contexto (não-CPP) --------------------- */
@@ -798,18 +805,24 @@ function nameCellHTML(r) {
 // gráfico dos contratos de produção só com uma cor diferente, em vez de
 // somados nos KPIs do topo: somar contaria poço/volume em dobro.
 
-function computeFieldRow(feature) {
+// contractNumbersIn/findLinkedContract (campo de contexto que é, na
+// verdade, o mesmo contrato de um projeto rastreado — hoje só MERO/Libra)
+// agora vivem em shared.js, compartilhadas com mapa.js e pocos.js.
+
+function computeFieldRow(feature, contractByContrato) {
   const props = feature.properties;
   const name = props.nome;
   const pd = pdData[name];
   const volumes = pd && pd.volumes ? pd.volumes : null;
+  const linkedContract = findLinkedContract(pd, contractByContrato);
   // Campo de contexto só aparece na seção "Campos em produção" — nunca na
   // de exploração — então já sai contado sem abandonado, igual aos
   // contratos rastreados dessa seção (ver withoutAbandonedWells).
   return withoutAbandonedWells({
     name,
-    color: CONTEXT_FIELD_COLOR,
+    color: linkedContract ? linkedContract.color : CONTEXT_FIELD_COLOR,
     isContract: false,
+    linkedContractName: linkedContract ? linkedContract.name : null,
     operador: props.operador || null,
     bacia: props.bacia || null,
     regime: regimeOf(props.rodada),
@@ -879,8 +892,14 @@ function renderProducaoTable(container, contractRows, fieldRows) {
   table.appendChild(thead);
 
   const tbody = document.createElement('tbody');
-  const contracts = [...contractRows].sort((a, b) => b.wellsTotal - a.wellsTotal);
-  const named = fieldRows.filter((r) => !r.isOutros).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  // Campo de contexto ligado a um contrato rastreado (ver
+  // findLinkedContract — hoje só MERO, mesmo contrato de Libra) entra
+  // agrupado com os contratos, não com os campos de Concessão/Cessão
+  // Onerosa — é o próprio contrato de partilha, só visto do lado do campo.
+  const linked = fieldRows.filter((r) => r.linkedContractName);
+  const unlinked = fieldRows.filter((r) => !r.linkedContractName && !r.isOutros);
+  const contracts = [...contractRows, ...linked].sort((a, b) => b.wellsTotal - a.wellsTotal);
+  const named = unlinked.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   const outros = fieldRows.filter((r) => r.isOutros);
   const groups = [
     ['Contratos rastreados (Partilha)', contracts],
@@ -1043,7 +1062,8 @@ async function init() {
 
   const rows = state.projects.map(computeProjectRow);
   const agg = computeAggregates(rows);
-  const fieldRows = presalGeojson ? presalGeojson.features.map(computeFieldRow) : [];
+  const contractByContrato = buildContractByContrato(state.projects, pdData);
+  const fieldRows = presalGeojson ? presalGeojson.features.map((f) => computeFieldRow(f, contractByContrato)) : [];
   if (outrosPocos.length) fieldRows.push(computeOutrosRow(outrosPocos));
 
   wrapper.innerHTML = '';

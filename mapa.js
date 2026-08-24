@@ -128,6 +128,13 @@ const featureByProject = {};
 // showOrHide funciona nele igual funciona nos outros.
 const projectLabelByProjectId = {};
 
+// Poligonais de campo de contexto que citam o MESMO número de contrato
+// (pd.contrato) de um contrato rastreado — hoje só MERO/Libra, ver
+// findLinkedContract em analises.js e a nota em presaltFieldPopupHTML.
+// Guardado à parte (não em layerByProjectId, que é só pros 29 contratos)
+// pra setColorMode saber repintar também quando o modo de cor muda.
+const linkedPresaltLayers = [];
+
 function formatAnpDate(s) {
   return s ? s.replaceAll('-', '/') : '—';
 }
@@ -674,7 +681,7 @@ function addOutrosPocoMarker(targetLayer, w) {
   addWellMarker(targetLayer, w.c, OUTROS_POCOS_COLOR, [{ label: w.n, info: w, date: w.d, approx: false }]);
 }
 
-function presaltFieldPopupHTML(props) {
+function presaltFieldPopupHTML(props, linkedProject) {
   const rows = [
     ['Bacia', props.bacia || '—'],
     ['Operador', props.operador || '—'],
@@ -683,10 +690,14 @@ function presaltFieldPopupHTML(props) {
     ['Área', props.area_km2 ? Math.round(props.area_km2).toLocaleString('pt-BR') + ' km²' : '—'],
   ];
   const rowsHTML = rows.map(([k, v]) => `<tr><td class="k">${k}</td><td>${v}</td></tr>`).join('');
+  const color = linkedProject ? colorForProject(linkedProject) : '#9aa1ac';
+  const sourceNote = linkedProject
+    ? `Mesmo contrato de partilha de "${escapeHtml(linkedProject.name)}" — ${escapeHtml(props.nome)} é o campo/jazida dentro do bloco, não um contrato à parte. Fonte: ANP, Campos de Produção (SIRGAS 2000).`
+    : 'Campo de contexto (fora dos 29 contratos rastreados) — Fonte: ANP, Campos de Produção (SIRGAS 2000)';
   return `<div class="map-popup">
-    <h3 style="color:#9aa1ac">${escapeHtml(props.nome)}</h3>
+    <h3 style="color:${color}">${escapeHtml(props.nome)}</h3>
     <table>${rowsHTML}</table>
-    <p class="map-popup-source">Campo de contexto (fora dos 29 contratos rastreados) — Fonte: ANP, Campos de Produção (SIRGAS 2000)</p>
+    <p class="map-popup-source">${sourceNote}</p>
     ${pdSectionHTML(props.nome)}
   </div>`;
 }
@@ -728,14 +739,28 @@ async function init() {
     // Camada opcional — segue sem a seção de Plano de Desenvolvimento.
   }
 
+  // buildContractByContrato/findLinkedContract (campo de contexto que é,
+  // na verdade, o mesmo contrato de um projeto rastreado — hoje só
+  // MERO/Libra) vivem em shared.js, compartilhadas com analises.js e
+  // pocos.js.
+  const contractByContrato = buildContractByContrato(state.projects, pdData);
+
   try {
     const presRes = await fetch(PRESALT_FIELDS_URL);
     const presGeojson = await presRes.json();
     for (const feat of presGeojson.features) {
-      const layer = L.geoJSON(feat, { style: PRESALT_FIELD_STYLE });
-      layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(feat.properties), { maxWidth: 320 }));
+      const props = feat.properties;
+      const pd = pdData[props.nome];
+      const linkedProject = findLinkedContract(pd, contractByContrato);
+      const color = linkedProject ? colorForProject(linkedProject) : PRESALT_FIELD_STYLE.color;
+      const style = linkedProject
+        ? { color, weight: 1.5, fillColor: color, fillOpacity: 0.22, dashArray: '4 3' }
+        : PRESALT_FIELD_STYLE;
+      const layer = L.geoJSON(feat, { style });
+      layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(props, linkedProject), { maxWidth: 320 }));
       layer.addTo(presaltFieldsLayer);
-      registerWellSet(feat.properties.nome, null, layer.getBounds(), PRESALT_FIELD_STYLE.color, wellPresaltLayer);
+      if (linkedProject) linkedPresaltLayers.push({ layer, project: linkedProject });
+      registerWellSet(props.nome, null, layer.getBounds(), color, wellPresaltLayer);
     }
   } catch (e) {
     // Camada de contexto é opcional — segue sem ela se não carregar.
@@ -910,6 +935,13 @@ function setColorMode(mode) {
     layer.setStyle({ color: c, fillColor: c });
     const feat = featureByProject[project.name];
     if (feat) layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties), { autoPan: false, maxWidth: 320 }));
+  }
+  // Campo de contexto ligado a um contrato (ver linkedPresaltLayers) segue
+  // a cor do contrato em qualquer modo — sem isso, "Colorir por Status"
+  // repintava Libra mas deixava MERO parado na cor de Partilha original.
+  for (const { layer, project } of linkedPresaltLayers) {
+    const c = colorForProject(project);
+    layer.setStyle({ color: c, fillColor: c });
   }
   renderPanel();
 }

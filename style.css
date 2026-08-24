@@ -773,6 +773,7 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .analytics-table td.num, .analytics-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .analytics-table .proj-name-cell { display: flex; align-items: center; gap: 8px; }
 .analytics-table .proj-dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 9px; }
+.proj-name-note { font-size: 10.5px; color: var(--text-faint); font-weight: 400; }
 .analytics-table td.muted { color: var(--text-faint); }
 .analytics-table tr.muted td:not(.num) { color: var(--text-faint); font-style: italic; }
 .analytics-table .participacao-cell { max-width: 260px; white-space: normal; line-height: 1.4; font-size: 11px; }

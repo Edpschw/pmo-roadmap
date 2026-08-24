@@ -10,6 +10,7 @@
 
 const POCOS_URL = 'data/pocos.json';
 const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
+const PD_URL = 'data/planos_desenvolvimento.json';
 
 // Mesmo cinza neutro do resto do app pra campo sem contrato próprio (ver
 // CONTEXT_FIELD_COLOR em analises.js/mapa.js).
@@ -152,10 +153,12 @@ async function init() {
   const wrapper = document.getElementById('pocosWrapper');
   let pocosJson = null;
   let presalGeojson = null;
+  let pdData = null;
   try {
-    [pocosJson, presalGeojson] = await Promise.all([
+    [pocosJson, presalGeojson, pdData] = await Promise.all([
       fetch(POCOS_URL).then((r) => r.json()),
       fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
+      fetch(PD_URL).then((r) => r.json()),
     ]);
   } catch (err) {
     console.error('Falha ao carregar dados de poços', err);
@@ -165,6 +168,23 @@ async function init() {
 
   const pocosData = pocosJson.pocos || {};
   const outrosPocos = pocosJson.outros || [];
+
+  // buildContractByContrato/findLinkedContract (campo de contexto que é,
+  // na verdade, o mesmo contrato de um projeto rastreado — hoje só
+  // MERO/Libra) vivem em shared.js, compartilhadas com analises.js e
+  // mapa.js.
+  const contractByContrato = buildContractByContrato(state.projects, pdData || {});
+  const contextFeatures = presalGeojson ? presalGeojson.features : [];
+  const linkedFieldsByProjectName = new Map();
+  const linkedFieldNames = new Set();
+  for (const feat of contextFeatures) {
+    const props = feat.properties;
+    const linkedProject = findLinkedContract(pdData && pdData[props.nome], contractByContrato);
+    if (!linkedProject) continue;
+    if (!linkedFieldsByProjectName.has(linkedProject.name)) linkedFieldsByProjectName.set(linkedProject.name, []);
+    linkedFieldsByProjectName.get(linkedProject.name).push(props);
+    linkedFieldNames.add(props.nome);
+  }
 
   const content = document.createElement('div');
   content.className = 'pocos-content';
@@ -202,11 +222,22 @@ async function init() {
       const wells = pocosData[p.name] || [];
       nav.appendChild(buildNavPill(id, p.name, p.color));
       content.appendChild(buildFieldSection(id, p.name, p.color, GROUP_BADGES[p.group], wells));
+      // Campo de contexto do mesmo contrato de partilha (ver
+      // linkedFieldsByProjectName acima) entra logo depois do projeto,
+      // com a cor dele — hoje só MERO, logo após Libra.
+      for (const linkedProps of linkedFieldsByProjectName.get(p.name) || []) {
+        const lid = 'campo-' + slug(linkedProps.nome);
+        const lwells = pocosData[linkedProps.nome] || [];
+        const badge = `${regimeOf(linkedProps.rodada)} — contrato de ${p.name}`;
+        nav.appendChild(buildNavPill(lid, linkedProps.nome, p.color));
+        content.appendChild(buildFieldSection(lid, linkedProps.nome, p.color, badge, lwells));
+      }
     }
   }
 
-  const contextFields = (presalGeojson ? presalGeojson.features : [])
+  const contextFields = contextFeatures
     .map((f) => f.properties)
+    .filter((props) => !linkedFieldNames.has(props.nome))
     .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   for (const props of contextFields) {
     const id = 'campo-' + slug(props.nome);
