@@ -23,7 +23,7 @@ const GEOJSON_URL = 'data/contratos.geojson';
 // leitura do roadmap, mas no mapa é exatamente o que se quer ver.
 const POCOS_URL = 'data/pocos.json';
 // Camada de contexto: outros campos do polígono do pré-sal que não são um
-// dos 29 contratos rastreados no roadmap — só pra dar noção de onde eles
+// dos 30 projetos rastreados no roadmap — só pra dar noção de onde eles
 // ficam em relação aos que rastreamos. Ver comentário em cima de
 // EXTRA_PRESALT_FIELDS no script de geração para a lista e os critérios.
 const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
@@ -154,28 +154,6 @@ const featureByProject = {};
 // polígono. Adicionado direto no mapa (não num layerGroup), então
 // showOrHide funciona nele igual funciona nos outros.
 const projectLabelByProjectId = {};
-
-// Poligonais de campo de contexto que citam o MESMO número de contrato
-// (pd.contrato) de um contrato rastreado — hoje só MERO/Libra, ver
-// findLinkedContract em analises.js e a nota em presaltFieldPopupHTML.
-// Guardado à parte (não em layerByProjectId, que é só pros 29 contratos)
-// pra setColorMode saber repintar também quando o modo de cor muda.
-const linkedPresaltLayers = [];
-
-// Nome de campo de contexto vem TUDO MAIÚSCULO no GeoJSON (MERO, SAPINHOÁ,
-// OESTE DE ATAPU...) — certo pra distinguir de contrato rastreado nas
-// tabelas/listas (convenção mantida em analises.js/pocos.js), mas errado
-// bem aqui: rótulo de projeto no mapa (ver projectLabelByProjectId) é
-// Título Case ("Norte de Carcará"), então "MERO" gritando ao lado de
-// "Libra" destoava do resto — só o rótulo do mapa usa isto, popup/tabela
-// continuam mostrando o nome como veio da fonte.
-const TITLE_CASE_LOWERCASE_WORDS = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
-function titleCasePt(name) {
-  return name.split(' ').map((word, i) => {
-    const lower = word.toLowerCase();
-    return i > 0 && TITLE_CASE_LOWERCASE_WORDS.has(lower) ? lower : lower.charAt(0).toUpperCase() + lower.slice(1);
-  }).join(' ');
-}
 
 function formatAnpDate(s) {
   return s ? s.replaceAll('-', '/') : '—';
@@ -323,7 +301,7 @@ function yearOf(iso) {
 
 // Ano do contrato de um projeto: o marco mais antigo com icon 'contract'
 // na workstream "Marcos do Contrato" (normalmente "Leilão", às vezes só
-// "Assinatura" quando não há leilão distinto) — os 29 projetos têm essa
+// "Assinatura" quando não há leilão distinto) — os 30 projetos têm essa
 // workstream, então cobre até os 8 sem poligonal na ANP. null se por
 // algum motivo não achar nenhum marco de contrato.
 function projectContractYear(project) {
@@ -405,10 +383,6 @@ function computeFieldValueCounts(normFn) {
 let pocosData = {};
 let outrosPocos = [];
 let pdData = {};
-// Contrato -> Set de código de poço que pertence a um campo de contexto
-// ligado (hoje só Libra -> poços de Mero) — ver buildLinkedFieldWellCodes
-// em shared.js. buildWellMarkers desconta esses poços do contrato.
-let linkedFieldWellCodesByContract = new Map();
 
 // "2015-03-10" -> "10/03/2015"; qualquer coisa que não seja uma data ISO
 // completa (data parcial "2017-12", ou texto livre tipo "Previsão
@@ -421,7 +395,7 @@ function formatMaybeISO(s) {
 // de contexto) — string vazia se não há sumário executivo pra essa chave,
 // pra quem chama só fazer `${pdSectionHTML(key)}` sem checar antes.
 function pdSectionHTML(key) {
-  const pd = pdData[key];
+  const pd = byNameOrUpper(pdData, key);
   if (!pd) return '';
   const rows = [
     ['Situação', pd.situacao],
@@ -612,13 +586,14 @@ function splitCellByWellhead(entries) {
 // Tupinambá hoje) entra pelo fallback: posição real se tiver coords,
 // senão uma aproximação dentro do polígono do contrato, espalhada em
 // círculo pra não empilhar e deslocada pro sul do centro, que é onde o
-// popup do contrato abre. contractOwnWells desconta os poços de um campo
-// ligado (hoje só Mero dentro de Libra, ver linkedFieldWellCodesByContract)
-// — sem isso, os mesmos poços apareciam desenhados duas vezes: uma vez
-// como parte do bloco de Libra, outra como campo Mero (as duas camadas
-// ficam visíveis ao mesmo tempo por padrão).
+// popup do contrato abre. contractOwnWells desconta os poços de outro
+// projeto rastreado com overlap conhecido (hoje só Mero dentro de Libra,
+// ver CONTRACT_WELL_OVERLAP em shared.js) — sem isso, os mesmos poços
+// apareciam desenhados duas vezes: uma como parte do bloco de Libra, outra
+// como projeto Mero (as duas camadas ficam visíveis ao mesmo tempo por
+// padrão).
 function buildWellMarkers(key, project, bounds, color, targetLayer) {
-  const anpWells = contractOwnWells(pocosData, key, linkedFieldWellCodesByContract);
+  const anpWells = contractOwnWells(pocosData, key);
   const milestones = project ? wellItemsOf(project) : [];
   const byCode = new Map();
   for (const item of milestones) {
@@ -702,7 +677,7 @@ function buildWellMarkers(key, project, bounds, color, targetLayer) {
 const wellRefBoundsByProjectId = {};
 
 function wellsOnlyBounds(key, project) {
-  const coords = (pocosData[key] || []).map((w) => w.c)
+  const coords = wellsForKey(pocosData, key).map((w) => w.c)
     .concat(project ? wellItemsOf(project).filter((i) => i.coords).map((i) => i.coords) : []);
   if (!coords.length) return null;
   const b = L.latLngBounds(coords);
@@ -731,7 +706,7 @@ function addOutrosPocoMarker(targetLayer, w) {
   addWellMarker(targetLayer, w.c, OUTROS_POCOS_COLOR, [{ label: w.n, info: w, date: w.d, approx: false }]);
 }
 
-function presaltFieldPopupHTML(props, linkedProject) {
+function presaltFieldPopupHTML(props) {
   const rows = [
     ['Bacia', props.bacia || '—'],
     ['Operador', props.operador || '—'],
@@ -740,14 +715,10 @@ function presaltFieldPopupHTML(props, linkedProject) {
     ['Área', props.area_km2 ? Math.round(props.area_km2).toLocaleString('pt-BR') + ' km²' : '—'],
   ];
   const rowsHTML = rows.map(([k, v]) => `<tr><td class="k">${k}</td><td>${v}</td></tr>`).join('');
-  const color = linkedProject ? colorForProject(linkedProject) : '#9aa1ac';
-  const sourceNote = linkedProject
-    ? `Mesmo contrato de partilha de "${escapeHtml(linkedProject.name)}" — ${escapeHtml(props.nome)} é o campo/jazida dentro do bloco, não um contrato à parte. Fonte: ANP, Campos de Produção (SIRGAS 2000).`
-    : 'Campo de contexto (fora dos 29 contratos rastreados) — Fonte: ANP, Campos de Produção (SIRGAS 2000)';
   return `<div class="map-popup">
-    <h3 style="color:${color}">${escapeHtml(props.nome)}</h3>
+    <h3 style="color:${PRESALT_FIELD_STYLE.color}">${escapeHtml(props.nome)}</h3>
     <table>${rowsHTML}</table>
-    <p class="map-popup-source">${sourceNote}</p>
+    <p class="map-popup-source">Campo de contexto (fora dos 30 projetos rastreados) — Fonte: ANP, Campos de Produção (SIRGAS 2000)</p>
     ${pdSectionHTML(props.nome)}
   </div>`;
 }
@@ -789,57 +760,46 @@ async function init() {
     // Camada opcional — segue sem a seção de Plano de Desenvolvimento.
   }
 
-  // buildContractByContrato/findLinkedContract (campo de contexto que é,
-  // na verdade, o mesmo contrato de um projeto rastreado — hoje só
-  // MERO/Libra) vivem em shared.js, compartilhadas com analises.js e
-  // pocos.js.
-  const contractByContrato = buildContractByContrato(state.projects, pdData);
+  // Campo de contexto cujo nome bate com um projeto rastreado (hoje só
+  // MERO -> "Mero") empresta a própria poligonal do campo pro projeto:
+  // contratos.geojson não tem uma poligonal própria pra Mero (só o bloco
+  // inteiro de Libra), mas campos_presal.geojson tem a área declarada do
+  // campo, mais precisa — melhor do que cair no fallback "sem poligonal"
+  // (ver PROJECTS_WITHOUT_SHAPE). O campo correspondente é pulado no laço
+  // abaixo: já vira o projeto rastreado (cor, popup e rótulo próprios, ver
+  // laço de state.projects mais abaixo), não teria por que desenhar os
+  // dois.
+  const trackedProjectByUpperName = new Map(state.projects.map((p) => [p.name.toUpperCase(), p]));
 
   try {
     const presRes = await fetch(PRESALT_FIELDS_URL);
     const presGeojson = await presRes.json();
     for (const feat of presGeojson.features) {
       const props = feat.properties;
-      const pd = pdData[props.nome];
-      const linkedProject = findLinkedContract(pd, contractByContrato);
-      const color = linkedProject ? colorForProject(linkedProject) : PRESALT_FIELD_STYLE.color;
-      const style = linkedProject
-        ? { color, weight: 1.5, fillColor: color, fillOpacity: 0.22, dashArray: '4 3' }
-        : PRESALT_FIELD_STYLE;
-      const layer = L.geoJSON(feat, { style });
-      layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(props, linkedProject), { maxWidth: 320 }));
-      layer.addTo(presaltFieldsLayer);
-      if (linkedProject) {
-        // Rótulo com o nome do CAMPO (não do contrato — Libra já tem o
-        // seu próprio, da lista de state.projects abaixo) sobre o centro
-        // da poligonal de Mero, mesmo padrão do rótulo de projeto (só no
-        // zoom em que os poços ainda não apareceram — ver
-        // updateProjectLabels).
-        const labelMarker = L.marker(layer.getBounds().getCenter(), {
-          icon: L.divIcon({
-            className: 'map-project-label-icon',
-            html: `<span class="map-project-label">${escapeHtml(titleCasePt(props.nome))}</span>`,
-            iconSize: null,
-          }),
-          interactive: false,
-          keyboard: false,
-          zIndexOffset: -100,
-        });
-        linkedPresaltLayers.push({ layer, project: linkedProject, labelMarker });
+      const trackedProject = trackedProjectByUpperName.get(props.nome.toUpperCase());
+      if (trackedProject) {
+        featureByProject[trackedProject.name] = feat;
+        continue;
       }
-      registerWellSet(props.nome, null, layer.getBounds(), color, wellPresaltLayer);
+      const layer = L.geoJSON(feat, { style: PRESALT_FIELD_STYLE });
+      layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(props), { maxWidth: 320 }));
+      layer.addTo(presaltFieldsLayer);
+      registerWellSet(props.nome, null, layer.getBounds(), PRESALT_FIELD_STYLE.color, wellPresaltLayer);
     }
-    // Precisa estar pronto antes do laço de state.projects logo abaixo —
-    // é buildWellMarkers (chamado por registerWellSet pro contrato) que
-    // desconta os poços do campo ligado.
-    linkedFieldWellCodesByContract = buildLinkedFieldWellCodes(presGeojson.features, pdData, pocosData, contractByContrato);
   } catch (e) {
     // Camada de contexto é opcional — segue sem ela se não carregar.
   }
 
   for (const feat of geojson.features) featureByProject[feat.properties.projeto] = feat;
 
-  rodadaOrder = [...new Set(geojson.features.map((f) => f.properties.rodada).filter(Boolean))].sort();
+  // A partir de featureByProject (não geojson.features cru) pra cobrir
+  // também o projeto que empresta feature de campos_presal.geojson (hoje
+  // só Mero, ver laço acima) — é exatamente o que colorForProject('rodada')
+  // consulta.
+  rodadaOrder = [...new Set(state.projects.map((p) => {
+    const f = featureByProject[p.name];
+    return f && f.properties.rodada;
+  }).filter(Boolean))].sort();
   rodadaColorMap = {};
   rodadaOrder.forEach((r, i) => { rodadaColorMap[r] = CATEGORY_PALETTE[i % CATEGORY_PALETTE.length]; });
 
@@ -1007,13 +967,6 @@ function setColorMode(mode) {
     const feat = featureByProject[project.name];
     if (feat) layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties), { autoPan: false, maxWidth: 320 }));
   }
-  // Campo de contexto ligado a um contrato (ver linkedPresaltLayers) segue
-  // a cor do contrato em qualquer modo — sem isso, "Colorir por Status"
-  // repintava Libra mas deixava MERO parado na cor de Partilha original.
-  for (const { layer, project } of linkedPresaltLayers) {
-    const c = colorForProject(project);
-    layer.setStyle({ color: c, fillColor: c });
-  }
   renderPanel();
 }
 
@@ -1114,12 +1067,6 @@ function updateProjectLabels() {
     const groupId = groupLayers[project.group] ? project.group : GROUP_FALLBACK;
     const target = groupLayers[groupId];
     showOrHide(marker, zoomOk && groupVisible[groupId] && target.hasLayer(layer));
-  }
-  // Campo de contexto ligado a um contrato (ver linkedPresaltLayers) —
-  // mesmo corte de zoom, mas segue a visibilidade da camada de campos de
-  // contexto (presaltFieldsLayer), não a de grupo de projeto.
-  for (const entry of linkedPresaltLayers) {
-    if (entry.labelMarker) showOrHide(entry.labelMarker, zoomOk && map.hasLayer(presaltFieldsLayer));
   }
 }
 
@@ -1366,7 +1313,7 @@ function buildLegend(entries) {
 // Preservado entre re-renders (troca de modo de cor, toggle de grupo etc.)
 // pra não reabrir/refechar o painel sozinho toda vez que o usuário interage
 // com ele. Começa fechado: o mapa é o conteúdo principal da página, e o
-// painel (com a lista dos 29 contratos) tampava boa parte dele logo na
+// painel (com a lista dos 30 projetos) tampava boa parte dele logo na
 // abertura — melhor deixar o usuário abrir quando quiser mexer nas camadas.
 let panelCollapsed = true;
 
@@ -1412,7 +1359,7 @@ function renderPanel() {
   const presaltNote = document.createElement('p');
   presaltNote.className = 'map-panel-note';
   presaltNote.style.marginTop = '0';
-  presaltNote.textContent = 'Contexto geográfico (tracejado cinza) — não fazem parte dos 29 contratos rastreados.';
+  presaltNote.textContent = 'Contexto geográfico (tracejado cinza) — não fazem parte dos 30 projetos rastreados.';
   presaltSection.appendChild(presaltNote);
   el.appendChild(presaltSection);
 

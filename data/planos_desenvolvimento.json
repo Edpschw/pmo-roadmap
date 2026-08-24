@@ -45,32 +45,6 @@
     "volumes": { "dataRef": "BAR 2015", "oleoInSituMMbbl": 29889, "gasInSituMMm3": 1101988, "oleoAcumMMbbl": 2.47, "gasAcumMMm3": 86.47 },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/buzios.pdf"
   },
-  "Libra": {
-    "titulo": "Campo de Mero (AIP) 2021",
-    "resolucao": "RD 0758/2021 de 09/12/2021",
-    "contrato": "48610.011150/2013-10 (MRO-PP) + Área Não Contratada (ANC)",
-    "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 40 },
-      { "empresa": "TotalEnergies EP Brasil Ltda.", "pct": 20 },
-      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 20 },
-      { "empresa": "CNODC Brasil Petróleo e Gás Ltda.", "pct": 10 },
-      { "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 10 }
-    ],
-    "participacaoObs": "% do contrato de partilha MRO-PP. A Área Não Contratada (3,5% da jazida) é 100% PPSA/União.",
-    "situacao": "Em produção",
-    "descoberta": "2010-10-28",
-    "comercialidade": "2017-11-30",
-    "inicioProducao": "2017-12 (Sistema de Produção Antecipada — TLD/SPA)",
-    "previsaoTermino": "2048 (término do contrato de partilha)",
-    "laminaDagua": "1.800–2.100 m",
-    "areaKm2": 359.78,
-    "areaObs": "Jazida compartilhada — 96,5% Mero / 3,5% Área Não Contratada",
-    "sistemaResumo": "FPSO Pioneiro Libra (SPA, até 2029, 50.000 bbl/d) + 4 FPSOs definitivos (Guanabara, Sepetiba, Marechal Duque de Caxias, Mero 4), 180.000 bbl/d cada",
-    "pocos": { "dataRef": "2021 (projeto)", "produtores": 32, "injetores": 33, "obs": "65 poços no projeto da jazida compartilhada, recuperação secundária por injeção alternada de água e gás (WAG)" },
-    "geologiaResumo": "Carbonáticos da Fm. Barra Velha e coquinas da Fm. Itapema (Aptiano), 5.700–6.000 m, óleo 29° API",
-    "volumes": { "dataRef": "BAR 2021 (31/12/2021)", "oleoInSituMMbbl": 10274.03, "gasInSituMMm3": 375037.92, "oleoAcumMMbbl": 40.05, "gasAcumMMm3": 2682.08, "reservaProvada": { "dataRef": "31/12/2017 — PD completo", "oleoMMbbl": 505, "gasMMm3": 5555 } },
-    "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/rd-0758-mero-e-anc-sumario-executivo-aip.pdf"
-  },
   "MERO": {
     "titulo": "Campo de Mero (AIP) 2021",
     "resolucao": "RD 0758/2021 de 09/12/2021",

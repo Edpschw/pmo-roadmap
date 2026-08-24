@@ -13,12 +13,12 @@
 const GEOJSON_URL = 'data/contratos.geojson';
 const POCOS_URL = 'data/pocos.json';
 const PD_URL = 'data/planos_desenvolvimento.json';
-// Campos de contexto do pré-sal (ver mapa.js) — a maioria é regime
-// Concessão ou Cessão Onerosa, não Partilha de Produção (só MERO, com
-// "(PP)" na rodada). Não são nenhum dos 29 contratos rastreados (podem
-// sobrepor um deles em área — ex.: MERO é o reservatório dentro do bloco
-// de Libra — por isso ficam numa seção à parte, sem somar nos KPIs do
-// topo: somar contaria o mesmo poço/volume duas vezes.
+// Campos de contexto do pré-sal (ver mapa.js) — regime de Concessão ou
+// Cessão Onerosa, bem anterior à Lei da Partilha (2010); nenhum dos 30
+// projetos rastreados (Mero, o único campo de contexto em Partilha, virou
+// projeto próprio — ver seedState em shared.js). Ficam numa seção à parte,
+// sem somar nos KPIs do topo: somar contaria o mesmo poço/volume duas
+// vezes com algum contrato rastreado que sobreponha a mesma área.
 const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
 
 // Ordem fixa (nunca ciclada) das categorias de poço mostradas na seção
@@ -52,7 +52,7 @@ const EXPLORATION_WELL_CATEGORY_ORDER = [
 ];
 
 // Cor neutra pros campos de contexto e pro balde "outros poços" nos
-// gráficos/tabelas unificados — só os 29 contratos rastreados têm cor
+// gráficos/tabelas unificados — só os 30 projetos rastreados têm cor
 // própria (a mesma do roadmap/mapa, project.color); tudo que não é
 // contrato usa este cinza, pra "colorindo só quem tem contrato" ficar
 // óbvio à primeira vista em qualquer gráfico.
@@ -61,11 +61,6 @@ const CONTEXT_FIELD_COLOR = '#7a828f';
 let featureByProject = {};
 let pocosData = {};
 let pdData = {};
-// Contrato -> Set de código de poço que pertence a um campo de contexto
-// ligado (hoje só Libra -> poços de Mero) — ver buildLinkedFieldWellCodes
-// em shared.js. wellCountsFor desconta esses poços do contrato, pra Mero
-// não aparecer contado (nem desenhado, no mapa) duas vezes.
-let linkedFieldWellCodesByContract = new Map();
 
 /* -------------------------------- Helpers -------------------------------- */
 
@@ -91,7 +86,7 @@ function participacaoText(pd) {
 // Partilha de Produção explicitamente; "Cessão Onerosa" é regime próprio
 // (2010); qualquer outra rodada numerada (0, 1, 2, 6, 7...) sem "(PP)" é
 // uma rodada de Concessão, de antes da Lei do Partilha (2010). Usado só
-// nos campos de contexto (ver computeFieldRow) — os 29 projetos
+// nos campos de contexto (ver computeFieldRow) — os 30 projetos
 // rastreados são todos CPP/Partilha, então essa distinção não se aplica
 // a eles (renderProducaoTable já rotula todo contrato como "Partilha").
 function regimeOf(rodada) {
@@ -164,7 +159,7 @@ function attachTooltip(el, htmlFn) {
 // gráfico. A seção "Campos em produção" usa withoutAbandonedWells (abaixo)
 // pra recontar sem ele — ver nota em WELL_CATEGORY_ORDER.
 function wellCountsFor(projectName) {
-  const wells = contractOwnWells(pocosData, projectName, linkedFieldWellCodesByContract);
+  const wells = contractOwnWells(pocosData, projectName);
   const counts = {};
   for (const cat of ALL_WELL_CATEGORIES) counts[cat] = 0;
   for (const w of wells) counts[wellCategory(w)]++;
@@ -176,7 +171,7 @@ function wellCountsFor(projectName) {
 // abandonado, ver computeFieldRow/computeOutrosRow) sem os poços
 // definitivamente abandonados — só pra seção "Campos em produção".
 function withoutAbandonedWells(row) {
-  const wells = contractOwnWells(pocosData, row.name, linkedFieldWellCodesByContract)
+  const wells = contractOwnWells(pocosData, row.name)
     .filter((w) => wellCategory(w) !== 'abandonado');
   const counts = {};
   for (const [cat] of WELL_CATEGORY_ORDER) counts[cat] = 0;
@@ -230,7 +225,7 @@ function computeProjectRow(project) {
   const fpso = fpsoInfo(project);
   const leilaoYear = leilaoYearOf(project);
   const leadTimeYears = (leilaoYear != null && fpso.firstOilYear != null) ? fpso.firstOilYear - leilaoYear : null;
-  const pd = pdData[project.name];
+  const pd = byNameOrUpper(pdData, project.name);
   const volumes = pd && pd.volumes ? pd.volumes : null;
   return {
     name: project.name,
@@ -334,7 +329,7 @@ function renderKPIRow(container, agg) {
   ));
   row.appendChild(statTile(
     'Poços perfurados', fmtNum(agg.wellsTotal),
-    `Base ANP/BDEP, todos os 29 contratos (inclui abandonados de exploração) — ${agg.wellCatTotals.producao} produtores · ${agg.wellCatTotals.injecao} injetores`,
+    `Base ANP/BDEP, todos os 30 projetos rastreados (inclui abandonados de exploração) — ${agg.wellCatTotals.producao} produtores · ${agg.wellCatTotals.injecao} injetores`,
   ));
   row.appendChild(statTile(
     'FPSOs em operação', fmtNum(agg.fpsoInstalled),
@@ -442,7 +437,7 @@ function renderStoiipChart(container, rows) {
 function computeWellTypeTotals(pocosData, outrosPocos) {
   const wells = [];
   for (const name of Object.keys(pocosData)) {
-    wells.push(...contractOwnWells(pocosData, name, linkedFieldWellCodesByContract));
+    wells.push(...contractOwnWells(pocosData, name));
   }
   wells.push(...outrosPocos);
   const totals = new Map();
@@ -542,7 +537,7 @@ function buildStackedBarRow(row, maxTotal, categoryOrder) {
 }
 
 // Cartão de barra empilhada por categoria de poço — reaproveitado pelos
-// 29 projetos rastreados e pelos campos de contexto (mesma forma de linha,
+// 30 projetos rastreados e pelos campos de contexto (mesma forma de linha,
 // só muda o título/legenda de rodapé de quem não tem poço ainda).
 function buildWellsStackedCard(rows, title, subtitle, categoryOrder) {
   categoryOrder = categoryOrder || WELL_CATEGORY_ORDER;
@@ -655,13 +650,13 @@ function renderFpsoByYearChart(container, projects) {
 }
 
 // Soma poços dos contratos de produção rastreados (já sem os que
-// pertencem a um campo ligado, ver contractOwnWells/wellCountsFor) +
-// campos de contexto + poços sem campo nomeado. Só serve pra agregados de
-// portfólio — a tabela e os gráficos por entidade continuam mostrando
-// cada contrato/campo separado.
+// pertencem a outro projeto rastreado com overlap conhecido, ver
+// contractOwnWells/wellCountsFor) + campos de contexto + poços sem campo
+// nomeado. Só serve pra agregados de portfólio — a tabela e os gráficos
+// por entidade continuam mostrando cada contrato/campo separado.
 function dedupedProducaoWells(producaoProjectRows, fieldRows, outrosPocos) {
   const wells = [];
-  for (const r of producaoProjectRows) wells.push(...contractOwnWells(pocosData, r.name, linkedFieldWellCodesByContract));
+  for (const r of producaoProjectRows) wells.push(...contractOwnWells(pocosData, r.name));
   for (const r of fieldRows) {
     if (r.isOutros) continue;
     wells.push(...(pocosData[r.name] || []));
@@ -723,24 +718,11 @@ function renderWellsByYearChart(container, wells) {
 // "Poços por FPSO instalado" — total de poços do contrato dividido pelo
 // número de FPSOs já instalados. É densidade média por projeto, não
 // poço-a-poço por unidade (a base ANP não registra a qual FPSO cada poço
-// está ligado). Contrato com campo ligado (hoje só Libra) soma de volta o
-// poço do campo pra essa conta específica: wellsTotal do contrato já
-// desconta esses poços (ver wellCountsFor) porque a linha do campo os
-// mostra à parte, mas são eles que de fato alimentam os FPSOs do
-// contrato — sem somar de volta, Libra apareceria com FPSO sem poço
-// nenhum.
-function renderWellsPerFpsoChart(container, projectRows, fieldRows) {
-  const linkedWellsByContract = new Map();
-  for (const f of fieldRows || []) {
-    if (!f.linkedContractName) continue;
-    linkedWellsByContract.set(f.linkedContractName, (linkedWellsByContract.get(f.linkedContractName) || 0) + f.wellsTotal);
-  }
+// está ligado).
+function renderWellsPerFpsoChart(container, projectRows) {
   const withFpso = projectRows
     .filter((r) => r.fpsoInstalled > 0)
-    .map((r) => {
-      const wellsTotal = r.wellsTotal + (linkedWellsByContract.get(r.name) || 0);
-      return { ...r, wellsTotal, perFpso: wellsTotal / r.fpsoInstalled };
-    })
+    .map((r) => ({ ...r, perFpso: r.wellsTotal / r.fpsoInstalled }))
     .sort((a, b) => b.perFpso - a.perFpso);
   if (!withFpso.length) return;
 
@@ -751,7 +733,7 @@ function renderWellsPerFpsoChart(container, projectRows, fieldRows) {
   title.textContent = 'Poços por FPSO instalado (média)';
   const sub = document.createElement('p');
   sub.className = 'chart-card-subtitle';
-  sub.textContent = 'Poços do contrato (base ANP/BDEP, incluindo os do campo comercial dentro do bloco — caso de Mero em Libra) dividido pelo número de FPSOs já instalados — densidade média por projeto; a base não liga poço individual a FPSO individual.';
+  sub.textContent = 'Poços do contrato (base ANP/BDEP) dividido pelo número de FPSOs já instalados — densidade média por projeto; a base não liga poço individual a FPSO individual.';
   card.appendChild(title);
   card.appendChild(sub);
 
@@ -792,47 +774,30 @@ function renderWellsPerFpsoChart(container, projectRows, fieldRows) {
 // Nome com uma bolinha da cor da entidade — cor própria pra contrato
 // rastreado, CONTEXT_FIELD_COLOR (cinza) pra campo de contexto ou poço
 // sem campo nomeado. É o "colorindo só quem tem contrato" pedido, num só
-// lugar reaproveitado pela tabela de produção e pela de exploração. Campo
-// de contexto ligado a um contrato rastreado (linkedContractName — hoje só
-// MERO/Libra, ver findLinkedContract) herda a cor dele e ganha uma nota
-// deixando a ligação explícita, já que o nome sozinho ("MERO") não deixa
-// óbvio que é o mesmo contrato de "Libra".
+// lugar reaproveitado pela tabela de produção e pela de exploração.
 function nameCellHTML(r) {
-  const note = r.linkedContractName
-    ? ` <span class="proj-name-note">(contrato de ${escapeHtml(r.linkedContractName)})</span>`
-    : '';
-  return `<div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span>${escapeHtml(r.name)}${note}</div>`;
+  return `<div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span>${escapeHtml(r.name)}</div>`;
 }
 
 /* ------------------------ Campos de contexto (não-CPP) --------------------- */
-// Campos do play do pré-sal que não são nenhum dos 29 contratos rastreados
-// acima (ver PRESALT_FIELDS_URL) — a maioria em regime de Concessão ou
-// Cessão Onerosa, bem anterior à Lei da Partilha (2010); só Mero é
-// Partilha. Alguns ficam dentro da área de um contrato rastreado (Mero
-// dentro do bloco de Libra, por exemplo) — daí entrarem na mesma tabela/
-// gráfico dos contratos de produção. STOIIP continua somado nos KPIs do
-// topo mesmo pra campo ligado (é a mesma jazida, um volume só — ver
-// groupByPdKey); poço não: contractOwnWells já garante que cada poço
-// conta uma vez só, no contrato ou no campo, nunca nos dois.
+// Campos do play do pré-sal que não são nenhum dos 30 projetos rastreados
+// acima (ver PRESALT_FIELDS_URL) — regime de Concessão ou Cessão Onerosa,
+// bem anterior à Lei da Partilha (2010); o único campo de contexto em
+// Partilha (Mero) virou projeto rastreado próprio (ver seedState em
+// shared.js) e é filtrado antes de chegar aqui (ver init).
 
-// contractNumbersIn/findLinkedContract (campo de contexto que é, na
-// verdade, o mesmo contrato de um projeto rastreado — hoje só MERO/Libra)
-// agora vivem em shared.js, compartilhadas com mapa.js e pocos.js.
-
-function computeFieldRow(feature, contractByContrato) {
+function computeFieldRow(feature) {
   const props = feature.properties;
   const name = props.nome;
   const pd = pdData[name];
   const volumes = pd && pd.volumes ? pd.volumes : null;
-  const linkedContract = findLinkedContract(pd, contractByContrato);
   // Campo de contexto só aparece na seção "Campos em produção" — nunca na
   // de exploração — então já sai contado sem abandonado, igual aos
   // contratos rastreados dessa seção (ver withoutAbandonedWells).
   return withoutAbandonedWells({
     name,
-    color: linkedContract ? linkedContract.color : CONTEXT_FIELD_COLOR,
+    color: CONTEXT_FIELD_COLOR,
     isContract: false,
-    linkedContractName: linkedContract ? linkedContract.name : null,
     operador: props.operador || null,
     bacia: props.bacia || null,
     regime: regimeOf(props.rodada),
@@ -844,7 +809,7 @@ function computeFieldRow(feature, contractByContrato) {
 }
 
 // "outros" em data/pocos.json: poços do play do pré-sal (ATINGIU_PRESAL=
-// 'S' na base ANP/BDEP) que não caem em nenhum dos 29 contratos
+// 'S' na base ANP/BDEP) que não caem em nenhum dos 30 projetos
 // rastreados nem em nenhum dos 13 campos de contexto nomeados — sem
 // operador/bacia/regime/STOIIP porque não são um campo, é o resto
 // espalhado do play. Sem isso, "todos os campos do pré-sal" ficava
@@ -902,14 +867,8 @@ function renderProducaoTable(container, contractRows, fieldRows) {
   table.appendChild(thead);
 
   const tbody = document.createElement('tbody');
-  // Campo de contexto ligado a um contrato rastreado (ver
-  // findLinkedContract — hoje só MERO, mesmo contrato de Libra) entra
-  // agrupado com os contratos, não com os campos de Concessão/Cessão
-  // Onerosa — é o próprio contrato de partilha, só visto do lado do campo.
-  const linked = fieldRows.filter((r) => r.linkedContractName);
-  const unlinked = fieldRows.filter((r) => !r.linkedContractName && !r.isOutros);
-  const contracts = [...contractRows, ...linked].sort((a, b) => b.wellsTotal - a.wellsTotal);
-  const named = unlinked.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const contracts = [...contractRows].sort((a, b) => b.wellsTotal - a.wellsTotal);
+  const named = fieldRows.filter((r) => !r.isOutros).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   const outros = fieldRows.filter((r) => r.isOutros);
   const groups = [
     ['Contratos rastreados (Partilha)', contracts],
@@ -952,7 +911,7 @@ function renderProducaoTable(container, contractRows, fieldRows) {
 
   const note = document.createElement('p');
   note.className = 'analytics-table-note';
-  note.textContent = 'Cor do nome = cor do contrato (a mesma do roadmap/mapa); cinza = campo de contexto ou poço sem campo nomeado, sem contrato próprio. Parceiros: só onde o sumário executivo de PD publicado trouxe a tabela de participação. FPSOs: instalados (+ previstos entre parênteses) — só contrato rastreado tem essa informação. Mero (contrato de Libra) é o campo comercial dentro do bloco — seus poços contam só na linha de Mero; a linha de Libra mostra o resto do bloco, ainda em exploração.';
+  note.textContent = 'Cor do nome = cor do contrato (a mesma do roadmap/mapa); cinza = campo de contexto ou poço sem campo nomeado, sem contrato próprio. Parceiros: só onde o sumário executivo de PD publicado trouxe a tabela de participação. FPSOs: instalados (+ previstos entre parênteses) — só contrato rastreado tem essa informação.';
   container.appendChild(note);
 }
 
@@ -965,7 +924,7 @@ function renderProducaoSection(container, contractRows, fieldRows, outrosPocos, 
   const intro = document.createElement('p');
   intro.className = 'chart-card-subtitle';
   intro.style.margin = '0 0 14px';
-  intro.textContent = `Os ${contractRows.length} contratos rastreados já em produção, mais os ${namedFields.length} campos de contexto do pré-sal (Concessão, Cessão Onerosa e só Mero em Partilha) e os poços sem campo nomeado — o play de produção inteiro. Cor própria = contrato rastreado; cinza = campo de contexto ou poço avulso, sem contrato próprio.`;
+  intro.textContent = `Os ${contractRows.length} contratos rastreados já em produção, mais os ${namedFields.length} campos de contexto do pré-sal (regime de Concessão ou Cessão Onerosa) e os poços sem campo nomeado — o play de produção inteiro. Cor própria = contrato rastreado; cinza = campo de contexto ou poço avulso, sem contrato próprio.`;
   container.appendChild(intro);
 
   const statsRow = document.createElement('div');
@@ -987,7 +946,7 @@ function renderProducaoSection(container, contractRows, fieldRows, outrosPocos, 
     'Poços por categoria, por contrato/campo',
     'Base ANP/BDEP — contratos de produção rastreados + campos de contexto + poços sem campo nomeado.',
   ));
-  renderWellsPerFpsoChart(container, contractRows, fieldRows);
+  renderWellsPerFpsoChart(container, contractRows);
   renderFpsoByYearChart(container, allProjects);
   renderWellsByYearChart(container, wells);
   renderProducaoTable(container, contractRows, fieldRows);
@@ -1070,16 +1029,24 @@ async function init() {
     console.error('Falha ao carregar dados de análise', err);
   }
 
-  // Calculado antes de computeProjectRow — wellCountsFor (chamada por
-  // ele) já precisa descontar os poços do campo ligado (ver
-  // linkedFieldWellCodesByContract/contractOwnWells).
-  const contractByContrato = buildContractByContrato(state.projects, pdData);
-  const presalFeatures = presalGeojson ? presalGeojson.features : [];
-  linkedFieldWellCodesByContract = buildLinkedFieldWellCodes(presalFeatures, pdData, pocosData, contractByContrato);
+  // Campo de contexto cujo nome bate com um projeto rastreado (hoje só
+  // MERO -> "Mero") empresta operador/bacia/área pro projeto — Mero não
+  // tem feature própria em contratos.geojson (só o bloco inteiro de
+  // Libra), mas campos_presal.geojson tem a área declarada do campo (ver
+  // mesma lógica em mapa.js/featureByProject). O campo é filtrado da
+  // lista de campos de contexto logo abaixo pra não ser contado duas
+  // vezes, na tabela/gráficos de "Campos de contexto".
+  const trackedProjectByUpperName = new Map(state.projects.map((p) => [p.name.toUpperCase(), p]));
+  const presalAllFeatures = presalGeojson ? presalGeojson.features : [];
+  for (const feat of presalAllFeatures) {
+    const trackedProject = trackedProjectByUpperName.get(feat.properties.nome.toUpperCase());
+    if (trackedProject) featureByProject[trackedProject.name] = feat;
+  }
+  const presalFeatures = presalAllFeatures.filter((f) => !trackedProjectByUpperName.has(f.properties.nome.toUpperCase()));
 
   const rows = state.projects.map(computeProjectRow);
   const agg = computeAggregates(rows);
-  const fieldRows = presalFeatures.map((f) => computeFieldRow(f, contractByContrato));
+  const fieldRows = presalFeatures.map(computeFieldRow);
   if (outrosPocos.length) fieldRows.push(computeOutrosRow(outrosPocos));
 
   wrapper.innerHTML = '';

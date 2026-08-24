@@ -37,7 +37,8 @@ const GROUP_FALLBACK = 'exploracao';
 // antes deste agrupamento existir — sem isso, todo projeto antigo cairia
 // sempre em GROUP_FALLBACK em vez do grupo real do contrato.
 const KNOWN_PROJECT_GROUPS = {
-  'Libra': 'producao',
+  'Mero': 'producao',
+  'Libra': 'exploracao',
   'Sul de Gato do Mato': 'exploracao',
   'Norte de Carcará': 'producao',
   'Entorno de Sapinhoá': 'producao',
@@ -133,8 +134,11 @@ function progressStatusClass(actualProgress, expectedProgress) {
 // Código do poço dentro do nome de um marco ("Poço pioneiro 1-BRSA-1363-RJS
 // (gás com CO2...)" -> "1-BRSA-1363-RJS"), pra casar o marco com o registro
 // da ANP. Marco sem código (ex.: "Poço exploratório (previsto)") não casa
-// com nada.
-const WELL_CODE_RE = /\b\d+-[A-Z]{2,6}-\d+[A-Z]*-[A-Z]{3}\b/;
+// com nada. O segundo grupo de dígitos aceita sufixo minúsculo (ex.:
+// "3-BRSA-1267i-RJS") — sidetrack/complemento do poço-mãe, convenção usada
+// pela ANP em ~19 poços da base (Libra, Búzios); sem o "i" no meio da
+// classe de caracteres, o marco ficava sem casar com o próprio registro.
+const WELL_CODE_RE = /\b\d+-[A-Z]{2,6}-\d+[A-Za-z]*-[A-Z]{3}\b/;
 function wellCodeOf(name) {
   const m = String(name).match(WELL_CODE_RE);
   return m ? m[0] : null;
@@ -221,93 +225,42 @@ function escapeHtml(str) {
   }[c]));
 }
 
-/* ------------------- Campo de contexto ligado a um contrato -------------- */
-// Compartilhada entre analises.js, mapa.js e pocos.js — as três telas
-// precisam da mesma resposta pra "esse campo de contexto é, na verdade, o
-// mesmo contrato de partilha de um projeto rastreado, só visto do lado do
-// campo?" (hoje só MERO, dentro do bloco de Libra — contrato
-// 48610.011150/2013-10, MRO-PP, idêntico no PD dos dois). Ter isso nas
-// três em vez de uma cópia em cada evita que uma fique com uma regra
-// diferente das outras.
-//
-// "Mesmo contrato" é mais estreito que "mesma string pd.contrato": essa
-// string às vezes é composta, citando VÁRIOS números de contrato/regime
-// pra áreas diferentes descritas junto num sumário só — Atapu ("Cessão
-// Onerosa X + Partilha Y — Oeste de Atapu: Concessão Z") e Sapinhoá/
-// Entorno de Sapinhoá são exemplos, e bateriam string-a-string na
-// primeira tentativa sem serem o mesmo contrato, só documentados juntos.
-// E o INVERSO também acontece: '48610.012913/2010-05' sozinha é a Cessão
-// Onerosa original de 2010, citada como origem histórica por TRÊS
-// contratos de partilha diferentes hoje (Búzios, Sépia, e dentro da
-// string composta de Atapu) — mesma raiz, contratos diferentes agora. Só
-// conta como "mesmo contrato" quando a string cita UM SÓ número
-// (contractNumbersIn) E esse número não aparece em nenhum OUTRO contrato
-// rastreado (senão a ligação seria ambígua) — critério validado contra a
-// base inteira antes de implementar: isola exatamente Mero/Libra, mais
-// nenhum outro par.
-function contractNumbersIn(contrato) {
-  return contrato ? [...new Set(contrato.match(/48610\.\d+/g) || [])] : [];
+/* --------------------- Poços do contrato x campo ligado ------------------ */
+// Compartilhada entre analises.js, mapa.js e pocos.js.
+
+// Alguns dados por nome (pocosData, pdData) trazem a chave em MAIÚSCULO
+// quando vêm de um campo de contexto do pré-sal, padrão ANP (MERO,
+// SAPINHOÁ...). "Mero" também é hoje um projeto rastreado, com nome em
+// Título Case como todo projeto do seed, mas puxando do mesmo registro —
+// esta função deixa os dois lados casarem sem duplicar a entrada no
+// arquivo de dados.
+function byNameOrUpper(obj, name) {
+  return obj[name] !== undefined ? obj[name] : obj[name.toUpperCase()];
+}
+function wellsForKey(pocosData, name) {
+  return byNameOrUpper(pocosData, name) || [];
 }
 
-// Mapa contrato-string -> projeto, só com as strings de contrato único
-// (ver contractNumbersIn) usadas por exatamente um projeto rastreado.
-function buildContractByContrato(projects, pdData) {
-  const useCount = new Map();
-  for (const p of projects) {
-    const pd = pdData[p.name];
-    if (pd && pd.contrato) useCount.set(pd.contrato, (useCount.get(pd.contrato) || 0) + 1);
-  }
-  const map = new Map();
-  for (const p of projects) {
-    const pd = pdData[p.name];
-    if (pd && pd.contrato && contractNumbersIn(pd.contrato).length === 1 && useCount.get(pd.contrato) === 1) {
-      map.set(pd.contrato, p);
-    }
-  }
-  return map;
-}
+// Mero é o campo comercial DENTRO do bloco original de Libra — os dois
+// nasceram do mesmo contrato de partilha (Leilão 2013-10-21, Assinatura
+// 2013-12-02, 48610.011150/2013-10), mas hoje são dois projetos
+// rastreados: Mero (produção) e Libra (exploração — o que sobrou do bloco
+// fora da área declarada de Mero). pocosData['Libra'] (ver
+// scripts/build_pocos.py) ainda lista os 74 poços do bloco inteiro — 69 já
+// pertencem a Mero e precisam ser descontados daqui, senão apareciam
+// desenhados/contados duas vezes: uma como parte do bloco de Libra, outra
+// como projeto Mero.
+const CONTRACT_WELL_OVERLAP = { 'Libra': 'Mero' };
 
-// pd aqui é o PD do CAMPO DE CONTEXTO (não do projeto) — devolve o
-// projeto rastreado dono do mesmo contrato, ou null se o campo não tem PD,
-// não cita contrato, cita mais de um número, ou não bate com nenhum
-// projeto em contractByContrato.
-function findLinkedContract(pd, contractByContrato) {
-  if (!pd || !pd.contrato || contractNumbersIn(pd.contrato).length !== 1) return null;
-  return contractByContrato.get(pd.contrato) || null;
-}
-
-// Mero é o campo comercial DENTRO do bloco de Libra (mesmo contrato, ver
-// findLinkedContract) — mas nem todo poço do bloco de Libra é um poço de
-// Mero: dos 74 poços que casam com Libra (SIG_CAMPO MRO/AnC6 + BLOCO
-// LIBRA, ver PLAN em build_pocos.py), 69 também casam com o campo Mero
-// (CAMPO MERO/AnC_MERO) e 5 não — são poços de extensão/pioneiro
-// adjacente, todos abandonados, fora da área declarada de Mero: o resto
-// do contrato de Libra, ainda em exploração. Mapa contrato -> Set de
-// código de poço do campo ligado, pra quem lê pocosData[contrato] saber
-// quais descontar (sem isso, os 69 poços de Mero apareciam contados e
-// desenhados duas vezes: uma como parte do bloco de Libra, outra como
-// campo Mero).
-function buildLinkedFieldWellCodes(presalFeatures, pdData, pocosData, contractByContrato) {
-  const byContract = new Map();
-  for (const feat of presalFeatures) {
-    const props = feat.properties;
-    const linked = findLinkedContract(pdData[props.nome], contractByContrato);
-    if (!linked) continue;
-    const codes = byContract.get(linked.name) || new Set();
-    for (const w of pocosData[props.nome] || []) codes.add(w.n);
-    byContract.set(linked.name, codes);
-  }
-  return byContract;
-}
-
-// Poços do CONTRATO propriamente ditos — pocosData[name] menos os que já
-// pertencem a um campo de contexto ligado (ver buildLinkedFieldWellCodes).
-// Pra qualquer nome sem campo ligado (todo mundo, hoje, exceto Libra),
-// isso é só pocosData[name] sem filtro nenhum.
-function contractOwnWells(pocosData, name, linkedFieldWellCodesByContract) {
-  const wells = pocosData[name] || [];
-  const excluded = linkedFieldWellCodesByContract && linkedFieldWellCodesByContract.get(name);
-  if (!excluded || !excluded.size) return wells;
+// Poços do CONTRATO propriamente ditos — wellsForKey(pocosData, name)
+// menos os que já pertencem a outro projeto rastreado com overlap
+// conhecido (ver CONTRACT_WELL_OVERLAP). Pra qualquer nome sem overlap
+// (todo mundo hoje, exceto Libra), isso é só wellsForKey sem filtro.
+function contractOwnWells(pocosData, name) {
+  const wells = wellsForKey(pocosData, name);
+  const overlapName = CONTRACT_WELL_OVERLAP[name];
+  if (!overlapName) return wells;
+  const excluded = new Set(wellsForKey(pocosData, overlapName).map((w) => w.n));
   return wells.filter((w) => !excluded.has(w.n));
 }
 
@@ -339,7 +292,10 @@ function seedState() {
     projects: [
       // Os 29 contratos de Partilha de Produção (CPP) em vigor no pré-sal,
       // conforme presalpetroleo.gov.br/contratos-de-partilha-e-producao/
-      // contratos-em-vigor/ (consultado em 21/08/2026). Nomes de projeto e
+      // contratos-em-vigor/ (consultado em 21/08/2026) — 30 projetos
+      // rastreados no total, porque um desses contratos (Libra) já virou
+      // dois projetos separados (Mero produção + Libra exploração, ver
+      // nota junto dos dois abaixo). Nomes de projeto e
       // marco ficam só com o essencial (o ícone e a workstream já dizem o
       // tipo) — a rodada/ano de cada contrato e o motivo de cada devolução
       // saíram do texto visível, mas continuam no histórico do repositório.
@@ -355,17 +311,29 @@ function seedState() {
       // publicamente (Sul de Gato do Mato, Esmeralda, Ametista, Citrino,
       // Itaimbezinho, Jaspe) ficam sem essa workstream até haver dado
       // concreto.
-      proj('Libra', PALETTE[3], 'producao', [
+      // Mero e Libra nasceram do mesmo contrato de partilha (Leilão
+      // 2013-10-21, Assinatura 2013-12-02, 48610.011150/2013-10) — Mero é
+      // o campo comercial dentro do bloco, hoje em produção; Libra (grupo
+      // exploração, logo abaixo) é o que sobrou do bloco fora da área
+      // declarada de Mero, ainda sem descoberta comercial própria (os 5
+      // poços que caem ali são todos abandonados). O PD público do
+      // contrato ("Campo de Mero (AIP) 2021") é sobre Mero, não sobre o
+      // resto do bloco — daí STOIIP/volume recuperável/FPSOs ficarem só
+      // aqui. Contagem de "Poços Perfurados" (base ANP/BDEP, ver
+      // scripts/build_pocos.py) é só dos 69 poços dentro da área declarada
+      // de Mero (CAMPO MERO/AnC_MERO) — os outros 5 do bloco entram no
+      // workstream "Poços Exploratórios" de Libra.
+      proj('Mero', PALETTE[3], 'producao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2013-10-21', true, 'contract'),
           m('Assinatura', '2013-12-02', true, 'contract'),
         ]),
         ws('Poços Perfurados', [
           m('2 poços perfurados em 2010', '2010-12-31', true, 'well'),
-          m('3 poços perfurados em 2014', '2014-12-31', true, 'well'),
-          m('5 poços perfurados em 2015', '2015-12-31', true, 'well'),
+          m('2 poços perfurados em 2014', '2014-12-31', true, 'well'),
+          m('2 poços perfurados em 2015', '2015-12-31', true, 'well'),
           m('7 poços perfurados em 2016', '2016-12-31', true, 'well'),
-          m('4 poços perfurados em 2017', '2017-12-31', true, 'well'),
+          m('3 poços perfurados em 2017', '2017-12-31', true, 'well'),
           m('6 poços perfurados em 2018', '2018-12-31', true, 'well'),
           m('4 poços perfurados em 2019', '2019-12-31', true, 'well'),
           m('9 poços perfurados em 2020', '2020-12-31', true, 'well'),
@@ -376,12 +344,29 @@ function seedState() {
           m('5 poços perfurados em 2025', '2025-12-31', true, 'well'),
           m('1 poço perfurado em 2026 (até agora)', '2026-03-10', true, 'well'),
         ]),
-        ws('Primeiro Óleo por FPSO (campo de Mero)', [
+        ws('Primeiro Óleo por FPSO', [
           m('Pioneiro (EWT)', '2017-11-26', true, 'fpso'),
           m('Guanabara (Mero-1)', '2022-04-30', true, 'fpso'),
           m('Sepetiba (Mero-2)', '2023-12-31', true, 'fpso'),
           m('Duque de Caxias (Mero-3)', '2024-10-30', true, 'fpso'),
           m('Alexandre de Gusmão (Mero-4)', '2025-05-26', true, 'fpso'),
+        ]),
+      ]),
+      // O resto do bloco de Libra fora da área declarada de Mero (ver
+      // nota acima) — 5 poços de extensão/pioneiro adjacente, todos
+      // abandonados, sem descoberta comercial própria: ainda em
+      // exploração, sem workstream de FPSO.
+      proj('Libra', PALETTE[4], 'exploracao', [
+        ws('Marcos do Contrato', [
+          m('Leilão', '2013-10-21', true, 'contract'),
+          m('Assinatura', '2013-12-02', true, 'contract'),
+        ]),
+        ws('Poços Exploratórios', [
+          m('Poço de extensão 3-BRSA-1267i-RJS (indícios de petróleo)', '2014-09-25', true, 'well', false, [-24.650638, -42.031936]),
+          m('Poço de extensão 3-BRSA-1267-RJS (portador de petróleo e gás natural)', '2015-01-21', true, 'well', false, [-24.650649, -42.03243]),
+          m('Poço de extensão 3-BRSA-1267A-RJS (portador de petróleo e gás natural)', '2015-02-27', true, 'well', false, [-24.650649, -42.03243]),
+          m('Poço de extensão 3-BRSA-1310-RJS (seco com indícios de petróleo)', '2015-09-05', true, 'well', false, [-24.610277, -42.110245]),
+          m('Poço pioneiro adjacente 4-BRSA-1346-RJS (seco com indícios de gás natural)', '2017-05-11', true, 'well', false, [-24.655928, -41.905046]),
         ]),
       ]),
       proj('Sul de Gato do Mato', PALETTE[4], 'exploracao', [
@@ -786,7 +771,18 @@ function seedState() {
 // Exploratórios" de propósito: mapa.js só desenha marcador de poço pra
 // esse nome exato, e estes marcos não têm um ponto único no mapa (são
 // contagem agregada de um ano inteiro), então ficam só no roadmap/tabela.
-const SEED_VERSION = 7;
+// v8: revisão Mero/Libra — Mero (campo comercial de produção, PD "Campo de
+// Mero (AIP) 2021") vira projeto rastreado próprio, com "Poços Perfurados"
+// (69 poços dentro da área declarada do campo) e "Primeiro Óleo por FPSO"
+// (antes em "Libra", sempre foi sobre Mero); Libra passa a representar só
+// o resto do bloco original, fora da área de Mero, ainda em exploração (5
+// poços, todos abandonados) — grupo muda de produção pra exploração, e o
+// workstream de poços vira "Poços Exploratórios" (ver REMOVED_WORKSTREAMS
+// pra quem já tinha Libra salvo com a estrutura antiga). Estado salvo sem
+// "Mero" não ganha o projeto novo automaticamente (mergeSeedUpdates só
+// atualiza projeto que o usuário já tem — ver nota ali); só estado novo
+// (sem localStorage prévio) parte de seedState() já com os dois.
+const SEED_VERSION = 8;
 
 // Nomes antigos de marco que migraram para um nome novo em seedState() —
 // sem isso, o merge abaixo (que só adiciona, nunca substitui) deixaria o
@@ -804,6 +800,19 @@ const RENAMED_MILESTONES = {
   'Uirapuru': ['Poço pioneiro (descoberta)'],
   'Dois Irmãos': ['Poço pioneiro (poço seco, navio Ocean Courage) — bloco devolvido'],
   'Água Marinha': ['Início da perfuração (poço 1-BRSA-1401D/DA-RJS) — resultado ainda não divulgado'],
+};
+
+// Nome de workstream inteira que saiu de um projeto em seedState() — sem
+// isso, o merge abaixo (que só adiciona workstream/item novo, nunca
+// remove) deixaria a workstream antiga do usuário lado a lado com a nova
+// de mesmo assunto. Chave: nome do projeto; valor: nomes de workstream
+// antigos a remover ao mesclar.
+const REMOVED_WORKSTREAMS = {
+  // Libra virou o resto do bloco fora da área de Mero (grupo exploração,
+  // ver seedState/v8 acima) — "Poços Perfurados" (contagem anual, do
+  // bloco inteiro) e "Primeiro Óleo por FPSO" (sempre foi sobre Mero)
+  // migraram pra lá.
+  'Libra': ['Poços Perfurados', 'Primeiro Óleo por FPSO'],
 };
 
 // Correções pontuais de um campo que já se sabe estar errado (bug de
@@ -887,6 +896,8 @@ function mergeSeedUpdates(saved) {
     const savedProj = saved.projects.find((p) => p.name === refProj.name);
     if (!savedProj) continue;
     savedProj.group = refProj.group;
+    const removedWs = REMOVED_WORKSTREAMS[refProj.name];
+    if (removedWs) savedProj.workstreams = savedProj.workstreams.filter((w) => !removedWs.includes(w.name));
     const renamed = RENAMED_MILESTONES[refProj.name];
     for (const refWs of refProj.workstreams) {
       const savedWs = savedProj.workstreams.find((w) => w.name === refWs.name);
