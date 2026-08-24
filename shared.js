@@ -276,6 +276,41 @@ function findLinkedContract(pd, contractByContrato) {
   return contractByContrato.get(pd.contrato) || null;
 }
 
+// Mero é o campo comercial DENTRO do bloco de Libra (mesmo contrato, ver
+// findLinkedContract) — mas nem todo poço do bloco de Libra é um poço de
+// Mero: dos 74 poços que casam com Libra (SIG_CAMPO MRO/AnC6 + BLOCO
+// LIBRA, ver PLAN em build_pocos.py), 69 também casam com o campo Mero
+// (CAMPO MERO/AnC_MERO) e 5 não — são poços de extensão/pioneiro
+// adjacente, todos abandonados, fora da área declarada de Mero: o resto
+// do contrato de Libra, ainda em exploração. Mapa contrato -> Set de
+// código de poço do campo ligado, pra quem lê pocosData[contrato] saber
+// quais descontar (sem isso, os 69 poços de Mero apareciam contados e
+// desenhados duas vezes: uma como parte do bloco de Libra, outra como
+// campo Mero).
+function buildLinkedFieldWellCodes(presalFeatures, pdData, pocosData, contractByContrato) {
+  const byContract = new Map();
+  for (const feat of presalFeatures) {
+    const props = feat.properties;
+    const linked = findLinkedContract(pdData[props.nome], contractByContrato);
+    if (!linked) continue;
+    const codes = byContract.get(linked.name) || new Set();
+    for (const w of pocosData[props.nome] || []) codes.add(w.n);
+    byContract.set(linked.name, codes);
+  }
+  return byContract;
+}
+
+// Poços do CONTRATO propriamente ditos — pocosData[name] menos os que já
+// pertencem a um campo de contexto ligado (ver buildLinkedFieldWellCodes).
+// Pra qualquer nome sem campo ligado (todo mundo, hoje, exceto Libra),
+// isso é só pocosData[name] sem filtro nenhum.
+function contractOwnWells(pocosData, name, linkedFieldWellCodesByContract) {
+  const wells = pocosData[name] || [];
+  const excluded = linkedFieldWellCodesByContract && linkedFieldWellCodesByContract.get(name);
+  if (!excluded || !excluded.size) return wells;
+  return wells.filter((w) => !excluded.has(w.n));
+}
+
 /* ------------------------------- Seed data ------------------------------ */
 
 // Contratos reais de Partilha de Produção (CPP) do polígono do pré-sal,

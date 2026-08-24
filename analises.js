@@ -58,19 +58,14 @@ const EXPLORATION_WELL_CATEGORY_ORDER = [
 // óbvio à primeira vista em qualquer gráfico.
 const CONTEXT_FIELD_COLOR = '#7a828f';
 
-// MERO (campo de contexto) e Libra (contrato) casam quase o mesmo poço —
-// ver PLAN em scripts/build_pocos.py: Libra inclui SIG_CAMPO 'MRO' (o
-// código do campo Mero) + 'AnC6' + BLOCO 'LIBRA'. Nas tabelas/gráficos por
-// entidade os dois aparecem separados de propósito (é informação real:
-// "aqui está o contrato todo, aqui está só o campo"), mas em qualquer
-// AGREGADO (poços por ano, total de produtores/injetores) incluir os dois
-// contaria o mesmo poço duas vezes — por isso MERO fica de fora desses
-// agregados especificamente.
-const AGGREGATE_DEDUP_EXCLUDE = ['MERO'];
-
 let featureByProject = {};
 let pocosData = {};
 let pdData = {};
+// Contrato -> Set de código de poço que pertence a um campo de contexto
+// ligado (hoje só Libra -> poços de Mero) — ver buildLinkedFieldWellCodes
+// em shared.js. wellCountsFor desconta esses poços do contrato, pra Mero
+// não aparecer contado (nem desenhado, no mapa) duas vezes.
+let linkedFieldWellCodesByContract = new Map();
 
 /* -------------------------------- Helpers -------------------------------- */
 
@@ -169,7 +164,7 @@ function attachTooltip(el, htmlFn) {
 // gráfico. A seção "Campos em produção" usa withoutAbandonedWells (abaixo)
 // pra recontar sem ele — ver nota em WELL_CATEGORY_ORDER.
 function wellCountsFor(projectName) {
-  const wells = pocosData[projectName] || [];
+  const wells = contractOwnWells(pocosData, projectName, linkedFieldWellCodesByContract);
   const counts = {};
   for (const cat of ALL_WELL_CATEGORIES) counts[cat] = 0;
   for (const w of wells) counts[wellCategory(w)]++;
@@ -181,7 +176,8 @@ function wellCountsFor(projectName) {
 // abandonado, ver computeFieldRow/computeOutrosRow) sem os poços
 // definitivamente abandonados — só pra seção "Campos em produção".
 function withoutAbandonedWells(row) {
-  const wells = (pocosData[row.name] || []).filter((w) => wellCategory(w) !== 'abandonado');
+  const wells = contractOwnWells(pocosData, row.name, linkedFieldWellCodesByContract)
+    .filter((w) => wellCategory(w) !== 'abandonado');
   const counts = {};
   for (const [cat] of WELL_CATEGORY_ORDER) counts[cat] = 0;
   for (const w of wells) counts[wellCategory(w)]++;
@@ -445,9 +441,8 @@ function renderStoiipChart(container, rows) {
 // resultado de produção).
 function computeWellTypeTotals(pocosData, outrosPocos) {
   const wells = [];
-  for (const [name, arr] of Object.entries(pocosData)) {
-    if (AGGREGATE_DEDUP_EXCLUDE.includes(name)) continue;
-    wells.push(...arr);
+  for (const name of Object.keys(pocosData)) {
+    wells.push(...contractOwnWells(pocosData, name, linkedFieldWellCodesByContract));
   }
   wells.push(...outrosPocos);
   const totals = new Map();
@@ -472,7 +467,7 @@ function renderWellTypeChart(container, pocosData, outrosPocos) {
   title.textContent = 'Poços por categoria de perfuração (ANP/BDEP)';
   const sub = document.createElement('p');
   sub.className = 'chart-card-subtitle';
-  sub.textContent = `${fmtNum(grandTotal)} poços — todo o play do pré-sal (contratos rastreados + campos de contexto, sem contar Mero duas vezes + poços sem campo nomeado). O que o poço foi projetado pra ser, não o resultado que achou (isso já está nos gráficos "poços por categoria" de cada seção abaixo).`;
+  sub.textContent = `${fmtNum(grandTotal)} poços — todo o play do pré-sal (contratos rastreados + campos de contexto + poços sem campo nomeado, cada poço contado uma vez só). O que o poço foi projetado pra ser, não o resultado que achou (isso já está nos gráficos "poços por categoria" de cada seção abaixo).`;
   card.appendChild(title);
   card.appendChild(sub);
 
@@ -659,16 +654,16 @@ function renderFpsoByYearChart(container, projects) {
   if (card) container.appendChild(card);
 }
 
-// Dedup — ver AGGREGATE_DEDUP_EXCLUDE: soma poços dos contratos de
-// produção rastreados + campos de contexto (menos os excluídos) + poços
-// sem campo nomeado, sem contar o mesmo poço duas vezes (Mero dentro de
-// Libra). Só serve pra agregados de portfólio — a tabela e os gráficos
-// por entidade continuam mostrando cada contrato/campo separado.
+// Soma poços dos contratos de produção rastreados (já sem os que
+// pertencem a um campo ligado, ver contractOwnWells/wellCountsFor) +
+// campos de contexto + poços sem campo nomeado. Só serve pra agregados de
+// portfólio — a tabela e os gráficos por entidade continuam mostrando
+// cada contrato/campo separado.
 function dedupedProducaoWells(producaoProjectRows, fieldRows, outrosPocos) {
   const wells = [];
-  for (const r of producaoProjectRows) wells.push(...(pocosData[r.name] || []));
+  for (const r of producaoProjectRows) wells.push(...contractOwnWells(pocosData, r.name, linkedFieldWellCodesByContract));
   for (const r of fieldRows) {
-    if (r.isOutros || AGGREGATE_DEDUP_EXCLUDE.includes(r.name)) continue;
+    if (r.isOutros) continue;
     wells.push(...(pocosData[r.name] || []));
   }
   wells.push(...outrosPocos);
@@ -719,7 +714,7 @@ function renderWellsByYearChart(container, wells) {
   const card = buildYearColumnCard(
     byYear,
     'Poços perfurados por ano',
-    `${fmtNum(total)} poços entre ${minY} e ${maxY}${early ? ` — mais ${early} antes de ${WELLS_BY_YEAR_MIN}, fora do gráfico` : ''}. Contratos de produção + campos de contexto (sem Mero, já contado em Libra) + poços sem campo nomeado.`,
+    `${fmtNum(total)} poços entre ${minY} e ${maxY}${early ? ` — mais ${early} antes de ${WELLS_BY_YEAR_MIN}, fora do gráfico` : ''}. Contratos de produção + campos de contexto + poços sem campo nomeado, cada poço contado uma vez só.`,
     'Poços perfurados',
   );
   if (card) container.appendChild(card);
@@ -728,11 +723,24 @@ function renderWellsByYearChart(container, wells) {
 // "Poços por FPSO instalado" — total de poços do contrato dividido pelo
 // número de FPSOs já instalados. É densidade média por projeto, não
 // poço-a-poço por unidade (a base ANP não registra a qual FPSO cada poço
-// está ligado).
-function renderWellsPerFpsoChart(container, projectRows) {
+// está ligado). Contrato com campo ligado (hoje só Libra) soma de volta o
+// poço do campo pra essa conta específica: wellsTotal do contrato já
+// desconta esses poços (ver wellCountsFor) porque a linha do campo os
+// mostra à parte, mas são eles que de fato alimentam os FPSOs do
+// contrato — sem somar de volta, Libra apareceria com FPSO sem poço
+// nenhum.
+function renderWellsPerFpsoChart(container, projectRows, fieldRows) {
+  const linkedWellsByContract = new Map();
+  for (const f of fieldRows || []) {
+    if (!f.linkedContractName) continue;
+    linkedWellsByContract.set(f.linkedContractName, (linkedWellsByContract.get(f.linkedContractName) || 0) + f.wellsTotal);
+  }
   const withFpso = projectRows
     .filter((r) => r.fpsoInstalled > 0)
-    .map((r) => ({ ...r, perFpso: r.wellsTotal / r.fpsoInstalled }))
+    .map((r) => {
+      const wellsTotal = r.wellsTotal + (linkedWellsByContract.get(r.name) || 0);
+      return { ...r, wellsTotal, perFpso: wellsTotal / r.fpsoInstalled };
+    })
     .sort((a, b) => b.perFpso - a.perFpso);
   if (!withFpso.length) return;
 
@@ -743,7 +751,7 @@ function renderWellsPerFpsoChart(container, projectRows) {
   title.textContent = 'Poços por FPSO instalado (média)';
   const sub = document.createElement('p');
   sub.className = 'chart-card-subtitle';
-  sub.textContent = 'Poços do contrato (base ANP/BDEP) dividido pelo número de FPSOs já instalados — densidade média por projeto; a base não liga poço individual a FPSO individual.';
+  sub.textContent = 'Poços do contrato (base ANP/BDEP, incluindo os do campo comercial dentro do bloco — caso de Mero em Libra) dividido pelo número de FPSOs já instalados — densidade média por projeto; a base não liga poço individual a FPSO individual.';
   card.appendChild(title);
   card.appendChild(sub);
 
@@ -802,8 +810,10 @@ function nameCellHTML(r) {
 // Cessão Onerosa, bem anterior à Lei da Partilha (2010); só Mero é
 // Partilha. Alguns ficam dentro da área de um contrato rastreado (Mero
 // dentro do bloco de Libra, por exemplo) — daí entrarem na mesma tabela/
-// gráfico dos contratos de produção só com uma cor diferente, em vez de
-// somados nos KPIs do topo: somar contaria poço/volume em dobro.
+// gráfico dos contratos de produção. STOIIP continua somado nos KPIs do
+// topo mesmo pra campo ligado (é a mesma jazida, um volume só — ver
+// groupByPdKey); poço não: contractOwnWells já garante que cada poço
+// conta uma vez só, no contrato ou no campo, nunca nos dois.
 
 // contractNumbersIn/findLinkedContract (campo de contexto que é, na
 // verdade, o mesmo contrato de um projeto rastreado — hoje só MERO/Libra)
@@ -942,7 +952,7 @@ function renderProducaoTable(container, contractRows, fieldRows) {
 
   const note = document.createElement('p');
   note.className = 'analytics-table-note';
-  note.textContent = 'Cor do nome = cor do contrato (a mesma do roadmap/mapa); cinza = campo de contexto ou poço sem campo nomeado, sem contrato próprio. Parceiros: só onde o sumário executivo de PD publicado trouxe a tabela de participação. FPSOs: instalados (+ previstos entre parênteses) — só contrato rastreado tem essa informação. Mero soma poço em dobro com Libra de propósito (é o campo dentro do bloco) — os KPIs do topo e os gráficos de poços por ano/produtores-injetores excluem esse dobro; esta tabela mostra os dois porque aqui cada linha é uma entidade, não uma soma.';
+  note.textContent = 'Cor do nome = cor do contrato (a mesma do roadmap/mapa); cinza = campo de contexto ou poço sem campo nomeado, sem contrato próprio. Parceiros: só onde o sumário executivo de PD publicado trouxe a tabela de participação. FPSOs: instalados (+ previstos entre parênteses) — só contrato rastreado tem essa informação. Mero (contrato de Libra) é o campo comercial dentro do bloco — seus poços contam só na linha de Mero; a linha de Libra mostra o resto do bloco, ainda em exploração.';
   container.appendChild(note);
 }
 
@@ -963,7 +973,7 @@ function renderProducaoSection(container, contractRows, fieldRows, outrosPocos, 
   statsRow.style.marginBottom = '18px';
   statsRow.appendChild(statTile(
     'Poços produtores', fmtNum(stats.produtores),
-    'Contratos de produção + campos de contexto + poços avulsos, sem contar Mero duas vezes',
+    'Contratos de produção + campos de contexto + poços avulsos, cada poço contado uma vez só',
   ));
   statsRow.appendChild(statTile(
     'Poços injetores', fmtNum(stats.injetores),
@@ -977,7 +987,7 @@ function renderProducaoSection(container, contractRows, fieldRows, outrosPocos, 
     'Poços por categoria, por contrato/campo',
     'Base ANP/BDEP — contratos de produção rastreados + campos de contexto + poços sem campo nomeado.',
   ));
-  renderWellsPerFpsoChart(container, contractRows);
+  renderWellsPerFpsoChart(container, contractRows, fieldRows);
   renderFpsoByYearChart(container, allProjects);
   renderWellsByYearChart(container, wells);
   renderProducaoTable(container, contractRows, fieldRows);
@@ -1060,10 +1070,16 @@ async function init() {
     console.error('Falha ao carregar dados de análise', err);
   }
 
+  // Calculado antes de computeProjectRow — wellCountsFor (chamada por
+  // ele) já precisa descontar os poços do campo ligado (ver
+  // linkedFieldWellCodesByContract/contractOwnWells).
+  const contractByContrato = buildContractByContrato(state.projects, pdData);
+  const presalFeatures = presalGeojson ? presalGeojson.features : [];
+  linkedFieldWellCodesByContract = buildLinkedFieldWellCodes(presalFeatures, pdData, pocosData, contractByContrato);
+
   const rows = state.projects.map(computeProjectRow);
   const agg = computeAggregates(rows);
-  const contractByContrato = buildContractByContrato(state.projects, pdData);
-  const fieldRows = presalGeojson ? presalGeojson.features.map((f) => computeFieldRow(f, contractByContrato)) : [];
+  const fieldRows = presalFeatures.map((f) => computeFieldRow(f, contractByContrato));
   if (outrosPocos.length) fieldRows.push(computeOutrosRow(outrosPocos));
 
   wrapper.innerHTML = '';

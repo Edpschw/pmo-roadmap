@@ -185,6 +185,11 @@ async function init() {
     linkedFieldsByProjectName.get(linkedProject.name).push(props);
     linkedFieldNames.add(props.nome);
   }
+  // Poços do campo ligado (hoje só Mero) descontados do contrato (Libra) —
+  // ver buildLinkedFieldWellCodes/contractOwnWells em shared.js. Sem isso
+  // a seção de Libra listava os mesmos 69 poços que já aparecem na seção
+  // de Mero logo abaixo.
+  const linkedFieldWellCodesByContract = buildLinkedFieldWellCodes(contextFeatures, pdData || {}, pocosData, contractByContrato);
 
   const content = document.createElement('div');
   content.className = 'pocos-content';
@@ -219,7 +224,7 @@ async function init() {
   for (const g of groupOrder) {
     for (const p of trackedByGroup[g]) {
       const id = 'campo-' + slug(p.name);
-      const wells = pocosData[p.name] || [];
+      const wells = contractOwnWells(pocosData, p.name, linkedFieldWellCodesByContract);
       nav.appendChild(buildNavPill(id, p.name, p.color));
       content.appendChild(buildFieldSection(id, p.name, p.color, GROUP_BADGES[p.group], wells));
       // Campo de contexto do mesmo contrato de partilha (ver

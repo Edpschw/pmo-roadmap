@@ -363,6 +363,10 @@ function computeFieldValueCounts(normFn) {
 let pocosData = {};
 let outrosPocos = [];
 let pdData = {};
+// Contrato -> Set de código de poço que pertence a um campo de contexto
+// ligado (hoje só Libra -> poços de Mero) — ver buildLinkedFieldWellCodes
+// em shared.js. buildWellMarkers desconta esses poços do contrato.
+let linkedFieldWellCodesByContract = new Map();
 
 // "2015-03-10" -> "10/03/2015"; qualquer coisa que não seja uma data ISO
 // completa (data parcial "2017-12", ou texto livre tipo "Previsão
@@ -566,9 +570,13 @@ function splitCellByWellhead(entries) {
 // Tupinambá hoje) entra pelo fallback: posição real se tiver coords,
 // senão uma aproximação dentro do polígono do contrato, espalhada em
 // círculo pra não empilhar e deslocada pro sul do centro, que é onde o
-// popup do contrato abre.
+// popup do contrato abre. contractOwnWells desconta os poços de um campo
+// ligado (hoje só Mero dentro de Libra, ver linkedFieldWellCodesByContract)
+// — sem isso, os mesmos poços apareciam desenhados duas vezes: uma vez
+// como parte do bloco de Libra, outra como campo Mero (as duas camadas
+// ficam visíveis ao mesmo tempo por padrão).
 function buildWellMarkers(key, project, bounds, color, targetLayer) {
-  const anpWells = pocosData[key] || [];
+  const anpWells = contractOwnWells(pocosData, key, linkedFieldWellCodesByContract);
   const milestones = project ? wellItemsOf(project) : [];
   const byCode = new Map();
   for (const item of milestones) {
@@ -762,6 +770,10 @@ async function init() {
       if (linkedProject) linkedPresaltLayers.push({ layer, project: linkedProject });
       registerWellSet(props.nome, null, layer.getBounds(), color, wellPresaltLayer);
     }
+    // Precisa estar pronto antes do laço de state.projects logo abaixo —
+    // é buildWellMarkers (chamado por registerWellSet pro contrato) que
+    // desconta os poços do campo ligado.
+    linkedFieldWellCodesByContract = buildLinkedFieldWellCodes(presGeojson.features, pdData, pocosData, contractByContrato);
   } catch (e) {
     // Camada de contexto é opcional — segue sem ela se não carregar.
   }
