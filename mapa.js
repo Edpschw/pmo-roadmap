@@ -466,6 +466,71 @@ function addWellMarker(targetLayer, latlng, color, entries) {
   );
 }
 
+// Distância em metros entre duas coordenadas [lat, lng] (haversine) — usada
+// só por splitCellByWellhead, pra decidir se duas entradas da mesma célula
+// de WELL_MERGE_GRID são de fato o mesmo poço.
+function haversineMeters(c1, c2) {
+  const R = 6371000;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(c2[0] - c1[0]);
+  const dLng = toRad(c2[1] - c1[1]);
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(toRad(c1[0])) * Math.cos(toRad(c2[0])) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// "7-BAC-4D-SPS" -> "BAC-4"; "3-BRSA-1216DA-SPS" -> "BRSA-1216" — código
+// "base" do poço (prefixo do campo + número), sem a letra de sidetrack (D,
+// DA, A, B, HP, HPA...) nem o slot inicial/UF final. Duas entradas com o
+// mesmo base são perfuração original + sidetrack do mesmo poço.
+const WELL_BASE_CODE_RE = /^\d+-([A-Za-z]+)-(\d+)[A-Za-z]*-[A-Za-z]+$/;
+function wellBaseCode(n) {
+  const m = WELL_BASE_CODE_RE.exec(n);
+  return m ? `${m[1]}-${m[2]}` : n;
+}
+
+// Duas entradas caem na mesma célula da grade (~110 m, ver WELL_MERGE_GRID)
+// sem necessariamente serem o mesmo poço — pode ser só coincidência de dois
+// poços vizinhos, mas de perfurações INDEPENDENTES (caso real: BAC-4D a 70
+// m de BRSA-1216DA, códigos sem nenhuma relação — antes disso, BAC-4D
+// ficava escondido atrás do outro poço, só listado no popup como "mesmo
+// ponto", nunca com marcador próprio). Considera mesmo poço quando:
+// coordenada idêntica (mesmo registro), OU bem perto (<20 m — mesmo centro
+// de perfuração/manifold, onde vários poços vizinhos legitimamente caem no
+// mesmo ponto do mapa mesmo sendo perfurações diferentes), OU código-base
+// igual (sidetrack do mesmo poço original, que pode ficar a até ~70 m do
+// poço-mãe). Marco de roadmap sem poço real por trás (info null) sempre
+// entra: não tem coordenada/código de poço pra comparar.
+const WELL_CLUSTER_SMALL_RADIUS_M = 20;
+function sameWellhead(a, b) {
+  if (!a.info || !b.info) return true;
+  if (a.info.c[0] === b.info.c[0] && a.info.c[1] === b.info.c[1]) return true;
+  if (haversineMeters(a.info.c, b.info.c) <= WELL_CLUSTER_SMALL_RADIUS_M) return true;
+  return wellBaseCode(a.info.n) === wellBaseCode(b.info.n);
+}
+
+// Refina uma célula da grade em 1+ grupos por sameWellhead — union-find
+// simples (poucas entradas por célula, nunca vale a pena algo mais
+// esperto). Praticamente sempre devolve o próprio array inteiro como grupo
+// único; só separa nos ~2 casos reais de coincidência espacial encontrados
+// na base (ver sameWellhead).
+function splitCellByWellhead(entries) {
+  const parent = entries.map((_, i) => i);
+  const find = (i) => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
+  for (let i = 0; i < entries.length; i++) {
+    for (let j = i + 1; j < entries.length; j++) {
+      if (sameWellhead(entries[i], entries[j])) parent[find(i)] = find(j);
+    }
+  }
+  const groups = new Map();
+  entries.forEach((e, i) => {
+    const root = find(i);
+    if (!groups.has(root)) groups.set(root, []);
+    groups.get(root).push(e);
+  });
+  return [...groups.values()];
+}
+
 // Monta e adiciona (direto em targetLayer — a mesma camada do polígono do
 // contrato, ou presaltFieldsLayer pra um campo de contexto) os marcadores
 // de poço de um contrato. Todos os poços aparecem sempre, em qualquer
@@ -544,7 +609,17 @@ function buildWellMarkers(key, project, bounds, color, targetLayer) {
   });
 
   if (!cells.size) return false;
-  for (const cell of cells.values()) addWellMarker(targetLayer, cell.latlng, color, cell.entries);
+  for (const cell of cells.values()) {
+    for (const group of splitCellByWellhead(cell.entries)) {
+      // Coordenada do grupo: a do primeiro poço real dele (não a da célula
+      // inteira — depois de separar, cada grupo pode legitimamente ficar
+      // um pouco longe do ponto original da célula); só cai pra
+      // cell.latlng se o grupo inteiro for marco aproximado sem poço real.
+      const first = group.find((e) => e.info);
+      const latlng = first ? first.info.c : cell.latlng;
+      addWellMarker(targetLayer, latlng, color, group);
+    }
+  }
   return true;
 }
 
