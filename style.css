@@ -639,12 +639,23 @@ body.map-page .btn-ghost:hover { background: #1e222a; }
    via style inline — por isso o transform de centralização vai no `span`
    de dentro, não no wrapper do divIcon, pra não competir com ele. */
 .map-project-label-icon { background: transparent; border: none; pointer-events: none; }
+.map-project-label-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  transform: translate(-50%, -50%);
+}
 .map-project-label {
-  display: inline-block; white-space: nowrap; transform: translate(-50%, -50%);
+  display: inline-block; white-space: nowrap;
   font-size: 11px; font-weight: 700; color: #fff;
   text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.8);
   letter-spacing: 0.01em;
 }
+/* Selos de operador/parceiro embaixo do nome, direto sobre o polígono
+   (ver mapLabelBadgesHTML em mapa.js) — mesmos selos do popup, com uma
+   sombra no lugar do fundo branco do chip de logo (não dá pra pintar um
+   retângulo sólido atrás de cada um sem poluir o mapa). */
+.map-label-badges { display: flex; align-items: center; gap: 3px; justify-content: center; }
+.map-label-badges .company-badge { box-shadow: 0 1px 3px rgba(0,0,0,0.85); }
+.map-label-badges .company-logo-chip { box-shadow: 0 1px 3px rgba(0,0,0,0.85); }
 
 /* Sliders do painel "Controles" (zoom mínimo dos poços, filtro de ano) */
 .map-slider-row { margin-bottom: 10px; }

@@ -209,15 +209,16 @@ function mapDisplayName(project) {
   return MAP_DISPLAY_NAME_OVERRIDE[project.name] || project.name;
 }
 
-// Linha de selos (operador + parceiros do PD, ver companyBadgesFor em
-// shared.js) pro popup de um contrato/campo — key é o nome usado pra
-// procurar o PD (pdData, mesma chave de pdSectionHTML). String vazia sem
-// operador nem parceiros (ex.: PD ainda não carregou).
-function companyBadgesHTML(operadorRaw, key) {
+// HTML de cada selo (operador + parceiros do PD, ver companyBadgesFor em
+// shared.js), sem o <div> em volta — a mesma lista de <span> alimenta
+// tanto o popup (companyBadgesHTML, key = nome usado em pdSectionHTML)
+// quanto o rótulo sobre o polígono (mapLabelBadgesHTML). key é o nome
+// usado pra procurar o PD (pdData). String vazia sem operador nem
+// parceiros (ex.: PD ainda não carregou).
+function companyBadgeItemsHTML(operadorRaw, key) {
   const pd = byNameOrUpper(pdData, key);
   const badges = companyBadgesFor(operadorRaw, pd ? pd.participacao : null);
-  if (!badges.length) return '';
-  const items = badges.map((b) => {
+  return badges.map((b) => {
     const isOp = b.role === 'operador';
     const title = `${b.name}${isOp ? ' (operador)' : b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
     if (b.logo) {
@@ -225,7 +226,20 @@ function companyBadgesHTML(operadorRaw, key) {
     }
     return `<span class="company-badge ${isOp ? 'company-badge-operador' : 'company-badge-parceiro'}" style="background:${b.color}" title="${escapeHtml(title)}">${escapeHtml(b.initials)}</span>`;
   }).join('');
+}
+
+function companyBadgesHTML(operadorRaw, key) {
+  const items = companyBadgeItemsHTML(operadorRaw, key);
+  if (!items) return '';
   return `<div class="map-popup-badges">${items}</div>`;
+}
+
+// Mesmos selos, agora pro rótulo fixo sobre o polígono (não só no popup) —
+// ver projectLabelByProjectId/presaltFieldLabelMarkers mais abaixo.
+function mapLabelBadgesHTML(operadorRaw, key) {
+  const items = companyBadgeItemsHTML(operadorRaw, key);
+  if (!items) return '';
+  return `<div class="map-label-badges">${items}</div>`;
 }
 
 function popupHTML(project, props) {
@@ -877,7 +891,10 @@ async function init() {
       presaltFieldLabelMarkers.push(L.marker(layer.getBounds().getCenter(), {
         icon: L.divIcon({
           className: 'map-project-label-icon',
-          html: `<span class="map-project-label">${escapeHtml(titleCasePt(props.nome))}</span>`,
+          html: `<div class="map-project-label-wrap">
+            <span class="map-project-label">${escapeHtml(titleCasePt(props.nome))}</span>
+            ${mapLabelBadgesHTML(props.operador, props.nome)}
+          </div>`,
           iconSize: null,
         }),
         interactive: false,
@@ -934,7 +951,10 @@ async function init() {
     projectLabelByProjectId[project.id] = L.marker(bounds.getCenter(), {
       icon: L.divIcon({
         className: 'map-project-label-icon',
-        html: `<span class="map-project-label">${escapeHtml(mapDisplayName(project))}</span>`,
+        html: `<div class="map-project-label-wrap">
+          <span class="map-project-label">${escapeHtml(mapDisplayName(project))}</span>
+          ${mapLabelBadgesHTML(feat.properties.operador, project.name)}
+        </div>`,
         iconSize: null,
       }),
       interactive: false,
