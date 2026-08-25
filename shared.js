@@ -58,7 +58,7 @@ const KNOWN_PROJECT_GROUPS = {
   'Sépia': 'producao',
   'Atapu': 'producao',
   'Água Marinha': 'exploracao',
-  'Norte de Brava': 'producao',
+  'Norte de Brava': 'exploracao',
   'Bumerangue': 'exploracao',
   'Sudoeste de Sagitário': 'exploracao',
   'Tupinambá': 'exploracao',
@@ -787,16 +787,24 @@ function seedState() {
           m('Poço 1-BRSA-1401DA-RJS (atingiu o pré-sal)', '2025-10-17', true, 'well', false, [-22.8645369444, -40.0254675]),
         ]),
       ]),
-      proj('Norte de Brava', PALETTE[4], 'producao', [
+      // Correção: "Anita Garibaldi" não é o FPSO de Norte de Brava — é o
+      // FPSO dos campos de Marlim e Voador (pós-sal/pré-sal da Bacia de
+      // Campos), sem relação com este contrato. O FPSO real da área
+      // (revitalização de Albacora, reservatório Forno unitizado com o
+      // bloco de Norte de Brava) ainda está em licitação (nov/2025, sem
+      // vencedor definido) — sem 1º óleo confirmado. O único poço
+      // perfurado no contrato (1-BRSA-1394-RJS, pioneiro) foi abandonado
+      // permanentemente — volta pro grupo exploração, sem workstream de
+      // FPSO, e "Poços Perfurados" (contagem anual) vira "Poços
+      // Exploratórios" (poço nomeado), mesmo padrão dos outros contratos
+      // desse grupo.
+      proj('Norte de Brava', PALETTE[4], 'exploracao', [
         ws('Marcos do Contrato', [
           m('Leilão', '2022-12-16', true, 'contract'),
           m('Assinatura', '2023-07-05', true, 'contract'),
         ]),
-        ws('Poços Perfurados', [
-          m('1 poço perfurado em 2025', '2025-12-31', true, 'well'),
-        ]),
-        ws('Primeiro Óleo por FPSO', [
-          m('Anita Garibaldi', '2023-08-16', true, 'fpso'),
+        ws('Poços Exploratórios', [
+          m('Poço pioneiro 1-BRSA-1394-RJS (abandonado permanentemente)', '2025-03-14', true, 'well', false, [-22.28171, -40.014952]),
         ]),
       ]),
       proj('Bumerangue', PALETTE[5], 'exploracao', [
@@ -934,7 +942,13 @@ function seedState() {
 // perfuração da jazida inteira é o que importa acompanhar, mesmo com
 // Bacalhau fora do contrato de partilha (mapa e análises continuam
 // separando os dois, só o roadmap soma).
-const SEED_VERSION = 11;
+// v12: corrige Norte de Brava — volta pro grupo exploração (ver nota no
+// seed, junto de "Norte de Brava"): "Anita Garibaldi" é o FPSO de Marlim/
+// Voador, não deste contrato, e o FPSO real da área ainda está em
+// licitação, sem 1º óleo. Workstream de FPSO removida, "Poços Perfurados"
+// vira "Poços Exploratórios" com o único poço do contrato (pioneiro,
+// abandonado).
+const SEED_VERSION = 12;
 
 // Nomes antigos de marco que migraram para um nome novo em seedState() —
 // sem isso, o merge abaixo (que só adiciona, nunca substitui) deixaria o
@@ -973,6 +987,11 @@ const REMOVED_WORKSTREAMS = {
   // bloco inteiro) e "Primeiro Óleo por FPSO" (sempre foi sobre Mero)
   // migraram pra lá.
   'Libra': ['Poços Perfurados', 'Primeiro Óleo por FPSO'],
+  // Norte de Brava volta pro grupo exploração (ver nota no seed) — nunca
+  // teve FPSO de verdade (Anita Garibaldi era de Marlim/Voador) nem poço
+  // "perfurado" no sentido de produção (o único poço foi um pioneiro
+  // abandonado, agora em "Poços Exploratórios").
+  'Norte de Brava': ['Poços Perfurados', 'Primeiro Óleo por FPSO'],
 };
 
 // Correções pontuais de um campo que já se sabe estar errado (bug de
@@ -980,10 +999,6 @@ const REMOVED_WORKSTREAMS = {
 // merge (que só adiciona), isto SOBRESCREVE o valor salvo do usuário. Usar
 // só para erros confirmados com fonte, nunca para forçar preferência.
 const FIELD_CORRECTIONS = [
-  {
-    project: 'Norte de Brava', workstream: 'Primeiro Óleo por FPSO', item: 'Anita Garibaldi',
-    fields: { date: '2023-08-16' },
-  },
   {
     // Registrada por engano com a data do poço seco (05/2020); a devolução
     // real do bloco só ocorreu no 4º tri/2022 (ver comentário no seed).
