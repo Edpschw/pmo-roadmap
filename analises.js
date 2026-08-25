@@ -251,9 +251,9 @@ function computeProjectRow(project) {
     jazidaNome: jazidaNome(pd),
     jazidaComposicao: jazidaComposicao(pd),
     // Nome do contrato de partilha propriamente dito — ver
-    // DISPLAY_NAME_OVERRIDE/nameCellHTML: nem sempre é o nome exibido na
-    // linha (Norte de Carcará exibe "Bacalhau", o nome popular da jazida).
-    contratoNome: project.name,
+    // projectContractName em shared.js: nem sempre é o próprio
+    // project.name (Mero cita "Libra", ver nota lá).
+    contratoNome: projectContractName(project.name),
   };
 }
 
@@ -433,10 +433,11 @@ function computeJazidaRows(contractRows, fieldRows) {
       participacao: rep.participacao,
       comercialidade: g.members.map((m) => m.comercialidade).find(Boolean) || null,
       resolucao: g.members.map((m) => m.resolucao).find(Boolean) || null,
-      // Contrato de partilha por trás da linha, pra nameCellHTML — o
-      // próprio quando existe; senão null (grupo só de campos de
+      // Contrato de partilha por trás da linha, pra nameCellHTML — o do
+      // membro contrato (já no nome real, ver projectContractName em
+      // shared.js) quando existe; senão null (grupo só de campos de
       // contexto, ex. Berbigão, sem contrato rastreado nenhum).
-      contratoNome: contractMember ? contractMember.name : null,
+      contratoNome: contractMember ? contractMember.contratoNome : null,
       membersOther: others,
       memberCount: g.members.length,
       composicao: g.members.map((m) => m.jazidaComposicao).find(Boolean) || null,

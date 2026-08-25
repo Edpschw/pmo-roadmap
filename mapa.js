@@ -213,10 +213,17 @@ function popupHTML(project, props) {
   const groupLabel = (GROUP_DEFS.find((g) => g.id === project.group) || {}).label || project.group;
   const displayName = mapDisplayName(project);
   const renamed = displayName !== project.name;
+  // Contrato de partilha por trás do projeto — normalmente o próprio
+  // project.name, mas nem sempre (Mero cita "Libra", ver
+  // projectContractName em shared.js: mesmo Leilão/Assinatura dos dois,
+  // sem PD próprio pra Libra que permita derivar isso de outro jeito).
+  // Independente de "renamed" (que só decide o TÍTULO do popup) — Mero
+  // não tem o título trocado, mas ainda ganha a linha "Contrato".
+  const contractName = projectContractName(project.name);
   const rows = [
     ['Grupo', groupLabel],
   ];
-  if (renamed) rows.push(['Contrato', project.name]);
+  if (contractName !== displayName) rows.push(['Contrato', contractName]);
   rows.push(['Bacia', props.bacia || '—'], ['Operador', props.operador || '—'], ['Rodada', props.rodada || '—']);
   if (props.fonte === 'bloco_exploratorio') {
     rows.push(['Assinatura', formatAnpDate(props.assinatura)]);

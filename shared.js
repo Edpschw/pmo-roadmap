@@ -338,6 +338,23 @@ function projectDisplayName(name) {
   return PROJECT_DISPLAY_NAME_OVERRIDE[name] || name;
 }
 
+// Nome do CONTRATO por trás de um projeto rastreado, quando difere do
+// próprio nome — hoje só Mero: o contrato de partilha é "Libra" (mesmo
+// Leilão 2013-10-21/Assinatura 2013-12-02 dos dois, ver seedState), mas
+// Mero é o campo/jazida compartilhada dentro dele, viraram dois projetos
+// rastreados separados (Mero produção, Libra exploração) porque cada um
+// tem seu próprio grupo. Diferente de Bacalhau/Sapinhoá (onde o contrato
+// e a jazida compartilhada citam o mesmo PD, ver groupByPdKey em
+// analises.js), Libra não tem PD próprio — não dá pra derivar essa
+// ligação a partir dos dados carregados em runtime, por isso o mapa
+// explícito aqui (mesmo padrão de PROJECT_DISPLAY_NAME_OVERRIDE acima).
+const PROJECT_CONTRACT_OVERRIDE = {
+  'Mero': 'Libra',
+};
+function projectContractName(name) {
+  return PROJECT_CONTRACT_OVERRIDE[name] || name;
+}
+
 // Agrupa uma lista de { name, pd } por pd.fonte — a URL do PD é a chave
 // real de "é o mesmo documento, logo a mesma jazida", já que o PD é o
 // documento POR JAZIDA (não por campo/contrato). Grupo com mais de um
