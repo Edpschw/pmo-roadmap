@@ -836,11 +836,17 @@ function renderWellsPerFpsoChart(container, projectRows) {
 // rastreado, CONTEXT_FIELD_COLOR (cinza) pra campo de contexto ou poço
 // sem campo nomeado. É o "colorindo só quem tem contrato" pedido, num só
 // lugar reaproveitado pela tabela de produção e pela de exploração.
+// Quando a entidade é uma jazida compartilhada (r.jazidaComposicao — só
+// preenchido quando o PD descreve a composição em prosa, ver
+// jazidaComposicao em shared.js), o nome da jazida (r.jazidaNome, do
+// título do PD) entra embaixo do nome do contrato/campo — "Norte de
+// Carcará" sozinho não deixa óbvio que a jazida ali é "Bacalhau e Bacalhau
+// Norte", por exemplo.
 function nameCellHTML(r) {
-  const note = r.jazidaComposicao
-    ? ` <span class="proj-name-note" title="${escapeHtml(r.jazidaComposicao)}">(jazida compartilhada)</span>`
+  const sub = r.jazidaComposicao
+    ? `<span class="proj-name-sub" title="${escapeHtml(r.jazidaComposicao)}">Jazida compartilhada: ${escapeHtml(r.jazidaNome || r.name)}</span>`
     : '';
-  return `<div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span>${escapeHtml(r.name)}${note}</div>`;
+  return `<div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span><span class="proj-name-stack"><span class="proj-name-main">${escapeHtml(r.name)}</span>${sub}</span></div>`;
 }
 
 /* ------------------------ Campos de contexto (não-CPP) --------------------- */
