@@ -187,6 +187,20 @@ body { display: flex; flex-direction: column; height: 100vh; }
 }
 .company-badge-operador { width: 15px; height: 15px; font-size: 6.5px; }
 .company-badge-parceiro { width: 11px; height: 11px; font-size: 5.5px; opacity: 0.85; }
+
+/* Logo real (ver COMPANY_LOGO_FILES em shared.js) em vez do círculo com
+   sigla — logo de empresa costuma ser uma marca larga (wordmark), não um
+   ícone quadrado, por isso vira um chip retangular branco (a maioria dos
+   logos oficiais é pensada pra fundo claro) em vez de forçar num círculo. */
+.company-logo-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff; border-radius: 4px; flex: none; line-height: 0;
+}
+.company-logo-chip img { display: block; width: auto; }
+.company-logo-chip-operador { height: 17px; padding: 1px 4px; }
+.company-logo-chip-operador img { height: 13px; max-width: 46px; }
+.company-logo-chip-parceiro { height: 13px; padding: 1px 3px; opacity: 0.9; }
+.company-logo-chip-parceiro img { height: 9px; max-width: 34px; }
 .row.group-row .label-text {
   font-weight: 700; font-size: 11.5px; color: var(--text-faint);
   text-transform: uppercase; letter-spacing: .04em;
@@ -886,6 +900,10 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   .project-badges-row { padding-left: 30px; } /* chevron(22)+gap(4)+dot(9)+gap(4)-ish, arredondado */
   .company-badge-operador { width: 13px; height: 13px; font-size: 5.8px; }
   .company-badge-parceiro { width: 10px; height: 10px; font-size: 5px; }
+  .company-logo-chip-operador { height: 15px; padding: 1px 3px; }
+  .company-logo-chip-operador img { height: 11px; max-width: 38px; }
+  .company-logo-chip-parceiro { height: 12px; padding: 1px 2px; }
+  .company-logo-chip-parceiro img { height: 8px; max-width: 28px; }
   /* Nome do projeto/workstream nunca é cortado no mobile: quebra em várias
      linhas em vez de truncar com reticências (altura da linha calculada em
      JS via measureLabelCellHeight, para não sobrepor a linha seguinte). */

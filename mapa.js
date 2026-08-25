@@ -218,9 +218,12 @@ function companyBadgesHTML(operadorRaw, key) {
   const badges = companyBadgesFor(operadorRaw, pd ? pd.participacao : null);
   if (!badges.length) return '';
   const items = badges.map((b) => {
-    const cls = b.role === 'operador' ? 'company-badge-operador' : 'company-badge-parceiro';
-    const title = `${b.name}${b.role === 'operador' ? ' (operador)' : b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
-    return `<span class="company-badge ${cls}" style="background:${b.color}" title="${escapeHtml(title)}">${escapeHtml(b.initials)}</span>`;
+    const isOp = b.role === 'operador';
+    const title = `${b.name}${isOp ? ' (operador)' : b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
+    if (b.logo) {
+      return `<span class="company-logo-chip ${isOp ? 'company-logo-chip-operador' : 'company-logo-chip-parceiro'}" title="${escapeHtml(title)}"><img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name)}"/></span>`;
+    }
+    return `<span class="company-badge ${isOp ? 'company-badge-operador' : 'company-badge-parceiro'}" style="background:${b.color}" title="${escapeHtml(title)}">${escapeHtml(b.initials)}</span>`;
   }).join('');
   return `<div class="map-popup-badges">${items}</div>`;
 }

@@ -392,12 +392,21 @@ function colorForCompany(shortName) {
   return `hsl(${hash % 360}, 55%, 40%)`;
 }
 
+// Logo real (arquivo enviado pelo usuário, ver assets/logos/) por nome
+// curto da empresa (mesma chave de COMPANY_ALIASES.short) — quando existe
+// aqui, o selo usa a imagem em vez do círculo com sigla gerado (ver
+// companyBadge). Só Petrobras até agora; demais empresas seguem no selo
+// gerado até que o arquivo do logo seja enviado.
+const COMPANY_LOGO_FILES = {
+  'Petrobras': 'assets/logos/petrobras.png',
+};
+
 function companyBadge(rawName) {
   if (!rawName) return null;
   const known = COMPANY_ALIASES[rawName];
   const short = known ? known.short : rawName.trim();
   const initials = known ? known.initials : short.split(/\s+/).slice(0, 2).map((w) => w[0] || '').join('').toUpperCase() || '?';
-  return { name: short, initials, color: colorForCompany(short) };
+  return { name: short, initials, color: colorForCompany(short), logo: COMPANY_LOGO_FILES[short] || null };
 }
 
 // Selo do operador (maior) + selos dos parceiros do PD (menores), pro

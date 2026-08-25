@@ -814,11 +814,22 @@ function renderProjectRow(project, rangeStart) {
     const badgesRow = document.createElement('div');
     badgesRow.className = 'project-badges-row';
     for (const b of badges) {
+      const isOp = b.role === 'operador';
+      const title = `${b.name}${isOp ? ' (operador)' : b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
       const el = document.createElement('span');
-      el.className = 'company-badge ' + (b.role === 'operador' ? 'company-badge-operador' : 'company-badge-parceiro');
-      el.style.background = b.color;
-      el.textContent = b.initials;
-      el.title = `${b.name}${b.role === 'operador' ? ' (operador)' : b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
+      if (b.logo) {
+        el.className = 'company-logo-chip ' + (isOp ? 'company-logo-chip-operador' : 'company-logo-chip-parceiro');
+        el.title = title;
+        const img = document.createElement('img');
+        img.src = b.logo;
+        img.alt = b.name;
+        el.appendChild(img);
+      } else {
+        el.className = 'company-badge ' + (isOp ? 'company-badge-operador' : 'company-badge-parceiro');
+        el.style.background = b.color;
+        el.textContent = b.initials;
+        el.title = title;
+      }
       badgesRow.appendChild(el);
     }
     labelCell.appendChild(badgesRow);
