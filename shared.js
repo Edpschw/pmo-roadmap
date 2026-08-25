@@ -355,6 +355,77 @@ function projectContractName(name) {
   return PROJECT_CONTRACT_OVERRIDE[name] || name;
 }
 
+// Selos de empresa (operador/parceiros) no mapa e no roadmap — como este
+// ambiente não tem acesso de rede pra baixar o logo real de cada empresa
+// (site de cada operador bloqueado pela política de saída desta sessão),
+// o selo é gerado: um círculo colorido com a sigla da empresa, no mesmo
+// espírito do avatar-padrão do GitHub/Slack. Nome cru (como aparece em
+// props.operador do GeoJSON ou pd.participacao[].empresa) -> nome curto +
+// sigla; a cor é derivada por hash do nome curto (colorForCompany), não é
+// a cor de marca real de cada empresa — evita parecer um logo oficial.
+// Cobre todo operador/parceiro observado nos dados atuais (ver nota em
+// build_geojson.py/planos_desenvolvimento.json); empresa nova cai no
+// fallback de companyBadge (sigla derivada automaticamente do nome).
+const COMPANY_ALIASES = {
+  'Petróleo Brasileiro S.A. - PETROBRAS': { short: 'Petrobras', initials: 'PB' },
+  'Petróleo Brasileiro S.A.': { short: 'Petrobras', initials: 'PB' },
+  'Equinor Brasil Energia Ltda.': { short: 'Equinor', initials: 'EQ' },
+  'Equinor Energy do Brasil  Ltda.': { short: 'Equinor', initials: 'EQ' },
+  'Shell Brasil Petróleo Ltda.': { short: 'Shell', initials: 'SH' },
+  'TotalEnergies EP Brasil Ltda.': { short: 'TotalEnergies', initials: 'TE' },
+  'TotalEnergies EP do Brasil Ltda.': { short: 'TotalEnergies', initials: 'TE' },
+  'CNOOC Petroleum Brasil Ltda.': { short: 'CNOOC', initials: 'CN' },
+  'CNODC Brasil Petróleo e Gás Ltda.': { short: 'CNODC', initials: 'CD' },
+  'BP Energy do Brasil Ltda.': { short: 'BP', initials: 'BP' },
+  'Karoon Petróleo & Gás Ltda.': { short: 'Karoon', initials: 'KE' },
+  'Prio Forte S.A.': { short: 'PRIO', initials: 'PR' },
+  'Petro Rio Jaguar Petróleo S.A.': { short: 'PRIO', initials: 'PR' },
+  'ExxonMobil Exploração Brasil Ltda.': { short: 'ExxonMobil', initials: 'XM' },
+  'IBV Brasil Petróleo Ltda.': { short: 'IBV Brasil', initials: 'IB' },
+  'Petrogal Brasil S.A.': { short: 'Galp', initials: 'GP' },
+  'Repsol Sinopec Brasil S.A.': { short: 'Repsol Sinopec', initials: 'RS' },
+};
+
+function colorForCompany(shortName) {
+  let hash = 0;
+  for (let i = 0; i < shortName.length; i++) hash = (hash * 31 + shortName.charCodeAt(i)) >>> 0;
+  return `hsl(${hash % 360}, 55%, 40%)`;
+}
+
+function companyBadge(rawName) {
+  if (!rawName) return null;
+  const known = COMPANY_ALIASES[rawName];
+  const short = known ? known.short : rawName.trim();
+  const initials = known ? known.initials : short.split(/\s+/).slice(0, 2).map((w) => w[0] || '').join('').toUpperCase() || '?';
+  return { name: short, initials, color: colorForCompany(short) };
+}
+
+// Selo do operador (maior) + selos dos parceiros do PD (menores), pro
+// contrato/jazida de um projeto — usado no popup do mapa e embaixo do
+// nome no roadmap. Operador deduplicado da lista de parceiros (a tabela
+// de participação do PD normalmente já inclui o operador de novo, com o
+// maior %). "participacao" é pd.participacao (array {empresa, pct}) —
+// null/vazio quando o PD não publicou essa tabela (ver participacaoText
+// em analises.js).
+function companyBadgesFor(operadorRaw, participacao) {
+  const list = [];
+  const seen = new Set();
+  const op = companyBadge(operadorRaw);
+  if (op) {
+    list.push({ ...op, role: 'operador' });
+    seen.add(op.name);
+  }
+  if (participacao) {
+    for (const p of participacao) {
+      const b = companyBadge(p.empresa);
+      if (!b || seen.has(b.name)) continue;
+      seen.add(b.name);
+      list.push({ ...b, role: 'parceiro', pct: p.pct });
+    }
+  }
+  return list;
+}
+
 // Agrupa uma lista de { name, pd } por pd.fonte — a URL do PD é a chave
 // real de "é o mesmo documento, logo a mesma jazida", já que o PD é o
 // documento POR JAZIDA (não por campo/contrato). Grupo com mais de um

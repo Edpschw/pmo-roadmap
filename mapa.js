@@ -209,6 +209,22 @@ function mapDisplayName(project) {
   return MAP_DISPLAY_NAME_OVERRIDE[project.name] || project.name;
 }
 
+// Linha de selos (operador + parceiros do PD, ver companyBadgesFor em
+// shared.js) pro popup de um contrato/campo — key é o nome usado pra
+// procurar o PD (pdData, mesma chave de pdSectionHTML). String vazia sem
+// operador nem parceiros (ex.: PD ainda não carregou).
+function companyBadgesHTML(operadorRaw, key) {
+  const pd = byNameOrUpper(pdData, key);
+  const badges = companyBadgesFor(operadorRaw, pd ? pd.participacao : null);
+  if (!badges.length) return '';
+  const items = badges.map((b) => {
+    const cls = b.role === 'operador' ? 'company-badge-operador' : 'company-badge-parceiro';
+    const title = `${b.name}${b.role === 'operador' ? ' (operador)' : b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
+    return `<span class="company-badge ${cls}" style="background:${b.color}" title="${escapeHtml(title)}">${escapeHtml(b.initials)}</span>`;
+  }).join('');
+  return `<div class="map-popup-badges">${items}</div>`;
+}
+
 function popupHTML(project, props) {
   const groupLabel = (GROUP_DEFS.find((g) => g.id === project.group) || {}).label || project.group;
   const displayName = mapDisplayName(project);
@@ -238,6 +254,7 @@ function popupHTML(project, props) {
   const rowsHTML = rows.map(([k, v]) => `<tr><td class="k">${k}</td><td>${v}</td></tr>`).join('');
   return `<div class="map-popup">
     <h3 style="color:${colorForProject(project)}">${escapeHtml(displayName)}</h3>
+    ${companyBadgesHTML(props.operador, project.name)}
     <table>${rowsHTML}</table>
     <p class="map-popup-source">Fonte: ANP — ${props.fonte === 'bloco_exploratorio' ? 'Blocos Exploratórios sob Contrato' : 'Campos de Produção'} (SIRGAS 2000)</p>
     ${pdSectionHTML(project.name)}
@@ -772,6 +789,7 @@ function presaltFieldPopupHTML(props) {
   const rowsHTML = rows.map(([k, v]) => `<tr><td class="k">${k}</td><td>${v}</td></tr>`).join('');
   return `<div class="map-popup">
     <h3 style="color:${PRESALT_FIELD_STYLE.color}">${escapeHtml(props.nome)}</h3>
+    ${companyBadgesHTML(props.operador, props.nome)}
     <table>${rowsHTML}</table>
     <p class="map-popup-source">Campo de contexto (fora dos 30 projetos rastreados) — Fonte: ANP, Campos de Produção (SIRGAS 2000)</p>
     ${pdSectionHTML(props.nome)}

@@ -277,6 +277,18 @@ function simplifyMilestoneLabel(name) {
 const POCOS_URL = 'data/pocos.json';
 let pocosDataApp = {};
 
+// Operador (data/contratos.geojson, + data/campos_presal.geojson pro caso
+// do Mero — ver nota em featureByProjectApp) e parceiros (pd.participacao
+// em data/planos_desenvolvimento.json) de cada projeto, só pros selos
+// embaixo do nome (ver companyBadgesFor em shared.js) — mesma fonte que
+// mapa.js/analises.js já usam pra "Operador"/"Parceiros", carregada aqui
+// também porque o roadmap (diferente deles) não buscava esses arquivos.
+const GEOJSON_URL = 'data/contratos.geojson';
+const PD_URL = 'data/planos_desenvolvimento.json';
+const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
+let featureByProjectApp = {};
+let pdDataApp = {};
+
 // Marco agregado ("17 poços perfurados em 2024", workstream "Poços
 // Perfurados" dos campos em produção) — casa só o número no início do
 // nome, sem exigir o resto do texto, pra não depender do plural/singular
@@ -760,6 +772,9 @@ function renderProjectRow(project, rangeStart) {
   const labelCell = document.createElement('div');
   labelCell.className = 'label-cell';
 
+  const mainRow = document.createElement('div');
+  mainRow.className = 'project-label-main';
+
   const chevron = document.createElement('span');
   chevron.className = 'chevron' + (project.collapsed ? ' collapsed' : '');
   chevron.textContent = '▾';
@@ -770,22 +785,44 @@ function renderProjectRow(project, rangeStart) {
     saveState();
     render();
   });
-  labelCell.appendChild(chevron);
+  mainRow.appendChild(chevron);
 
   const dot = document.createElement('span');
   dot.className = 'color-dot';
   dot.style.background = project.color;
-  labelCell.appendChild(dot);
+  mainRow.appendChild(dot);
 
   const label = document.createElement('span');
   label.className = 'label-text';
   label.textContent = projectDisplayName(project.name);
-  labelCell.appendChild(label);
+  mainRow.appendChild(label);
 
   const actions = document.createElement('div');
   actions.className = 'row-actions';
   actions.appendChild(iconButton('+', 'Nova workstream', () => openWorkstreamModal(project)));
-  labelCell.appendChild(actions);
+  mainRow.appendChild(actions);
+  labelCell.appendChild(mainRow);
+
+  // Selos de operador (maior) + parceiros do PD (menores), embaixo do
+  // nome — ver companyBadgesFor em shared.js. featureByProjectApp/
+  // pdDataApp começam vazios (carregam à parte, ver fetch no fim deste
+  // arquivo) — sem selo nenhum até chegarem, sem quebrar o layout.
+  const feature = featureByProjectApp[project.name];
+  const pd = byNameOrUpper(pdDataApp, project.name);
+  const badges = companyBadgesFor(feature ? feature.properties.operador : null, pd ? pd.participacao : null);
+  if (badges.length) {
+    const badgesRow = document.createElement('div');
+    badgesRow.className = 'project-badges-row';
+    for (const b of badges) {
+      const el = document.createElement('span');
+      el.className = 'company-badge ' + (b.role === 'operador' ? 'company-badge-operador' : 'company-badge-parceiro');
+      el.style.background = b.color;
+      el.textContent = b.initials;
+      el.title = `${b.name}${b.role === 'operador' ? ' (operador)' : b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
+      badgesRow.appendChild(el);
+    }
+    labelCell.appendChild(badgesRow);
+  }
 
   // No mobile, o nome do projeto sempre cabe numa linha só: a sidebar já
   // cresce para o nome mais longo (computeMobileSidebarWidth), e aqui a
@@ -795,7 +832,10 @@ function renderProjectRow(project, rangeStart) {
     label.style.fontSize = fitProjectLabelFontSize(projectDisplayName(project.name), available) + 'px';
   }
 
-  const mobileLabelHeight = isMobileLayout() ? measureLabelCellHeight(labelCell) : 0;
+  // Sempre medido (não só no mobile, como as outras linhas/label-cell
+  // ainda fazem) — a 2ª linha de selos precisa desse espaço extra também
+  // no desktop, e PROJECT_ROW_H sozinho não sabe quantos selos vão caber.
+  const mobileLabelHeight = measureLabelCellHeight(labelCell);
   row.appendChild(labelCell);
 
   const timelineCell = document.createElement('div');
@@ -1590,6 +1630,29 @@ fetch(POCOS_URL).then((r) => r.json()).then((d) => {
 }).catch(() => {
   // Sem os dados da ANP, os marcos de poço seguem no rótulo genérico
   // (só corta parêntese/travessão) em vez de "código (operador)".
+});
+
+// Operador/parceiros pros selos embaixo do nome (ver companyBadgesFor em
+// shared.js) — mesmo padrão acima: primeiro render() já roda sem eles
+// (sem selo nenhum até chegar), re-render assim que os 3 arquivos
+// carregarem. Mero não tem feature própria em contratos.geojson (só o
+// bloco inteiro de Libra) — empresta de campos_presal.geojson, mesma
+// lógica de featureByProject em mapa.js/analises.js.
+Promise.all([
+  fetch(GEOJSON_URL).then((r) => r.json()),
+  fetch(PD_URL).then((r) => r.json()),
+  fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
+]).then(([geojson, pd, presal]) => {
+  for (const feat of geojson.features) featureByProjectApp[feat.properties.projeto] = feat;
+  const trackedByUpperName = new Map(state.projects.map((p) => [p.name.toUpperCase(), p]));
+  for (const feat of presal.features || []) {
+    const tracked = trackedByUpperName.get(feat.properties.nome.toUpperCase());
+    if (tracked && !featureByProjectApp[tracked.name]) featureByProjectApp[tracked.name] = feat;
+  }
+  pdDataApp = pd;
+  render();
+}).catch(() => {
+  // Sem esses dados, a linha de projeto segue sem selo de operador/parceiro.
 });
 
 render();
