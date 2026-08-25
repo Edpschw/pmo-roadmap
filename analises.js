@@ -357,13 +357,12 @@ function renderKPIRow(container, agg) {
 // Contrato rastreado e campo de contexto que citam o mesmo Plano de
 // Desenvolvimento (Atapu/Oeste de Atapu, Sapinhoá/Entorno de Sapinhoá,
 // Norte de Carcará/Bacalhau, Berbigão/Norte de Berbigão/Sul de Berbigão)
-// têm STOIIP idêntico by design — é a mesma jazida compartilhada, só
-// documentada do ponto de vista do contrato inteiro ou só do campo por
-// dentro (ver jazidaNome/jazidaComposicao em shared.js e buildJazidasCard
-// abaixo, que usa o mesmo agrupamento pra um card dedicado). Duas barras
-// coladas com o mesmo valor pareciam bug, não informação — agrupa por
-// pd.fonte (a URL do PD é a chave real de "é o mesmo documento") numa
-// barra só antes de desenhar.
+// são a mesma jazida compartilhada, só documentada do ponto de vista do
+// contrato inteiro ou só do campo por dentro (ver jazidaNome/
+// jazidaComposicao em shared.js). Agrupa por pd.fonte (a URL do PD é a
+// chave real de "é o mesmo documento") — base de computeJazidaRows abaixo,
+// que agrega poços/FPSOs de cada grupo numa linha só pra toda a seção
+// "Campos em Produção" (gráficos e tabela).
 function groupByPdKey(rows) {
   const groups = new Map();
   for (const r of rows) {
@@ -382,73 +381,83 @@ function groupByPdKey(rows) {
   });
 }
 
-// Card dedicado às jazidas compartilhadas — groupByPdKey já faz o
-// agrupamento por PD (usado ali só como background pro gráfico de
-// STOIIP); aqui o agrupamento em si é a informação. Um grupo de 2+
-// membros já é jazida compartilhada por definição (mesmo PD, mais de um
-// campo/contrato); um grupo de 1 membro só entra quando o próprio PD diz
-// isso em prosa (jazidaComposicao) — caso Mero, cujo resto da jazida é
-// Área Não Contratada, sem entidade própria nesta base.
-function buildJazidasCard(rows) {
-  const jazidas = groupByPdKey(rows)
-    .filter((g) => g.members.length > 1 || g.members.some((m) => m.jazidaComposicao))
-    .map((g) => {
-      const rep = g.members.find((m) => m.jazidaNome) || g.members[0];
-      return {
-        nome: rep.jazidaNome || g.name,
-        members: g.members,
-        composicao: g.members.map((m) => m.jazidaComposicao).find(Boolean) || null,
-        comercialidade: g.members.map((m) => m.comercialidade).find(Boolean) || null,
-        resolucao: g.members.map((m) => m.resolucao).find(Boolean) || null,
-      };
-    })
-    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-  if (!jazidas.length) return null;
-
-  const card = document.createElement('div');
-  card.className = 'chart-card';
-  const title = document.createElement('h3');
-  title.className = 'chart-card-title';
-  title.textContent = 'Jazidas compartilhadas';
-  const sub = document.createElement('p');
-  sub.className = 'chart-card-subtitle';
-  sub.textContent = 'O Plano de Desenvolvimento é o documento por JAZIDA — o reservatório físico —, não por campo ou contrato: quando o mesmo PD cobre mais de uma entidade desta seção (ou descreve a composição em prosa), é a mesma jazida vista de mais de um lado, não uma coincidência de valores.';
-  card.appendChild(title);
-  card.appendChild(sub);
-
-  const list = document.createElement('div');
-  list.className = 'jazida-list';
-  for (const j of jazidas) {
-    const item = document.createElement('div');
-    item.className = 'jazida-item';
-    const membersHTML = j.members.map((m) => `<span class="jazida-member"><span class="proj-dot" style="background:${m.color}"></span>${escapeHtml(displayName(m))}</span>`).join('');
-    const details = [];
-    if (j.composicao) details.push(escapeHtml(j.composicao));
-    if (j.comercialidade) details.push(`Comercialidade: ${formatBR(j.comercialidade)}`);
-    if (j.resolucao) details.push(`PD: ${escapeHtml(j.resolucao)}`);
-    item.innerHTML = `
-      <div class="jazida-item-title">${escapeHtml(j.nome)}</div>
-      <div class="jazida-item-members">${membersHTML}</div>
-      ${details.length ? `<div class="jazida-item-detail">${details.join(' · ')}</div>` : ''}
-    `;
-    list.appendChild(item);
-  }
-  card.appendChild(list);
-  return card;
+// Uma linha por JAZIDA (não por contrato/campo separado) — toda a seção
+// "Campos em Produção" (gráficos e tabela) analisa nesse nível, agregando
+// os membros do mesmo grupo de groupByPdKey. Contrato + campo de contexto
+// ligados (ex.: Norte de Carcará + BACALHAU) somam poços/FPSOs numa linha
+// só; STOIIP/volume recuperável não somam — é a mesma jazida, mesmo
+// volume, já vem igual em cada membro (ver groupByPdKey). Grupo de 1
+// membro só (a maioria — Búzios, Itapu, Lapa...) sai idêntico à linha
+// original, sem essa agregação mudar nada.
+function computeJazidaRows(contractRows, fieldRows) {
+  return groupByPdKey([...contractRows, ...fieldRows]).map((g) => {
+    const contractMember = g.members.find((m) => m.isContract);
+    const rep = contractMember || g.members[0];
+    // Nome: o do contrato (já no "nome popular", ver displayName) quando
+    // tem contrato no grupo; senão o primeiro pedaço do título do PD antes
+    // do "e"/"," — "Berbigão, Norte de Berbigão e Sul de Berbigão" vira só
+    // "Berbigão", mesma lógica que já dá "Bacalhau"/"Sapinhoá" pros
+    // contratos com override (ver PROJECT_DISPLAY_NAME_OVERRIDE).
+    const name = contractMember
+      ? displayName(contractMember)
+      : (rep.jazidaNome || g.name).split(/,| e /)[0].trim();
+    const wellCounts = {};
+    for (const [cat] of WELL_CATEGORY_ORDER) wellCounts[cat] = 0;
+    let wellsTotal = 0;
+    let fpsoInstalled = 0;
+    let fpsoPlanned = 0;
+    let areaKm2 = 0;
+    for (const m of g.members) {
+      wellsTotal += m.wellsTotal;
+      for (const [cat] of WELL_CATEGORY_ORDER) wellCounts[cat] += m.wellCounts[cat] || 0;
+      fpsoInstalled += m.fpsoInstalled || 0;
+      fpsoPlanned += m.fpsoPlanned || 0;
+      areaKm2 += m.areaKm2 || 0;
+    }
+    const others = g.members.filter((m) => m !== rep).map((m) => displayName(m));
+    return {
+      name,
+      color: g.color,
+      isContract: !!contractMember,
+      group: rep.group,
+      operador: rep.operador,
+      bacia: rep.bacia,
+      regime: contractMember ? 'Partilha' : (rep.regime || '—'),
+      areaKm2: areaKm2 || null,
+      wellsTotal,
+      wellCounts,
+      fpsoInstalled,
+      fpsoPlanned,
+      stoiip: g.stoiip,
+      recOleo: rep.recOleo,
+      participacao: rep.participacao,
+      comercialidade: g.members.map((m) => m.comercialidade).find(Boolean) || null,
+      resolucao: g.members.map((m) => m.resolucao).find(Boolean) || null,
+      // Contrato de partilha por trás da linha, pra nameCellHTML — o
+      // próprio quando existe; senão null (grupo só de campos de
+      // contexto, ex. Berbigão, sem contrato rastreado nenhum).
+      contratoNome: contractMember ? contractMember.name : null,
+      membersOther: others,
+      memberCount: g.members.length,
+      composicao: g.members.map((m) => m.jazidaComposicao).find(Boolean) || null,
+    };
+  });
 }
 
+// rows já vem uma linha por jazida (ver computeJazidaRows) — nenhum
+// agrupamento aqui, só filtra quem tem STOIIP publicado.
 function renderStoiipChart(container, rows) {
-  const withStoiip = groupByPdKey(rows.filter((r) => r.stoiip != null)).sort((a, b) => b.stoiip - a.stoiip);
+  const withStoiip = rows.filter((r) => r.stoiip != null).sort((a, b) => b.stoiip - a.stoiip);
   if (!withStoiip.length) return;
 
   const card = document.createElement('div');
   card.className = 'chart-card';
   const title = document.createElement('h3');
   title.className = 'chart-card-title';
-  title.textContent = 'STOIIP por contrato/campo (óleo in situ)';
+  title.textContent = 'STOIIP por jazida (óleo in situ)';
   const sub = document.createElement('p');
   sub.className = 'chart-card-subtitle';
-  sub.textContent = `Só as ${withStoiip.length} entidades/grupos com Plano de Desenvolvimento público — as demais ainda não têm PD aprovado/divulgado. Contrato e campo de contexto do mesmo PD (mesma jazida compartilhada) aparecem juntos numa barra só. Cor própria = grupo com contrato rastreado; cinza = só campo de contexto.`;
+  sub.textContent = `Só as ${withStoiip.length} jazidas com Plano de Desenvolvimento público — as demais ainda não têm PD aprovado/divulgado. Cor própria = jazida com contrato rastreado; cinza = só campo de contexto (ex.: Berbigão, sem contrato de partilha).`;
   card.appendChild(title);
   card.appendChild(sub);
 
@@ -471,7 +480,7 @@ function renderStoiipChart(container, rows) {
     fill.tabIndex = 0;
     attachTooltip(fill, () => `<strong>${escapeHtml(g.name)}</strong>`
       + tooltipRowHTML('STOIIP', `${fmtNum(g.stoiip)} MMbbl`)
-      + (g.members.length > 1 ? `<div class="viz-tooltip-row"><span>Mesma jazida compartilhada, ${g.members.length} entidades</span></div>` : ''));
+      + (g.memberCount > 1 ? `<div class="viz-tooltip-row"><span>Jazida compartilhada, ${g.memberCount} entidades</span></div>` : ''));
     track.appendChild(fill);
     const value = document.createElement('div');
     value.className = 'hbar-value';
@@ -780,10 +789,10 @@ function renderWellsByYearChart(container, wells) {
   if (card) container.appendChild(card);
 }
 
-// "Poços por FPSO instalado" — total de poços do contrato dividido pelo
-// número de FPSOs já instalados. É densidade média por projeto, não
-// poço-a-poço por unidade (a base ANP não registra a qual FPSO cada poço
-// está ligado).
+// "Poços por FPSO instalado" — total de poços da jazida (ver
+// computeJazidaRows) dividido pelo número de FPSOs já instalados. É
+// densidade média por jazida, não poço-a-poço por unidade (a base ANP não
+// registra a qual FPSO cada poço está ligado).
 function renderWellsPerFpsoChart(container, projectRows) {
   const withFpso = projectRows
     .filter((r) => r.fpsoInstalled > 0)
@@ -847,17 +856,22 @@ function displayName(r) {
 // rastreado, CONTEXT_FIELD_COLOR (cinza) pra campo de contexto ou poço
 // sem campo nomeado. É o "colorindo só quem tem contrato" pedido, num só
 // lugar reaproveitado pela tabela de produção e pela de exploração.
-// r.contratoNome (contrato de partilha por trás da linha — o próprio nome
-// pra linha de contrato, o do contrato ligado pra linha de campo de
-// contexto, ver computeProjectRow/computeFieldRow) vira uma segunda linha
-// "Contrato: ..." só quando acrescenta informação (diferente do nome já
-// exibido) — não duplica quando o nome do contrato já é o nome exibido.
+// r.contratoNome (contrato de partilha por trás da linha — ver
+// computeJazidaRows) vira uma segunda linha "Contrato: ..." só quando
+// acrescenta informação (diferente do nome já exibido); grupo sem
+// contrato mas com mais de um campo de contexto (só Berbigão hoje) mostra
+// os outros membros em vez disso. Composição (% de cada membro na jazida,
+// quando o PD publica) fica só como tooltip — não cabe numa tabela.
 function nameCellHTML(r) {
   const name = displayName(r);
-  const sub = (r.contratoNome && r.contratoNome !== name)
-    ? `<span class="proj-name-sub">Contrato: ${escapeHtml(r.contratoNome)}</span>`
-    : '';
-  return `<div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span><span class="proj-name-stack"><span class="proj-name-main">${escapeHtml(name)}</span>${sub}</span></div>`;
+  let sub = '';
+  if (r.contratoNome && r.contratoNome !== name) {
+    sub = `<span class="proj-name-sub">Contrato: ${escapeHtml(r.contratoNome)}</span>`;
+  } else if (r.membersOther && r.membersOther.length) {
+    sub = `<span class="proj-name-sub">+ ${escapeHtml(r.membersOther.join(', '))}</span>`;
+  }
+  const title = r.composicao ? ` title="${escapeHtml(r.composicao)}"` : '';
+  return `<div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span><span class="proj-name-stack"${title}><span class="proj-name-main">${escapeHtml(name)}</span>${sub}</span></div>`;
 }
 
 /* ------------------------ Campos de contexto (não-CPP) --------------------- */
@@ -932,7 +946,7 @@ function computeOutrosRow(outrosPocos) {
 // antes), mas agora numa tabela só — dá pra comparar contrato e campo
 // lado a lado, e o ponto pedido ("colorindo só quem tem contrato") fica
 // visível linha a linha.
-function renderProducaoTable(container, contractRows, fieldRows) {
+function renderProducaoTable(container, jazidaRows, outrosRow) {
   const wrap = document.createElement('div');
   wrap.className = 'table-wrapper';
   wrap.style.padding = '0';
@@ -958,13 +972,12 @@ function renderProducaoTable(container, contractRows, fieldRows) {
   table.appendChild(thead);
 
   const tbody = document.createElement('tbody');
-  const contracts = [...contractRows].sort((a, b) => b.wellsTotal - a.wellsTotal);
-  const named = fieldRows.filter((r) => !r.isOutros).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-  const outros = fieldRows.filter((r) => r.isOutros);
+  const withContract = jazidaRows.filter((r) => r.isContract).sort((a, b) => b.wellsTotal - a.wellsTotal);
+  const withoutContract = jazidaRows.filter((r) => !r.isContract).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   const groups = [
-    ['Contratos rastreados (Partilha)', contracts],
-    ['Campos de contexto', named],
-    ['Poços sem campo nomeado', outros],
+    ['Jazidas com contrato de partilha', withContract],
+    ['Campos de contexto (sem contrato rastreado)', withoutContract],
+    ['Poços sem campo nomeado', outrosRow ? [outrosRow] : []],
   ];
   for (const [label, groupRows] of groups) {
     if (!groupRows.length) continue;
@@ -1004,20 +1017,24 @@ function renderProducaoTable(container, contractRows, fieldRows) {
 
   const note = document.createElement('p');
   note.className = 'analytics-table-note';
-  note.textContent = 'Cor do nome = cor do contrato (a mesma do roadmap/mapa); cinza = campo de contexto ou poço sem campo nomeado, sem contrato próprio. Nome = o nome popular da jazida quando o nome do contrato não diz nada sobre ela (Norte de Carcará → Bacalhau, Entorno de Sapinhoá → Sapinhoá); "Contrato" embaixo do nome mostra o contrato de partilha por trás (ver Jazidas Compartilhadas abaixo pra composição completa). Comercialidade = data da declaração de comercialidade (marco que dá origem ao campo, dentro do contrato ou em Área Não Contratada); PD (resolução) = despacho da ANP que aprovou o Plano de Desenvolvimento. Parceiros: só onde o sumário executivo de PD publicado trouxe a tabela de participação. FPSOs: instalados (+ previstos entre parênteses) — só contrato rastreado tem essa informação.';
+  note.textContent = 'Uma linha por jazida: contrato rastreado e campo de contexto que citam o mesmo Plano de Desenvolvimento (ex.: Norte de Carcará + BACALHAU) somam poços/FPSOs numa linha só, com o nome popular da jazida (Bacalhau, Sapinhoá...) — passe o mouse sobre o nome pra ver a composição %, quando o PD publica. "Contrato" embaixo do nome mostra o contrato de partilha por trás; "+ outro(s) campo(s)" aparece quando a jazida não tem contrato rastreado (ex.: Berbigão). Cor do nome = cor do contrato; cinza = jazida sem contrato de partilha ou poço sem campo nomeado. Comercialidade = data da declaração de comercialidade; PD (resolução) = despacho da ANP que aprovou o Plano de Desenvolvimento. Parceiros: só onde o sumário executivo de PD publicado trouxe a tabela de participação. FPSOs: instalados (+ previstos entre parênteses) — soma de todos os membros da jazida.';
   container.appendChild(note);
 }
 
 function renderProducaoSection(container, contractRows, fieldRows, outrosPocos, allProjects) {
-  const allEntities = [...contractRows, ...fieldRows];
+  const namedFieldRows = fieldRows.filter((r) => !r.isOutros);
+  const outrosRow = fieldRows.find((r) => r.isOutros) || null;
+  // Uma linha por jazida (ver computeJazidaRows) — todo gráfico e a
+  // tabela desta seção usam jazidaRows a partir daqui, não mais contrato
+  // e campo de contexto ligados como entidades separadas.
+  const jazidaRows = computeJazidaRows(contractRows, namedFieldRows);
   const wells = dedupedProducaoWells(contractRows, fieldRows, outrosPocos);
   const stats = computeProdInjStats(wells);
-  const namedFields = fieldRows.filter((r) => !r.isOutros);
 
   const intro = document.createElement('p');
   intro.className = 'chart-card-subtitle';
   intro.style.margin = '0 0 14px';
-  intro.textContent = `Os ${contractRows.length} contratos rastreados já em produção, mais os ${namedFields.length} campos de contexto do pré-sal (regime de Concessão ou Cessão Onerosa) e os poços sem campo nomeado — o play de produção inteiro. Cor própria = contrato rastreado; cinza = campo de contexto ou poço avulso, sem contrato próprio.`;
+  intro.textContent = `As ${jazidaRows.length} jazidas/contratos avulsos já em produção (contrato rastreado + campo de contexto do mesmo PD somados numa linha só, quando é o caso) e os poços sem campo nomeado — o play de produção inteiro. Cor própria = jazida com contrato rastreado; cinza = só campo de contexto (sem contrato de partilha) ou poço avulso.`;
   container.appendChild(intro);
 
   const statsRow = document.createElement('div');
@@ -1033,18 +1050,16 @@ function renderProducaoSection(container, contractRows, fieldRows, outrosPocos, 
   ));
   container.appendChild(statsRow);
 
-  const jazidasCard = buildJazidasCard(allEntities);
-  if (jazidasCard) container.appendChild(jazidasCard);
-  renderStoiipChart(container, allEntities);
+  renderStoiipChart(container, jazidaRows);
   container.appendChild(buildWellsStackedCard(
-    allEntities,
-    'Poços por categoria, por contrato/campo',
-    'Base ANP/BDEP — contratos de produção rastreados + campos de contexto + poços sem campo nomeado.',
+    outrosRow ? [...jazidaRows, outrosRow] : jazidaRows,
+    'Poços por categoria, por jazida',
+    'Base ANP/BDEP — uma barra por jazida (contrato + campo de contexto ligados somados) + poços sem campo nomeado.',
   ));
-  renderWellsPerFpsoChart(container, contractRows);
+  renderWellsPerFpsoChart(container, jazidaRows);
   renderFpsoByYearChart(container, allProjects);
   renderWellsByYearChart(container, wells);
-  renderProducaoTable(container, contractRows, fieldRows);
+  renderProducaoTable(container, jazidaRows, outrosRow);
 }
 
 function renderExploracaoSection(container, explorationRows) {
