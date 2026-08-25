@@ -642,9 +642,16 @@ body.map-page .btn-ghost:hover { background: #1e222a; }
    via style inline — por isso o transform de centralização vai no `span`
    de dentro, não no wrapper do divIcon, pra não competir com ele. */
 .map-project-label-icon { background: transparent; border: none; pointer-events: none; }
+/* --map-label-scale (ver updateMapLabelScale em mapa.js) cresce/encolhe
+   com o zoom do mapa — escalar o wrapper inteiro (não só a fonte do nome)
+   mantém nome e selo na mesma proporção um do outro em qualquer zoom, sem
+   precisar recalcular cada tamanho separadamente a cada passo. scale()
+   depois do translate: centraliza primeiro (nas dimensões reais do
+   conteúdo), escala em volta desse centro depois — não desloca o rótulo
+   ao mudar de tamanho. */
 .map-project-label-wrap {
   display: flex; flex-direction: column; align-items: center; gap: 3px;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(var(--map-label-scale, 1));
 }
 .map-project-label {
   display: inline-block; white-space: nowrap;

@@ -146,6 +146,17 @@ const WELLS_MIN_ZOOM_DEFAULT = 10;
 const WELLS_MIN_ZOOM_RANGE = [3, 14];
 let wellsMinZoom = WELLS_MIN_ZOOM_DEFAULT;
 
+// Nome/selo sobre o polígono acompanha o zoom (ver updateMapLabelScale) —
+// escala 1 no zoom padrão do fitBounds inicial (7, com os 30 contratos na
+// tela), menor perto do zoom mínimo do mapa (3, tudo bem afastado) e maior
+// perto do teto em que o rótulo ainda aparece (14 — WELLS_MIN_ZOOM_RANGE[1],
+// acima disso vira poço, ver updateProjectLabels). Interpolação em duas
+// pernas (não só min->max) pra bater exatamente escala 1 no zoom 7, onde o
+// tamanho do selo foi ajustado a olho.
+const MAP_LABEL_SCALE_ZOOM_REF = 7;
+const MAP_LABEL_SCALE_ZOOM_RANGE = [3, 14];
+const MAP_LABEL_SCALE_RANGE = [0.6, 1.9];
+
 const groupLayers = {};
 for (const g of GROUP_DEFS) groupLayers[g.id] = L.layerGroup().addTo(map);
 // Poços dos contratos rastreados, um layer por grupo — separado do
@@ -992,6 +1003,12 @@ async function init() {
   map.on('zoomend', updateWellsVisibility);
   updateWellsVisibility();
 
+  // 'zoom' (não só 'zoomend'): acompanha o gesto de zoom em tempo real,
+  // inclusive durante a animação, em vez de só saltar pro tamanho novo
+  // quando ela termina.
+  map.on('zoom', updateMapLabelScale);
+  updateMapLabelScale();
+
   const years = [
     ...Object.values(projectYearById),
     ...wellMarkerRegistry.map((e) => e.year),
@@ -1204,6 +1221,26 @@ function updateProjectLabels() {
   for (const marker of presaltFieldLabelMarkers) {
     showOrHide(marker, zoomOk && map.hasLayer(presaltFieldsLayer));
   }
+}
+
+// Escala do nome/selo sobre o polígono (ver .map-project-label-wrap em
+// style.css, que lê --map-label-scale) — uma variável CSS só, no
+// container do mapa: todo rótulo herda sem precisar tocar em cada marker
+// individualmente. Interpolação linear em duas pernas ao redor de
+// MAP_LABEL_SCALE_ZOOM_REF (ver constantes acima).
+function updateMapLabelScale() {
+  const zoom = map.getZoom();
+  const [zMin, zMax] = MAP_LABEL_SCALE_ZOOM_RANGE;
+  const [sMin, sMax] = MAP_LABEL_SCALE_RANGE;
+  let scale;
+  if (zoom <= MAP_LABEL_SCALE_ZOOM_REF) {
+    const t = (Math.max(zMin, zoom) - zMin) / (MAP_LABEL_SCALE_ZOOM_REF - zMin);
+    scale = sMin + t * (1 - sMin);
+  } else {
+    const t = (Math.min(zMax, zoom) - MAP_LABEL_SCALE_ZOOM_REF) / (zMax - MAP_LABEL_SCALE_ZOOM_REF);
+    scale = 1 + t * (sMax - 1);
+  }
+  document.getElementById('map').style.setProperty('--map-label-scale', scale.toFixed(3));
 }
 
 function renderColorModeControl(container) {
