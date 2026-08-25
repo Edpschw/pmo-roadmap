@@ -1055,14 +1055,47 @@ const FIELD_CORRECTIONS = [
   },
 ];
 
+// Projeto rastreado novo que precisa ser adicionado a QUALQUER estado
+// salvo que ainda não tenha — ver ensureNewTrackedProjects, chamada
+// incondicionalmente (não só quando o seedVersion está desatualizado, ver
+// nota lá). Hoje só Mero: mergeSeedUpdates nunca recria um projeto que o
+// usuário não tem salvo (pra não ressuscitar um removido de propósito),
+// e isso escondeu Mero pra sempre de quem já usava o app desde antes dele
+// existir — mesmo depois de seedVersion já ter avançado várias vezes sem
+// o projeto ser adicionado (o gate de versão, se dependesse só dele, já
+// tinha "passado" pra esses usuários). Único projeto na lista até hoje —
+// se algum outro caso aparecer, considerar se cabe aqui ou se é mesmo
+// caso de o usuário ter removido de propósito.
+const NEW_TRACKED_PROJECTS = ['Mero'];
+
+// Garante que os projetos de NEW_TRACKED_PROJECTS existam no estado
+// salvo, incondicionalmente (sem checar seedVersion) — diferente do resto
+// da migração (mergeSeedUpdates), que só roda quando a versão está
+// desatualizada. Devolve true se adicionou algo (pra loadState saber se
+// precisa salvar de novo).
+function ensureNewTrackedProjects(saved) {
+  const reference = seedState();
+  let added = false;
+  for (const name of NEW_TRACKED_PROJECTS) {
+    if (saved.projects.some((p) => p.name === name)) continue;
+    const refProj = reference.projects.find((p) => p.name === name);
+    if (refProj) {
+      saved.projects.push(JSON.parse(JSON.stringify(refProj)));
+      added = true;
+    }
+  }
+  return added;
+}
+
 // Aplica ao estado salvo do usuário só o que existe em seedState() e ainda
 // não existe localmente — nunca sobrescreve nem remove nada que o usuário
 // já tenha editado ou adicionado por conta própria. Casa projeto por nome
 // e, dentro dele, workstream por nome; workstream nova é adicionada
 // inteira, workstream já existente ganha apenas os itens (por nome) que
-// faltarem. Projetos que o usuário não tem salvos (removidos ou nunca
-// importados) não são recriados. O grupo (Exploração/Produção/Devolvidos)
-// é sincronizado com a referência, já que reflete a situação real do
+// faltarem. Projeto que o usuário não tem salvo não é recriado aqui
+// (removido ou nunca importado) — ver ensureNewTrackedProjects pra a
+// única exceção conhecida. O grupo (Exploração/Produção/Devolvidos) é
+// sincronizado com a referência, já que reflete a situação real do
 // contrato (não uma preferência pessoal) — se você reclassificou um
 // projeto de propósito, ajuste de novo depois de uma migração.
 function mergeSeedUpdates(saved) {
@@ -1118,8 +1151,17 @@ function loadState() {
         for (const p of parsed.projects) {
           if (!p.group) p.group = inferProjectGroup(p.name);
         }
+        let changed = false;
         if ((parsed.seedVersion || 0) < SEED_VERSION) {
           mergeSeedUpdates(parsed);
+          changed = true;
+        }
+        // Incondicional (não só quando seedVersion está desatualizado) —
+        // ver nota em NEW_TRACKED_PROJECTS: o gate de versão sozinho não
+        // bastava pra garantir que Mero chegasse a quem já tinha passado
+        // por uma migração anterior sem ganhar o projeto.
+        if (ensureNewTrackedProjects(parsed)) changed = true;
+        if (changed) {
           seedMigrationHappened = true;
           localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
         }
