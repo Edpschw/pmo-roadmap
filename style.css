@@ -177,7 +177,7 @@ body { display: flex; flex-direction: column; height: 100vh; }
 }
 .project-label-main { display: flex; align-items: center; gap: 6px; overflow: hidden; }
 .project-badges-row {
-  display: flex; align-items: center; gap: 3px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 2px; flex-wrap: wrap;
   padding-left: 37px; /* alinha com o texto do nome: chevron(16)+gap(6)+dot(9)+gap(6) */
 }
 .company-badge {
@@ -185,8 +185,11 @@ body { display: flex; flex-direction: column; height: 100vh; }
   border-radius: 50%; color: #fff; font-weight: 700; line-height: 1;
   flex: none; user-select: none;
 }
-.company-badge-operador { width: 15px; height: 15px; font-size: 6.5px; }
-.company-badge-parceiro { width: 11px; height: 11px; font-size: 5.5px; opacity: 0.85; }
+/* Discreto de propósito: bem menor que o nome do projeto (13px), só um
+   indício visual de quem é o operador/parceiro, não um elemento que
+   disputa atenção com o nome. */
+.company-badge-operador { width: 10px; height: 10px; font-size: 4.3px; }
+.company-badge-parceiro { width: 7px; height: 7px; font-size: 3.6px; opacity: 0.85; }
 
 /* Logo real (ver COMPANY_LOGO_FILES em shared.js) em vez do círculo com
    sigla — logo de empresa costuma ser uma marca larga (wordmark), não um
@@ -194,13 +197,13 @@ body { display: flex; flex-direction: column; height: 100vh; }
    logos oficiais é pensada pra fundo claro) em vez de forçar num círculo. */
 .company-logo-chip {
   display: inline-flex; align-items: center; justify-content: center;
-  background: #fff; border-radius: 4px; flex: none; line-height: 0;
+  background: #fff; border-radius: 3px; flex: none; line-height: 0;
 }
 .company-logo-chip img { display: block; width: auto; }
-.company-logo-chip-operador { height: 17px; padding: 1px 4px; }
-.company-logo-chip-operador img { height: 13px; max-width: 46px; }
-.company-logo-chip-parceiro { height: 13px; padding: 1px 3px; opacity: 0.9; }
-.company-logo-chip-parceiro img { height: 9px; max-width: 34px; }
+.company-logo-chip-operador { height: 11px; padding: 1px 3px; }
+.company-logo-chip-operador img { height: 8px; max-width: 30px; }
+.company-logo-chip-parceiro { height: 9px; padding: 1px 2px; opacity: 0.9; }
+.company-logo-chip-parceiro img { height: 6px; max-width: 22px; }
 .row.group-row .label-text {
   font-weight: 700; font-size: 11.5px; color: var(--text-faint);
   text-transform: uppercase; letter-spacing: .04em;
@@ -653,7 +656,7 @@ body.map-page .btn-ghost:hover { background: #1e222a; }
    (ver mapLabelBadgesHTML em mapa.js) — mesmos selos do popup, com uma
    sombra no lugar do fundo branco do chip de logo (não dá pra pintar um
    retângulo sólido atrás de cada um sem poluir o mapa). */
-.map-label-badges { display: flex; align-items: center; gap: 3px; justify-content: center; }
+.map-label-badges { display: flex; align-items: center; gap: 2px; justify-content: center; }
 .map-label-badges .company-badge { box-shadow: 0 1px 3px rgba(0,0,0,0.85); }
 .map-label-badges .company-logo-chip { box-shadow: 0 1px 3px rgba(0,0,0,0.85); }
 
@@ -696,7 +699,7 @@ body.map-page .leaflet-popup-content { max-height: 70vh; overflow-y: auto; paddi
 .map-popup h3 { margin: 0 0 6px; font-size: 13.5px; }
 /* Selos de operador/parceiro (ver companyBadgesFor em shared.js e
    companyBadgesHTML em mapa.js) — embaixo do título, acima da tabela. */
-.map-popup-badges { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin: -2px 0 8px; }
+.map-popup-badges { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; margin: -2px 0 8px; }
 .map-popup-badges .company-badge { border: 1px solid rgba(255,255,255,0.15); }
 .map-popup table { border-collapse: collapse; font-size: 11.5px; width: 100%; table-layout: fixed; }
 .map-popup td { padding: 1px 6px 1px 0; vertical-align: top; overflow-wrap: break-word; }
@@ -909,12 +912,12 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   .row.project-row .label-cell { padding-left: 16px; }
   .row.workstream-row .label-cell { padding-left: 26px; }
   .project-badges-row { padding-left: 30px; } /* chevron(22)+gap(4)+dot(9)+gap(4)-ish, arredondado */
-  .company-badge-operador { width: 13px; height: 13px; font-size: 5.8px; }
-  .company-badge-parceiro { width: 10px; height: 10px; font-size: 5px; }
-  .company-logo-chip-operador { height: 15px; padding: 1px 3px; }
-  .company-logo-chip-operador img { height: 11px; max-width: 38px; }
-  .company-logo-chip-parceiro { height: 12px; padding: 1px 2px; }
-  .company-logo-chip-parceiro img { height: 8px; max-width: 28px; }
+  .company-badge-operador { width: 8px; height: 8px; font-size: 3.6px; }
+  .company-badge-parceiro { width: 6px; height: 6px; font-size: 3px; }
+  .company-logo-chip-operador { height: 9px; padding: 1px 2px; }
+  .company-logo-chip-operador img { height: 6px; max-width: 22px; }
+  .company-logo-chip-parceiro { height: 7px; padding: 1px 2px; }
+  .company-logo-chip-parceiro img { height: 5px; max-width: 16px; }
   /* Nome do projeto/workstream nunca é cortado no mobile: quebra em várias
      linhas em vez de truncar com reticências (altura da linha calculada em
      JS via measureLabelCellHeight, para não sobrepor a linha seguinte). */
