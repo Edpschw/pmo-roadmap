@@ -250,6 +250,10 @@ function computeProjectRow(project) {
     resolucao: pd ? pd.resolucao : null,
     jazidaNome: jazidaNome(pd),
     jazidaComposicao: jazidaComposicao(pd),
+    // Nome do contrato de partilha propriamente dito — ver
+    // DISPLAY_NAME_OVERRIDE/nameCellHTML: nem sempre é o nome exibido na
+    // linha (Norte de Carcará exibe "Bacalhau", o nome popular da jazida).
+    contratoNome: project.name,
   };
 }
 
@@ -417,7 +421,7 @@ function buildJazidasCard(rows) {
   for (const j of jazidas) {
     const item = document.createElement('div');
     item.className = 'jazida-item';
-    const membersHTML = j.members.map((m) => `<span class="jazida-member"><span class="proj-dot" style="background:${m.color}"></span>${escapeHtml(m.name)}</span>`).join('');
+    const membersHTML = j.members.map((m) => `<span class="jazida-member"><span class="proj-dot" style="background:${m.color}"></span>${escapeHtml(displayName(m))}</span>`).join('');
     const details = [];
     if (j.composicao) details.push(escapeHtml(j.composicao));
     if (j.comercialidade) details.push(`Comercialidade: ${formatBR(j.comercialidade)}`);
@@ -832,21 +836,37 @@ function renderWellsPerFpsoChart(container, projectRows) {
   container.appendChild(card);
 }
 
+// Nome popular da jazida no lugar do nome do contrato, só quando o nome do
+// contrato não diz nada sobre ela — hoje só Norte de Carcará ("Bacalhau")
+// e Entorno de Sapinhoá ("Sapinhoá"); Atapu, Mero etc. já têm o nome
+// popular como nome do próprio contrato, sem precisar de troca. No mapa,
+// Norte de Carcará usa "Bacalhau Norte" (ver MAP_DISPLAY_NAME_OVERRIDE em
+// mapa.js) — nomes diferentes de propósito: lá a distinção geográfica
+// entre as duas metades da jazida importa, aqui a linha já mostra os dois
+// lados como entidades separadas (contrato + campo de contexto).
+const DISPLAY_NAME_OVERRIDE = {
+  'Norte de Carcará': 'Bacalhau',
+  'Entorno de Sapinhoá': 'Sapinhoá',
+};
+function displayName(r) {
+  return DISPLAY_NAME_OVERRIDE[r.name] || r.name;
+}
+
 // Nome com uma bolinha da cor da entidade — cor própria pra contrato
 // rastreado, CONTEXT_FIELD_COLOR (cinza) pra campo de contexto ou poço
 // sem campo nomeado. É o "colorindo só quem tem contrato" pedido, num só
 // lugar reaproveitado pela tabela de produção e pela de exploração.
-// Quando a entidade é uma jazida compartilhada (r.jazidaComposicao — só
-// preenchido quando o PD descreve a composição em prosa, ver
-// jazidaComposicao em shared.js), o nome da jazida (r.jazidaNome, do
-// título do PD) entra embaixo do nome do contrato/campo — "Norte de
-// Carcará" sozinho não deixa óbvio que a jazida ali é "Bacalhau e Bacalhau
-// Norte", por exemplo.
+// r.contratoNome (contrato de partilha por trás da linha — o próprio nome
+// pra linha de contrato, o do contrato ligado pra linha de campo de
+// contexto, ver computeProjectRow/computeFieldRow) vira uma segunda linha
+// "Contrato: ..." só quando acrescenta informação (diferente do nome já
+// exibido) — não duplica quando o nome do contrato já é o nome exibido.
 function nameCellHTML(r) {
-  const sub = r.jazidaComposicao
-    ? `<span class="proj-name-sub" title="${escapeHtml(r.jazidaComposicao)}">Jazida compartilhada: ${escapeHtml(r.jazidaNome || r.name)}</span>`
+  const name = displayName(r);
+  const sub = (r.contratoNome && r.contratoNome !== name)
+    ? `<span class="proj-name-sub">Contrato: ${escapeHtml(r.contratoNome)}</span>`
     : '';
-  return `<div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span><span class="proj-name-stack"><span class="proj-name-main">${escapeHtml(r.name)}</span>${sub}</span></div>`;
+  return `<div class="proj-name-cell"><span class="proj-dot" style="background:${r.color}"></span><span class="proj-name-stack"><span class="proj-name-main">${escapeHtml(name)}</span>${sub}</span></div>`;
 }
 
 /* ------------------------ Campos de contexto (não-CPP) --------------------- */
@@ -856,11 +876,12 @@ function nameCellHTML(r) {
 // Partilha (Mero) virou projeto rastreado próprio (ver seedState em
 // shared.js) e é filtrado antes de chegar aqui (ver init).
 
-function computeFieldRow(feature) {
+function computeFieldRow(feature, projectByFonte) {
   const props = feature.properties;
   const name = props.nome;
   const pd = pdData[name];
   const volumes = pd && pd.volumes ? pd.volumes : null;
+  const linkedProject = pd && pd.fonte ? projectByFonte.get(pd.fonte) : null;
   // Campo de contexto só aparece na seção "Campos em produção" — nunca na
   // de exploração — então já sai contado sem abandonado, igual aos
   // contratos rastreados dessa seção (ver withoutAbandonedWells).
@@ -879,6 +900,9 @@ function computeFieldRow(feature) {
     resolucao: pd ? pd.resolucao : null,
     jazidaNome: jazidaNome(pd),
     jazidaComposicao: jazidaComposicao(pd),
+    // Contrato rastreado que cita o mesmo PD (mesma jazida) — ver
+    // projectByPdFonte em shared.js e nameCellHTML abaixo.
+    contratoNome: linkedProject ? linkedProject.name : null,
   });
 }
 
@@ -989,7 +1013,7 @@ function renderProducaoTable(container, contractRows, fieldRows) {
 
   const note = document.createElement('p');
   note.className = 'analytics-table-note';
-  note.textContent = 'Cor do nome = cor do contrato (a mesma do roadmap/mapa); cinza = campo de contexto ou poço sem campo nomeado, sem contrato próprio. Comercialidade = data da declaração de comercialidade (marco que dá origem ao campo, dentro do contrato ou em Área Não Contratada); PD (resolução) = despacho da ANP que aprovou o Plano de Desenvolvimento. "Jazida compartilhada" junto do nome (ver Jazidas Compartilhadas abaixo) = o PD é o mesmo de outro campo/contrato nesta tabela — mesmo reservatório, mais de uma entidade. Parceiros: só onde o sumário executivo de PD publicado trouxe a tabela de participação. FPSOs: instalados (+ previstos entre parênteses) — só contrato rastreado tem essa informação.';
+  note.textContent = 'Cor do nome = cor do contrato (a mesma do roadmap/mapa); cinza = campo de contexto ou poço sem campo nomeado, sem contrato próprio. Nome = o nome popular da jazida quando o nome do contrato não diz nada sobre ela (Norte de Carcará → Bacalhau, Entorno de Sapinhoá → Sapinhoá); "Contrato" embaixo do nome mostra o contrato de partilha por trás (ver Jazidas Compartilhadas abaixo pra composição completa). Comercialidade = data da declaração de comercialidade (marco que dá origem ao campo, dentro do contrato ou em Área Não Contratada); PD (resolução) = despacho da ANP que aprovou o Plano de Desenvolvimento. Parceiros: só onde o sumário executivo de PD publicado trouxe a tabela de participação. FPSOs: instalados (+ previstos entre parênteses) — só contrato rastreado tem essa informação.';
   container.appendChild(note);
 }
 
@@ -1124,9 +1148,14 @@ async function init() {
   }
   const presalFeatures = presalAllFeatures.filter((f) => !trackedProjectByUpperName.has(f.properties.nome.toUpperCase()));
 
+  // Campo de contexto que cita o mesmo PD de um único projeto rastreado
+  // (ver projectByPdFonte em shared.js) — usado por nameCellHTML/
+  // computeFieldRow pra saber qual contrato citar como informação.
+  const projectByFonte = projectByPdFonte(state.projects, pdData);
+
   const rows = state.projects.map(computeProjectRow);
   const agg = computeAggregates(rows);
-  const fieldRows = presalFeatures.map(computeFieldRow);
+  const fieldRows = presalFeatures.map((f) => computeFieldRow(f, projectByFonte));
   if (outrosPocos.length) fieldRows.push(computeOutrosRow(outrosPocos));
 
   wrapper.innerHTML = '';

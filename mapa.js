@@ -195,24 +195,42 @@ function colorForProject(project) {
   return project.color;
 }
 
+// Nome de exibição no mapa (rótulo sobre o polígono + título do popup)
+// quando difere do nome do contrato — hoje só Norte de Carcará: o nome do
+// CONTRATO não diz nada sobre a jazida (Bacalhau), mas o CAMPO da metade
+// norte (BACALHAU NORTE, ver props.campos) sim, e é o mesmo nome que já
+// aparece no campo de contexto ligado (BACALHAU, a metade sul — ver
+// projectByPdFonte). O nome do contrato passa a aparecer como informação
+// ("Contrato: ...") dentro do popup, não mais no título.
+const MAP_DISPLAY_NAME_OVERRIDE = {
+  'Norte de Carcará': 'Bacalhau Norte',
+};
+function mapDisplayName(project) {
+  return MAP_DISPLAY_NAME_OVERRIDE[project.name] || project.name;
+}
+
 function popupHTML(project, props) {
   const groupLabel = (GROUP_DEFS.find((g) => g.id === project.group) || {}).label || project.group;
+  const displayName = mapDisplayName(project);
+  const renamed = displayName !== project.name;
   const rows = [
     ['Grupo', groupLabel],
-    ['Bacia', props.bacia || '—'],
-    ['Operador', props.operador || '—'],
-    ['Rodada', props.rodada || '—'],
   ];
+  if (renamed) rows.push(['Contrato', project.name]);
+  rows.push(['Bacia', props.bacia || '—'], ['Operador', props.operador || '—'], ['Rodada', props.rodada || '—']);
   if (props.fonte === 'bloco_exploratorio') {
     rows.push(['Assinatura', formatAnpDate(props.assinatura)]);
   } else {
-    rows.push(['Campo(s) ANP', props.campos || '—']);
+    // Campo(s) ANP só entra quando ainda acrescenta informação — quando o
+    // nome já virou o título (ver mapDisplayName), citá-lo nas duas linhas
+    // é redundante.
+    if (!renamed) rows.push(['Campo(s) ANP', props.campos || '—']);
     rows.push(['Início produção', formatAnpDate(props.inicio_producao)]);
   }
   rows.push(['Área', props.area_km2 ? Math.round(props.area_km2).toLocaleString('pt-BR') + ' km²' : '—']);
   const rowsHTML = rows.map(([k, v]) => `<tr><td class="k">${k}</td><td>${v}</td></tr>`).join('');
   return `<div class="map-popup">
-    <h3 style="color:${colorForProject(project)}">${escapeHtml(project.name)}</h3>
+    <h3 style="color:${colorForProject(project)}">${escapeHtml(displayName)}</h3>
     <table>${rowsHTML}</table>
     <p class="map-popup-source">Fonte: ANP — ${props.fonte === 'bloco_exploratorio' ? 'Blocos Exploratórios sob Contrato' : 'Campos de Produção'} (SIRGAS 2000)</p>
     ${pdSectionHTML(project.name)}
@@ -888,7 +906,7 @@ async function init() {
     projectLabelByProjectId[project.id] = L.marker(bounds.getCenter(), {
       icon: L.divIcon({
         className: 'map-project-label-icon',
-        html: `<span class="map-project-label">${escapeHtml(project.name)}</span>`,
+        html: `<span class="map-project-label">${escapeHtml(mapDisplayName(project))}</span>`,
         iconSize: null,
       }),
       interactive: false,
@@ -1488,7 +1506,7 @@ function renderPanel() {
       dot.style.background = hasShape ? colorForProject(project) : 'transparent';
       dot.style.borderColor = hasShape ? 'transparent' : 'var(--map-text-faint)';
       li.appendChild(dot);
-      li.appendChild(document.createTextNode(project.name));
+      li.appendChild(document.createTextNode(mapDisplayName(project)));
       if (!hasShape) {
         const flag = document.createElement('span');
         flag.className = 'map-panel-flag';
