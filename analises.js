@@ -836,20 +836,11 @@ function renderWellsPerFpsoChart(container, projectRows) {
   container.appendChild(card);
 }
 
-// Nome popular da jazida no lugar do nome do contrato, só quando o nome do
-// contrato não diz nada sobre ela — hoje só Norte de Carcará ("Bacalhau")
-// e Entorno de Sapinhoá ("Sapinhoá"); Atapu, Mero etc. já têm o nome
-// popular como nome do próprio contrato, sem precisar de troca. No mapa,
-// Norte de Carcará usa "Bacalhau Norte" (ver MAP_DISPLAY_NAME_OVERRIDE em
-// mapa.js) — nomes diferentes de propósito: lá a distinção geográfica
-// entre as duas metades da jazida importa, aqui a linha já mostra os dois
-// lados como entidades separadas (contrato + campo de contexto).
-const DISPLAY_NAME_OVERRIDE = {
-  'Norte de Carcará': 'Bacalhau',
-  'Entorno de Sapinhoá': 'Sapinhoá',
-};
+// projectDisplayName (nome popular da jazida no lugar do nome do contrato,
+// ver shared.js) espera um nome de projeto — este wrapper aceita a row
+// (contrato ou campo de contexto) usada nesta tela.
 function displayName(r) {
-  return DISPLAY_NAME_OVERRIDE[r.name] || r.name;
+  return projectDisplayName(r.name);
 }
 
 // Nome com uma bolinha da cor da entidade — cor própria pra contrato

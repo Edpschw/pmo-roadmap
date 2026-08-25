@@ -317,6 +317,27 @@ function projectByPdFonte(projects, pdData) {
   return map;
 }
 
+// Nome popular da jazida no lugar do nome do contrato, só quando o nome do
+// contrato não diz nada sobre ela — hoje só Norte de Carcará ("Bacalhau")
+// e Entorno de Sapinhoá ("Sapinhoá"); os demais contratos já têm o nome
+// popular como nome do próprio contrato. Usado em toda EXIBIÇÃO do nome do
+// projeto (roadmap em app.js, tabela de análises) — nunca em chave de
+// dado: pocosData, pdData, featureByProject, KNOWN_PROJECT_GROUPS,
+// CONTRACT_WELL_OVERLAP e o campo de nome editável de tabela.js continuam
+// usando project.name, o nome real do contrato (editar o campo "renomeado"
+// em tabela.js sem essa distinção quebraria essas referências, por isso
+// tabela.js não usa este helper). No mapa (mapa.js), Norte de Carcará usa
+// "Bacalhau Norte" em vez de "Bacalhau" — override próprio ali
+// (MAP_DISPLAY_NAME_OVERRIDE), pela distinção geográfica entre as duas
+// metades da jazida que só faz sentido lá.
+const PROJECT_DISPLAY_NAME_OVERRIDE = {
+  'Norte de Carcará': 'Bacalhau',
+  'Entorno de Sapinhoá': 'Sapinhoá',
+};
+function projectDisplayName(name) {
+  return PROJECT_DISPLAY_NAME_OVERRIDE[name] || name;
+}
+
 // Agrupa uma lista de { name, pd } por pd.fonte — a URL do PD é a chave
 // real de "é o mesmo documento, logo a mesma jazida", já que o PD é o
 // documento POR JAZIDA (não por campo/contrato). Grupo com mais de um

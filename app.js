@@ -399,7 +399,7 @@ function computeMobileSidebarWidth() {
   const font = `${PROJECT_NAME_FONT_WEIGHT_MOBILE} ${PROJECT_NAME_FONT_SIZE_MOBILE}px ${FONT_STACK}`;
   let widestName = 0;
   for (const project of state.projects) {
-    const w = measureTextWidth(project.name, font);
+    const w = measureTextWidth(projectDisplayName(project.name), font);
     if (w > widestName) widestName = w;
   }
   const desired = Math.ceil(widestName + PROJECT_LABEL_CHROME_MOBILE);
@@ -779,7 +779,7 @@ function renderProjectRow(project, rangeStart) {
 
   const label = document.createElement('span');
   label.className = 'label-text';
-  label.textContent = project.name;
+  label.textContent = projectDisplayName(project.name);
   labelCell.appendChild(label);
 
   const actions = document.createElement('div');
@@ -792,7 +792,7 @@ function renderProjectRow(project, rangeStart) {
   // fonte reduz um pouco se ainda faltar espaço (ex.: nomes muito longos).
   if (isMobileLayout()) {
     const available = currentSidebarWidth - PROJECT_LABEL_CHROME_MOBILE;
-    label.style.fontSize = fitProjectLabelFontSize(project.name, available) + 'px';
+    label.style.fontSize = fitProjectLabelFontSize(projectDisplayName(project.name), available) + 'px';
   }
 
   const mobileLabelHeight = isMobileLayout() ? measureLabelCellHeight(labelCell) : 0;
@@ -1208,7 +1208,7 @@ function openWorkstreamModal(project, ws) {
   const isEdit = !!ws;
   const html = `
     <h2>${isEdit ? 'Editar workstream' : 'Nova workstream'}</h2>
-    <p style="margin:-6px 0 14px;color:var(--text-muted);font-size:12px;">Projeto: <strong>${escapeHtml(project.name)}</strong></p>
+    <p style="margin:-6px 0 14px;color:var(--text-muted);font-size:12px;">Projeto: <strong>${escapeHtml(projectDisplayName(project.name))}</strong></p>
     <div class="field">
       <label>Nome da workstream</label>
       <input type="text" id="f-name" value="${isEdit ? escapeAttr(ws.name) : ''}" placeholder="Ex: Arquitetura & Plataforma" />
