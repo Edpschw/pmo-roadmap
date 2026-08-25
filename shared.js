@@ -1090,18 +1090,44 @@ const NEW_TRACKED_PROJECTS = ['Mero'];
 // da migração (mergeSeedUpdates), que só roda quando a versão está
 // desatualizada. Devolve true se adicionou algo (pra loadState saber se
 // precisa salvar de novo).
+//
+// A ordem dentro de cada grupo no roadmap é simplesmente a ordem do array
+// state.projects (não há sort explícito por data em app.js) — e a ordem
+// de seedState() já reflete a data do Leilão dentro de cada grupo. Por
+// isso o novo projeto é (re)inserido na posição correspondente à
+// referência (antes do primeiro projeto já salvo cuja posição na
+// referência é maior), em vez de simplesmente ir pro final do array: um
+// push cego jogaria, por ex., o Mero (Leilão de 2013, o mais antigo de
+// todos) pro fim do grupo de produção, atrás de projetos com leilão bem
+// mais recente — o que já tinha acontecido com quem recebeu o Mero pela
+// primeira versão desta função (só push). Por isso a reposição roda pra
+// TODO projeto de NEW_TRACKED_PROJECTS, mesmo quando ele já existe no
+// estado salvo — a função é idempotente (não mexe em mais nada se a
+// posição já está correta) e corrige automaticamente quem ficou com o
+// Mero mal posicionado por causa daquele bug antigo.
 function ensureNewTrackedProjects(saved) {
+  const before = saved.projects.map((p) => p.name).join('|');
   const reference = seedState();
-  let added = false;
+  const refIndexByName = new Map(reference.projects.map((p, i) => [p.name, i]));
   for (const name of NEW_TRACKED_PROJECTS) {
-    if (saved.projects.some((p) => p.name === name)) continue;
-    const refProj = reference.projects.find((p) => p.name === name);
-    if (refProj) {
-      saved.projects.push(JSON.parse(JSON.stringify(refProj)));
-      added = true;
+    const newIdx = refIndexByName.get(name);
+    const existingIdx = saved.projects.findIndex((p) => p.name === name);
+    let entry;
+    if (existingIdx === -1) {
+      const refProj = reference.projects.find((p) => p.name === name);
+      if (!refProj) continue;
+      entry = JSON.parse(JSON.stringify(refProj));
+    } else {
+      entry = saved.projects.splice(existingIdx, 1)[0];
     }
+    const insertAt = saved.projects.findIndex((p) => {
+      const idx = refIndexByName.get(p.name);
+      return idx !== undefined && idx > newIdx;
+    });
+    if (insertAt === -1) saved.projects.push(entry);
+    else saved.projects.splice(insertAt, 0, entry);
   }
-  return added;
+  return saved.projects.map((p) => p.name).join('|') !== before;
 }
 
 // Aplica ao estado salvo do usuário só o que existe em seedState() e ainda
