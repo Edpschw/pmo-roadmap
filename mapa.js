@@ -206,18 +206,31 @@ function colorForProject(project) {
   return project.color;
 }
 
-// Nome de exibição no mapa (rótulo sobre o polígono + título do popup)
-// quando difere do nome do contrato — hoje só Norte de Carcará: o nome do
-// CONTRATO não diz nada sobre a jazida (Bacalhau), mas o CAMPO da metade
-// norte (BACALHAU NORTE, ver props.campos) sim, e é o mesmo nome que já
-// aparece no campo de contexto ligado (BACALHAU, a metade sul — ver
-// projectByPdFonte). O nome do contrato passa a aparecer como informação
-// ("Contrato: ...") dentro do popup, não mais no título.
-const MAP_DISPLAY_NAME_OVERRIDE = {
-  'Norte de Carcará': 'Bacalhau Norte',
-};
+// Nome de exibição no mapa (rótulo sobre o polígono + título do popup) —
+// pra jazida compartilhada (Bacalhau, Sapinhoá...) usa o mesmo nome
+// popular do roadmap/análises (ver projectDisplayName em shared.js), não
+// o nome do contrato: o pedido foi deixar só o nome da jazida em todos os
+// campos/contratos que fazem parte dela (contrato E campo de contexto
+// mostram o mesmo nome — ver contextFieldMapLabel abaixo, pro lado do
+// campo de contexto sem contrato).
 function mapDisplayName(project) {
-  return MAP_DISPLAY_NAME_OVERRIDE[project.name] || project.name;
+  return projectDisplayName(project.name);
+}
+
+// Mesma ideia que mapDisplayName, pro RÓTULO (não o popup, ver
+// presaltFieldPopupHTML) de um campo de contexto sem contrato rastreado
+// por trás — Berbigão é o caso puro (Norte de Berbigão/Berbigão/Sul de
+// Berbigão, sem nenhum dos três virar contrato rastreado). pd.titulo do
+// PD compartilhado já vem como "Berbigão, Norte de Berbigão e Sul de
+// Berbigão" (ver jazidaNome em shared.js) — o primeiro nome da lista é
+// sempre o nome popular da jazida, então cortar aí basta. Só entra em
+// ação quando o título tem mais de um nome (vírgula ou " e "): PD de
+// campo isolado (a maioria) mantém o próprio nome do campo, sem risco de
+// mudar formatação à toa.
+function contextFieldMapLabel(props) {
+  const jn = jazidaNome(byNameOrUpper(pdData, props.nome));
+  if (jn && /,| e /.test(jn)) return jn.split(/,| e /)[0].trim();
+  return titleCasePt(props.nome);
 }
 
 // HTML de cada selo (operador + parceiros do PD, ver companyBadgesFor em
@@ -903,7 +916,7 @@ async function init() {
         icon: L.divIcon({
           className: 'map-project-label-icon',
           html: `<div class="map-project-label-wrap">
-            <span class="map-project-label">${escapeHtml(titleCasePt(props.nome))}</span>
+            <span class="map-project-label">${escapeHtml(contextFieldMapLabel(props))}</span>
             ${mapLabelBadgesHTML(props.operador, props.nome)}
           </div>`,
           iconSize: null,
