@@ -185,13 +185,6 @@ def main(csv_path, out_path):
             w = build_well(r)
             if not w:
                 continue
-            # Só poço que a ANP confirma ter atingido o pré-sal (ver mesmo
-            # filtro/motivo na seção "outros poços do pré-sal" abaixo) —
-            # um campo/bloco pode ter poço raso (pós-sal) dentro da mesma
-            # área, sem relação com a jazida de pré-sal que o projeto
-            # rastreia.
-            if w.get('ps') != 'S':
-                continue
             if desde and (w.get('d') or '9999') < desde:
                 continue
             matched.append(w)
@@ -208,8 +201,7 @@ def main(csv_path, out_path):
             if (r['BACIA'] or '').strip() not in BACIAS or (r['CAMPO'] or '').strip() not in aliases:
                 continue
             w = build_well(r)
-            # Mesmo filtro de pré-sal do laço do PLAN acima.
-            if w and w.get('ps') == 'S':
+            if w:
                 # Poço registrado numa Área Não Concedida (prefixo "AnC" no
                 # cadastro da ANP) em vez de sob o nome definitivo do campo —
                 # sinaliza isso pro mapa.js desenhar um símbolo diferente,
@@ -223,15 +215,15 @@ def main(csv_path, out_path):
             pocos[campo] = matched
         report.append((campo + ' (contexto)', len(matched)))
 
-    # "Todos os poços do pré-sal": mesmo filtro ATINGIU_PRESAL='S' dos dois
-    # laços acima (o app inteiro só mostra poço do pré-sal, não todo poço
-    # das bacias de Santos e Campos — que também têm décadas de produção
-    # pós-sal convencional, Marlim/Albacora/Barracuda etc., sem relação com
-    # o play do pré-sal). 'I' (indeterminado) e vazio (sem informação,
-    # comum em poço recente sob confidencialidade) ficam de fora por serem
-    # incertos — mais conservador que arriscar incluir poço que não é do
-    # pré-sal. Ainda exclui quem já entrou em algum contrato/campo nomeado
-    # acima.
+    # "Todos os poços do pré-sal": só poços que a ANP confirma terem
+    # atingido o pré-sal (ATINGIU_PRESAL='S') — não todo poço das bacias de
+    # Santos e Campos, que também têm décadas de produção pós-sal
+    # convencional (Marlim, Albacora, Barracuda etc.) sem relação com o
+    # play do pré-sal; incluir esses poluiria o mapa com pontos fora do
+    # tema. 'I' (indeterminado) e vazio (sem informação, comum em poços
+    # recentes sob confidencialidade) ficam de fora por serem incertos —
+    # mais conservador que arriscar incluir poço que não é do pré-sal.
+    # Ainda exclui quem já entrou em algum contrato/campo nomeado acima.
     outros = []
     for r in rows:
         if (r['BACIA'] or '').strip() not in BACIAS:
