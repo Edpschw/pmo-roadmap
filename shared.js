@@ -384,6 +384,22 @@ const COMPANY_ALIASES = {
   'IBV Brasil Petróleo Ltda.': { short: 'IBV Brasil', initials: 'IB' },
   'Petrogal Brasil S.A.': { short: 'Galp', initials: 'GP' },
   'Repsol Sinopec Brasil S.A.': { short: 'Repsol Sinopec', initials: 'RS' },
+  // Variantes mais curtas do campo "op" de data/pocos.json (nome do
+  // operador do POÇO, não do contrato — formato diferente do operador do
+  // GeoJSON acima) — mesma empresa, mesmo selo. Usadas pelo fallback de
+  // operador do roadmap (ver wellOperatorFallback em app.js) pros 8
+  // projetos sem poligonal na ANP (ver PROJECTS_WITHOUT_SHAPE em mapa.js).
+  'Petrobras': { short: 'Petrobras', initials: 'PB' },
+  'Shell Brasil': { short: 'Shell', initials: 'SH' },
+  'Shell': { short: 'Shell', initials: 'SH' },
+  'BP Energy': { short: 'BP', initials: 'BP' },
+  'ExxonMobil Brasil': { short: 'ExxonMobil', initials: 'XM' },
+  'Equinor Brasil': { short: 'Equinor', initials: 'EQ' },
+  'Equinor Energy': { short: 'Equinor', initials: 'EQ' },
+  'TotalEnergies EP': { short: 'TotalEnergies', initials: 'TE' },
+  'Prio Forte S.A': { short: 'PRIO', initials: 'PR' },
+  'Prio Bravo': { short: 'PRIO', initials: 'PR' },
+  'Prio Tigris': { short: 'PRIO', initials: 'PR' },
 };
 
 function colorForCompany(shortName) {

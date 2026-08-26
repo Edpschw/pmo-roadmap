@@ -765,6 +765,25 @@ function renderGroupRow(groupDef, groupProjects, isCollapsed) {
   return PROJECT_ROW_H;
 }
 
+// Operador mais frequente entre os poços do próprio contrato (data/
+// pocos.json) — fallback pro selo (ver renderProjectRow) quando o
+// projeto não tem feature em contratos.geojson/campos_presal.geojson.
+// null sem nenhum poço com operador registrado.
+function wellOperatorFallback(projectName) {
+  const wells = pocosDataApp[projectName] || [];
+  const counts = new Map();
+  for (const w of wells) {
+    if (!w.op) continue;
+    counts.set(w.op, (counts.get(w.op) || 0) + 1);
+  }
+  let best = null;
+  let bestCount = 0;
+  for (const [op, count] of counts) {
+    if (count > bestCount) { best = op; bestCount = count; }
+  }
+  return best;
+}
+
 function renderProjectRow(project, rangeStart) {
   const row = document.createElement('div');
   row.className = 'row project-row';
@@ -809,7 +828,14 @@ function renderProjectRow(project, rangeStart) {
   // arquivo) — sem selo nenhum até chegarem, sem quebrar o layout.
   const feature = featureByProjectApp[project.name];
   const pd = byNameOrUpper(pdDataApp, project.name);
-  const badges = companyBadgesFor(feature ? feature.properties.operador : null, pd ? pd.participacao : null);
+  // 8 dos 30 projetos não têm feature em contratos.geojson/campos_presal.
+  // geojson (blocos devolvidos/exploratórios sem poligonal na ANP, ver
+  // PROJECTS_WITHOUT_SHAPE em mapa.js) — sem isso ficavam sem nenhum selo
+  // de operador. wellOperatorFallback usa o operador já registrado no(s)
+  // próprio(s) poço(s) do contrato (data/pocos.json), dado real que já
+  // carrega de qualquer forma pros marcos de poço.
+  const operadorRaw = feature ? feature.properties.operador : wellOperatorFallback(project.name);
+  const badges = companyBadgesFor(operadorRaw, pd ? pd.participacao : null);
   if (badges.length) {
     const badgesRow = document.createElement('div');
     badgesRow.className = 'project-badges-row';
