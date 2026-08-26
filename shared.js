@@ -415,6 +415,7 @@ function colorForCompany(shortName) {
 // gerado até que o arquivo do logo seja enviado.
 const COMPANY_LOGO_FILES = {
   'Petrobras': 'assets/logos/petrobras.png',
+  'TotalEnergies': 'assets/logos/totalenergies.png',
 };
 
 function companyBadge(rawName) {
