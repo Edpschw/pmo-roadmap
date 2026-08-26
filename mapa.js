@@ -89,6 +89,11 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   maxZoom: 20,
 }).addTo(map);
 
+// Força o renderer SVG a existir desde já (não só quando o 1º polígono é
+// adicionado) — hatchFillFor precisa do <svg> do mapa já no DOM pra
+// injetar o <defs>/<pattern> da textura hachurada dos blocos devolvidos.
+L.svg().addTo(map);
+
 // Todo popup (projeto, campo de contexto, poço) abre ancorado num ponto
 // fixo e cresce PRA CIMA a partir dele (o triângulo de baixo aponta pro
 // ponto) — com autoPan desligado de propósito em todo lugar que chama
@@ -258,6 +263,58 @@ function colorForProject(project) {
     return (rodada && rodadaColorMap[rodada]) || '#5c6470';
   }
   return project.color;
+}
+
+// Textura hachurada (linhas diagonais na cor do próprio polígono, ver
+// fillStyleFor) pro preenchimento dos blocos do grupo Devolvidos — sinal
+// visual extra de "esse contrato já acabou", sem depender só da legenda/
+// popup. Um <pattern> SVG por cor (cacheado, não recria à toa — mesma cor
+// se repete entre polígonos e entre trocas de "Colorir por"), injetado no
+// <defs> do <svg> do próprio Leaflet (ver L.svg().addTo(map) acima).
+const hatchPatternIds = new Set();
+function hatchFillFor(color) {
+  const id = 'hatch-' + color.replace('#', '');
+  if (!hatchPatternIds.has(id)) {
+    const svg = document.querySelector('#map svg');
+    if (!svg) return color; // ainda sem <svg> no DOM — cai pro fill sólido
+    let defs = svg.querySelector('defs');
+    if (!defs) {
+      defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      svg.insertBefore(defs, svg.firstChild);
+    }
+    const pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+    pattern.setAttribute('id', id);
+    pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+    pattern.setAttribute('width', '8');
+    pattern.setAttribute('height', '8');
+    pattern.setAttribute('patternTransform', 'rotate(45)');
+    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bg.setAttribute('width', '8');
+    bg.setAttribute('height', '8');
+    bg.setAttribute('fill', color);
+    bg.setAttribute('fill-opacity', '0.28');
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', '0');
+    line.setAttribute('y1', '0');
+    line.setAttribute('x2', '0');
+    line.setAttribute('y2', '8');
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', '3');
+    pattern.appendChild(bg);
+    pattern.appendChild(line);
+    defs.appendChild(pattern);
+    hatchPatternIds.add(id);
+  }
+  return `url(#${id})`;
+}
+
+// {color, fillColor} de um projeto — hachurado só pro grupo Devolvidos
+// (ver hatchFillFor), sólido pros demais. Centraliza a regra pra não
+// duplicar entre a criação inicial do polígono e setColorMode (que
+// recolore ao trocar "Colorir por").
+function fillStyleFor(project) {
+  const c = colorForProject(project);
+  return { color: c, fillColor: project.group === 'devolvidos' ? hatchFillFor(c) : c };
 }
 
 // Nome de exibição no RÓTULO sempre visível sobre o polígono (não o
@@ -978,7 +1035,7 @@ async function init() {
       const linkedProject = fieldPd && fieldPd.fonte ? linkedProjectByFonte.get(fieldPd.fonte) : null;
       const color = linkedProject ? colorForProject(linkedProject) : PRESALT_FIELD_STYLE.color;
       const style = linkedProject
-        ? { color, weight: 1.5, fillColor: color, fillOpacity: 0.22, dashArray: '4 3' }
+        ? { ...fillStyleFor(linkedProject), weight: 1.5, fillOpacity: 0.22, dashArray: '4 3' }
         : PRESALT_FIELD_STYLE;
       const layer = L.geoJSON(feat, { style });
       layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(props), { maxWidth: 320 }));
@@ -1017,9 +1074,8 @@ async function init() {
     if (!feat) continue;
     const layer = L.geoJSON(feat, {
       style: {
-        color: colorForProject(project),
+        ...fillStyleFor(project),
         weight: 2,
-        fillColor: colorForProject(project),
         fillOpacity: 0.42,
       },
     });
@@ -1180,8 +1236,7 @@ function setColorMode(mode) {
   for (const project of state.projects) {
     const layer = layerByProjectId[project.id];
     if (!layer) continue;
-    const c = colorForProject(project);
-    layer.setStyle({ color: c, fillColor: c });
+    layer.setStyle(fillStyleFor(project));
     const feat = featureByProject[project.name];
     if (feat) layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties), { autoPan: false, maxWidth: 320 }));
   }
@@ -1190,8 +1245,7 @@ function setColorMode(mode) {
   // isso, "Colorir por Status" repintava Atapu mas deixava OESTE DE ATAPU
   // parado na cor de Partilha original.
   for (const { layer, project } of linkedPresaltLayers) {
-    const c = colorForProject(project);
-    layer.setStyle({ color: c, fillColor: c });
+    layer.setStyle(fillStyleFor(project));
   }
   renderPanel();
 }
