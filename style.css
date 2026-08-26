@@ -663,9 +663,20 @@ body.map-page .btn-ghost:hover { background: #1e222a; }
    (ver mapLabelBadgesHTML em mapa.js) — mesmos selos do popup, com uma
    sombra no lugar do fundo branco do chip de logo (não dá pra pintar um
    retângulo sólido atrás de cada um sem poluir o mapa). */
-.map-label-badges { display: flex; align-items: center; gap: 2px; justify-content: center; }
+.map-label-badges { display: flex; align-items: center; gap: 1.5px; justify-content: center; }
 .map-label-badges .company-badge { box-shadow: 0 1px 3px rgba(0,0,0,0.85); }
 .map-label-badges .company-logo-chip { box-shadow: 0 1px 3px rgba(0,0,0,0.85); }
+/* Menor que o mesmo selo no popup/roadmap (ver .company-badge-operador
+   etc. lá em cima) — sobre o polígono ele já escala com o zoom (ver
+   --map-label-scale), então o tamanho-base tem que ser bem discreto: no
+   zoom em que aparece pela primeira vez (MAP_LABEL_BADGES_MIN_ZOOM) a
+   escala já passa de 1×. */
+.map-label-badges .company-badge-operador { width: 7px; height: 7px; font-size: 3px; }
+.map-label-badges .company-badge-parceiro { width: 5px; height: 5px; font-size: 2.5px; }
+.map-label-badges .company-logo-chip-operador { height: 8px; padding: 1px 2px; }
+.map-label-badges .company-logo-chip-operador img { height: 5.5px; max-width: 20px; }
+.map-label-badges .company-logo-chip-parceiro { height: 6.5px; padding: 0 1px; }
+.map-label-badges .company-logo-chip-parceiro img { height: 4.5px; max-width: 15px; }
 /* Abaixo de MAP_LABEL_BADGES_MIN_ZOOM (ver updateMapLabelScale em
    mapa.js) — visão geral bem afastada, dezenas de contratos na tela ao
    mesmo tempo: some só o selo, o nome continua. */

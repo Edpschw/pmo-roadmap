@@ -156,9 +156,10 @@ const MAP_LABEL_SCALE_RANGE = [0.6, 1.9];
 // zoom — na visão geral (todos os 30 contratos na tela, zoom inicial ~7
 // pra baixo), dezenas de selos ao mesmo tempo só poluem; o nome sozinho
 // (que continua, só menor, ver MAP_LABEL_SCALE_*) já basta pra orientar
-// nesse zoom. Só reaparece num zoom "intermediário" — perto ou acima do
-// padrão do fitBounds inicial — sem precisar focar um contrato específico.
-const MAP_LABEL_BADGES_MIN_ZOOM = 6;
+// nesse zoom. Só reaparece num zoom "intermediário" — já passando do
+// padrão do fitBounds inicial (7) — sem precisar focar um contrato
+// específico.
+const MAP_LABEL_BADGES_MIN_ZOOM = 7.5;
 
 const groupLayers = {};
 for (const g of GROUP_DEFS) groupLayers[g.id] = L.layerGroup().addTo(map);
