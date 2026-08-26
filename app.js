@@ -828,9 +828,9 @@ function renderProjectRow(project, rangeStart) {
   // arquivo) — sem selo nenhum até chegarem, sem quebrar o layout.
   const feature = featureByProjectApp[project.name];
   const pd = byNameOrUpper(pdDataApp, project.name);
-  // 3 dos 30 projetos não têm feature em contratos.geojson/campos_presal.
-  // geojson (blocos sem poligonal na ANP, ver PROJECTS_WITHOUT_SHAPE em
-  // mapa.js) — sem isso ficavam sem nenhum selo de operador.
+  // 1 dos 30 projetos não tem feature em contratos.geojson/campos_presal.
+  // geojson (bloco sem poligonal na ANP, ver PROJECTS_WITHOUT_SHAPE em
+  // mapa.js) — sem isso ficava sem nenhum selo de operador.
   // wellOperatorFallback usa o operador já registrado no(s) próprio(s)
   // poço(s) do contrato (data/pocos.json), dado real que já
   // carrega de qualquer forma pros marcos de poço.

@@ -387,8 +387,8 @@ const COMPANY_ALIASES = {
   // Variantes mais curtas do campo "op" de data/pocos.json (nome do
   // operador do POÇO, não do contrato — formato diferente do operador do
   // GeoJSON acima) — mesma empresa, mesmo selo. Usadas pelo fallback de
-  // operador do roadmap (ver wellOperatorFallback em app.js) pros 3
-  // projetos sem poligonal na ANP (ver PROJECTS_WITHOUT_SHAPE em mapa.js).
+  // operador do roadmap (ver wellOperatorFallback em app.js) pro único
+  // projeto sem poligonal na ANP (ver PROJECTS_WITHOUT_SHAPE em mapa.js).
   'Petrobras': { short: 'Petrobras', initials: 'PB' },
   'Shell Brasil': { short: 'Shell', initials: 'SH' },
   'Shell': { short: 'Shell', initials: 'SH' },

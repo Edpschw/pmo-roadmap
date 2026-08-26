@@ -41,12 +41,12 @@ const PD_URL = 'data/planos_desenvolvimento.json';
 // Projetos sem poligonal em NENHUM shapefile disponível até agora, com o
 // motivo — ver comentário em cima de PLAN em scripts/build_geojson.py
 // (blocos exploratórios/campos de produção, arquivo unificado) e em
-// scripts/add_partilha3_5_blocks.py (shapefiles por rodada, que já
-// resolveram Peroba/Alto de Cabo Frio Oeste/Pau-Brasil/Saturno/Titã).
+// scripts/add_partilha_blocks.py (shapefiles por rodada, que já
+// resolveram Peroba/Alto de Cabo Frio Oeste/Dois Irmãos/Três Marias/
+// Pau-Brasil/Saturno/Titã). Só falta Sul de Gato do Mato — FID recente
+// demais (2025) pra já ter shapefile de rodada.
 const PROJECTS_WITHOUT_SHAPE = {
   'Sul de Gato do Mato': 'FID recente (2025); área ainda não aparece nos cadastros públicos de bloco ou campo.',
-  'Dois Irmãos': 'Bloco devolvido — não consta mais no cadastro de blocos ativos da ANP.',
-  'Três Marias': 'Bloco devolvido — não consta mais no cadastro de blocos ativos da ANP.',
 };
 
 // Modos de coloração do mapa. 'projeto' usa a cor de cada projeto (mesma do
@@ -479,7 +479,7 @@ function yearOf(iso) {
 // Ano do contrato de um projeto: o marco mais antigo com icon 'contract'
 // na workstream "Marcos do Contrato" (normalmente "Leilão", às vezes só
 // "Assinatura" quando não há leilão distinto) — os 30 projetos têm essa
-// workstream, então cobre até os 3 sem poligonal na ANP (ver
+// workstream, então cobre até o único sem poligonal na ANP (ver
 // PROJECTS_WITHOUT_SHAPE). null se por algum motivo não achar nenhum
 // marco de contrato.
 function projectContractYear(project) {
@@ -1057,7 +1057,7 @@ async function init() {
 
   // Poços de TODOS os contratos que tenham poço cadastrado — inclusive os
   // campos em produção (Búzios, Mero/Libra, Bacalhau/Norte de Carcará…) e
-  // os 3 sem poligonal na ANP (ver PROJECTS_WITHOUT_SHAPE), que ficavam
+  // o único sem poligonal na ANP (ver PROJECTS_WITHOUT_SHAPE), que ficava
   // completamente fora do mapa: com a coordenada real de cada
   // poço, o polígono deixou de ser necessário pra posicioná-los. Vão pra
   // wellGroupLayers[grupo do projeto] — separado do groupLayers do

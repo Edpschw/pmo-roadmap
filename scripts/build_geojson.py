@@ -33,12 +33,11 @@ PLAN = {
     'Itaimbezinho': ('bloco', 'COD_BLOCO', ['Itaimbezin']),
     'Jaspe': ('bloco', 'COD_BLOCO', ['Jaspe']),
 }
-# Projetos sem shapefile disponível nos dois arquivos fornecidos (devolvidos
-# há mais tempo, ou área ainda não declarada oficialmente): Sul de Gato do
-# Mato, Dois Irmãos, Três Marias.
-# Pau-Brasil, Peroba, Alto de Cabo Frio Oeste, Saturno e Titã foram
-# adicionados depois, a partir dos shapefiles por rodada (não o arquivo
-# unificado acima) — ver scripts/add_partilha3_5_blocks.py.
+# Projeto sem shapefile disponível nos dois arquivos fornecidos: Sul de
+# Gato do Mato (FID recente demais, 2025, pra já ter shapefile de rodada).
+# Pau-Brasil, Peroba, Alto de Cabo Frio Oeste, Dois Irmãos, Três Marias,
+# Saturno e Titã foram adicionados depois, a partir de shapefiles por
+# rodada (não o arquivo unificado acima) — ver scripts/add_partilha_blocks.py.
 
 def records_matching(reader, key_field, values):
     fields = [f[0] for f in reader.fields[1:]]
