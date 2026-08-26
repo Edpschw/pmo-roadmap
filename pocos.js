@@ -53,6 +53,7 @@ function wellRowHTML(w) {
     <td class="num ${w.lam != null ? '' : 'muted'}">${w.lam != null ? w.lam.toLocaleString('pt-BR') : '—'}</td>
     <td class="num ${w.prof != null ? '' : 'muted'}">${w.prof != null ? w.prof.toLocaleString('pt-BR') : '—'}</td>
     <td class="${w.ps ? '' : 'muted'}">${w.ps === 'S' ? 'Sim' : w.ps === 'N' ? 'Não' : '—'}</td>
+    <td class="${w.form ? '' : 'muted'}">${escapeHtml(w.form || '—')}</td>
     <td class="${w.sonda ? '' : 'muted'}">${escapeHtml(w.sonda || '—')}</td>
     <td class="muted">${fmtCoord(w.c)}</td>
   </tr>`;
@@ -98,6 +99,7 @@ function buildFieldSection(id, name, color, badge, wells) {
       <th class="num">Lâmina d'água (m)</th>
       <th class="num">Profundidade (m)</th>
       <th>Atingiu pré-sal</th>
+      <th>Formação</th>
       <th>Sonda</th>
       <th>Coordenadas</th>
     </tr></thead>

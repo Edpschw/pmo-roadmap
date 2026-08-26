@@ -157,6 +157,17 @@ def build_well(r):
         v = num(r[col])
         if v:
             w[key] = v
+    # Formação geológica final (GEOLOGIA_GRUPO_FINAL/_FORMACAO_FINAL) — só
+    # a formação sozinha costuma bastar (ex. "Barra Velha", "Piçarras"),
+    # mas junta o grupo na frente quando os dois vêm preenchidos ("Guaratiba
+    # / Barra Velha") pra não perder contexto de quem só olha o poço avulso.
+    # Poço recente sob confidencialidade vem sem nenhum dos dois.
+    grupo = (r['GEOLOGIA_GRUPO_FINAL'] or '').strip()
+    formacao = (r['GEOLOGIA_FORMACAO_FINAL'] or '').strip()
+    if formacao:
+        w['form'] = f'{grupo} / {formacao}' if grupo else formacao
+    elif grupo:
+        w['form'] = grupo
     # ATINGIU_PRESAL: 'S' sim, 'N' não, 'I' indeterminado, vazio = sem info.
     ps = (r['ATINGIU_PRESAL'] or '').strip()
     if ps in ('S', 'N'):
@@ -185,6 +196,15 @@ def main(csv_path, out_path):
             w = build_well(r)
             if not w:
                 continue
+            # Exclui só quem a ANP confirma explicitamente NÃO ter atingido
+            # o pré-sal (ATINGIU_PRESAL='N') — indeterminado ou sem
+            # informação (comum em poço recente sob confidencialidade)
+            # fica dentro: o campo/bloco já garante que é um contrato de
+            # pré-sal, "sem confirmação" não é o mesmo que "confirmado que
+            # não é" (ver "outros poços do pré-sal" abaixo, que é o único
+            # lugar sem esse contexto — ali sim exige ATINGIU_PRESAL='S').
+            if w.get('ps') == 'N':
+                continue
             if desde and (w.get('d') or '9999') < desde:
                 continue
             matched.append(w)
@@ -201,7 +221,8 @@ def main(csv_path, out_path):
             if (r['BACIA'] or '').strip() not in BACIAS or (r['CAMPO'] or '').strip() not in aliases:
                 continue
             w = build_well(r)
-            if w:
+            # Mesmo filtro do laço do PLAN acima — só exclui ATINGIU_PRESAL='N'.
+            if w and w.get('ps') != 'N':
                 # Poço registrado numa Área Não Concedida (prefixo "AnC" no
                 # cadastro da ANP) em vez de sob o nome definitivo do campo —
                 # sinaliza isso pro mapa.js desenhar um símbolo diferente,
