@@ -416,6 +416,8 @@ function colorForCompany(shortName) {
 const COMPANY_LOGO_FILES = {
   'Petrobras': 'assets/logos/petrobras.png',
   'TotalEnergies': 'assets/logos/totalenergies.png',
+  'Shell': 'assets/logos/shell.png',
+  'Equinor': 'assets/logos/equinor.png',
 };
 
 function companyBadge(rawName) {
