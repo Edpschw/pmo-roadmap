@@ -666,6 +666,10 @@ body.map-page .btn-ghost:hover { background: #1e222a; }
 .map-label-badges { display: flex; align-items: center; gap: 2px; justify-content: center; }
 .map-label-badges .company-badge { box-shadow: 0 1px 3px rgba(0,0,0,0.85); }
 .map-label-badges .company-logo-chip { box-shadow: 0 1px 3px rgba(0,0,0,0.85); }
+/* Abaixo de MAP_LABEL_BADGES_MIN_ZOOM (ver updateMapLabelScale em
+   mapa.js) — visão geral bem afastada, dezenas de contratos na tela ao
+   mesmo tempo: some só o selo, o nome continua. */
+#map.map-labels-hide-badges .map-label-badges { display: none; }
 
 /* Sliders do painel "Controles" (zoom mínimo dos poços, filtro de ano) */
 .map-slider-row { margin-bottom: 10px; }

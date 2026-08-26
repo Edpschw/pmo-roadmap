@@ -122,11 +122,6 @@ map.on('popupopen', (e) => {
 // baixo delas (Leaflet empilha na ordem de addTo).
 const presaltFieldsLayer = L.layerGroup().addTo(map);
 let presaltFieldsVisible = true;
-// Rótulo do nome de cada campo de contexto (ver laço em init()) — mesmo
-// padrão do rótulo de projeto rastreado (projectLabelByProjectId), mas
-// visibilidade segue presaltFieldsLayer (ver updateProjectLabels), não um
-// grupo de projeto: campo de contexto não tem grupo nem projeto por trás.
-const presaltFieldLabelMarkers = [];
 // Campo de contexto colorido como um projeto rastreado por citar o mesmo
 // PD (ver linkedProjectByFonte em init()) — guardado à parte (não em
 // layerByProjectId, que é só pros 30 projetos) pra setColorMode saber
@@ -157,6 +152,14 @@ const MAP_LABEL_SCALE_ZOOM_REF = 7;
 const MAP_LABEL_SCALE_ZOOM_RANGE = [3, 14];
 const MAP_LABEL_SCALE_RANGE = [0.6, 1.9];
 
+// Selo de operador/parceiro (ver mapLabelBadgesHTML) some abaixo deste
+// zoom — na visão geral (todos os 30 contratos na tela, zoom inicial ~7
+// pra baixo), dezenas de selos ao mesmo tempo só poluem; o nome sozinho
+// (que continua, só menor, ver MAP_LABEL_SCALE_*) já basta pra orientar
+// nesse zoom. Só reaparece num zoom "intermediário" — perto ou acima do
+// padrão do fitBounds inicial — sem precisar focar um contrato específico.
+const MAP_LABEL_BADGES_MIN_ZOOM = 6;
+
 const groupLayers = {};
 for (const g of GROUP_DEFS) groupLayers[g.id] = L.layerGroup().addTo(map);
 // Poços dos contratos rastreados, um layer por grupo — separado do
@@ -169,19 +172,71 @@ const wellPresaltLayer = L.layerGroup();
 
 const layerByProjectId = {};
 const featureByProject = {};
-// Rótulo com o nome do projeto sobre o centro do polígono — só aparece
-// no zoom em que os poços ainda não apareceram (ver updateProjectLabels),
-// pra dar contexto de qual projeto é qual sem precisar clicar em cada
-// polígono. Adicionado direto no mapa (não num layerGroup), então
+
+// Rótulo com o nome do contrato/campo sobre o centro do polígono — só
+// aparece no zoom em que os poços ainda não apareceram (ver
+// updateProjectLabels), pra dar contexto de qual é qual sem precisar
+// clicar em cada polígono. Uma entrada aqui por polígono (ver
+// addMapLabelEntry, chamado nos dois laços de init() — projetos
+// rastreados e campos de contexto), mas quando vários polígonos citam o
+// mesmo PD (mesma jazida compartilhada — Bacalhau, Sapinhoá, Berbigão...)
+// eles colapsam num ÚNICO marker central em vez de repetir o mesmo nome
+// em cada um (ver finalizeMapLabels, chamado depois dos dois laços).
+// key: pd.fonte quando existe (mesma lógica de agrupamento de
+// groupByPdKey em analises.js), senão uma chave própria só daquele
+// polígono (fica "sozinho no grupo" — é o caso da maioria).
+const mapLabelEntries = [];
+function addMapLabelEntry(key, name, bounds, operatorRaw, badgeKey, isVisible, isContract) {
+  mapLabelEntries.push({ key, name, bounds, operatorRaw, badgeKey, isVisible, isContract: !!isContract });
+}
+// Um marker Leaflet por grupo de mapLabelEntries — populado por
+// finalizeMapLabels, consultado por updateProjectLabels pra mostrar/
+// esconder. Adicionado direto no mapa (não num layerGroup), então
 // showOrHide funciona nele igual funciona nos outros.
-const projectLabelByProjectId = {};
+let mapLabelMarkers = [];
+function finalizeMapLabels() {
+  const groups = new Map();
+  for (const e of mapLabelEntries) {
+    if (!groups.has(e.key)) groups.set(e.key, []);
+    groups.get(e.key).push(e);
+  }
+  mapLabelMarkers = [...groups.values()].map((members) => {
+    // Clona os bounds do 1º membro antes de estender — LatLngBounds.extend
+    // muta o próprio objeto, e o bounds de um projeto rastreado é o mesmo
+    // objeto usado em allBounds (fitBounds do mapa inteiro); mutar aqui
+    // corromperia aquele cálculo.
+    const bounds = L.latLngBounds(members[0].bounds.getSouthWest(), members[0].bounds.getNorthEast());
+    for (const m of members.slice(1)) bounds.extend(m.bounds);
+    // Prioriza o membro-contrato como representante (nome/operador/selo)
+    // quando o grupo tem um — mesmo critério de computeJazidaRows em
+    // analises.js. Não muda o NOME exibido (todo membro do grupo já
+    // calcula o mesmo nome popular, ver mapDisplayName/
+    // contextFieldMapLabel), só qual operador/badgeKey alimenta o selo.
+    const rep = members.find((m) => m.isContract) || members[0];
+    const marker = L.marker(bounds.getCenter(), {
+      icon: L.divIcon({
+        className: 'map-project-label-icon',
+        html: `<div class="map-project-label-wrap">
+          <span class="map-project-label">${escapeHtml(rep.name)}</span>
+          ${mapLabelBadgesHTML(rep.operatorRaw, rep.badgeKey)}
+        </div>`,
+        iconSize: null,
+      }),
+      interactive: false,
+      keyboard: false,
+      zIndexOffset: -100,
+    });
+    marker._mapLabelVisible = () => members.some((m) => m.isVisible());
+    return marker;
+  });
+}
 
 // Nome de campo de contexto vem TUDO MAIÚSCULO no GeoJSON (MERO, SAPINHOÁ,
 // OESTE DE ATAPU...) — certo pra distinguir de contrato rastreado nas
 // tabelas/listas (convenção mantida em analises.js/pocos.js), mas errado
-// no rótulo do mapa (ver presaltFieldLabelMarkers/projectLabelByProjectId),
-// que é sempre Título Case ("Norte de Carcará") — só o rótulo do mapa usa
-// isto, popup/tabela continuam mostrando o nome como veio da fonte.
+// no rótulo do mapa (ver mapLabelEntries acima), que é sempre Título Case
+// ("Norte de Carcará") — só o rótulo do mapa usa isto, popup/tabela
+// continuam mostrando o nome como veio da fonte.
 const TITLE_CASE_LOWERCASE_WORDS = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
 function titleCasePt(name) {
   return name.split(' ').map((word, i) => {
@@ -259,7 +314,7 @@ function companyBadgesHTML(operadorRaw, key) {
 }
 
 // Mesmos selos, agora pro rótulo fixo sobre o polígono (não só no popup) —
-// ver projectLabelByProjectId/presaltFieldLabelMarkers mais abaixo.
+// ver mapLabelEntries/finalizeMapLabels mais abaixo.
 function mapLabelBadgesHTML(operadorRaw, key) {
   const items = companyBadgeItemsHTML(operadorRaw, key);
   if (!items) return '';
@@ -912,19 +967,14 @@ async function init() {
       const layer = L.geoJSON(feat, { style });
       layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(props), { maxWidth: 320 }));
       layer.addTo(presaltFieldsLayer);
-      presaltFieldLabelMarkers.push(L.marker(layer.getBounds().getCenter(), {
-        icon: L.divIcon({
-          className: 'map-project-label-icon',
-          html: `<div class="map-project-label-wrap">
-            <span class="map-project-label">${escapeHtml(contextFieldMapLabel(props))}</span>
-            ${mapLabelBadgesHTML(props.operador, props.nome)}
-          </div>`,
-          iconSize: null,
-        }),
-        interactive: false,
-        keyboard: false,
-        zIndexOffset: -100,
-      }));
+      addMapLabelEntry(
+        (fieldPd && fieldPd.fonte) || `f:${props.nome}`,
+        contextFieldMapLabel(props),
+        layer.getBounds(),
+        props.operador,
+        props.nome,
+        () => map.hasLayer(presaltFieldsLayer),
+      );
       if (linkedProject) linkedPresaltLayers.push({ layer, project: linkedProject });
       registerWellSet(props.nome, null, layer.getBounds(), color, wellPresaltLayer);
     }
@@ -972,20 +1022,21 @@ async function init() {
     layerByProjectId[project.id] = layer;
     allBounds.push(bounds);
 
-    projectLabelByProjectId[project.id] = L.marker(bounds.getCenter(), {
-      icon: L.divIcon({
-        className: 'map-project-label-icon',
-        html: `<div class="map-project-label-wrap">
-          <span class="map-project-label">${escapeHtml(mapDisplayName(project))}</span>
-          ${mapLabelBadgesHTML(feat.properties.operador, project.name)}
-        </div>`,
-        iconSize: null,
-      }),
-      interactive: false,
-      keyboard: false,
-      zIndexOffset: -100,
-    });
+    const projPd = byNameOrUpper(pdData, project.name);
+    addMapLabelEntry(
+      (projPd && projPd.fonte) || `p:${project.id}`,
+      mapDisplayName(project),
+      bounds,
+      feat.properties.operador,
+      project.name,
+      () => {
+        const groupId = groupLayers[project.group] ? project.group : GROUP_FALLBACK;
+        return groupVisible[groupId] && groupLayers[groupId].hasLayer(layer);
+      },
+      true,
+    );
   }
+  finalizeMapLabels();
   for (const project of state.projects) projectYearById[project.id] = projectContractYear(project);
 
   // Poços de TODOS os contratos que tenham poço cadastrado — inclusive os
@@ -1219,20 +1270,8 @@ function updateWellsVisibility() {
 // em vez de duplicar aquela lógica aqui.
 function updateProjectLabels() {
   const zoomOk = map.getZoom() < wellsMinZoom;
-  for (const project of state.projects) {
-    const marker = projectLabelByProjectId[project.id];
-    const layer = layerByProjectId[project.id];
-    if (!marker || !layer) continue;
-    const groupId = groupLayers[project.group] ? project.group : GROUP_FALLBACK;
-    const target = groupLayers[groupId];
-    showOrHide(marker, zoomOk && groupVisible[groupId] && target.hasLayer(layer));
-  }
-  // Rótulo de campo de contexto (ver presaltFieldLabelMarkers) — mesmo
-  // corte de zoom, mas segue a visibilidade da camada de campos de
-  // contexto (presaltFieldsLayer), não a de grupo de projeto: campo de
-  // contexto não tem grupo nem projeto por trás.
-  for (const marker of presaltFieldLabelMarkers) {
-    showOrHide(marker, zoomOk && map.hasLayer(presaltFieldsLayer));
+  for (const marker of mapLabelMarkers) {
+    showOrHide(marker, zoomOk && marker._mapLabelVisible());
   }
 }
 
@@ -1253,7 +1292,12 @@ function updateMapLabelScale() {
     const t = (Math.min(zMax, zoom) - MAP_LABEL_SCALE_ZOOM_REF) / (zMax - MAP_LABEL_SCALE_ZOOM_REF);
     scale = 1 + t * (sMax - 1);
   }
-  document.getElementById('map').style.setProperty('--map-label-scale', scale.toFixed(3));
+  const mapEl = document.getElementById('map');
+  mapEl.style.setProperty('--map-label-scale', scale.toFixed(3));
+  // Abaixo de MAP_LABEL_BADGES_MIN_ZOOM some só o selo — o nome continua
+  // (menor, ver escala acima), pra não poluir a visão geral com dezenas
+  // de selos ao mesmo tempo.
+  mapEl.classList.toggle('map-labels-hide-badges', zoom < MAP_LABEL_BADGES_MIN_ZOOM);
 }
 
 function renderColorModeControl(container) {
