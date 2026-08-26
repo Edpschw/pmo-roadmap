@@ -82,10 +82,29 @@ function showToast(msg) {
 }
 
 const map = L.map('map', { zoomControl: true, minZoom: 3 }).setView([-25.3, -43], 6);
-// CARTO Dark Matter: base escura (visual "executivo"), sem chave de API.
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  subdomains: 'abcd',
+// Base escura (visual "executivo") — era CARTO Dark Matter, mas a CARTO
+// passou a exigir API key pros tiles de basemapscartocdn.com (mesmo no
+// plano anônimo/gratuito), o que quebrou o mapa pra quem não tem chave.
+// Troca pro Canvas Dark Gray da Esri (server.arcgisonline.com), que
+// continua público sem chave — dois tile layers empilhados, igual o
+// padrão documentado da própria Esri: Base (o fundo escuro) + Reference
+// (rótulos de países/cidades por cima, sem isso o mapa fica sem nenhum
+// nome geográfico). Os dois ficam no tilePane padrão (Reference depois
+// de Base, então empilha por cima dele) — sem mexer em pane nenhum, o
+// tilePane inteiro já fica abaixo do overlayPane onde os polígonos/
+// poços do próprio mapa são desenhados, então o rótulo genérico de
+// cidade nunca tampa nosso dado. maxNativeZoom 16 é o limite real do
+// serviço da Esri pra esse basemap — acima disso o Leaflet amplia o
+// último tile em vez de pedir um zoom que não existe (maxZoom do mapa
+// continua livre pra aproximar mais que isso nos próprios polígonos/
+// poços).
+L.tileLayer('https://server.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, © OpenStreetMap contributors, GIS User Community',
+  maxNativeZoom: 16,
+  maxZoom: 20,
+}).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+  maxNativeZoom: 16,
   maxZoom: 20,
 }).addTo(map);
 
