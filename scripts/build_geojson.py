@@ -35,8 +35,10 @@ PLAN = {
 }
 # Projetos sem shapefile disponível nos dois arquivos fornecidos (devolvidos
 # há mais tempo, ou área ainda não declarada oficialmente): Sul de Gato do
-# Mato, Pau-Brasil, Peroba, Alto de Cabo Frio Oeste, Dois Irmãos, Três
-# Marias, Saturno, Titã.
+# Mato, Dois Irmãos, Três Marias.
+# Pau-Brasil, Peroba, Alto de Cabo Frio Oeste, Saturno e Titã foram
+# adicionados depois, a partir dos shapefiles por rodada (não o arquivo
+# unificado acima) — ver scripts/add_partilha3_5_blocks.py.
 
 def records_matching(reader, key_field, values):
     fields = [f[0] for f in reader.fields[1:]]

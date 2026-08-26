@@ -38,17 +38,15 @@ const PRESALT_FIELD_STYLE = { color: '#9aa1ac', weight: 1.25, dashArray: '4 3', 
 // a área do reservatório em si (menor); os dois usam a mesma entrada.
 const PD_URL = 'data/planos_desenvolvimento.json';
 
-// Projetos sem poligonal nos dois shapefiles fornecidos, com o motivo —
-// ver comentário em cima de PLAN no script de geração (scripts/build_geojson.py).
+// Projetos sem poligonal em NENHUM shapefile disponível até agora, com o
+// motivo — ver comentário em cima de PLAN em scripts/build_geojson.py
+// (blocos exploratórios/campos de produção, arquivo unificado) e em
+// scripts/add_partilha3_5_blocks.py (shapefiles por rodada, que já
+// resolveram Peroba/Alto de Cabo Frio Oeste/Pau-Brasil/Saturno/Titã).
 const PROJECTS_WITHOUT_SHAPE = {
   'Sul de Gato do Mato': 'FID recente (2025); área ainda não aparece nos cadastros públicos de bloco ou campo.',
-  'Peroba': 'Bloco devolvido — não consta mais no cadastro de blocos ativos da ANP.',
-  'Alto de Cabo Frio Oeste': 'Bloco devolvido — não consta mais no cadastro de blocos ativos da ANP.',
-  'Pau-Brasil': 'Bloco devolvido — não consta mais no cadastro de blocos ativos da ANP.',
   'Dois Irmãos': 'Bloco devolvido — não consta mais no cadastro de blocos ativos da ANP.',
   'Três Marias': 'Bloco devolvido — não consta mais no cadastro de blocos ativos da ANP.',
-  'Saturno': 'Bloco devolvido — não consta mais no cadastro de blocos ativos da ANP.',
-  'Titã': 'Bloco devolvido — não consta mais no cadastro de blocos ativos da ANP.',
 };
 
 // Modos de coloração do mapa. 'projeto' usa a cor de cada projeto (mesma do
@@ -481,8 +479,9 @@ function yearOf(iso) {
 // Ano do contrato de um projeto: o marco mais antigo com icon 'contract'
 // na workstream "Marcos do Contrato" (normalmente "Leilão", às vezes só
 // "Assinatura" quando não há leilão distinto) — os 30 projetos têm essa
-// workstream, então cobre até os 8 sem poligonal na ANP. null se por
-// algum motivo não achar nenhum marco de contrato.
+// workstream, então cobre até os 3 sem poligonal na ANP (ver
+// PROJECTS_WITHOUT_SHAPE). null se por algum motivo não achar nenhum
+// marco de contrato.
 function projectContractYear(project) {
   for (const ws of project.workstreams) {
     if (ws.name !== 'Marcos do Contrato') continue;
@@ -1058,8 +1057,8 @@ async function init() {
 
   // Poços de TODOS os contratos que tenham poço cadastrado — inclusive os
   // campos em produção (Búzios, Mero/Libra, Bacalhau/Norte de Carcará…) e
-  // os 8 sem poligonal na ANP (blocos devolvidos e Sul de Gato do Mato),
-  // que ficavam completamente fora do mapa: com a coordenada real de cada
+  // os 3 sem poligonal na ANP (ver PROJECTS_WITHOUT_SHAPE), que ficavam
+  // completamente fora do mapa: com a coordenada real de cada
   // poço, o polígono deixou de ser necessário pra posicioná-los. Vão pra
   // wellGroupLayers[grupo do projeto] — separado do groupLayers do
   // polígono porque a visibilidade destes também depende do zoom (ver
