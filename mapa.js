@@ -261,15 +261,31 @@ function colorForProject(project) {
   return project.color;
 }
 
-// Nome de exibição no mapa (rótulo sobre o polígono + título do popup) —
-// pra jazida compartilhada (Bacalhau, Sapinhoá...) usa o mesmo nome
-// popular do roadmap/análises (ver projectDisplayName em shared.js), não
-// o nome do contrato: o pedido foi deixar só o nome da jazida em todos os
-// campos/contratos que fazem parte dela (contrato E campo de contexto
-// mostram o mesmo nome — ver contextFieldMapLabel abaixo, pro lado do
-// campo de contexto sem contrato).
+// Nome de exibição no RÓTULO sempre visível sobre o polígono (não o
+// popup, ver popupDisplayName logo abaixo) — pra jazida compartilhada
+// (Bacalhau, Sapinhoá...) usa o mesmo nome popular do roadmap/análises
+// (ver projectDisplayName em shared.js), não o nome do contrato: o
+// pedido foi deixar só o nome da jazida ali (contrato E campo de
+// contexto mostram o mesmo nome, ver contextFieldMapLabel abaixo, e
+// colapsam num rótulo só, ver finalizeMapLabels). Ao CLICAR, porém, o
+// pedido foi manter o nome oficial do campo — ver popupDisplayName.
 function mapDisplayName(project) {
   return projectDisplayName(project.name);
+}
+
+// Nome de exibição no POPUP de um projeto rastreado (título do <h3> +
+// decide se mostra "Campo(s) ANP" ou "Contrato", ver popupHTML) — o nome
+// OFICIAL do campo/contrato (fonte ANP), não o nome popular da jazida
+// que já aparece no rótulo sempre visível (ver mapDisplayName acima): ao
+// clicar pra ver detalhe, o pedido foi manter "Entorno de Sapinhoá" e
+// "Bacalhau Norte", não a simplificação. Hoje só Norte de Carcará difere
+// do próprio nome do contrato — o CONTRATO não diz nada sobre a jazida,
+// mas o CAMPO da metade norte (BACALHAU NORTE, ver props.campos) sim.
+const POPUP_DISPLAY_NAME_OVERRIDE = {
+  'Norte de Carcará': 'Bacalhau Norte',
+};
+function popupDisplayName(project) {
+  return POPUP_DISPLAY_NAME_OVERRIDE[project.name] || project.name;
 }
 
 // Mesma ideia que mapDisplayName, pro RÓTULO (não o popup, ver
@@ -323,7 +339,7 @@ function mapLabelBadgesHTML(operadorRaw, key) {
 
 function popupHTML(project, props) {
   const groupLabel = (GROUP_DEFS.find((g) => g.id === project.group) || {}).label || project.group;
-  const displayName = mapDisplayName(project);
+  const displayName = popupDisplayName(project);
   const renamed = displayName !== project.name;
   // Contrato de partilha por trás do projeto — normalmente o próprio
   // project.name, mas nem sempre (Mero cita "Libra", ver
