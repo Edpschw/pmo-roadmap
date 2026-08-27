@@ -392,5 +392,23 @@
     "geologiaResumo": "Microbiolitos e coquinas da Fm. Barra Velha (Aptiano), 4.700–6.000 m, sob até 2.000 m de sal",
     "volumes": { "dataRef": "BAR 2017 (31/12/2017)", "oleoAcumMMbbl": 736, "gasAcumMMm3": 32121 },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/lula.pdf"
+  },
+  "RAIA": {
+    "titulo": "Raia 2026",
+    "resolucao": "Decisão de Diretoria nº 53/2026 de 26/01/2026 (Ata da Reunião de Diretoria nº 1175)",
+    "contrato": "Bloco C-M-539 (7ª Rodada de Licitações) — unificação das áreas de desenvolvimento Raia Manta e Raia Pintada",
+    "participacao": [
+      { "empresa": "Equinor Energy do Brasil  Ltda.", "pct": 35 },
+      { "empresa": "Repsol Sinopec Brasil S.A.", "pct": 35 },
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 30 }
+    ],
+    "situacao": "PD aprovado — produção ainda não iniciada",
+    "comercialidade": "2023-09-20",
+    "inicioProducao": "Previsão 1º semestre de 2028",
+    "laminaDagua": "2.500–2.900 m",
+    "sistemaResumo": "Produção de gás natural do Grupo Lagoa Feia (Aptiano); gasoduto de ~200 km até Cabiúnas (Macaé/RJ) aprovado em 06/2025; perfuração iniciada em 24/03/2026 (sonda Valaris DS-17)",
+    "geologiaResumo": "Reservatórios do Grupo Lagoa Feia (Aptiano)",
+    "fonte": "https://www.gov.br/anp/pt-br/composicao/diretoria-colegiada/reunioes-da-diretoria-colegiada/pautas-atas-e-calendario-de-reunioes-da-diretoria-colegiada/2026/arquivos-rd-2026/ata-1175.pdf",
+    "fonteObs": "Diferente das demais entradas deste arquivo (baixadas do PDF do Sumário Executivo do PD na ANP), esta foi montada a partir da ata de aprovação da Diretoria da ANP e de reportagens do setor — o PD, aprovado em 26/01/2026, é recente demais e o sumário executivo em si não foi localizado/confirmado no site da ANP no momento da pesquisa."
   }
 }
