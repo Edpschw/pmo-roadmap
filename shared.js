@@ -423,6 +423,8 @@ const COMPANY_LOGO_FILES = {
   'Repsol Sinopec': 'assets/logos/repsol-sinopec.png',
   'CNODC': 'assets/logos/cnodc.png',
   'CNOOC': 'assets/logos/cnooc.png',
+  'PRIO': 'assets/logos/prio.png',
+  'Karoon': 'assets/logos/karoon.png',
 };
 
 function companyBadge(rawName) {
