@@ -425,6 +425,7 @@ const COMPANY_LOGO_FILES = {
   'CNOOC': 'assets/logos/cnooc.png',
   'PRIO': 'assets/logos/prio.png',
   'Karoon': 'assets/logos/karoon.png',
+  'ExxonMobil': 'assets/logos/exxonmobil.png',
 };
 
 function companyBadge(rawName) {
