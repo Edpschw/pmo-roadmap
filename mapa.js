@@ -214,6 +214,136 @@ const wellPresaltLayer = L.layerGroup();
 const layerByProjectId = {};
 const featureByProject = {};
 
+// Ponto pra ancorar o rótulo DENTRO da área preenchida do polígono — não
+// dá pra usar o centro da bounding box (getBounds().getCenter()): pra
+// forma côncava (ex. Sudoeste de Tartaruga Verde, um bloco em "C") o
+// centro da caixa cai fora do preenchimento, no vão da concavidade, e o
+// rótulo aparece flutuando sobre nada. Implementa o algoritmo "polylabel"
+// (mesma técnica que o Mapbox usa pra rotular polígono em mapa: grade
+// grosseira cobrindo a bbox + fila de prioridade refinando a célula mais
+// promissora, ver https://github.com/mapbox/polylabel) — converge pro
+// ponto mais "protegido" (mais distante de qualquer borda), que por
+// definição está dentro do polígono mesmo em formas côncavas ou com
+// buraco. Direto em graus (lat/lng): aproximação euclidiana, sem
+// reprojeção — no tamanho de um bloco/campo (frações de grau) a
+// distorção não muda qual célula vence.
+function segDistSq(px, py, ax, ay, bx, by) {
+  let x = ax, y = ay;
+  const dx0 = bx - ax, dy0 = by - ay;
+  if (dx0 !== 0 || dy0 !== 0) {
+    const t = ((px - ax) * dx0 + (py - ay) * dy0) / (dx0 * dx0 + dy0 * dy0);
+    if (t > 1) { x = bx; y = by; }
+    else if (t > 0) { x += dx0 * t; y += dy0 * t; }
+  }
+  const dx = px - x, dy = py - y;
+  return dx * dx + dy * dy;
+}
+// Distância (com sinal — negativa fora do polígono) do ponto (x,y) até a
+// borda mais próxima entre todos os anéis (externo + buracos, formato
+// evenodd de togglar "dentro" a cada anel cruzado).
+function pointToPolygonDist(x, y, rings) {
+  let inside = false;
+  let minDistSq = Infinity;
+  for (const ring of rings) {
+    for (let i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+      const ax = ring[i].x, ay = ring[i].y, bx = ring[j].x, by = ring[j].y;
+      if ((ay > y) !== (by > y) && (x < (bx - ax) * (y - ay) / (by - ay) + ax)) inside = !inside;
+      minDistSq = Math.min(minDistSq, segDistSq(x, y, ax, ay, bx, by));
+    }
+  }
+  const d = Math.sqrt(minDistSq);
+  return inside ? d : -d;
+}
+function ringCentroid(ring) {
+  let area = 0, cx = 0, cy = 0;
+  for (let i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+    const cross = ring[j].x * ring[i].y - ring[i].x * ring[j].y;
+    area += cross;
+    cx += (ring[j].x + ring[i].x) * cross;
+    cy += (ring[j].y + ring[i].y) * cross;
+  }
+  area *= 3; // *0.5 da área real, já compensando o /6 de cx/cy abaixo
+  if (area === 0) return null;
+  return { x: cx / area, y: cy / area };
+}
+function ringArea(ring) {
+  let sum = 0;
+  for (let i = 0, len = ring.length, j = len - 1; i < len; j = i++) {
+    sum += ring[j].x * ring[i].y - ring[i].x * ring[j].y;
+  }
+  return Math.abs(sum) / 2;
+}
+function polylabel(rings, precision) {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const p of rings[0]) {
+    if (p.x < minX) minX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y > maxY) maxY = p.y;
+  }
+  const width = maxX - minX, height = maxY - minY;
+  const cellSize = Math.max(Math.min(width, height), 1e-9);
+  let h = cellSize / 2;
+  let queue = [];
+  for (let x = minX; x < maxX; x += cellSize) {
+    for (let y = minY; y < maxY; y += cellSize) {
+      const d = pointToPolygonDist(x + h, y + h, rings);
+      queue.push({ x: x + h, y: y + h, h, d, max: d + h * Math.SQRT2 });
+    }
+  }
+  let best = { x: minX + width / 2, y: minY + height / 2, d: pointToPolygonDist(minX + width / 2, minY + height / 2, rings) };
+  const centroid = ringCentroid(rings[0]);
+  if (centroid) {
+    const cd = pointToPolygonDist(centroid.x, centroid.y, rings);
+    if (cd > best.d) best = { x: centroid.x, y: centroid.y, d: cd };
+  }
+  let probes = queue.length;
+  while (queue.length) {
+    queue.sort((a, b) => a.max - b.max);
+    const cell = queue.pop();
+    if (cell.d > best.d) best = cell;
+    if (cell.max - best.d <= precision || probes > 5000) continue;
+    h = cell.h / 2;
+    for (const [ox, oy] of [[-h, -h], [h, -h], [-h, h], [h, h]]) {
+      const cx = cell.x + ox, cy = cell.y + oy;
+      const d = pointToPolygonDist(cx, cy, rings);
+      queue.push({ x: cx, y: cy, h, d, max: d + h * Math.SQRT2 });
+    }
+    probes += 4;
+  }
+  return { x: best.x, y: best.y };
+}
+// Normaliza o retorno de L.Polygon.getLatLngs() — [ring,...] pra uma peça
+// só (com ou sem buraco) ou [[ring,...],...] pra MultiPolygon (uma peça
+// por item) — numa lista de "peças", cada peça sua própria lista de anéis
+// (o [0] é sempre o externo).
+function polygonPieces(latlngs) {
+  if (!latlngs.length) return [];
+  return typeof latlngs[0][0].lat === 'number' ? [latlngs] : latlngs;
+}
+// Melhor ponto pra ancorar o rótulo de uma camada Leaflet (1 ou mais
+// polígonos/peças, ex. campo com sub-áreas de rodadas diferentes) — pega
+// a MAIOR peça (por área do anel externo) entre as sub-camadas e as
+// peças de cada uma, e roda polylabel só nela: um rótulo deve ficar
+// dentro de UMA área contígua, não flutuando entre duas peças distantes.
+function bestLabelPointForLayer(layer) {
+  let bestPiece = null;
+  let bestArea = -1;
+  layer.eachLayer((l) => {
+    if (!l.getLatLngs) return;
+    for (const piece of polygonPieces(l.getLatLngs())) {
+      const area = ringArea(piece[0].map((p) => ({ x: p.lng, y: p.lat })));
+      if (area > bestArea) { bestArea = area; bestPiece = piece; }
+    }
+  });
+  if (!bestPiece) return null;
+  const rings = bestPiece.map((ring) => ring.map((p) => ({ x: p.lng, y: p.lat })));
+  // Precisão em graus (~1e-4 ≈ 11m no equador) — de sobra pra posicionar
+  // um rótulo, sem gastar mais iterações do que precisa.
+  const p = polylabel(rings, 1e-4);
+  return L.latLng(p.y, p.x);
+}
+
 // Rótulo com o nome do contrato/campo sobre o centro do polígono — só
 // aparece no zoom em que os poços ainda não apareceram (ver
 // updateProjectLabels), pra dar contexto de qual é qual sem precisar
@@ -221,14 +351,17 @@ const featureByProject = {};
 // addMapLabelEntry, chamado nos dois laços de init() — projetos
 // rastreados e campos de contexto), mas quando vários polígonos citam o
 // mesmo PD (mesma jazida compartilhada — Bacalhau, Sapinhoá, Berbigão...)
-// eles colapsam num ÚNICO marker central em vez de repetir o mesmo nome
-// em cada um (ver finalizeMapLabels, chamado depois dos dois laços).
+// eles colapsam num ÚNICO marker em vez de repetir o mesmo nome em cada
+// um (ver finalizeMapLabels, chamado depois dos dois laços) — usa o
+// labelPoint do membro-contrato representante (ver rep abaixo), não uma
+// combinação dos dois, pra continuar dentro de uma peça de verdade em
+// vez de cair no vão entre os dois polígonos do grupo.
 // key: pd.fonte quando existe (mesma lógica de agrupamento de
 // groupByPdKey em analises.js), senão uma chave própria só daquele
 // polígono (fica "sozinho no grupo" — é o caso da maioria).
 const mapLabelEntries = [];
-function addMapLabelEntry(key, name, bounds, operatorRaw, badgeKey, isVisible, isContract) {
-  mapLabelEntries.push({ key, name, bounds, operatorRaw, badgeKey, isVisible, isContract: !!isContract });
+function addMapLabelEntry(key, name, labelPoint, operatorRaw, badgeKey, isVisible, isContract) {
+  mapLabelEntries.push({ key, name, labelPoint, operatorRaw, badgeKey, isVisible, isContract: !!isContract });
 }
 // Um marker Leaflet por grupo de mapLabelEntries — populado por
 // finalizeMapLabels, consultado por updateProjectLabels pra mostrar/
@@ -242,19 +375,14 @@ function finalizeMapLabels() {
     groups.get(e.key).push(e);
   }
   mapLabelMarkers = [...groups.values()].map((members) => {
-    // Clona os bounds do 1º membro antes de estender — LatLngBounds.extend
-    // muta o próprio objeto, e o bounds de um projeto rastreado é o mesmo
-    // objeto usado em allBounds (fitBounds do mapa inteiro); mutar aqui
-    // corromperia aquele cálculo.
-    const bounds = L.latLngBounds(members[0].bounds.getSouthWest(), members[0].bounds.getNorthEast());
-    for (const m of members.slice(1)) bounds.extend(m.bounds);
-    // Prioriza o membro-contrato como representante (nome/operador/selo)
-    // quando o grupo tem um — mesmo critério de computeJazidaRows em
-    // analises.js. Não muda o NOME exibido (todo membro do grupo já
-    // calcula o mesmo nome popular, ver mapDisplayName/
-    // contextFieldMapLabel), só qual operador/badgeKey alimenta o selo.
+    // Prioriza o membro-contrato como representante (nome/operador/selo E
+    // posição) quando o grupo tem um — mesmo critério de
+    // computeJazidaRows em analises.js. Não muda o NOME exibido (todo
+    // membro do grupo já calcula o mesmo nome popular, ver
+    // mapDisplayName/contextFieldMapLabel), só qual operador/badgeKey/
+    // posição alimenta o marker.
     const rep = members.find((m) => m.isContract) || members[0];
-    const marker = L.marker(bounds.getCenter(), {
+    const marker = L.marker(rep.labelPoint, {
       icon: L.divIcon({
         className: 'map-project-label-icon',
         html: `<div class="map-project-label-wrap">
@@ -1095,7 +1223,7 @@ async function init() {
       addMapLabelEntry(
         (fieldPd && fieldPd.fonte) || `f:${props.nome}`,
         contextFieldMapLabel(props),
-        layer.getBounds(),
+        bestLabelPointForLayer(layer),
         props.operador,
         props.nome,
         () => map.hasLayer(presaltFieldsLayer),
@@ -1150,7 +1278,7 @@ async function init() {
     addMapLabelEntry(
       (projPd && projPd.fonte) || `p:${project.id}`,
       mapDisplayName(project),
-      bounds,
+      bestLabelPointForLayer(layer),
       feat.properties.operador,
       project.name,
       () => {

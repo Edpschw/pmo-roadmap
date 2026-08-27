@@ -431,7 +431,7 @@
     "contrato": "3ª Rodada de Partilha de Produção (Leilão 27/10/2017)",
     "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 50 }, { "empresa": "BP Energy do Brasil Ltda.", "pct": 50 }],
     "situacao": "Em exploração",
-    "fonte": "http://agenciabrasil.ebc.com.br/economia/noticia/2017-10/consorcios-arrematam-tres-dos-quatro-blocos-do-pre-sal-na-3a-rodada",
+    "fonte": "http://agenciabrasil.ebc.com.br/economia/noticia/2017-10/consorcios-arrematam-tres-dos-quatro-blocos-do-pre-sal-na-3a-rodada#alto-de-cabo-frio-central",
     "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
   },
   "Peroba": {
@@ -439,7 +439,7 @@
     "contrato": "3ª Rodada de Partilha de Produção (Leilão 27/10/2017)",
     "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 40 }, { "empresa": "BP Energy do Brasil Ltda.", "pct": 40 }, { "empresa": "CNODC Brasil Petróleo e Gás Ltda.", "pct": 20 }],
     "situacao": "Bloco devolvido à ANP",
-    "fonte": "http://agenciabrasil.ebc.com.br/economia/noticia/2017-10/consorcios-arrematam-tres-dos-quatro-blocos-do-pre-sal-na-3a-rodada",
+    "fonte": "http://agenciabrasil.ebc.com.br/economia/noticia/2017-10/consorcios-arrematam-tres-dos-quatro-blocos-do-pre-sal-na-3a-rodada#peroba",
     "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
   },
   "Alto de Cabo Frio Oeste": {
@@ -447,7 +447,7 @@
     "contrato": "3ª Rodada de Partilha de Produção (Leilão 27/10/2017)",
     "participacao": [{ "empresa": "Shell Brasil Petróleo Ltda.", "pct": 55 }, { "empresa": "QPI Brasil Petróleo Ltda.", "pct": 25 }, { "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 20 }],
     "situacao": "Bloco devolvido à ANP",
-    "fonte": "http://agenciabrasil.ebc.com.br/economia/noticia/2017-10/consorcios-arrematam-tres-dos-quatro-blocos-do-pre-sal-na-3a-rodada",
+    "fonte": "http://agenciabrasil.ebc.com.br/economia/noticia/2017-10/consorcios-arrematam-tres-dos-quatro-blocos-do-pre-sal-na-3a-rodada#alto-de-cabo-frio-oeste",
     "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
   },
   "Uirapuru": {
@@ -519,7 +519,7 @@
     "contrato": "1º Ciclo da Oferta Permanente de Partilha de Produção (2022)",
     "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 30 }, { "empresa": "TotalEnergies EP Brasil Ltda.", "pct": 30 }, { "empresa": "Petronas Petróleo Brasil Ltda.", "pct": 20 }, { "empresa": "QatarEnergy Brasil Ltda.", "pct": 20 }],
     "situacao": "Em exploração",
-    "fonte": "https://www.gov.br/mme/pt-br/assuntos/noticias/petrobras-passa-a-ter-30-de-participacao-nos-blocos-exploratorios-de-agua-marinha-e-norte-de-brava",
+    "fonte": "https://www.gov.br/mme/pt-br/assuntos/noticias/petrobras-passa-a-ter-30-de-participacao-nos-blocos-exploratorios-de-agua-marinha-e-norte-de-brava#agua-marinha",
     "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
   },
   "Norte de Brava": {
@@ -527,7 +527,7 @@
     "contrato": "1º Ciclo da Oferta Permanente de Partilha de Produção (2022)",
     "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }],
     "situacao": "Em exploração",
-    "fonte": "https://www.gov.br/mme/pt-br/assuntos/noticias/petrobras-passa-a-ter-30-de-participacao-nos-blocos-exploratorios-de-agua-marinha-e-norte-de-brava",
+    "fonte": "https://www.gov.br/mme/pt-br/assuntos/noticias/petrobras-passa-a-ter-30-de-participacao-nos-blocos-exploratorios-de-agua-marinha-e-norte-de-brava#norte-de-brava",
     "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. Petrobras adquiriu o bloco integralmente."
   },
   "Bumerangue": {
@@ -559,7 +559,7 @@
     "contrato": "3º Ciclo da Oferta Permanente de Partilha de Produção (Leilão 22/10/2025)",
     "participacao": [{ "empresa": "Karoon Petróleo & Gás Ltda.", "pct": 100 }],
     "situacao": "Em exploração",
-    "fonte": "https://www.gov.br/anp/pt-br/canais_atendimento/imprensa/noticias-comunicados/3o-ciclo-da-oferta-permanente-de-partilha-da-anp-tem-cinco-blocos-no-pre-sal-arrematados",
+    "fonte": "https://www.gov.br/anp/pt-br/canais_atendimento/imprensa/noticias-comunicados/3o-ciclo-da-oferta-permanente-de-partilha-da-anp-tem-cinco-blocos-no-pre-sal-arrematados#esmeralda",
     "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. Karoon foi a única proponente e estreou como operadora no pré-sal brasileiro com este bloco."
   },
   "Ametista": {
@@ -567,7 +567,7 @@
     "contrato": "3º Ciclo da Oferta Permanente de Partilha de Produção (Leilão 22/10/2025)",
     "participacao": [{ "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 70 }, { "empresa": "Sinopec Petroleum do Brasil Ltda.", "pct": 30 }],
     "situacao": "Em exploração",
-    "fonte": "https://www.gov.br/anp/pt-br/canais_atendimento/imprensa/noticias-comunicados/3o-ciclo-da-oferta-permanente-de-partilha-da-anp-tem-cinco-blocos-no-pre-sal-arrematados",
+    "fonte": "https://www.gov.br/anp/pt-br/canais_atendimento/imprensa/noticias-comunicados/3o-ciclo-da-oferta-permanente-de-partilha-da-anp-tem-cinco-blocos-no-pre-sal-arrematados#ametista",
     "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. Consórcio 100% chinês, único proponente do bloco."
   },
   "Citrino": {
