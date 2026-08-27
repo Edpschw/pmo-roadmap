@@ -410,5 +410,188 @@
     "geologiaResumo": "Reservatórios do Grupo Lagoa Feia (Aptiano)",
     "fonte": "https://www.gov.br/anp/pt-br/composicao/diretoria-colegiada/reunioes-da-diretoria-colegiada/pautas-atas-e-calendario-de-reunioes-da-diretoria-colegiada/2026/arquivos-rd-2026/ata-1175.pdf",
     "fonteObs": "Diferente das demais entradas deste arquivo (baixadas do PDF do Sumário Executivo do PD na ANP), esta foi montada a partir da ata de aprovação da Diretoria da ANP e de reportagens do setor — o PD, aprovado em 26/01/2026, é recente demais e o sumário executivo em si não foi localizado/confirmado no site da ANP no momento da pesquisa."
+  },
+  "Libra": {
+    "titulo": "Libra — Partilha 1 (2013)",
+    "contrato": "48610.011150/2013-10 — 1ª Rodada de Partilha de Produção (Leilão 21/10/2013, Assinatura 02/12/2013)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 40 }, { "empresa": "TotalEnergies EP Brasil Ltda.", "pct": 20 }, { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 20 }, { "empresa": "CNODC Brasil Petróleo e Gás Ltda.", "pct": 10 }, { "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 10 }],
+    "situacao": "Em exploração",
+    "fonteObs": "Mesmo contrato de partilha do campo Mero (48610.011150/2013-10) — ver entrada \"MERO\" acima, mesma composição."
+  },
+  "Sul de Gato do Mato": {
+    "titulo": "Sul de Gato do Mato — 2ª Rodada de Partilha (2017)",
+    "contrato": "Bloco BM-S-54 — 2ª Rodada de Partilha de Produção (Leilão 27/10/2017); FID de desenvolvimento em 2025",
+    "participacao": [{ "empresa": "Shell Brasil Petróleo Ltda.", "pct": 50 }, { "empresa": "Ecopetrol Óleo e Gás do Brasil Ltda.", "pct": 30 }, { "empresa": "TotalEnergies EP Brasil Ltda.", "pct": 20 }],
+    "situacao": "Em exploração — FID de desenvolvimento anunciada (2025), produção prevista para 2029",
+    "fonte": "https://tnpetroleo.com.br/noticia/campo-sul-do-gato-do-mato-no-pre-sal-da-bacia-de-santos-tem-nova-composicao/",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. Composição original do leilão de 2017 era Shell 80% / TotalEnergies 20%; a Ecopetrol entrou depois (30%), redistribuindo as participações — percentuais aqui refletem a composição atual."
+  },
+  "Alto de Cabo Frio Central": {
+    "titulo": "Alto de Cabo Frio Central — Partilha 3 (2017/2018)",
+    "contrato": "3ª Rodada de Partilha de Produção (Leilão 27/10/2017)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 50 }, { "empresa": "BP Energy do Brasil Ltda.", "pct": 50 }],
+    "situacao": "Em exploração",
+    "fonte": "http://agenciabrasil.ebc.com.br/economia/noticia/2017-10/consorcios-arrematam-tres-dos-quatro-blocos-do-pre-sal-na-3a-rodada",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
+  },
+  "Peroba": {
+    "titulo": "Peroba — Partilha 3 (2017/2018)",
+    "contrato": "3ª Rodada de Partilha de Produção (Leilão 27/10/2017)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 40 }, { "empresa": "BP Energy do Brasil Ltda.", "pct": 40 }, { "empresa": "CNODC Brasil Petróleo e Gás Ltda.", "pct": 20 }],
+    "situacao": "Bloco devolvido à ANP",
+    "fonte": "http://agenciabrasil.ebc.com.br/economia/noticia/2017-10/consorcios-arrematam-tres-dos-quatro-blocos-do-pre-sal-na-3a-rodada",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
+  },
+  "Alto de Cabo Frio Oeste": {
+    "titulo": "Alto de Cabo Frio Oeste — Partilha 3 (2017/2018)",
+    "contrato": "3ª Rodada de Partilha de Produção (Leilão 27/10/2017)",
+    "participacao": [{ "empresa": "Shell Brasil Petróleo Ltda.", "pct": 55 }, { "empresa": "QPI Brasil Petróleo Ltda.", "pct": 25 }, { "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 20 }],
+    "situacao": "Bloco devolvido à ANP",
+    "fonte": "http://agenciabrasil.ebc.com.br/economia/noticia/2017-10/consorcios-arrematam-tres-dos-quatro-blocos-do-pre-sal-na-3a-rodada",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
+  },
+  "Uirapuru": {
+    "titulo": "Uirapuru — Partilha 4 (2018)",
+    "contrato": "4ª Rodada de Partilha de Produção (Leilão 07/06/2018)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 30 }, { "empresa": "ExxonMobil Exploração Brasil Ltda.", "pct": 28 }, { "empresa": "Equinor Brasil Energia Ltda.", "pct": 28 }, { "empresa": "Petrogal Brasil S.A.", "pct": 14 }],
+    "situacao": "Em exploração",
+    "fonte": "https://tnpetroleo.com.br/noticia/adquirido-na-4a-rodada-de-partilha-de-producao-pela-petrobras-bloco-de-uirapuru-tem-presenca-de-oleo-identificada-1/",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
+  },
+  "Dois Irmãos": {
+    "titulo": "Dois Irmãos — Partilha 4 (2018)",
+    "contrato": "4ª Rodada de Partilha de Produção (Leilão 07/06/2018)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 45 }, { "empresa": "BP Energy do Brasil Ltda.", "pct": 30 }, { "empresa": "Equinor Brasil Energia Ltda.", "pct": 25 }],
+    "situacao": "Em exploração",
+    "fonte": "https://www.sec.gov/Archives/edgar/data/1119639/000156459020005602/pbr-6k_20200220.htm",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
+  },
+  "Três Marias": {
+    "titulo": "Três Marias — Partilha 4 (2018)",
+    "contrato": "4ª Rodada de Partilha de Produção (Leilão 07/06/2018)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 30 }, { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 40 }, { "empresa": "Chevron Brasil Óleo e Gás Ltda.", "pct": 30 }],
+    "situacao": "Bloco devolvido à ANP",
+    "fonte": "https://brasilenergia.com.br/petroleoegas/petrobras-chevron-e-shell-arrematam-area-de-tres-marias/",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. Consórcio original (Shell/Chevron) venceu o leilão; a Petrobras exerceu o direito de preferência para entrar como operadora com 30%."
+  },
+  "Sudoeste de Tartaruga Verde": {
+    "titulo": "Sudoeste de Tartaruga Verde — Partilha 5 (2018)",
+    "contrato": "5ª Rodada de Partilha de Produção (Leilão 28/09/2018)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }],
+    "situacao": "Em exploração",
+    "fonte": "https://www.kincaid.com.br/petrobras-inicia-perfuracao-no-bloco-sudoeste-de-tartaruga-verde/",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. Petrobras arrematou sozinha, sem concorrência, com o percentual mínimo de excedente em óleo do edital."
+  },
+  "Pau-Brasil": {
+    "titulo": "Pau-Brasil — Partilha 5 (2018)",
+    "contrato": "5ª Rodada de Partilha de Produção (Leilão 28/09/2018)",
+    "participacao": [{ "empresa": "BP Energy do Brasil Ltda.", "pct": 50 }, { "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 30 }, { "empresa": "Ecopetrol Óleo e Gás do Brasil Ltda.", "pct": 20 }],
+    "situacao": "Bloco devolvido à ANP (devolução voluntária integral, set/2025)",
+    "fonte": "https://tnpetroleo.com.br/noticia/bp-cnooc-e-ecopetrol-ficam-com-pau-brasil/",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
+  },
+  "Saturno": {
+    "titulo": "Saturno — Partilha 5 (2018)",
+    "contrato": "5ª Rodada de Partilha de Produção (Leilão 28/09/2018)",
+    "participacao": [{ "empresa": "Shell Brasil Petróleo Ltda.", "pct": 45 }, { "empresa": "Chevron Brasil Óleo e Gás Ltda.", "pct": 45 }, { "empresa": "Ecopetrol Óleo e Gás do Brasil Ltda.", "pct": 10 }],
+    "situacao": "Bloco devolvido à ANP (devolução integral pela Shell, fev/2023)",
+    "fonte": "https://br.investing.com/news/stock-market-news/consorcio-shellchevron-arremata-bloco-saturno-na-5a-rodada-do-presal-609038",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. Composição original do leilão era Shell 50% / Chevron 50%; a Ecopetrol comprou 10% depois, redistribuindo pra Shell 45% / Chevron 45% / Ecopetrol 10%."
+  },
+  "Titã": {
+    "titulo": "Titã — Partilha 5 (2018)",
+    "contrato": "5ª Rodada de Partilha de Produção (Leilão 28/09/2018)",
+    "participacao": [{ "empresa": "ExxonMobil Exploração Brasil Ltda.", "pct": 64 }, { "empresa": "QPI Brasil Petróleo Ltda.", "pct": 36 }],
+    "situacao": "Bloco devolvido à ANP",
+    "fonte": "https://exame.com/negocios/consorcio-exxon-qpi-leva-bloco-de-tita-em-5a-rodada-do-pre-sal/",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
+  },
+  "Aram": {
+    "titulo": "Aram — Partilha 6 (2019)",
+    "contrato": "6ª Rodada de Partilha de Produção (Leilão 07/11/2019)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 80 }, { "empresa": "CNODC Brasil Petróleo e Gás Ltda.", "pct": 20 }],
+    "situacao": "Em exploração",
+    "fonte": "http://www.anp.gov.br/noticias/5713-assinados-contratos-da-6-rodada-de-partilha-e-do-excedente-da-cessao-onerosa",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
+  },
+  "Água Marinha": {
+    "titulo": "Água Marinha — Oferta Permanente, 1º Ciclo (2022)",
+    "contrato": "1º Ciclo da Oferta Permanente de Partilha de Produção (2022)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 30 }, { "empresa": "TotalEnergies EP Brasil Ltda.", "pct": 30 }, { "empresa": "Petronas Petróleo Brasil Ltda.", "pct": 20 }, { "empresa": "QatarEnergy Brasil Ltda.", "pct": 20 }],
+    "situacao": "Em exploração",
+    "fonte": "https://www.gov.br/mme/pt-br/assuntos/noticias/petrobras-passa-a-ter-30-de-participacao-nos-blocos-exploratorios-de-agua-marinha-e-norte-de-brava",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
+  },
+  "Norte de Brava": {
+    "titulo": "Norte de Brava — Oferta Permanente, 1º Ciclo (2022)",
+    "contrato": "1º Ciclo da Oferta Permanente de Partilha de Produção (2022)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }],
+    "situacao": "Em exploração",
+    "fonte": "https://www.gov.br/mme/pt-br/assuntos/noticias/petrobras-passa-a-ter-30-de-participacao-nos-blocos-exploratorios-de-agua-marinha-e-norte-de-brava",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. Petrobras adquiriu o bloco integralmente."
+  },
+  "Bumerangue": {
+    "titulo": "Bumerangue — Oferta Permanente, 1º Ciclo (2022)",
+    "contrato": "1º Ciclo da Oferta Permanente de Partilha de Produção (2022)",
+    "participacao": [{ "empresa": "BP Energy do Brasil Ltda.", "pct": 100 }],
+    "situacao": "Em exploração — maior descoberta da BP em 25 anos (2025)",
+    "fonte": "https://www.bp.com/pt_br/brazil/home/noticias/press-releases/descoberta-bumerangue.html",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. BP foi a única proponente e detém o bloco integralmente."
+  },
+  "Sudoeste de Sagitário": {
+    "titulo": "Sudoeste de Sagitário — Oferta Permanente, 1º Ciclo (2022)",
+    "contrato": "1º Ciclo da Oferta Permanente de Partilha de Produção (2022)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 60 }, { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 40 }],
+    "situacao": "Em exploração",
+    "fonte": "https://portalnaval.com.br/noticia/os-blocos-sudoeste-de-sagitario-bs-agua-marinha-e-norte-de-brava-bc-tem-a-participacao-da-petrobras/",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
+  },
+  "Tupinambá": {
+    "titulo": "Tupinambá — Oferta Permanente, 2º Ciclo (2023)",
+    "contrato": "2º Ciclo da Oferta Permanente de Partilha de Produção (Leilão 13/12/2023)",
+    "participacao": [{ "empresa": "BP Energy do Brasil Ltda.", "pct": 100 }],
+    "situacao": "Em exploração",
+    "fonte": "https://agenciabrasil.ebc.com.br/economia/noticia/2023-12/britanica-bp-energy-arremata-bloco-tupinamba-no-pre-sal-de-santos",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. BP foi a única proponente do leilão e detém o bloco integralmente."
+  },
+  "Esmeralda": {
+    "titulo": "Esmeralda — Oferta Permanente, 3º Ciclo (2025)",
+    "contrato": "3º Ciclo da Oferta Permanente de Partilha de Produção (Leilão 22/10/2025)",
+    "participacao": [{ "empresa": "Karoon Petróleo & Gás Ltda.", "pct": 100 }],
+    "situacao": "Em exploração",
+    "fonte": "https://www.gov.br/anp/pt-br/canais_atendimento/imprensa/noticias-comunicados/3o-ciclo-da-oferta-permanente-de-partilha-da-anp-tem-cinco-blocos-no-pre-sal-arrematados",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. Karoon foi a única proponente e estreou como operadora no pré-sal brasileiro com este bloco."
+  },
+  "Ametista": {
+    "titulo": "Ametista — Oferta Permanente, 3º Ciclo (2025)",
+    "contrato": "3º Ciclo da Oferta Permanente de Partilha de Produção (Leilão 22/10/2025)",
+    "participacao": [{ "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 70 }, { "empresa": "Sinopec Petroleum do Brasil Ltda.", "pct": 30 }],
+    "situacao": "Em exploração",
+    "fonte": "https://www.gov.br/anp/pt-br/canais_atendimento/imprensa/noticias-comunicados/3o-ciclo-da-oferta-permanente-de-partilha-da-anp-tem-cinco-blocos-no-pre-sal-arrematados",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. Consórcio 100% chinês, único proponente do bloco."
+  },
+  "Citrino": {
+    "titulo": "Citrino — Oferta Permanente, 3º Ciclo (2025)",
+    "contrato": "3º Ciclo da Oferta Permanente de Partilha de Produção (Leilão 22/10/2025)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }],
+    "situacao": "Em exploração",
+    "fonte": "https://petronoticias.com.br/petrobras-supera-disputa-com-prio-e-arremata-o-bloco-de-citrino-na-bacia-de-campos/",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. Petrobras venceu disputa com a PRIO e detém o bloco integralmente — maior ágio da rodada (251,63%)."
+  },
+  "Itaimbezinho": {
+    "titulo": "Itaimbezinho — Oferta Permanente, 3º Ciclo (2025)",
+    "contrato": "3º Ciclo da Oferta Permanente de Partilha de Produção (Leilão 22/10/2025)",
+    "participacao": [{ "empresa": "Equinor Brasil Energia Ltda.", "pct": 50 }, { "empresa": "Petróleo Brasileiro S.A.", "pct": 50 }],
+    "situacao": "Em exploração",
+    "fonte": "https://www.infomoney.com.br/mercados/petrobras-adquire-50-de-fatia-de-itaimbezinho-junto-a-equinor/",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo. Equinor arrematou o bloco sozinha em 2025; a Petrobras adquiriu 50% depois (assinatura 05/08/2026, ver marco no roadmap), passando a compor o consórcio."
+  },
+  "Jaspe": {
+    "titulo": "Jaspe — Oferta Permanente, 3º Ciclo (2025)",
+    "contrato": "3º Ciclo da Oferta Permanente de Partilha de Produção (Leilão 22/10/2025)",
+    "participacao": [{ "empresa": "Petróleo Brasileiro S.A.", "pct": 60 }, { "empresa": "Equinor Brasil Energia Ltda.", "pct": 40 }],
+    "situacao": "Em exploração — maior percentual de excedente em óleo da rodada (32,85%)",
+    "fonte": "https://www.infomoney.com.br/mercados/petrobras-e-equinor-dominam-leilao-do-pre-sal-da-anp-que-soma-r-1037-mi-em-bonus/",
+    "fonteObs": "Diferente das entradas de campos em produção/desenvolvimento deste arquivo (baseadas no PDF do Sumário Executivo do PD), esta é um bloco só de exploração — sem comercialidade declarada, logo sem PD ainda. A composição do consórcio vem do resultado do leilão/rodada da ANP (ou de aquisição de participação posterior, quando citado), não de um Sumário Executivo."
   }
 }

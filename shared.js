@@ -384,6 +384,18 @@ const COMPANY_ALIASES = {
   'IBV Brasil Petróleo Ltda.': { short: 'IBV Brasil', initials: 'IB' },
   'Petrogal Brasil S.A.': { short: 'Galp', initials: 'GP' },
   'Repsol Sinopec Brasil S.A.': { short: 'Repsol Sinopec', initials: 'RS' },
+  // Parceiras que só aparecem em blocos de exploração/devolvidos (sem PD —
+  // participação vem do resultado do leilão/rodada, não de um Sumário
+  // Executivo, ver nota em planos_desenvolvimento.json). QPI Brasil
+  // Petróleo Ltda. e QatarEnergy Brasil Ltda. são a mesma empresa (Qatar
+  // Petroleum International renomeada QatarEnergy ~2021) — duas chaves,
+  // mesmo selo, cada uma com o nome usado no leilão da época.
+  'Chevron Brasil Óleo e Gás Ltda.': { short: 'Chevron', initials: 'CV' },
+  'Ecopetrol Óleo e Gás do Brasil Ltda.': { short: 'Ecopetrol', initials: 'EC' },
+  'QPI Brasil Petróleo Ltda.': { short: 'QatarEnergy', initials: 'QE' },
+  'QatarEnergy Brasil Ltda.': { short: 'QatarEnergy', initials: 'QE' },
+  'Petronas Petróleo Brasil Ltda.': { short: 'Petronas', initials: 'PT' },
+  'Sinopec Petroleum do Brasil Ltda.': { short: 'Sinopec', initials: 'SP' },
   // Variantes mais curtas do campo "op" de data/pocos.json (nome do
   // operador do POÇO, não do contrato — formato diferente do operador do
   // GeoJSON acima) — mesma empresa, mesmo selo. Usadas pelo fallback de
