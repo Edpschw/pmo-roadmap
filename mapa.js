@@ -29,6 +29,12 @@ const POCOS_URL = 'data/pocos.json';
 const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
 const PRESALT_FIELD_STYLE = { color: '#9aa1ac', weight: 1.25, dashArray: '4 3', fillColor: '#9aa1ac', fillOpacity: 0.1 };
 
+// Contornos de fundo (só referência geológica, sem preenchimento — ver
+// CONTORNO_*_STYLE): limite do play do pré-sal e as 72 bacias sedimentares
+// do Brasil (ANP/GISHub), ver scripts/build_contornos.py.
+const PRESAL_CONTORNO_URL = 'data/pre_sal_contorno.geojson';
+const BACIAS_URL = 'data/bacias.geojson';
+
 // Sumários executivos de Plano de Desenvolvimento (ANP) — só o sumário é
 // público (Decreto 7.724/2012, art. 5º §2º: o PD completo dá vantagem
 // competitiva a outros agentes, então fica restrito). Chave = nome do
@@ -139,6 +145,18 @@ map.on('popupopen', (e) => {
   content.style.maxHeight = Math.max(90, Math.round(anchorY - chrome - margin)) + 'px';
   popup.update();
 });
+
+// Contornos de fundo — play do pré-sal (ANP) e bacias sedimentares do
+// Brasil (ANP/GISHub, enviados pelo usuário em 27/08/2026, ver
+// scripts/build_contornos.py) — só linha fina, sem preenchimento
+// (fill:false) e não-interativos (interactive:false, sem popup/hover):
+// é referência geológica bem discreta, adicionada antes de tudo (mesma
+// lógica do comentário abaixo) pra ficar por baixo até dos campos de
+// contexto, nunca competindo visualmente com contrato/campo/poço.
+const CONTORNO_BACIAS_STYLE = { color: '#4b5563', weight: 0.75, opacity: 0.45, dashArray: '2 3', fill: false, interactive: false };
+const CONTORNO_PRESAL_STYLE = { color: '#6b7280', weight: 1.25, opacity: 0.55, dashArray: '5 3', fill: false, interactive: false };
+const contornoBaciasLayer = L.layerGroup().addTo(map);
+const contornoPresalLayer = L.layerGroup().addTo(map);
 
 // Adicionadas antes das camadas de projeto para ficarem visualmente por
 // baixo delas (Leaflet empilha na ordem de addTo).
@@ -990,6 +1008,21 @@ async function init() {
   // quer lembrar o que cada ícone significa sem abrir o painel inteiro.
   document.getElementById('mapWellLegendFixed').appendChild(buildWellShapeLegend());
 
+  // Contornos de fundo (ver CONTORNO_*_STYLE acima) — puramente decorativos,
+  // falha em silêncio sem toast: o mapa funciona perfeitamente sem eles.
+  try {
+    const baciasGeojson = await (await fetch(BACIAS_URL)).json();
+    L.geoJSON(baciasGeojson, { style: CONTORNO_BACIAS_STYLE }).addTo(contornoBaciasLayer);
+  } catch (e) {
+    // Camada opcional — segue sem o contorno das bacias sedimentares.
+  }
+  try {
+    const presalContornoGeojson = await (await fetch(PRESAL_CONTORNO_URL)).json();
+    L.geoJSON(presalContornoGeojson, { style: CONTORNO_PRESAL_STYLE }).addTo(contornoPresalLayer);
+  } catch (e) {
+    // Camada opcional — segue sem o contorno do play do pré-sal.
+  }
+
   let geojson;
   try {
     const res = await fetch(GEOJSON_URL);
@@ -1311,6 +1344,13 @@ function toggleGroup(groupId, visible) {
   if (visible) map.addLayer(layer);
   else map.removeLayer(layer);
   updateWellsVisibility();
+}
+
+let contornosVisible = true;
+function toggleContornos(visible) {
+  contornosVisible = visible;
+  showOrHide(contornoBaciasLayer, visible);
+  showOrHide(contornoPresalLayer, visible);
 }
 
 function togglePresaltFields(visible) {
@@ -1663,6 +1703,24 @@ function renderPanel() {
   renderColorModeControl(el);
   renderControlsSection(el);
   renderWellFilterSection(el);
+
+  const contornosSection = document.createElement('div');
+  contornosSection.className = 'map-panel-section';
+  const contornosHeader = document.createElement('label');
+  contornosHeader.className = 'map-panel-group-header';
+  const contornosCheckbox = document.createElement('input');
+  contornosCheckbox.type = 'checkbox';
+  contornosCheckbox.checked = contornosVisible;
+  contornosCheckbox.addEventListener('change', () => toggleContornos(contornosCheckbox.checked));
+  contornosHeader.appendChild(contornosCheckbox);
+  contornosHeader.appendChild(document.createTextNode(' Bacias sedimentares e play do pré-sal'));
+  contornosSection.appendChild(contornosHeader);
+  const contornosNote = document.createElement('p');
+  contornosNote.className = 'map-panel-note';
+  contornosNote.style.marginTop = '0';
+  contornosNote.textContent = 'Contorno geológico de fundo (ANP/GISHub), sem preenchimento — só referência.';
+  contornosSection.appendChild(contornosNote);
+  el.appendChild(contornosSection);
 
   const presaltSection = document.createElement('div');
   presaltSection.className = 'map-panel-section';
