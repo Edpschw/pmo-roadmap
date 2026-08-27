@@ -418,6 +418,7 @@ const COMPANY_LOGO_FILES = {
   'TotalEnergies': 'assets/logos/totalenergies.png',
   'Shell': 'assets/logos/shell.png',
   'Equinor': 'assets/logos/equinor.png',
+  'BP': 'assets/logos/bp.png',
 };
 
 function companyBadge(rawName) {
