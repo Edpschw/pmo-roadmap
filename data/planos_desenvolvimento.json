@@ -1,6 +1,7 @@
 {
   "_fonte": "Sumários Executivos de Plano de Desenvolvimento (ANP) — o PD completo é confidencial por lei (Decreto 7.724/2012, art. 5º §2º), só o sumário é público. Enviados pelo usuário em 23/08/2026, baixados de gov.br/anp/.../desenvolvimento-e-producao/pd/.",
   "Norte de Carcará": {
+    "tracts": [{ "nome": "Bacalhau", "pct": 48, "excedenteOleoPct": null }, { "nome": "Bacalhau Norte", "pct": 52, "excedenteOleoPct": 67.12 }],
     "excedenteOleoPct": 67.12,
     "excedenteOleoObs": "Só a fatia Bacalhau Norte (CPP 48610.012964/2017-03, Partilha — 2ª Rodada de Partilha, leilão 27/10/2017, consórcio Equinor/ExxonMobil/Petrogal, mesma composição da tabela de participação) tem esse mecanismo; a fatia Bacalhau (CSS 48610.003883/2000, Concessão) paga royalties + participação especial em vez de excedente em óleo.",
     "titulo": "Bacalhau e Bacalhau Norte (AIP) 2021",
@@ -27,6 +28,7 @@
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sumario-executivo-bacalhau.pdf"
   },
   "BACALHAU": {
+    "tracts": [{ "nome": "Bacalhau", "pct": 48, "excedenteOleoPct": null }, { "nome": "Bacalhau Norte", "pct": 52, "excedenteOleoPct": 67.12 }],
     "excedenteOleoPct": 67.12,
     "excedenteOleoObs": "Só a fatia Bacalhau Norte (CPP 48610.012964/2017-03, Partilha — 2ª Rodada de Partilha, leilão 27/10/2017, consórcio Equinor/ExxonMobil/Petrogal, mesma composição da tabela de participação) tem esse mecanismo; a fatia Bacalhau (CSS 48610.003883/2000, Concessão) paga royalties + participação especial em vez de excedente em óleo.",
     "titulo": "Bacalhau e Bacalhau Norte (AIP) 2021",
@@ -53,6 +55,8 @@
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sumario-executivo-bacalhau.pdf"
   },
   "Búzios": {
+    "excedenteOleoPct": 23.24,
+    "excedenteOleoObs": "Só a fatia do excedente (leilão de 2019/2021, camada de Partilha sobre o contrato original) tem esse mecanismo; a fatia original da Cessão Onerosa (2010) paga royalties + participação especial em vez de excedente em óleo. Leilão do Excedente da Cessão Onerosa, 1ª Rodada (06/11/2019) — Petrobras venceu sozinha, com o percentual mínimo do edital.",
     "titulo": "Búzios 2016",
     "resolucao": "RD 832 de 18/02/2016 — Resolução nº 093/2016",
     "contrato": "48610.012913/2010-05",
@@ -74,6 +78,7 @@
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/buzios.pdf"
   },
   "MERO": {
+    "tracts": [{ "nome": "Mero", "pct": 96.5, "excedenteOleoPct": 41.65 }, { "nome": "Área Não Contratada", "pct": 3.5, "excedenteOleoPct": null }],
     "excedenteOleoPct": 41.65,
     "titulo": "Campo de Mero (AIP) 2021",
     "resolucao": "RD 0758/2021 de 09/12/2021",
@@ -194,6 +199,8 @@
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sapinhoa.pdf"
   },
   "Itapu": {
+    "excedenteOleoPct": 18.15,
+    "excedenteOleoObs": "Só a fatia do excedente (leilão de 2019/2021, camada de Partilha sobre o contrato original) tem esse mecanismo; a fatia original da Cessão Onerosa (2010) paga royalties + participação especial em vez de excedente em óleo. Leilão do Excedente da Cessão Onerosa, 1ª Rodada (06/11/2019) — Petrobras venceu sozinha, com o percentual mínimo do edital.",
     "titulo": "Itapu 2017",
     "resolucao": "RD 885 de 17/05/2017 — Resolução nº 301/2017",
     "contrato": "Bloco 1 do Contrato da Cessão Onerosa (Florim)",
@@ -210,6 +217,8 @@
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/itapu.pdf"
   },
   "Sépia": {
+    "excedenteOleoPct": 37.43,
+    "excedenteOleoObs": "Só a fatia do excedente (leilão de 2019/2021, camada de Partilha sobre o contrato original) tem esse mecanismo; a fatia original da Cessão Onerosa (2010) paga royalties + participação especial em vez de excedente em óleo. Leilão do Excedente da Cessão Onerosa, 2ª Rodada (17/12/2021) — não arrematado na 1ª Rodada (2019), reofertado com mínimo mais baixo.",
     "titulo": "Sépia 2017",
     "notaNome": "Documento de 2017, anterior ao contrato de partilha atual (leilão do excedente da Cessão Onerosa, 2021/2022) — números de poços e volumes provavelmente desatualizados.",
     "contrato": "48610.012913/2010-05",
@@ -232,6 +241,9 @@
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sepia.pdf"
   },
   "Atapu": {
+    "tracts": [{ "nome": "Atapu (CO)", "pct": 32.4, "excedenteOleoPct": null }, { "nome": "Atapu (PP)", "pct": 49.6, "excedenteOleoPct": 31.68 }, { "nome": "Oeste de Atapu", "pct": 17.0, "excedenteOleoPct": null }, { "nome": "Área Não Contratada", "pct": 0.95, "excedenteOleoPct": null }],
+    "excedenteOleoPct": 31.68,
+    "excedenteOleoObs": "Só a fatia do excedente (leilão de 2019/2021, camada de Partilha sobre o contrato original) tem esse mecanismo; a fatia original da Cessão Onerosa (2010) paga royalties + participação especial em vez de excedente em óleo. Leilão do Excedente da Cessão Onerosa, 2ª Rodada (17/12/2021) — não arrematado na 1ª Rodada (2019), reofertado com mínimo mais baixo.",
     "titulo": "Atapu e Oeste de Atapu (AIP) 2024",
     "resolucao": "RD 355/2024 de 29/05/2024",
     "contrato": "Atapu: Cessão Onerosa 48610.012913/2010-05 + Partilha 48610.226558/2021-02 — Oeste de Atapu: Concessão 48610.003886/2000A — + Área Não Contratada",
@@ -257,6 +269,7 @@
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/atapu-atapu-eco-oeste-atapu.pdf"
   },
   "OESTE DE ATAPU": {
+    "tracts": [{ "nome": "Atapu (CO)", "pct": 32.4, "excedenteOleoPct": null }, { "nome": "Atapu (PP)", "pct": 49.6, "excedenteOleoPct": 31.68 }, { "nome": "Oeste de Atapu", "pct": 17.0, "excedenteOleoPct": null }, { "nome": "Área Não Contratada", "pct": 0.95, "excedenteOleoPct": null }],
     "titulo": "Atapu e Oeste de Atapu (AIP) 2024",
     "resolucao": "RD 355/2024 de 29/05/2024",
     "contrato": "Atapu: Cessão Onerosa 48610.012913/2010-05 + Partilha 48610.226558/2021-02 — Oeste de Atapu: Concessão 48610.003886/2000A — + Área Não Contratada",

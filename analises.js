@@ -282,6 +282,7 @@ function computeProjectRow(project) {
     recOleo: volumes && volumes.reservaProvada && volumes.reservaProvada.oleoMMbbl != null ? volumes.reservaProvada.oleoMMbbl : null,
     excedenteOleoPct: pd && pd.excedenteOleoPct != null ? pd.excedenteOleoPct : null,
     excedenteOleoObs: pd ? pd.excedenteOleoObs : null,
+    tracts: pd && pd.tracts ? pd.tracts : null,
     participacao: participacaoText(pd),
     pdKey: pd ? pd.fonte : null,
     comercialidade: pd ? pd.comercialidade : null,
@@ -511,10 +512,11 @@ function renderProfitOilChart(container, rows) {
   container.appendChild(card);
 }
 
-// STOIIP por PROJETO (não por jazida — ver renderStoiipChart, a versão
-// agrupada usada dentro de "Campos em Produção") — visão de portfólio
-// inteiro logo na Visão Geral, cobrindo os 30 projetos rastreados
-// (produção + exploração + devolvidos), não só os já em produção.
+// STOIIP por PROJETO (não por jazida — ver renderJazidaComboChart, a
+// versão agrupada com TP/profit oil usada dentro de "Campos em Produção")
+// — visão de portfólio inteiro logo na Visão Geral, cobrindo os 30
+// projetos rastreados (produção + exploração + devolvidos), não só os já
+// em produção.
 function renderStoiipByBlockChart(container, rows) {
   const withStoiip = rows.filter((r) => r.stoiip != null).sort((a, b) => b.stoiip - a.stoiip);
   if (!withStoiip.length) return;
@@ -638,6 +640,12 @@ function computeJazidaRows(contractRows, fieldRows) {
       fpsoPlanned,
       stoiip: g.stoiip,
       recOleo: rep.recOleo,
+      excedenteOleoPct: rep.excedenteOleoPct,
+      // Composição estruturada da jazida (ver "tracts" em data/planos_
+      // desenvolvimento.json) — mesmo array em todo membro do grupo que a
+      // publica (ex.: Norte de Carcará e BACALHAU citam o mesmo), então
+      // o primeiro membro que tiver já serve.
+      tracts: g.members.map((m) => m.tracts).find(Boolean) || null,
       participacao: rep.participacao,
       comercialidade: g.members.map((m) => m.comercialidade).find(Boolean) || null,
       resolucao: g.members.map((m) => m.resolucao).find(Boolean) || null,
@@ -653,9 +661,44 @@ function computeJazidaRows(contractRows, fieldRows) {
   });
 }
 
-// rows já vem uma linha por jazida (ver computeJazidaRows) — nenhum
-// agrupamento aqui, só filtra quem tem STOIIP publicado.
-function renderStoiipChart(container, rows) {
+// Uma linha de barra dentro de um grupo de jazida — mesmo <div class=
+// "hbar-row"> usado pelos outros gráficos, só que aqui cada jazida monta
+// várias dessas em sequência (uma por métrica/fatia) em vez de uma só.
+function comboBarRow(label, widthPct, valueText, color, tooltipHtmlFn) {
+  const row = document.createElement('div');
+  row.className = 'hbar-row';
+  const name = document.createElement('div');
+  name.className = 'hbar-name';
+  name.textContent = label;
+  name.title = label;
+  const track = document.createElement('div');
+  track.className = 'hbar-track';
+  const fill = document.createElement('div');
+  fill.className = 'hbar-fill';
+  fill.style.width = Math.max(3, widthPct) + '%';
+  fill.style.background = color;
+  fill.tabIndex = 0;
+  attachTooltip(fill, tooltipHtmlFn);
+  track.appendChild(fill);
+  const value = document.createElement('div');
+  value.className = 'hbar-value';
+  value.textContent = valueText;
+  track.appendChild(value);
+  row.appendChild(name);
+  row.appendChild(track);
+  return row;
+}
+
+// Um único cartão com 3 métricas por jazida — STOIIP, Tract Participation
+// (TP, a % de cada fatia/contrato dentro da jazida, só quando há mais de
+// um — ver "tracts" em data/planos_desenvolvimento.json, decomposição
+// estruturada de pd.areaObs) e profit oil (% de excedente em óleo
+// ofertado no leilão de cada fatia — só existe pra Partilha ou pro
+// excedente da Cessão Onerosa; Concessão, Cessão Onerosa original e Área
+// Não Contratada não têm esse mecanismo, ficam sem barra). Jazida sem
+// "tracts" publicado vira uma fatia só (ela mesma, 100%) — mesmo
+// resultado de antes (só STOIIP + profit oil do contrato, sem TP).
+function renderJazidaComboChart(container, rows) {
   const withStoiip = rows.filter((r) => r.stoiip != null).sort((a, b) => b.stoiip - a.stoiip);
   if (!withStoiip.length) return;
 
@@ -663,43 +706,81 @@ function renderStoiipChart(container, rows) {
   card.className = 'chart-card';
   const title = document.createElement('h3');
   title.className = 'chart-card-title';
-  title.textContent = 'STOIIP por jazida (óleo in situ)';
+  title.textContent = 'STOIIP, participação (TP) e profit oil por jazida';
   const sub = document.createElement('p');
   sub.className = 'chart-card-subtitle';
-  sub.textContent = `Só as ${withStoiip.length} jazidas com Plano de Desenvolvimento público — as demais ainda não têm PD aprovado/divulgado. Cor própria = jazida com contrato rastreado; cinza = só campo de contexto (ex.: Berbigão, sem contrato de partilha).`;
+  sub.textContent = `As ${withStoiip.length} jazidas com Plano de Desenvolvimento público. STOIIP (óleo in situ) por jazida; Tract Participation (TP) — % de cada fatia/contrato dentro da jazida — só onde o PD publica a composição e há mais de um contrato; profit oil — % de excedente em óleo ofertado no leilão de cada fatia, quando existe (Concessão e a fatia original da Cessão Onerosa não têm esse mecanismo, só a Partilha e o excedente da Cessão Onerosa).`;
   card.appendChild(title);
   card.appendChild(sub);
 
-  const list = document.createElement('div');
-  list.className = 'hbar-list';
-  const max = Math.max(...withStoiip.map((r) => r.stoiip));
-  for (const g of withStoiip) {
-    const row = document.createElement('div');
-    row.className = 'hbar-row';
-    const name = document.createElement('div');
-    name.className = 'hbar-name';
-    name.textContent = g.name;
-    name.title = g.name;
-    const track = document.createElement('div');
-    track.className = 'hbar-track';
-    const fill = document.createElement('div');
-    fill.className = 'hbar-fill';
-    fill.style.width = Math.max(3, (g.stoiip / max) * 100) + '%';
-    fill.style.background = g.color;
-    fill.tabIndex = 0;
-    attachTooltip(fill, () => `<strong>${escapeHtml(g.name)}</strong>`
-      + tooltipRowHTML('STOIIP', `${fmtNum(g.stoiip)} MMbbl`)
-      + (g.memberCount > 1 ? `<div class="viz-tooltip-row"><span>Jazida compartilhada, ${g.memberCount} entidades</span></div>` : ''));
-    track.appendChild(fill);
-    const value = document.createElement('div');
-    value.className = 'hbar-value';
-    value.textContent = fmtNum(g.stoiip) + ' MMbbl';
-    track.appendChild(value);
-    row.appendChild(name);
-    row.appendChild(track);
-    list.appendChild(row);
+  const maxStoiip = Math.max(...withStoiip.map((r) => r.stoiip));
+
+  for (const r of withStoiip) {
+    const group = document.createElement('div');
+    group.className = 'jazida-combo-group';
+
+    const header = document.createElement('div');
+    header.className = 'jazida-combo-header';
+    header.innerHTML = `<span class="proj-dot" style="background:${r.color}"></span>${escapeHtml(r.name)}`;
+    group.appendChild(header);
+
+    // Fatia única sintética quando não há "tracts" publicado — mesmo
+    // valor de profit oil que o contrato/jazida já carregava.
+    const tracts = r.tracts && r.tracts.length ? r.tracts : [{ nome: r.name, pct: 100, excedenteOleoPct: r.excedenteOleoPct }];
+
+    const stoiipMetric = document.createElement('div');
+    stoiipMetric.className = 'jazida-combo-metric';
+    const stoiipLabel = document.createElement('p');
+    stoiipLabel.className = 'jazida-combo-metric-label';
+    stoiipLabel.textContent = 'STOIIP';
+    stoiipMetric.appendChild(stoiipLabel);
+    stoiipMetric.appendChild(comboBarRow(
+      r.name, (r.stoiip / maxStoiip) * 100, fmtNum(r.stoiip) + ' MMbbl', r.color,
+      () => `<strong>${escapeHtml(r.name)}</strong>` + tooltipRowHTML('STOIIP', `${fmtNum(r.stoiip)} MMbbl`),
+    ));
+    group.appendChild(stoiipMetric);
+
+    if (tracts.length > 1) {
+      const tpMetric = document.createElement('div');
+      tpMetric.className = 'jazida-combo-metric';
+      const tpLabel = document.createElement('p');
+      tpLabel.className = 'jazida-combo-metric-label';
+      tpLabel.textContent = 'Participação (TP)';
+      tpMetric.appendChild(tpLabel);
+      for (const t of tracts) {
+        tpMetric.appendChild(comboBarRow(
+          t.nome, t.pct, t.pct.toLocaleString('pt-BR') + '%', r.color,
+          () => `<strong>${escapeHtml(t.nome)}</strong>` + tooltipRowHTML('Participação na jazida', `${t.pct.toLocaleString('pt-BR')}%`),
+        ));
+      }
+      group.appendChild(tpMetric);
+    }
+
+    const withPct = tracts.filter((t) => t.excedenteOleoPct != null);
+    const profitMetric = document.createElement('div');
+    profitMetric.className = 'jazida-combo-metric';
+    const profitLabel = document.createElement('p');
+    profitLabel.className = 'jazida-combo-metric-label';
+    profitLabel.textContent = 'Profit oil';
+    profitMetric.appendChild(profitLabel);
+    if (withPct.length) {
+      for (const t of withPct) {
+        const label = tracts.length > 1 ? t.nome : r.name;
+        profitMetric.appendChild(comboBarRow(
+          label, t.excedenteOleoPct, t.excedenteOleoPct.toLocaleString('pt-BR') + '%', r.color,
+          () => `<strong>${escapeHtml(label)}</strong>` + tooltipRowHTML('Profit oil', `${t.excedenteOleoPct.toLocaleString('pt-BR')}%`),
+        ));
+      }
+    } else {
+      const note = document.createElement('p');
+      note.className = 'jazida-combo-metric-note';
+      note.textContent = 'Sem profit oil — regime de Concessão/Cessão Onerosa, sem esse mecanismo.';
+      profitMetric.appendChild(note);
+    }
+    group.appendChild(profitMetric);
+
+    card.appendChild(group);
   }
-  card.appendChild(list);
   container.appendChild(card);
 }
 
@@ -1108,6 +1189,8 @@ function computeFieldRow(feature, projectByFonte) {
     regime: regimeOf(props.rodada),
     areaKm2: props.area_km2 || null,
     stoiip: volumes && volumes.oleoInSituMMbbl != null ? volumes.oleoInSituMMbbl : null,
+    excedenteOleoPct: pd && pd.excedenteOleoPct != null ? pd.excedenteOleoPct : null,
+    tracts: pd && pd.tracts ? pd.tracts : null,
     participacao: participacaoText(pd),
     pdKey: pd ? pd.fonte : null,
     comercialidade: pd ? pd.comercialidade : null,
@@ -1259,7 +1342,7 @@ function renderProducaoSection(container, contractRows, fieldRows, outrosPocos, 
   ));
   container.appendChild(statsRow);
 
-  renderStoiipChart(container, jazidaRows);
+  renderJazidaComboChart(container, jazidaRows);
   container.appendChild(buildWellsStackedCard(
     outrosRow ? [...jazidaRows, outrosRow] : jazidaRows,
     'Poços por categoria, por jazida',

@@ -744,6 +744,18 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 }
 .hbar-row-total { display: flex; align-items: center; }
 
+/* ---- Grupo por jazida (STOIIP + TP + profit oil combinados) ---- */
+.jazida-combo-group { padding: 12px 0; border-top: 1px solid var(--border); }
+.jazida-combo-group:first-of-type { padding-top: 4px; border-top: none; }
+.jazida-combo-header { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; margin-bottom: 8px; }
+.jazida-combo-metric { margin-bottom: 8px; }
+.jazida-combo-metric:last-child { margin-bottom: 0; }
+.jazida-combo-metric-label {
+  font-size: 10px; font-weight: 700; color: var(--text-faint); text-transform: uppercase;
+  letter-spacing: .04em; margin: 0 0 4px 0;
+}
+.jazida-combo-metric-note { font-size: 11px; color: var(--text-faint); font-style: italic; }
+
 /* ---- Colunas verticais (FPSOs por ano) ---- */
 .vbar-chart { display: flex; align-items: flex-end; gap: 6px; height: 160px; padding-top: 20px; }
 .vbar-col { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
