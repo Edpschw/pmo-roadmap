@@ -419,6 +419,7 @@ const COMPANY_LOGO_FILES = {
   'Shell': 'assets/logos/shell.png',
   'Equinor': 'assets/logos/equinor.png',
   'BP': 'assets/logos/bp.png',
+  'Galp': 'assets/logos/galp.png',
 };
 
 function companyBadge(rawName) {
