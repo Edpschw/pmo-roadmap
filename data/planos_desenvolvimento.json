@@ -1,6 +1,8 @@
 {
   "_fonte": "Sumários Executivos de Plano de Desenvolvimento (ANP) — o PD completo é confidencial por lei (Decreto 7.724/2012, art. 5º §2º), só o sumário é público. Enviados pelo usuário em 23/08/2026, baixados de gov.br/anp/.../desenvolvimento-e-producao/pd/.",
   "Norte de Carcará": {
+    "excedenteOleoPct": 67.12,
+    "excedenteOleoObs": "Só a fatia Bacalhau Norte (CPP 48610.012964/2017-03, Partilha — 2ª Rodada de Partilha, leilão 27/10/2017, consórcio Equinor/ExxonMobil/Petrogal, mesma composição da tabela de participação) tem esse mecanismo; a fatia Bacalhau (CSS 48610.003883/2000, Concessão) paga royalties + participação especial em vez de excedente em óleo.",
     "titulo": "Bacalhau e Bacalhau Norte (AIP) 2021",
     "resolucao": "RD 163/2021",
     "contrato": "48610.003883/2000 (CSS) + 48610.012964/2017-03 (CPP)",
@@ -25,6 +27,8 @@
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sumario-executivo-bacalhau.pdf"
   },
   "BACALHAU": {
+    "excedenteOleoPct": 67.12,
+    "excedenteOleoObs": "Só a fatia Bacalhau Norte (CPP 48610.012964/2017-03, Partilha — 2ª Rodada de Partilha, leilão 27/10/2017, consórcio Equinor/ExxonMobil/Petrogal, mesma composição da tabela de participação) tem esse mecanismo; a fatia Bacalhau (CSS 48610.003883/2000, Concessão) paga royalties + participação especial em vez de excedente em óleo.",
     "titulo": "Bacalhau e Bacalhau Norte (AIP) 2021",
     "resolucao": "RD 163/2021",
     "contrato": "48610.003883/2000 (CSS) + 48610.012964/2017-03 (CPP)",

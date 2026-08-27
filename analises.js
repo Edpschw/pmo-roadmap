@@ -281,6 +281,7 @@ function computeProjectRow(project) {
     stoiip: volumes && volumes.oleoInSituMMbbl != null ? volumes.oleoInSituMMbbl : null,
     recOleo: volumes && volumes.reservaProvada && volumes.reservaProvada.oleoMMbbl != null ? volumes.reservaProvada.oleoMMbbl : null,
     excedenteOleoPct: pd && pd.excedenteOleoPct != null ? pd.excedenteOleoPct : null,
+    excedenteOleoObs: pd ? pd.excedenteOleoObs : null,
     participacao: participacaoText(pd),
     pdKey: pd ? pd.fonte : null,
     comercialidade: pd ? pd.comercialidade : null,
@@ -494,7 +495,9 @@ function renderProfitOilChart(container, rows) {
     fill.style.width = Math.max(3, (r.excedenteOleoPct / max) * 100) + '%';
     fill.style.background = r.color;
     fill.tabIndex = 0;
-    attachTooltip(fill, () => `<strong>${escapeHtml(label)}</strong>` + tooltipRowHTML('Profit oil', `${r.excedenteOleoPct.toLocaleString('pt-BR')}%`));
+    attachTooltip(fill, () => `<strong>${escapeHtml(label)}</strong>`
+      + tooltipRowHTML('Profit oil', `${r.excedenteOleoPct.toLocaleString('pt-BR')}%`)
+      + (r.excedenteOleoObs ? `<div class="viz-tooltip-row"><span>${escapeHtml(r.excedenteOleoObs)}</span></div>` : ''));
     track.appendChild(fill);
     const value = document.createElement('div');
     value.className = 'hbar-value';
