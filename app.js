@@ -168,8 +168,6 @@ const gridEl = document.getElementById('grid');
 const scrollContainer = document.getElementById('scrollContainer');
 const emptyStateEl = document.getElementById('emptyState');
 const rangeLabelEl = document.getElementById('rangeLabel');
-const modalOverlay = document.getElementById('modalOverlay');
-const modalEl = document.getElementById('modal');
 const toastEl = document.getElementById('toast');
 const popoverEl = document.getElementById('popover');
 
@@ -386,9 +384,15 @@ function resolveMilestoneLabelLayout(project, placements, rangeStart) {
 
 /* -------------------------------- Render ---------------------------------- */
 
-const SIDEBAR_WIDTH_DESKTOP = 300;
+const SIDEBAR_WIDTH_DESKTOP_MIN = 300;
 const SIDEBAR_WIDTH_MOBILE_MIN = 150;
 const MOBILE_BREAKPOINT = 640;
+// Espaço reservado na label-cell além do texto do nome do projeto: padding +
+// chevron + bolinha de cor + gaps (ver .label-cell/.row.project-row .label-cell
+// no CSS desktop — padding-left 30 + padding-right 8 + chevron 16 + gap 6 +
+// bolinha 9 + gap 6 = 75; a folga extra é margem pra imprecisão de medição).
+const PROJECT_LABEL_CHROME_DESKTOP = 80;
+const PROJECT_NAME_FONT_DESKTOP = '600 13px ' + FONT_STACK; // mesma fonte de .label-text
 // Espaço reservado na label-cell além do texto do nome do projeto: padding +
 // chevron + bolinha de cor + ícone "+" + gaps (ver .label-cell no CSS mobile).
 const PROJECT_LABEL_CHROME_MOBILE = 95;
@@ -400,6 +404,22 @@ const PROJECT_NAME_MIN_FONT_SIZE_MOBILE = 9;
 // modo compacto quando girado para paisagem (largura grande, altura curta).
 function isMobileLayout() {
   return Math.min(window.innerWidth, window.innerHeight) <= MOBILE_BREAKPOINT;
+}
+
+// No desktop, a sidebar cresce o suficiente para caber o nome do projeto mais
+// longo numa única linha só (sem quebrar nem cortar com reticências — ver
+// text-overflow: ellipsis em .label-text no CSS), respeitando o mínimo atual
+// como piso e um teto que garante espaço útil pra timeline ao lado mesmo com
+// um nome bem comprido.
+function computeDesktopSidebarWidth() {
+  let widestName = 0;
+  for (const project of state.projects) {
+    const w = measureTextWidth(projectDisplayName(project.name), PROJECT_NAME_FONT_DESKTOP);
+    if (w > widestName) widestName = w;
+  }
+  const desired = Math.ceil(widestName + PROJECT_LABEL_CHROME_DESKTOP);
+  const max = Math.max(SIDEBAR_WIDTH_DESKTOP_MIN, window.innerWidth - 500);
+  return Math.min(max, Math.max(SIDEBAR_WIDTH_DESKTOP_MIN, desired));
 }
 
 // No mobile, a sidebar cresce o suficiente para caber o nome do projeto mais
@@ -433,7 +453,7 @@ function fitProjectLabelFontSize(name, availableWidth) {
 }
 
 function getSidebarWidth() {
-  return isMobileLayout() ? computeMobileSidebarWidth() : SIDEBAR_WIDTH_DESKTOP;
+  return isMobileLayout() ? computeMobileSidebarWidth() : computeDesktopSidebarWidth();
 }
 let currentSidebarWidth = getSidebarWidth();
 
@@ -815,11 +835,6 @@ function renderProjectRow(project, rangeStart) {
   label.className = 'label-text';
   label.textContent = projectDisplayName(project.name);
   mainRow.appendChild(label);
-
-  const actions = document.createElement('div');
-  actions.className = 'row-actions';
-  actions.appendChild(iconButton('+', 'Nova workstream', () => openWorkstreamModal(project)));
-  mainRow.appendChild(actions);
   labelCell.appendChild(mainRow);
 
   // Selos de operador (maior) + parceiros do PD (menores), embaixo do
@@ -966,18 +981,7 @@ function renderWorkstreamRow(project, ws, rangeStart) {
   const label = document.createElement('span');
   label.className = 'label-text';
   label.textContent = ws.name;
-  label.title = 'Clique para editar';
-  label.addEventListener('click', (e) => {
-    e.stopPropagation();
-    openWorkstreamModal(project, ws);
-  });
   labelCell.appendChild(label);
-
-  const actions = document.createElement('div');
-  actions.className = 'row-actions';
-  actions.appendChild(iconButton('✎', 'Editar workstream', () => openWorkstreamModal(project, ws), 'secondary-action'));
-  actions.appendChild(iconButton('✕', 'Excluir workstream', () => confirmDeleteWorkstream(project, ws), 'secondary-action'));
-  labelCell.appendChild(actions);
 
   const mobileLabelHeight = isMobileLayout() ? measureLabelCellHeight(labelCell) : 0;
   const rowHeight = Math.max(PROJECT_ROW_H, mobileLabelHeight, laneCount * LANE_H + LANE_PAD);
@@ -1002,19 +1006,6 @@ function renderWorkstreamRow(project, ws, rangeStart) {
   row.appendChild(timelineCell);
   gridEl.appendChild(row);
   return rowHeight;
-}
-
-function iconButton(symbol, title, onClick, extraClass) {
-  const btn = document.createElement('button');
-  btn.className = 'btn-icon' + (extraClass ? ' ' + extraClass : '');
-  btn.textContent = symbol;
-  btn.title = title;
-  btn.type = 'button';
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    onClick();
-  });
-  return btn;
 }
 
 function renderTaskBar(project, item, lane, rangeStart) {
@@ -1260,82 +1251,6 @@ function renderMilestone(project, item, lane, rangeStart, labelLayoutOverride, t
   return wrapper;
 }
 
-/* -------------------------------- Modals ---------------------------------- */
-
-function closeModal() {
-  modalOverlay.hidden = true;
-  modalEl.innerHTML = '';
-}
-modalOverlay.addEventListener('click', (e) => {
-  if (e.target === modalOverlay) closeModal();
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !modalOverlay.hidden) closeModal();
-});
-
-function openModalWith(html, wireFn) {
-  modalEl.innerHTML = html;
-  modalOverlay.hidden = false;
-  wireFn(modalEl);
-  const firstInput = modalEl.querySelector('input, textarea, select');
-  if (firstInput) firstInput.focus();
-}
-
-function openWorkstreamModal(project, ws) {
-  const isEdit = !!ws;
-  const html = `
-    <h2>${isEdit ? 'Editar workstream' : 'Nova workstream'}</h2>
-    <p style="margin:-6px 0 14px;color:var(--text-muted);font-size:12px;">Projeto: <strong>${escapeHtml(projectDisplayName(project.name))}</strong></p>
-    <div class="field">
-      <label>Nome da workstream</label>
-      <input type="text" id="f-name" value="${isEdit ? escapeAttr(ws.name) : ''}" placeholder="Ex: Arquitetura & Plataforma" />
-    </div>
-    <div class="modal-actions">
-      <div>${isEdit ? '<button class="btn-danger" id="f-delete">Excluir workstream</button>' : ''}</div>
-      <div class="modal-actions-right">
-        <button class="btn-ghost" id="f-cancel">Cancelar</button>
-        <button class="btn-primary" id="f-save">${isEdit ? 'Salvar' : 'Criar'}</button>
-      </div>
-    </div>`;
-  openModalWith(html, (m) => {
-    m.querySelector('#f-cancel').addEventListener('click', closeModal);
-    if (isEdit) {
-      m.querySelector('#f-delete').addEventListener('click', () => {
-        closeModal();
-        confirmDeleteWorkstream(project, ws);
-      });
-    }
-    m.querySelector('#f-save').addEventListener('click', () => {
-      const name = m.querySelector('#f-name').value.trim();
-      if (!name) { showToast('Informe um nome para a workstream.'); return; }
-      if (isEdit) {
-        ws.name = name;
-      } else {
-        project.workstreams.push({ id: uid('ws'), name, items: [] });
-      }
-      saveState();
-      render();
-      closeModal();
-      showToast(isEdit ? 'Workstream atualizada.' : 'Workstream criada.');
-    });
-  });
-}
-
-/* ------------------------------- Delete flows ------------------------------ */
-
-function confirmDeleteWorkstream(project, ws) {
-  if (!confirm(`Excluir a workstream "${ws.name}" e todos os seus itens?`)) return;
-  project.workstreams = project.workstreams.filter((w) => w.id !== ws.id);
-  saveState();
-  render();
-  showToast('Workstream excluída.');
-}
-
-/* --------------------------------- Utils ----------------------------------- */
-
-// escapeHtml vem de shared.js (compartilhada com mapa.js e analises.js).
-function escapeAttr(str) { return escapeHtml(str); }
-
 /* ------------------------------- Toolbar wiring ----------------------------- */
 
 document.getElementById('scaleSwitch').addEventListener('click', (e) => {
@@ -1484,175 +1399,6 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   a.remove();
   URL.revokeObjectURL(url);
   showToast('Roadmap exportado.');
-});
-
-document.getElementById('importBtn').addEventListener('click', () => {
-  document.getElementById('importFile').click();
-});
-document.getElementById('importFile').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const parsed = JSON.parse(reader.result);
-      if (!parsed || !Array.isArray(parsed.projects)) throw new Error('formato inválido');
-      state = parsed;
-      if (!state.scale) state.scale = 'all';
-      saveState();
-      render();
-      showToast('Roadmap importado.');
-    } catch (err) {
-      showToast('Arquivo inválido. Verifique o JSON exportado.');
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-});
-
-/* ------------------------------ Importar Excel ----------------------------- */
-// Formato esperado: uma linha por tarefa/marco, agrupados repetindo o nome
-// do Projeto e da Workstream. Colunas (nomes flexíveis quanto a acento/caixa):
-// Projeto | Cor | Workstream | Tipo (Tarefa/Marco) | Item | Início | Fim | Progresso | Data
-
-const EXCEL_HEADER_ALIASES = {
-  'projeto': 'projeto',
-  'cor': 'cor',
-  'workstream': 'workstream',
-  'tipo': 'tipo',
-  'item': 'item',
-  'nome': 'item',
-  'tarefa': 'item',
-  'inicio': 'inicio',
-  'data inicio': 'inicio',
-  'data de inicio': 'inicio',
-  'fim': 'fim',
-  'data fim': 'fim',
-  'data de fim': 'fim',
-  'progresso': 'progresso',
-  'progresso (%)': 'progresso',
-  'data': 'data',
-};
-
-function normalizeHeaderKey(h) {
-  return String(h).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-}
-
-function normalizeExcelRow(row) {
-  const out = {};
-  for (const [key, value] of Object.entries(row)) {
-    const norm = normalizeHeaderKey(key);
-    const field = EXCEL_HEADER_ALIASES[norm] || norm;
-    out[field] = value;
-  }
-  return out;
-}
-
-// Aceita células já convertidas em Date (SheetJS com cellDates:true), datas em
-// texto "AAAA-MM-DD" ou no formato brasileiro "DD/MM/AAAA".
-function excelValueToISO(value) {
-  if (value instanceof Date) {
-    return toISO(new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate())));
-  }
-  const s = String(value == null ? '' : value).trim();
-  if (!s) return null;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (br) return `${br[3]}-${br[2].padStart(2, '0')}-${br[1].padStart(2, '0')}`;
-  return null;
-}
-
-// Agrupa as linhas planas da planilha em projetos > workstreams > itens,
-// criando projetos/workstreams na primeira vez que seus nomes aparecem.
-function excelRowsToProjects(rawRows) {
-  const rows = rawRows.map(normalizeExcelRow);
-  const projectsByName = new Map();
-  const projects = [];
-  let colorCursor = 0;
-  let skipped = 0;
-
-  for (const row of rows) {
-    const projectName = String(row.projeto || '').trim();
-    const wsName = String(row.workstream || '').trim();
-    const itemName = String(row.item || '').trim();
-    if (!projectName || !wsName || !itemName) { skipped++; continue; }
-
-    let project = projectsByName.get(projectName);
-    if (!project) {
-      const colorCell = String(row.cor || '').trim();
-      const color = /^#[0-9a-fA-F]{6}$/.test(colorCell) ? colorCell : PALETTE[colorCursor % PALETTE.length];
-      colorCursor++;
-      project = { id: uid('p'), name: projectName, color, collapsed: false, workstreams: [] };
-      projectsByName.set(projectName, project);
-      projects.push(project);
-    }
-    let ws = project.workstreams.find((w) => w.name === wsName);
-    if (!ws) {
-      ws = { id: uid('ws'), name: wsName, items: [] };
-      project.workstreams.push(ws);
-    }
-
-    const tipo = normalizeHeaderKey(row.tipo || '');
-    if (tipo.startsWith('marco') || tipo === 'milestone') {
-      const date = excelValueToISO(row.data);
-      if (!date) { skipped++; continue; }
-      ws.items.push({ id: uid('m'), type: 'milestone', name: itemName, date });
-    } else {
-      const start = excelValueToISO(row.inicio);
-      const end = excelValueToISO(row.fim);
-      if (!start || !end || end < start) { skipped++; continue; }
-      const progress = Math.min(100, Math.max(0, Math.round(Number(row.progresso) || 0)));
-      ws.items.push({ id: uid('t'), type: 'task', name: itemName, start, end, progress });
-    }
-  }
-  return { projects, skipped };
-}
-
-document.getElementById('importExcelBtn').addEventListener('click', () => {
-  document.getElementById('importExcelFile').click();
-});
-document.getElementById('importExcelFile').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const workbook = XLSX.read(new Uint8Array(reader.result), { type: 'array', cellDates: true });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rawRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-      const { projects, skipped } = excelRowsToProjects(rawRows);
-      if (!projects.length) {
-        showToast('Nenhuma linha válida encontrada. Baixe o "Modelo Excel" para ver o formato esperado.');
-        return;
-      }
-      if (!confirm(`Importar substituirá o roadmap atual por ${projects.length} projeto(s) da planilha. Continuar?`)) return;
-      state = { scale: state.scale || 'all', pxPerDay: state.pxPerDay || SCALE_PX_PER_DAY.year, projects };
-      saveState();
-      render();
-      showToast(skipped ? `Roadmap importado (${skipped} linha(s) ignorada(s) por dados incompletos).` : 'Roadmap importado do Excel.');
-    } catch (err) {
-      console.warn('Falha ao importar Excel.', err);
-      showToast('Não foi possível ler a planilha. Verifique se é um .xlsx válido.');
-    }
-  };
-  reader.readAsArrayBuffer(file);
-  e.target.value = '';
-});
-
-document.getElementById('templateExcelBtn').addEventListener('click', () => {
-  const sampleRows = [
-    { Projeto: 'Transformação Digital', Cor: '#3457d5', Workstream: 'Arquitetura & Plataforma', Tipo: 'Tarefa', Item: 'Levantamento de requisitos', 'Início': '2026-05-04', Fim: '2026-05-29', Progresso: 100, Data: '' },
-    { Projeto: 'Transformação Digital', Cor: '#3457d5', Workstream: 'Arquitetura & Plataforma', Tipo: 'Marco', Item: 'Aprovação do comitê', 'Início': '', Fim: '', Progresso: '', Data: '2026-07-15' },
-    { Projeto: 'Expansão Comercial', Cor: '#1c9e6b', Workstream: 'Novos Mercados', Tipo: 'Tarefa', Item: 'Estudo de viabilidade', 'Início': '2026-04-06', Fim: '2026-05-15', Progresso: 40, Data: '' },
-  ];
-  const sheet = XLSX.utils.json_to_sheet(sampleRows, {
-    header: ['Projeto', 'Cor', 'Workstream', 'Tipo', 'Item', 'Início', 'Fim', 'Progresso', 'Data'],
-  });
-  sheet['!cols'] = [{ wch: 22 }, { wch: 9 }, { wch: 26 }, { wch: 9 }, { wch: 30 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 12 }];
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, sheet, 'Roadmap');
-  XLSX.writeFile(workbook, 'modelo-roadmap-pmo.xlsx');
-  showToast('Modelo baixado. Preencha uma linha por tarefa ou marco.');
 });
 
 /* ---------------------------------- Init ------------------------------------ */

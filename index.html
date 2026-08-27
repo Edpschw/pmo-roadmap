@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Roadmap PMO</title>
-<link rel="stylesheet" href="style.css?v=131" />
+<link rel="stylesheet" href="style.css?v=132" />
 </head>
 <body>
 
@@ -28,17 +28,7 @@
     <a class="btn-ghost" href="mapa.html">Ver mapa</a>
     <a class="btn-ghost" href="analises.html">Ver análises</a>
     <a class="btn-ghost" href="pocos.html">Ver poços</a>
-    <div class="options-wrap">
-      <button class="btn-ghost btn-options" id="optionsBtn" title="Mais opções" aria-haspopup="true" aria-expanded="false">⋯</button>
-      <div class="options-menu" id="optionsMenu" hidden>
-        <button class="options-item" id="importBtn">Importar JSON</button>
-        <button class="options-item" id="importExcelBtn">Importar Excel</button>
-        <button class="options-item" id="templateExcelBtn">Modelo Excel</button>
-        <button class="options-item" id="exportBtn">Exportar</button>
-      </div>
-    </div>
-    <input type="file" id="importFile" accept="application/json" hidden />
-    <input type="file" id="importExcelFile" accept=".xlsx,.xls" hidden />
+    <button class="btn-ghost" id="exportBtn">Exportar</button>
   </div>
 </header>
 
@@ -51,16 +41,11 @@
   </div>
 </main>
 
-<div class="modal-overlay" id="modalOverlay" hidden>
-  <div class="modal" id="modal"></div>
-</div>
-
 <div class="popover" id="popover" hidden></div>
 
 <div class="toast" id="toast" hidden></div>
 
-<script src="vendor/xlsx.full.min.js"></script>
 <script src="shared.js?v=42"></script>
-<script src="app.js?v=40"></script>
+<script src="app.js?v=41"></script>
 </body>
 </html>

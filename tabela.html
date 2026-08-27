@@ -4,26 +4,20 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Roadmap PMO — Tabela</title>
-<link rel="stylesheet" href="style.css?v=131" />
+<link rel="stylesheet" href="style.css?v=132" />
 </head>
 <body>
 
 <header class="toolbar">
   <div class="toolbar-left">
     <h1>Roadmap de Projetos — Tabela</h1>
-    <span class="subtitle">Edite nomes, datas, progresso e marcos diretamente na tabela</span>
+    <span class="subtitle">Nomes, datas, progresso e marcos de cada projeto</span>
   </div>
   <div class="toolbar-right">
     <a class="btn-ghost" href="index.html">← Ver Roadmap</a>
     <a class="btn-ghost" href="mapa.html">Ver mapa</a>
     <a class="btn-ghost" href="analises.html">Ver análises</a>
     <a class="btn-ghost" href="pocos.html">Ver poços</a>
-    <div class="options-wrap">
-      <button class="btn-ghost btn-options" id="optionsBtn" title="Mais opções" aria-haspopup="true" aria-expanded="false">⋯</button>
-      <div class="options-menu" id="optionsMenu" hidden>
-        <button class="options-item options-item-primary" id="addProjectBtn">+ Novo Projeto</button>
-      </div>
-    </div>
   </div>
 </header>
 
@@ -31,13 +25,12 @@
   <div id="tableContainer"></div>
   <div class="empty-state" id="emptyState" hidden>
     <p>Nenhum projeto ainda.</p>
-    <button class="btn-primary" id="emptyAddProjectBtn">+ Criar primeiro projeto</button>
   </div>
 </main>
 
 <div class="toast" id="toast" hidden></div>
 
 <script src="shared.js?v=42"></script>
-<script src="tabela.js?v=2"></script>
+<script src="tabela.js?v=3"></script>
 </body>
 </html>

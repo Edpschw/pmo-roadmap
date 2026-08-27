@@ -2,9 +2,10 @@
 
 /* =========================================================================
    PMO Roadmap — visão em tabela. Usa o mesmo estado (shared.js) da visão
-   Gantt (index.html/app.js): qualquer edição aqui é salva em localStorage e
-   aparece imediatamente na outra página ao recarregar. Assim como no
-   app.js, a renderização reconstrói a tabela inteira a cada mudança.
+   Gantt (index.html/app.js), só leitura — nenhuma das duas páginas edita
+   mais nada, ver nota em app.js. Assim como no app.js, a renderização
+   reconstrói a tabela inteira a cada mudança de state (hoje só troca por
+   uma migração automática de seed, ver seedMigrationHappened abaixo).
    ========================================================================= */
 
 const tableContainer = document.getElementById('tableContainer');
@@ -19,7 +20,7 @@ function showToast(msg) {
   toastTimer = setTimeout(() => { toastEl.hidden = true; }, 2200);
 }
 
-const COLUMN_COUNT = 10;
+const COLUMN_COUNT = 9;
 
 function renderTable() {
   const hasProjects = state.projects.length > 0;
@@ -43,7 +44,6 @@ function renderTable() {
       <th>Esperado</th>
       <th>Data</th>
       <th>Realizado</th>
-      <th>Ações</th>
     </tr>`;
   table.appendChild(thead);
 
@@ -54,12 +54,12 @@ function renderTable() {
       tbody.appendChild(buildPlaceholderRow('Nenhuma workstream neste projeto ainda.'));
     }
     for (const ws of project.workstreams) {
-      tbody.appendChild(buildWorkstreamHeaderRow(project, ws));
+      tbody.appendChild(buildWorkstreamHeaderRow(ws));
       if (!ws.items.length) {
         tbody.appendChild(buildPlaceholderRow('Nenhum item nesta workstream ainda.'));
       }
       for (const item of ws.items) {
-        tbody.appendChild(buildItemRow(project, ws, item));
+        tbody.appendChild(buildItemRow(item));
       }
     }
   }
@@ -86,43 +86,22 @@ function buildProjectHeaderRow(project) {
   const wrap = document.createElement('div');
   wrap.className = 'group-header-content';
 
-  const colorInput = document.createElement('input');
-  colorInput.type = 'color';
-  colorInput.className = 'color-input';
-  colorInput.value = project.color;
-  colorInput.title = 'Cor do projeto';
-  colorInput.addEventListener('change', () => {
-    project.color = colorInput.value;
-    saveState();
-    renderTable();
-  });
-  wrap.appendChild(colorInput);
+  const dot = document.createElement('span');
+  dot.className = 'color-dot';
+  dot.style.background = project.color;
+  wrap.appendChild(dot);
 
-  const nameInput = document.createElement('input');
-  nameInput.type = 'text';
-  nameInput.className = 'cell-input group-name-input';
-  nameInput.value = project.name;
-  nameInput.addEventListener('change', () => {
-    const name = nameInput.value.trim();
-    if (!name) { showToast('O nome do projeto não pode ficar vazio.'); renderTable(); return; }
-    project.name = name;
-    saveState();
-    renderTable();
-  });
-  wrap.appendChild(nameInput);
-
-  const actions = document.createElement('div');
-  actions.className = 'group-header-actions';
-  actions.appendChild(smallButton('+ Workstream', () => addWorkstream(project)));
-  actions.appendChild(iconButton('✕', 'Excluir projeto', () => deleteProject(project)));
-  wrap.appendChild(actions);
+  const name = document.createElement('span');
+  name.className = 'group-name-text';
+  name.textContent = projectDisplayName(project.name);
+  wrap.appendChild(name);
 
   td.appendChild(wrap);
   tr.appendChild(td);
   return tr;
 }
 
-function buildWorkstreamHeaderRow(project, ws) {
+function buildWorkstreamHeaderRow(ws) {
   const tr = document.createElement('tr');
   tr.className = 'ws-header-row';
   const td = document.createElement('td');
@@ -131,32 +110,17 @@ function buildWorkstreamHeaderRow(project, ws) {
   const wrap = document.createElement('div');
   wrap.className = 'group-header-content';
 
-  const nameInput = document.createElement('input');
-  nameInput.type = 'text';
-  nameInput.className = 'cell-input group-name-input';
-  nameInput.value = ws.name;
-  nameInput.addEventListener('change', () => {
-    const name = nameInput.value.trim();
-    if (!name) { showToast('O nome da workstream não pode ficar vazio.'); renderTable(); return; }
-    ws.name = name;
-    saveState();
-    renderTable();
-  });
-  wrap.appendChild(nameInput);
-
-  const actions = document.createElement('div');
-  actions.className = 'group-header-actions';
-  actions.appendChild(smallButton('+ Tarefa', () => addTask(project, ws)));
-  actions.appendChild(smallButton('+ Marco', () => addMilestone(project, ws)));
-  actions.appendChild(iconButton('✕', 'Excluir workstream', () => deleteWorkstream(project, ws)));
-  wrap.appendChild(actions);
+  const name = document.createElement('span');
+  name.className = 'group-name-text';
+  name.textContent = ws.name;
+  wrap.appendChild(name);
 
   td.appendChild(wrap);
   tr.appendChild(td);
   return tr;
 }
 
-function buildItemRow(project, ws, item) {
+function buildItemRow(item) {
   const tr = document.createElement('tr');
   tr.className = 'item-row';
 
@@ -169,24 +133,11 @@ function buildItemRow(project, ws, item) {
   typeTd.appendChild(badge);
   tr.appendChild(typeTd);
 
-  tr.appendChild(textCell(item.name, (value) => {
-    const name = value.trim();
-    if (!name) { showToast('Informe um nome.'); return false; }
-    item.name = name;
-    return true;
-  }));
+  tr.appendChild(textCell(item.name));
 
   if (item.type === 'task') {
-    tr.appendChild(dateCell(item.start, (value) => {
-      if (value > item.end) { showToast('O início não pode ser depois do fim.'); return false; }
-      item.start = value;
-      return true;
-    }));
-    tr.appendChild(dateCell(item.end, (value) => {
-      if (value < item.start) { showToast('O fim não pode ser antes do início.'); return false; }
-      item.end = value;
-      return true;
-    }));
+    tr.appendChild(textCell(formatBR(item.start)));
+    tr.appendChild(textCell(formatBR(item.end)));
     tr.appendChild(progressCell(item));
     tr.appendChild(expectedCell(item));
     tr.appendChild(emptyCell());
@@ -196,75 +147,27 @@ function buildItemRow(project, ws, item) {
     tr.appendChild(emptyCell());
     tr.appendChild(emptyCell());
     tr.appendChild(emptyCell());
-    tr.appendChild(dateCell(item.date, (value) => {
-      item.date = value;
-      return true;
-    }));
+    tr.appendChild(textCell(formatBR(item.date)));
     tr.appendChild(doneCell(item));
   }
-
-  const actionsTd = document.createElement('td');
-  actionsTd.appendChild(iconButton('✕', 'Excluir', () => deleteItem(project, ws, item)));
-  tr.appendChild(actionsTd);
 
   return tr;
 }
 
-function commitField(input, getValue, apply) {
-  input.addEventListener('change', () => {
-    const value = getValue();
-    const ok = apply(value);
-    if (ok === false) {
-      renderTable();
-      return;
-    }
-    saveState();
-    renderTable();
-  });
-}
-
-function textCell(value, apply) {
+function textCell(value) {
   const td = document.createElement('td');
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'cell-input';
-  input.value = value;
-  commitField(input, () => input.value, apply);
-  td.appendChild(input);
-  return td;
-}
-
-function dateCell(value, apply) {
-  const td = document.createElement('td');
-  const input = document.createElement('input');
-  input.type = 'date';
-  input.className = 'cell-input cell-date';
-  input.value = value;
-  commitField(input, () => input.value, (v) => {
-    if (!v) { showToast('Informe uma data.'); return false; }
-    return apply(v);
-  });
-  td.appendChild(input);
+  td.textContent = value;
   return td;
 }
 
 function progressCell(item) {
   const td = document.createElement('td');
-  const input = document.createElement('input');
-  input.type = 'number';
-  input.min = '0';
-  input.max = '100';
-  input.step = '5';
-  input.className = 'cell-input cell-number';
   const actual = Math.min(100, Math.max(0, item.progress || 0));
-  input.value = actual;
   const expected = computeExpectedProgress(item);
-  input.classList.add('status-' + progressStatusClass(actual, expected));
-  commitField(input, () => Math.min(100, Math.max(0, Number(input.value) || 0)), (v) => {
-    item.progress = v;
-    return true;
-  });
-  td.appendChild(input);
+  const span = document.createElement('span');
+  span.className = 'progress-value status-' + progressStatusClass(actual, expected);
+  span.textContent = actual + '%';
+  td.appendChild(span);
   return td;
 }
 
@@ -278,17 +181,9 @@ function expectedCell(item) {
 function doneCell(item) {
   const td = document.createElement('td');
   td.className = 'done-cell';
-  const label = document.createElement('label');
-  label.className = 'done-checkbox-label';
-  const checkbox = document.createElement('input');
-  checkbox.type = 'checkbox';
-  checkbox.checked = !!item.done;
-  checkbox.addEventListener('change', () => {
-    item.done = checkbox.checked;
-    saveState();
-    renderTable();
-  });
-  label.appendChild(checkbox);
+  const label = document.createElement('span');
+  label.className = 'done-status' + (item.done ? ' done-yes' : '');
+  label.textContent = item.done ? 'Sim' : 'Não';
   td.appendChild(label);
 
   const isPast = parseDate(item.date) < parseDate(todayISO());
@@ -308,95 +203,7 @@ function emptyCell() {
   return td;
 }
 
-function smallButton(label, onClick) {
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'btn-ghost btn-small';
-  btn.textContent = label;
-  btn.addEventListener('click', onClick);
-  return btn;
-}
-
-function iconButton(symbol, title, onClick) {
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'btn-icon';
-  btn.textContent = symbol;
-  btn.title = title;
-  btn.addEventListener('click', onClick);
-  return btn;
-}
-
-/* ------------------------------- Ações ------------------------------- */
-
-function addProjectPrompt() {
-  const name = window.prompt('Nome do novo projeto:');
-  if (name === null) return;
-  const trimmed = name.trim();
-  if (!trimmed) { showToast('Informe um nome para o projeto.'); return; }
-  const color = PALETTE[state.projects.length % PALETTE.length];
-  state.projects.push({ id: uid('p'), name: trimmed, color, collapsed: false, workstreams: [] });
-  saveState();
-  renderTable();
-  showToast('Projeto criado.');
-}
-
-function addWorkstream(project) {
-  const name = window.prompt('Nome da nova workstream:');
-  if (name === null) return;
-  const trimmed = name.trim();
-  if (!trimmed) { showToast('Informe um nome para a workstream.'); return; }
-  project.workstreams.push({ id: uid('ws'), name: trimmed, items: [] });
-  saveState();
-  renderTable();
-  showToast('Workstream criada.');
-}
-
-function addTask(project, ws) {
-  const start = todayISO();
-  const end = toISO(addDays(parseDate(start), 14));
-  ws.items.push({ id: uid('t'), type: 'task', name: 'Nova tarefa', start, end, progress: 0 });
-  saveState();
-  renderTable();
-  showToast('Tarefa criada — edite os campos na tabela.');
-}
-
-function addMilestone(project, ws) {
-  ws.items.push({ id: uid('m'), type: 'milestone', name: 'Novo marco', date: todayISO(), done: false });
-  saveState();
-  renderTable();
-  showToast('Marco criado — edite os campos na tabela.');
-}
-
-function deleteProject(project) {
-  if (!window.confirm(`Excluir o projeto "${project.name}" e todas as suas workstreams?`)) return;
-  state.projects = state.projects.filter((p) => p.id !== project.id);
-  saveState();
-  renderTable();
-  showToast('Projeto excluído.');
-}
-
-function deleteWorkstream(project, ws) {
-  if (!window.confirm(`Excluir a workstream "${ws.name}" e todos os seus itens?`)) return;
-  project.workstreams = project.workstreams.filter((w) => w.id !== ws.id);
-  saveState();
-  renderTable();
-  showToast('Workstream excluída.');
-}
-
-function deleteItem(project, ws, item) {
-  const kind = item.type === 'task' ? 'tarefa' : 'marco';
-  if (!window.confirm(`Excluir ${kind} "${item.name}"?`)) return;
-  ws.items = ws.items.filter((i) => i.id !== item.id);
-  saveState();
-  renderTable();
-  showToast(kind[0].toUpperCase() + kind.slice(1) + ' excluído(a).');
-}
-
 /* ---------------------------------- Init ------------------------------------ */
-
-document.getElementById('addProjectBtn').addEventListener('click', addProjectPrompt);
-document.getElementById('emptyAddProjectBtn').addEventListener('click', addProjectPrompt);
 
 renderTable();
 

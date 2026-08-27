@@ -71,7 +71,7 @@ body { display: flex; flex-direction: column; height: 100vh; }
 }
 .scale-btn.active { background: var(--panel); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
 
-.btn-primary, .btn-ghost, .btn-icon {
+.btn-ghost {
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
@@ -84,42 +84,9 @@ body { display: flex; flex-direction: column; height: 100vh; }
   display: inline-flex;
   align-items: center;
   text-decoration: none;
+  background: var(--panel); color: var(--text); border-color: var(--border-strong);
 }
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { background: #2a45b8; }
-.btn-ghost { background: var(--panel); color: var(--text); border-color: var(--border-strong); }
 .btn-ghost:hover { background: var(--surface); }
-.btn-icon {
-  background: transparent; border: none; color: var(--text-muted);
-  width: 24px; height: 24px; padding: 0; border-radius: 5px;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 15px; line-height: 1;
-}
-.btn-icon:hover { background: var(--surface); color: var(--text); }
-
-/* ---------- Menu de opções (toolbar) ---------- */
-.options-wrap { position: relative; }
-.btn-options { font-size: 16px; font-weight: 700; padding: 6px 11px; letter-spacing: 1px; }
-.options-menu {
-  /* position: fixed (não absolute) de propósito — no mobile, .toolbar-right
-     tem overflow-x: auto pra caber os botões numa tela estreita, e isso
-     cortaria um menu posicionado de forma absoluta relativa a ela. Top/
-     right exatos são calculados via JS (shared.js) ao abrir. */
-  position: fixed; z-index: 95;
-  background: var(--panel); border: 1px solid var(--border-strong); border-radius: 10px;
-  box-shadow: var(--shadow); padding: 8px; min-width: 200px;
-  flex-direction: column; gap: 3px;
-}
-.options-menu[hidden] { display: none; }
-.options-menu:not([hidden]) { display: flex; }
-.options-divider { height: 1px; background: var(--border); margin: 4px 2px; }
-.options-item {
-  font-family: inherit; font-size: 12.5px; font-weight: 600; text-align: left;
-  background: transparent; border: none; color: var(--text); border-radius: 6px;
-  padding: 7px 8px; cursor: pointer; width: 100%;
-}
-.options-item:hover { background: var(--surface); }
-.options-item-primary { color: var(--accent); }
 
 /* ---------- Layout ---------- */
 .roadmap-wrapper { flex: 1 1 auto; position: relative; overflow: hidden; }
@@ -225,13 +192,6 @@ body { display: flex; flex-direction: column; height: 100vh; }
   font-weight: 600; font-size: 13px; cursor: default;
 }
 .row.workstream-row .label-text { font-weight: 500; color: var(--text-muted); font-size: 12.5px; }
-.label-text:hover { text-decoration: underline dotted; }
-/* Projeto não é mais editável clicando no nome — sem sublinhado de hover,
-   que sugeria essa ação (workstream continua editável, mantém o efeito). */
-.row.project-row .label-text:hover { text-decoration: none; }
-
-.row-actions { display: none; align-items: center; gap: 2px; flex: 0 0 auto; }
-.row:hover .row-actions { display: flex; }
 
 .timeline-cell {
   position: relative;
@@ -362,30 +322,6 @@ body { display: flex; flex-direction: column; height: 100vh; }
 .progress-numbers .sep { color: var(--text-faint); font-weight: 400; margin: 0 2px; }
 .progress-numbers .expected { color: var(--text-faint); font-weight: 600; }
 
-/* ---------- Modal ---------- */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6);
-  display: flex; align-items: center; justify-content: center; z-index: 100;
-}
-.modal-overlay[hidden] { display: none; }
-.modal {
-  background: var(--panel); border-radius: 12px; box-shadow: var(--shadow);
-  width: 380px; max-width: calc(100vw - 40px); padding: 20px;
-}
-.modal h2 { margin: 0 0 14px; font-size: 15.5px; font-weight: 700; }
-.field { margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px; }
-.field label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
-.field input[type="text"], .field input[type="date"], .field select {
-  border: 1px solid var(--border-strong); border-radius: 6px; padding: 7px 9px;
-  font-size: 13px; font-family: inherit; color: var(--text); background: var(--panel);
-  width: 100%;
-}
-.field input[type="color"] { width: 44px; height: 30px; padding: 2px; border: 1px solid var(--border-strong); border-radius: 6px; cursor: pointer; }
-.modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
-.modal-actions-right { display: flex; gap: 8px; }
-.btn-danger { background: none; border: none; color: var(--danger); font-weight: 600; font-size: 12.5px; cursor: pointer; padding: 6px 4px; }
-.btn-danger:hover { text-decoration: underline; }
-
 /* ---------- Popover ---------- */
 .popover {
   position: absolute; z-index: 90; background: var(--panel); border: 1px solid var(--border-strong);
@@ -447,21 +383,10 @@ body { display: flex; flex-direction: column; height: 100vh; }
 
 .group-header-content { display: flex; align-items: center; gap: 10px; }
 .project-header-row td { background: var(--bg); border-top: 2px solid var(--border-strong); padding: 10px; }
-.project-header-row .group-name-input { font-weight: 700; font-size: 13.5px; max-width: 320px; }
+.group-name-text { font-weight: 700; font-size: 13.5px; }
 .ws-header-row td { background: var(--surface); padding: 7px 10px 7px 30px; }
-.ws-header-row .group-name-input { font-weight: 600; font-size: 12.5px; color: var(--text-muted); max-width: 300px; }
-.group-header-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
-.btn-small { padding: 5px 10px; font-size: 11.5px; }
+.ws-header-row .group-name-text { font-weight: 600; font-size: 12.5px; color: var(--text-muted); }
 
-.color-input { width: 26px; height: 26px; padding: 0; border: 1px solid var(--border-strong); border-radius: 6px; cursor: pointer; flex: 0 0 auto; }
-
-.cell-input {
-  border: 1px solid transparent; background: transparent; border-radius: 5px;
-  padding: 5px 7px; font: inherit; color: var(--text); width: 100%;
-}
-.cell-input:hover, .cell-input:focus { border-color: var(--border-strong); background: var(--panel); }
-.cell-date { width: 140px; }
-.cell-number { width: 70px; }
 .type-badge {
   display: inline-block; padding: 2px 8px; border-radius: 20px;
   font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
@@ -471,24 +396,17 @@ body { display: flex; flex-direction: column; height: 100vh; }
 
 .expected-cell, .empty-cell { color: var(--text-faint); font-size: 12.5px; }
 .done-cell { display: flex; align-items: center; gap: 8px; }
-.done-checkbox-label { display: inline-flex; align-items: center; cursor: pointer; }
-.done-checkbox-label input { width: 16px; height: 16px; cursor: pointer; }
+.done-status { font-size: 12.5px; color: var(--text-muted); }
+.done-status.done-yes { color: #1c9e6b; font-weight: 600; }
 .overdue-flag { font-size: 11px; font-weight: 700; color: var(--danger); }
 
-.cell-number.status-on-track { color: #1c9e6b; }
-.cell-number.status-slightly-behind { color: #e0762f; }
-.cell-number.status-behind { color: var(--danger); }
-.cell-number.status-complete { color: var(--text-faint); }
+.progress-value.status-on-track { color: #1c9e6b; }
+.progress-value.status-slightly-behind { color: #e0762f; }
+.progress-value.status-behind { color: var(--danger); }
+.progress-value.status-complete { color: var(--text-faint); }
 
-/* ---------- Telas de toque: alvos maiores, ações sempre visíveis ---------- */
+/* ---------- Telas de toque: alvos maiores ---------- */
 @media (hover: none) {
-  .row-actions { display: flex; }
-  /* Editar/excluir workstream ficam escondidos por padrão pra liberar
-     espaço pro texto — só aparecem tocando na linha (:hover cobre isso
-     no desktop; no touch a área toda vira alvo por causa do row-actions
-     acima). Projeto e tarefa não têm mais essas ações (view-only). */
-  .btn-icon.secondary-action { display: none; }
-  .btn-icon { width: 30px; height: 30px; font-size: 15px; }
   .chevron { flex: 0 0 22px; width: 22px; height: 22px; font-size: 11px; }
   .scale-btn { padding: 7px 12px; }
 }
@@ -927,8 +845,8 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
     padding-bottom: 3px;
   }
   .toolbar-right::-webkit-scrollbar { height: 4px; }
-  .scale-switch, .btn-primary, .btn-ghost { flex: 0 0 auto; }
-  .btn-primary, .btn-ghost { padding: 7px 10px; font-size: 12px; }
+  .scale-switch, .btn-ghost { flex: 0 0 auto; }
+  .btn-ghost { padding: 7px 10px; font-size: 12px; }
 
   .label-cell { padding: 0 4px 0 6px; gap: 4px; align-items: center; }
   .row.project-row .label-cell { padding-left: 16px; }
@@ -962,11 +880,7 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   .header-tier-label.fine { font-size: 10px; }
   .header-tier-label.unit-day { font-size: 9px; }
 
-  .modal { width: calc(100vw - 24px); max-width: calc(100vw - 24px); padding: 16px; }
-
   .table-wrapper { padding: 12px; }
-  .project-header-row .group-name-input, .ws-header-row .group-name-input { max-width: 140px; }
-  .cell-date { width: 118px; }
 
   /* Tabela mais compacta: menos espaçamento e fonte menor para caber mais
      linhas na tela sem exigir tanta rolagem. */
@@ -975,9 +889,6 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   .data-table td { padding: 4px 8px; }
   .project-header-row td { padding: 7px 8px; }
   .ws-header-row td { padding: 5px 8px 5px 22px; }
-  .cell-input { padding: 3px 5px; }
-  .cell-number { width: 56px; }
-  .btn-small { padding: 4px 8px; font-size: 10.5px; }
 
   /* Painel flutuante do mapa: em telas estreitas, 280px fixos deixam
      pouco mapa visível — encolhe e some com a margem direita. */
