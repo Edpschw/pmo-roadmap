@@ -62,6 +62,41 @@ let featureByProject = {};
 let pocosData = {};
 let pdData = {};
 
+// Ordem cronológica fixa das rodadas/ciclos de licitação que arremataram os
+// 30 projetos rastreados — não dá pra ordenar as strings alfabeticamente:
+// "Rodada 2" (bare, Norte de Carcará) é a 2ª Rodada de CONCESSÃO (ano 2000);
+// "Rodada 2 (PP)" (Entorno de Sapinhoá) é a 2ª Rodada de PARTILHA (2017) —
+// dois sistemas de numeração completamente diferentes que só coincidem no
+// número. Cada entrada é [chaves brutas do campo "rodada", rótulo de
+// exibição por extenso com o ano] — mais de uma chave bruta pro mesmo
+// balde porque o mesmo leilão aparece com convenção de nome diferente
+// conforme o shapefile de origem (Mero, que empresta feature de
+// campos_presal.geojson, cita "Rodada 1 (PP)" pro mesmo leilão que Libra,
+// de contratos.geojson, chama "Partilha 1").
+const RODADA_ORDER = [
+  [['Rodada 2'], '2ª Rodada Concessão (2000)'],
+  [['Cessão Onerosa'], 'Cessão Onerosa (2010)'],
+  [['Partilha 1', 'Rodada 1 (PP)'], '1ª Rodada Partilha (2013)'],
+  [['Rodada 2 (PP)'], '2ª Rodada Partilha (2017)'],
+  [['Partilha 3'], '3ª Rodada Partilha (2017)'],
+  [['Partilha 4'], '4ª Rodada Partilha (2018)'],
+  [['Partilha 5'], '5ª Rodada Partilha (2018)'],
+  [['Partilha 6'], '6ª Rodada Partilha (2019)'],
+  [['OPP1'], 'Oferta Permanente — 1º Ciclo (2022)'],
+  [['OPP2'], 'Oferta Permanente — 2º Ciclo (2023)'],
+  [['OPP3'], 'Oferta Permanente — 3º Ciclo (2025)'],
+];
+// Sul de Gato do Mato não tem feature em contratos.geojson (sem poligonal
+// na ANP, ver PROJECTS_WITHOUT_SHAPE em mapa.js) — mesma rodada de Entorno
+// de Sapinhoá (2ª Rodada de Partilha, 2017, ver fonteObs do bloco em
+// data/planos_desenvolvimento.json), sem outra fonte estruturada pra puxar
+// isso automaticamente.
+const RODADA_OVERRIDE = { 'Sul de Gato do Mato': 'Rodada 2 (PP)' };
+function rodadaOf(project) {
+  const feat = featureByProject[project.name];
+  return (feat && feat.properties.rodada) || RODADA_OVERRIDE[project.name] || null;
+}
+
 /* -------------------------------- Helpers -------------------------------- */
 
 function fmtNum(n, opts) {
@@ -235,6 +270,7 @@ function computeProjectRow(project) {
     operador: props ? props.operador : null,
     bacia: props ? props.bacia : null,
     areaKm2: props && props.area_km2 ? props.area_km2 : null,
+    rodada: rodadaOf(project),
     leilaoYear,
     wellsTotal: wc.total,
     wellCounts: wc.counts,
@@ -244,6 +280,7 @@ function computeProjectRow(project) {
     leadTimeYears,
     stoiip: volumes && volumes.oleoInSituMMbbl != null ? volumes.oleoInSituMMbbl : null,
     recOleo: volumes && volumes.reservaProvada && volumes.reservaProvada.oleoMMbbl != null ? volumes.reservaProvada.oleoMMbbl : null,
+    excedenteOleoPct: pd && pd.excedenteOleoPct != null ? pd.excedenteOleoPct : null,
     participacao: participacaoText(pd),
     pdKey: pd ? pd.fonte : null,
     comercialidade: pd ? pd.comercialidade : null,
@@ -352,6 +389,174 @@ function renderKPIRow(container, agg) {
     `Dado parcial — só ${agg.recCount} projeto(s) com essa figura no PD`,
   ));
   container.appendChild(row);
+}
+
+// Uma barra por rodada/ciclo (ver RODADA_ORDER), ordem cronológica — não
+// por contagem — pra ler como uma linha do tempo de licitações, não um
+// ranking. Cor única (var(--accent)): mesma lógica de renderWellTypeChart,
+// é contagem de uma categoria só por eixo, sem outra série pra comparar
+// dentro da mesma barra.
+function renderBlocksByRodadaChart(container, projects) {
+  const counts = new Map();
+  for (const p of projects) {
+    const r = rodadaOf(p);
+    if (!r) continue;
+    if (!counts.has(r)) counts.set(r, []);
+    counts.get(r).push(p.name);
+  }
+  const data = RODADA_ORDER
+    .map(([keys, label]) => ({ label, names: keys.flatMap((k) => counts.get(k) || []) }))
+    .filter((r) => r.names.length > 0);
+  if (!data.length) return;
+
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+  const title = document.createElement('h3');
+  title.className = 'chart-card-title';
+  title.textContent = 'Blocos arrematados por rodada';
+  const sub = document.createElement('p');
+  sub.className = 'chart-card-subtitle';
+  sub.textContent = `Os ${projects.length} projetos rastreados, pela rodada/ciclo de licitação da ANP em que cada bloco foi arrematado — ordem cronológica, da mais antiga à mais recente.`;
+  card.appendChild(title);
+  card.appendChild(sub);
+
+  const list = document.createElement('div');
+  list.className = 'hbar-list';
+  const max = Math.max(...data.map((r) => r.names.length));
+  for (const r of data) {
+    const row = document.createElement('div');
+    row.className = 'hbar-row';
+    const name = document.createElement('div');
+    name.className = 'hbar-name';
+    name.textContent = r.label;
+    name.title = r.label;
+    const track = document.createElement('div');
+    track.className = 'hbar-track';
+    const fill = document.createElement('div');
+    fill.className = 'hbar-fill';
+    fill.style.width = Math.max(3, (r.names.length / max) * 100) + '%';
+    fill.style.background = 'var(--accent)';
+    fill.tabIndex = 0;
+    attachTooltip(fill, () => `<strong>${escapeHtml(r.label)}</strong>`
+      + tooltipRowHTML('Blocos', String(r.names.length))
+      + `<div class="viz-tooltip-row"><span>${escapeHtml(r.names.join(', '))}</span></div>`);
+    track.appendChild(fill);
+    const value = document.createElement('div');
+    value.className = 'hbar-value';
+    value.textContent = String(r.names.length);
+    track.appendChild(value);
+    row.appendChild(name);
+    row.appendChild(track);
+    list.appendChild(row);
+  }
+  card.appendChild(list);
+  container.appendChild(card);
+}
+
+// "Profit oil" = óleo lucro/excedente em óleo — a fatia do óleo excedente
+// (depois do custo em óleo) que vai pra União, ofertada no leilão de cada
+// bloco. Conceito específico do regime de Partilha de Produção (não existe
+// em Concessão/Cessão Onerosa, que pagam royalties + participação especial
+// em vez disso) — por isso a lista cobre só os blocos de Partilha, nunca
+// os 30 projetos inteiros. rows já vem por projeto (ver computeProjectRow),
+// não por jazida — cada bloco arrematado tem sua própria oferta de leilão,
+// mesmo quando duas entradas depois viram a mesma jazida compartilhada.
+function renderProfitOilChart(container, rows) {
+  const withPct = rows.filter((r) => r.excedenteOleoPct != null).sort((a, b) => b.excedenteOleoPct - a.excedenteOleoPct);
+  if (!withPct.length) return;
+
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+  const title = document.createElement('h3');
+  title.className = 'chart-card-title';
+  title.textContent = 'Profit oil por bloco (% de excedente em óleo)';
+  const sub = document.createElement('p');
+  sub.className = 'chart-card-subtitle';
+  sub.textContent = `Percentual do óleo excedente ofertado à União no leilão de cada bloco — o "profit oil" do regime de Partilha de Produção. Só se aplica a contrato de Partilha (não a Concessão/Cessão Onerosa, que não têm esse mecanismo) — ${withPct.length} dos 30 projetos rastreados, pesquisado por rodada (ver data/planos_desenvolvimento.json).`;
+  card.appendChild(title);
+  card.appendChild(sub);
+
+  const list = document.createElement('div');
+  list.className = 'hbar-list';
+  const max = Math.max(...withPct.map((r) => r.excedenteOleoPct));
+  for (const r of withPct) {
+    const row = document.createElement('div');
+    row.className = 'hbar-row';
+    const label = displayName(r);
+    const name = document.createElement('div');
+    name.className = 'hbar-name';
+    name.textContent = label;
+    name.title = label;
+    const track = document.createElement('div');
+    track.className = 'hbar-track';
+    const fill = document.createElement('div');
+    fill.className = 'hbar-fill';
+    fill.style.width = Math.max(3, (r.excedenteOleoPct / max) * 100) + '%';
+    fill.style.background = r.color;
+    fill.tabIndex = 0;
+    attachTooltip(fill, () => `<strong>${escapeHtml(label)}</strong>` + tooltipRowHTML('Profit oil', `${r.excedenteOleoPct.toLocaleString('pt-BR')}%`));
+    track.appendChild(fill);
+    const value = document.createElement('div');
+    value.className = 'hbar-value';
+    value.textContent = r.excedenteOleoPct.toLocaleString('pt-BR') + '%';
+    track.appendChild(value);
+    row.appendChild(name);
+    row.appendChild(track);
+    list.appendChild(row);
+  }
+  card.appendChild(list);
+  container.appendChild(card);
+}
+
+// STOIIP por PROJETO (não por jazida — ver renderStoiipChart, a versão
+// agrupada usada dentro de "Campos em Produção") — visão de portfólio
+// inteiro logo na Visão Geral, cobrindo os 30 projetos rastreados
+// (produção + exploração + devolvidos), não só os já em produção.
+function renderStoiipByBlockChart(container, rows) {
+  const withStoiip = rows.filter((r) => r.stoiip != null).sort((a, b) => b.stoiip - a.stoiip);
+  if (!withStoiip.length) return;
+
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+  const title = document.createElement('h3');
+  title.className = 'chart-card-title';
+  title.textContent = 'STOIIP estimado por bloco (óleo in situ)';
+  const sub = document.createElement('p');
+  sub.className = 'chart-card-subtitle';
+  sub.textContent = `Volume de óleo em place estimado, por projeto rastreado — só os ${withStoiip.length} de 30 com Plano de Desenvolvimento público (a maioria dos blocos ainda em exploração não tem essa figura, só divulgada depois de comercialidade + PD aprovado).`;
+  card.appendChild(title);
+  card.appendChild(sub);
+
+  const list = document.createElement('div');
+  list.className = 'hbar-list';
+  const max = Math.max(...withStoiip.map((r) => r.stoiip));
+  for (const r of withStoiip) {
+    const row = document.createElement('div');
+    row.className = 'hbar-row';
+    const label = displayName(r);
+    const name = document.createElement('div');
+    name.className = 'hbar-name';
+    name.textContent = label;
+    name.title = label;
+    const track = document.createElement('div');
+    track.className = 'hbar-track';
+    const fill = document.createElement('div');
+    fill.className = 'hbar-fill';
+    fill.style.width = Math.max(3, (r.stoiip / max) * 100) + '%';
+    fill.style.background = r.color;
+    fill.tabIndex = 0;
+    attachTooltip(fill, () => `<strong>${escapeHtml(label)}</strong>` + tooltipRowHTML('STOIIP', `${fmtNum(r.stoiip)} MMbbl`));
+    track.appendChild(fill);
+    const value = document.createElement('div');
+    value.className = 'hbar-value';
+    value.textContent = fmtNum(r.stoiip) + ' MMbbl';
+    track.appendChild(value);
+    row.appendChild(name);
+    row.appendChild(track);
+    list.appendChild(row);
+  }
+  card.appendChild(list);
+  container.appendChild(card);
 }
 
 // Contrato rastreado e campo de contexto que citam o mesmo Plano de
@@ -1169,7 +1374,14 @@ async function init() {
 
   const kpiSection = document.createElement('section');
   kpiSection.className = 'analytics-section';
+  const kpiTitle = document.createElement('h2');
+  kpiTitle.className = 'analytics-section-title';
+  kpiTitle.textContent = 'Visão Geral';
+  kpiSection.appendChild(kpiTitle);
   renderKPIRow(kpiSection, agg);
+  renderBlocksByRodadaChart(kpiSection, state.projects);
+  renderProfitOilChart(kpiSection, rows);
+  renderStoiipByBlockChart(kpiSection, rows);
   renderWellTypeChart(kpiSection, pocosData, outrosPocos);
   wrapper.appendChild(kpiSection);
 
