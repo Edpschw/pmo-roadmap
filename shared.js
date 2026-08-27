@@ -420,6 +420,7 @@ const COMPANY_LOGO_FILES = {
   'Equinor': 'assets/logos/equinor.png',
   'BP': 'assets/logos/bp.png',
   'Galp': 'assets/logos/galp.png',
+  'Repsol Sinopec': 'assets/logos/repsol-sinopec.png',
 };
 
 function companyBadge(rawName) {
