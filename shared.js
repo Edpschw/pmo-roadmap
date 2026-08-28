@@ -438,6 +438,7 @@ const COMPANY_LOGO_FILES = {
   'PRIO': 'assets/logos/prio.png',
   'Karoon': 'assets/logos/karoon.png',
   'ExxonMobil': 'assets/logos/exxonmobil.png',
+  'Ecopetrol': 'assets/logos/ecopetrol.png',
 };
 
 function companyBadge(rawName) {
