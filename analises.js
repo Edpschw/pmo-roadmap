@@ -13,6 +13,7 @@
    ========================================================================= */
 
 const PD_URL = 'data/planos_desenvolvimento.json';
+const POCOS_URL = 'data/pocos.json';
 // Campos de contexto do pré-sal (ver mapa.js) — regime de Concessão ou
 // Cessão Onerosa, bem anterior à Lei da Partilha (2010); nenhum dos 30
 // projetos rastreados (Mero, o único campo de contexto em Partilha, virou
@@ -229,6 +230,35 @@ function computeAggregates(contractRows) {
   return { byGroup, totalProjects: contractRows.length, fpsoInstalled, fpsoPlanned };
 }
 
+// Todos os poços da base ANP/BDEP (data/pocos.json), um por nome — os 30
+// contratos rastreados + campos de contexto + poços sem campo nomeado
+// ("outros"), deduplicados (o mesmo poço pode aparecer sob mais de uma
+// chave, ver CONTRACT_WELL_OVERLAP em shared.js). Universo completo, não
+// só os 30 projetos, porque os dois números pedidos aqui (furados no ano +
+// em perfuração agora) são sobre o play inteiro, não por projeto.
+function allWells(pocosData, outrosPocos) {
+  const byName = new Map();
+  for (const wells of Object.values(pocosData)) {
+    for (const w of wells) byName.set(w.n, w);
+  }
+  for (const w of outrosPocos) byName.set(w.n, w);
+  return [...byName.values()];
+}
+
+// "d" é a data de conclusão (ver mapa.js/wellPopupHTML) — pros poços ainda
+// em perfuração, é a data do último boletim, então "furados no ano" conta
+// só quem já concluiu (sit !== EM PERFURAÇÃO); "em perfuração" é a
+// situação atual, sem filtrar por ano (não teria sentido: perfurando agora
+// é sempre "neste ano").
+function computeWellAggregates(pocosData, outrosPocos) {
+  const wells = allWells(pocosData, outrosPocos);
+  const year = new Date().getFullYear();
+  const yearStr = String(year);
+  const emPerfuracao = wells.filter((w) => w.sit === 'EM PERFURAÇÃO');
+  const furadosNoAno = wells.filter((w) => w.d && w.d.slice(0, 4) === yearStr && w.sit !== 'EM PERFURAÇÃO');
+  return { year, furadosNoAno: furadosNoAno.length, emPerfuracao: emPerfuracao.length };
+}
+
 /* -------------------------------- Barra ------------------------------------ */
 // Uma linha de barra horizontal — mesmo bloco reaproveitado por todo
 // gráfico desta tela.
@@ -295,7 +325,7 @@ function statTile(label, value, sub) {
   return div;
 }
 
-function renderExecutiveKpis(container, agg) {
+function renderExecutiveKpis(container, agg, wellAgg) {
   const row = document.createElement('div');
   row.className = 'kpi-row';
   row.appendChild(statTile(
@@ -305,6 +335,14 @@ function renderExecutiveKpis(container, agg) {
   row.appendChild(statTile(
     'FPSOs em operação', fmtNum(agg.fpsoInstalled),
     `+ ${agg.fpsoPlanned} previstos`,
+  ));
+  row.appendChild(statTile(
+    `Poços furados em ${wellAgg.year}`, fmtNum(wellAgg.furadosNoAno),
+    'Base ANP/BDEP, todo o play do pré-sal — concluídos neste ano',
+  ));
+  row.appendChild(statTile(
+    'Poços em perfuração', fmtNum(wellAgg.emPerfuracao),
+    `Situação atual (${wellAgg.year})`,
   ));
   container.appendChild(row);
 }
@@ -345,8 +383,8 @@ function renderContractsByYearChart(container, contractRows) {
   container.appendChild(card);
 }
 
-function renderExecutivePage(container, contractRows, agg) {
-  renderExecutiveKpis(container, agg);
+function renderExecutivePage(container, contractRows, agg, wellAgg) {
+  renderExecutiveKpis(container, agg, wellAgg);
   renderContractsByYearChart(container, contractRows);
 }
 
@@ -523,13 +561,16 @@ function buildTabSwitch(tabs, onChange) {
 async function init() {
   const wrapper = document.getElementById('analyticsWrapper');
   let presalGeojson = null;
+  let pocosJson = null;
   try {
-    const [pd, presal] = await Promise.all([
+    const [pd, presal, pocos] = await Promise.all([
       fetch(PD_URL).then((r) => r.json()),
       fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
+      fetch(POCOS_URL).then((r) => r.json()),
     ]);
     pdData = pd;
     presalGeojson = presal;
+    pocosJson = pocos;
   } catch (err) {
     console.error('Falha ao carregar dados de análise', err);
   }
@@ -547,6 +588,7 @@ async function init() {
   const fieldRows = presalFeatures.map(computeFieldRow);
   const jazidaRows = computeJazidaRows(contractRows, fieldRows);
   const agg = computeAggregates(contractRows);
+  const wellAgg = computeWellAggregates(pocosJson ? pocosJson.pocos || {} : {}, pocosJson ? pocosJson.outros || [] : []);
 
   wrapper.innerHTML = '';
 
@@ -567,7 +609,7 @@ async function init() {
   wrapper.appendChild(execSection);
   wrapper.appendChild(portSection);
 
-  renderExecutivePage(execSection, contractRows, agg);
+  renderExecutivePage(execSection, contractRows, agg, wellAgg);
   renderPortfolioPage(portSection, jazidaRows);
 }
 
