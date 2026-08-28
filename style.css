@@ -677,6 +677,21 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   text-transform: uppercase; letter-spacing: .05em; margin: 0 0 10px;
 }
 
+/* Alterna entre a página Executivo e a página Portfolio — mesmo par
+   .scale-switch/.scale-btn do seletor de escala do roadmap (ver app.js),
+   fora da toolbar mas com o mesmo visual de par de botões. */
+.analytics-tab-switch { margin: 0 auto 20px; max-width: 1180px; }
+
+/* ---- KPI: linha de "stat tiles" ---- */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.stat-tile {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;
+}
+.stat-tile-label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.stat-tile-value { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; }
+.stat-tile-sub { font-size: 11px; color: var(--text-faint); line-height: 1.4; }
+
 /* ---- Cartão de gráfico ---- */
 .chart-card {
   background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
@@ -709,19 +724,6 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 }
 .hbar-row-total { display: flex; align-items: center; }
 
-/* ---- Grupo por jazida (STOIIP + TP + profit oil combinados) ---- */
-.jazida-combo-group { padding: 12px 0; border-top: 1px solid var(--border); }
-.jazida-combo-group:first-of-type { padding-top: 4px; border-top: none; }
-.jazida-combo-header { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; margin-bottom: 8px; }
-.jazida-combo-metric { margin-bottom: 8px; }
-.jazida-combo-metric:last-child { margin-bottom: 0; }
-.jazida-combo-metric-label {
-  font-size: 10px; font-weight: 700; color: var(--text-faint); text-transform: uppercase;
-  letter-spacing: .04em; margin: 0 0 4px 0;
-}
-.jazida-combo-metric-note { font-size: 11px; color: var(--text-faint); font-style: italic; }
-
-/* ---- Colunas verticais (FPSOs por ano) ---- */
 /* Bolinha da cor da entidade — usada tanto em título de cartão (poços por
    contrato) quanto em cabeçalho de grupo (jazida-combo-header). */
 .proj-dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 9px; display: inline-block; }
@@ -864,8 +866,8 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   .map-panel { top: 8px; right: 8px; width: min(240px, calc(100vw - 60px)); }
 
   /* Análises: nome do projeto some da barra horizontal (cabe só a barra +
-     valor) e o gráfico de colunas por ano rola na horizontal em vez de
-     espremer cada coluna até sumir. */
+     valor); KPIs empilham em colunas mais estreitas. */
   .hbar-row { grid-template-columns: 74px 1fr; }
   .hbar-name { font-size: 10.5px; }
+  .kpi-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 }
