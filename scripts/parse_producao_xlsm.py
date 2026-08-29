@@ -31,15 +31,14 @@ import argparse
 import json
 import re
 import sys
-import unicodedata
 from pathlib import Path
 
 import openpyxl
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-DATA_PATH = REPO_ROOT / 'data' / 'producao.json'
-
-METRIC_KEYS = ['oleoPreSalBbld', 'oleoPosSalBbld', 'gasPreSalMm3d', 'gasPosSalMm3d', 'boedPreSal', 'boedPosSal']
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from producao_common import (  # noqa: E402
+    METRIC_KEYS, REPO_ROOT, DATA_PATH, clean_field_name, load_existing, save, strip_accents, upsert_month,
+)
 
 # Nome da aba muda de posição/vizinhas entre edições (nº de abas varia),
 # mas o texto "Dados de Produção" (com o número "2." na frente ou não) é
@@ -62,20 +61,6 @@ MONTH_NAME_TO_NUM = {
 }
 
 
-def strip_accents(s):
-    return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
-
-
-def clean_field_name(raw):
-    # Tira marcador de nota de rodapé colado no nome ("Jubarte³") — só os
-    # dígitos sobrescritos ¹²³ observados nesta base, direto ou via
-    # unicodedata (normaliza "³" pra "3" e some com dígito solto no fim).
-    s = str(raw).strip()
-    s = re.sub(r'[¹²³⁴⁵⁶⁷⁸⁹⁰]+$', '', s)
-    s = re.sub(r'\s+', ' ', s).strip()
-    return s
-
-
 def to_num(v):
     return float(v) if v is not None else 0.0
 
@@ -90,17 +75,53 @@ def find_field_table(wb):
     return None
 
 
+# O número de linhas de cabeçalho entre o título e o primeiro campo MUDA
+# por edição — a maioria tem título / linha em branco / cabeçalho "Campo |
+# Petróleo | Gás natural | Produção" / subcabeçalho "Pré-sal | Pós-sal |
+# ..." (4 linhas antes do primeiro campo), mas algumas (confirmado em
+# fev/2025) já trazem o texto completo da coluna numa única linha de
+# cabeçalho ("Petróleo (bbl/d) Pré Sal" etc.), sem subcabeçalho separado —
+# 3 linhas antes do primeiro campo, não 4. Assumir 4 sempre pulava a
+# primeira linha de dado da tabela — que é sempre o maior produtor do mês
+# (a tabela vem ordenada por produção decrescente), então o campo que
+# sumia era sempre Tupi (ver bug reportado: "Tupi quase sem produção" em
+# vários meses — não era queda real, era essa linha pulada). Por isso a
+# busca aqui é pelo conteúdo, não por offset fixo: acha a linha de
+# cabeçalho ("Campo" na coluna B) e, a partir dela, a primeira linha
+# seguinte que já parece dado de verdade (texto na coluna B + pelo menos
+# um número nas colunas de métrica) — pula quantas linhas de subcabeçalho
+# existirem no meio (0 ou 1, conforme a edição) sem precisar saber de
+# antemão quantas são.
+def find_data_start(sheet, title_row):
+    header_row = None
+    for i in range(title_row + 1, min(title_row + 8, sheet.max_row) + 1):
+        cell = sheet.cell(row=i, column=2).value
+        if cell is not None and str(cell).strip().lower() == 'campo':
+            header_row = i
+            break
+    if header_row is None:
+        return None
+    for i in range(header_row + 1, min(header_row + 4, sheet.max_row) + 1):
+        nome = sheet.cell(row=i, column=2).value
+        if nome is None or str(nome).strip() == '':
+            continue
+        vals = [sheet.cell(row=i, column=c).value for c in range(3, 9)]
+        if any(isinstance(v, (int, float)) for v in vals):
+            return i
+    return None
+
+
 def parse_xlsm(path):
     wb = openpyxl.load_workbook(path, data_only=True)
     found = find_field_table(wb)
     if not found:
         raise RuntimeError('Tabela de produção por campo do pré-sal não encontrada (nenhuma aba/título reconhecido).')
     sheet, title_row = found
-    # title_row+1: linha em branco. title_row+2: cabeçalho "Campo |
-    # Petróleo | Gás natural | Produção". title_row+3: subcabeçalho
-    # "Pré-sal | Pós-sal | ...". Dados começam em title_row+4.
+    data_start = find_data_start(sheet, title_row)
+    if data_start is None:
+        raise RuntimeError('Cabeçalho "Campo" não encontrado logo após o título da tabela — layout não reconhecido.')
     campos = {}
-    for row in sheet.iter_rows(min_row=title_row + 4, max_row=sheet.max_row, values_only=True):
+    for row in sheet.iter_rows(min_row=data_start, max_row=sheet.max_row, values_only=True):
         if len(row) < 8:
             continue
         nome_raw = row[1]
@@ -140,29 +161,6 @@ def infer_ano_mes(filename, url=None):
         if name in normalized:
             return ano, num
     raise RuntimeError(f'Não consegui inferir o mês a partir de "{filename}".')
-
-
-def load_existing():
-    if DATA_PATH.exists():
-        return json.loads(DATA_PATH.read_text(encoding='utf-8'))
-    return {'fonte': {}, 'meses': []}
-
-
-def upsert_month(existing, ano, mes, campos, url):
-    existing.setdefault('meses', [])
-    existing['meses'] = [m for m in existing['meses'] if not (m['ano'] == ano and m['mes'] == mes)]
-    entry = {'ano': ano, 'mes': mes, 'campos': campos}
-    if url:
-        entry['fonteUrl'] = url
-    existing['meses'].append(entry)
-    existing['meses'].sort(key=lambda m: (m['ano'], m['mes']))
-    return existing
-
-
-def save(existing):
-    existing.setdefault('fonte', {})
-    existing['fonte']['nome'] = 'ANP — Boletim da Produção de Petróleo e Gás Natural (pré-sal)'
-    DATA_PATH.write_text(json.dumps(existing, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 
 def main():

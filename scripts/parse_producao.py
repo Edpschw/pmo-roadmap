@@ -30,8 +30,8 @@ from pathlib import Path
 
 import pypdf
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-DATA_PATH = REPO_ROOT / 'data' / 'producao.json'
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from producao_common import REPO_ROOT, DATA_PATH, load_existing, save, upsert_month  # noqa: E402
 
 # "Nome do campo<glifo> 875.527,49 28.467,01 ..." (com decimais) ou
 # "Nome do campo<glifo> 787.080 0 39.702 0 ..." (só inteiro, edições mais
@@ -142,29 +142,6 @@ def parse_pdf(pdf_path):
         if ano and mes and len(campos) >= 5:
             return ano, mes, campos
     raise RuntimeError(f'Tabela "{TABLE_TITLE}" não encontrada (ou layout não reconhecido) neste PDF.')
-
-
-def load_existing():
-    if DATA_PATH.exists():
-        return json.loads(DATA_PATH.read_text(encoding='utf-8'))
-    return {'fonte': {}, 'meses': []}
-
-
-def upsert_month(existing, ano, mes, campos, url):
-    existing.setdefault('meses', [])
-    existing['meses'] = [m for m in existing['meses'] if not (m['ano'] == ano and m['mes'] == mes)]
-    entry = {'ano': ano, 'mes': mes, 'campos': campos}
-    if url:
-        entry['fonteUrl'] = url
-    existing['meses'].append(entry)
-    existing['meses'].sort(key=lambda m: (m['ano'], m['mes']))
-    return existing
-
-
-def save(existing):
-    existing.setdefault('fonte', {})
-    existing['fonte']['nome'] = 'ANP — Boletim da Produção de Petróleo e Gás Natural (pré-sal)'
-    DATA_PATH.write_text(json.dumps(existing, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 
 def main():
