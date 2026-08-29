@@ -214,11 +214,55 @@ function computeFieldRows(campos, projects, knownNames) {
 // cada campo de contexto separado desde o início.
 function computeMonthlySeries(meses, projects) {
   const knownNames = allFieldNames(meses);
-  return meses.map((mes) => {
+  const raw = meses.map((mes) => {
     const rows = computeFieldRows(mes.campos, projects, knownNames).map((r) => (
       r.isContract ? r : { ...r, color: colorForCompany(r.name) }
     ));
     return { ano: mes.ano, mes: mes.mes, rows };
+  });
+  return groupSmallContextFields(raw);
+}
+
+// Campo de contexto (fora dos 7 rastreados) que nunca passou de 50 mil
+// bbl/d de petróleo pré-sal em NENHUM mês do histórico inteiro vira uma
+// linha cinza só, "Campos menores", somando todos esses juntos por mês —
+// evita 20+ linhas minúsculas disputando espaço com as grandes. O corte
+// usa sempre petróleo (bbl/d) e o máximo do campo em TODO o período, não
+// o valor do mês nem a unidade escolhida no momento (gás/boe/RGO) — sem
+// isso um campo trocaria de grupo (linha própria ↔ "Campos menores") só
+// por variar de mês pra mês perto do limiar, ou ao trocar de aba de
+// unidade, o que quebraria a cor/posição na legenda entre uma visita e
+// outra.
+const SMALL_FIELD_THRESHOLD_BBLD = 50000;
+const SMALL_FIELDS_LABEL = 'Campos menores';
+function groupSmallContextFields(monthlySeries) {
+  const maxOleo = new Map();
+  for (const m of monthlySeries) {
+    for (const r of m.rows) {
+      if (r.isContract) continue;
+      maxOleo.set(r.name, Math.max(maxOleo.get(r.name) || 0, r.oleoPreSalBbld));
+    }
+  }
+  const smallNames = new Set([...maxOleo.entries()].filter(([, v]) => v < SMALL_FIELD_THRESHOLD_BBLD).map(([k]) => k));
+  if (!smallNames.size) return monthlySeries;
+
+  return monthlySeries.map((m) => {
+    const kept = m.rows.filter((r) => r.isContract || !smallNames.has(r.name));
+    const smallRows = m.rows.filter((r) => !r.isContract && smallNames.has(r.name));
+    if (!smallRows.length) return { ...m, rows: kept };
+    const sum = emptyMetrics();
+    for (const r of smallRows) {
+      for (const k of METRIC_KEYS) sum[k] += r[k];
+    }
+    kept.push({
+      name: SMALL_FIELDS_LABEL,
+      color: CONTEXT_FIELD_COLOR,
+      isContract: false,
+      parts: smallRows.flatMap((r) => r.parts),
+      ...sum,
+      rgo: computeRGO(sum.oleoPreSalBbld, sum.gasPreSalMm3d),
+    });
+    return { ...m, rows: kept };
   });
 }
 
