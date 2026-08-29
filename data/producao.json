@@ -1,10 +1,4366 @@
 {
   "fonte": {
-    "nome": "ANP — Boletim da Produção de Petróleo e Gás Natural (pré-sal)",
-    "urlBase": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/boletins/arquivos-bmppgn",
-    "ultimaImportacaoUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/boletins/arquivos-bmppgn/2025/dezembro.pdf"
+    "nome": "ANP — Boletim da Produção de Petróleo e Gás Natural (pré-sal)"
   },
   "meses": [
+    {
+      "ano": 2024,
+      "mes": 6,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 787080.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 39702.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1036801.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 690300.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 29338.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 874832.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 240863.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 15825.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 340401.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 142330.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 6805.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 185133.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 139266.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5098.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 171331.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 126984.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4903.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 157819.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 78193.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1021.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 84614.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 73027.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 953.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 79024.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 67268.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1220.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 74939.0,
+          "boedPosSal": 0.0
+        },
+        "Sururu": {
+          "oleoPreSalBbld": 55884.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1897.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 67817.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 53207.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1828.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 64705.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 47196.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2196.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 61010.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 47273.0,
+          "oleoPosSalBbld": 64830.0,
+          "gasPreSalMm3d": 1815.0,
+          "gasPosSalMm3d": 726.0,
+          "boedPreSal": 58686.0,
+          "boedPosSal": 69394.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 26370.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1018.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 32773.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 16738.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1346.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 25203.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 19119.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 700.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23521.0,
+          "boedPosSal": 0.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 15287.0,
+          "oleoPosSalBbld": 20176.0,
+          "gasPreSalMm3d": 256.0,
+          "gasPosSalMm3d": 359.0,
+          "boedPreSal": 16899.0,
+          "boedPosSal": 22431.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 14111.0,
+          "oleoPosSalBbld": 3672.0,
+          "gasPreSalMm3d": 237.0,
+          "gasPosSalMm3d": 55.0,
+          "boedPreSal": 15599.0,
+          "boedPosSal": 4021.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 8736.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 574.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 12346.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 10176.0,
+          "oleoPosSalBbld": 38162.0,
+          "gasPreSalMm3d": 300.0,
+          "gasPosSalMm3d": 629.0,
+          "boedPreSal": 12062.0,
+          "boedPosSal": 42118.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 5289.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 156.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 6269.0,
+          "boedPosSal": 0.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 4455.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 189.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5647.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3536.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 165.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4571.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 3212.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 154.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4178.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 2672.0,
+          "oleoPosSalBbld": 77650.0,
+          "gasPreSalMm3d": 33.0,
+          "gasPosSalMm3d": 1288.0,
+          "boedPreSal": 2880.0,
+          "boedPosSal": 85753.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1868.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 89.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2430.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1471.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 57.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1828.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 389.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 19.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 506.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 368.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 11.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 436.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2024/junho.pdf"
+    },
+    {
+      "ano": 2024,
+      "mes": 7,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 731925.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 37498.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 967781.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 637392.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 26713.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 805414.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 302114.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 19914.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 427369.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 141830.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5173.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 174364.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 126324.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 6338.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 166192.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 104566.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 3960.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 129475.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 70317.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 936.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 76201.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 65672.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 874.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 71167.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 62760.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1155.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 70025.0,
+          "boedPosSal": 0.0
+        },
+        "Sururu": {
+          "oleoPreSalBbld": 54390.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1902.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 66357.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 47427.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1638.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 57730.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 46459.0,
+          "oleoPosSalBbld": 64111.0,
+          "gasPreSalMm3d": 1762.0,
+          "gasPosSalMm3d": 685.0,
+          "boedPreSal": 57543.0,
+          "boedPosSal": 68422.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 43524.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2048.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 56408.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 21714.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 822.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 26887.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 17040.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1455.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 26194.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 19471.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 710.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23937.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 10958.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 722.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 15500.0,
+          "boedPosSal": 0.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 12094.0,
+          "oleoPosSalBbld": 19124.0,
+          "gasPreSalMm3d": 214.0,
+          "gasPosSalMm3d": 349.0,
+          "boedPreSal": 13438.0,
+          "boedPosSal": 21320.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 11164.0,
+          "oleoPosSalBbld": 3217.0,
+          "gasPreSalMm3d": 197.0,
+          "gasPosSalMm3d": 50.0,
+          "boedPreSal": 12404.0,
+          "boedPosSal": 3532.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 9804.0,
+          "oleoPosSalBbld": 28478.0,
+          "gasPreSalMm3d": 285.0,
+          "gasPosSalMm3d": 481.0,
+          "boedPreSal": 11596.0,
+          "boedPosSal": 31505.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 5096.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 148.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 6027.0,
+          "boedPosSal": 0.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 4114.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 172.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5198.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3261.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 153.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4226.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 2850.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 143.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 3750.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 2164.0,
+          "oleoPosSalBbld": 53126.0,
+          "gasPreSalMm3d": 29.0,
+          "gasPosSalMm3d": 952.0,
+          "boedPreSal": 2344.0,
+          "boedPosSal": 59112.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1658.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 83.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2181.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1211.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 46.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1500.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 345.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 17.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 454.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 355.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 10.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 420.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2024/julho.pdf"
+    },
+    {
+      "ano": 2024,
+      "mes": 8,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 832602.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 43192.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1104272.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 605555.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 25818.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 767943.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 317261.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 21117.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 450081.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 134292.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 6384.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 174447.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 141320.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5163.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 173797.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 115666.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4166.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 141867.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 78721.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1060.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 85389.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 73521.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 990.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 79748.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 65475.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1173.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 72851.0,
+          "boedPosSal": 0.0
+        },
+        "Sururu": {
+          "oleoPreSalBbld": 57761.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1978.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 70200.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 50933.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2460.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 66407.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 45267.0,
+          "oleoPosSalBbld": 65037.0,
+          "gasPreSalMm3d": 1732.0,
+          "gasPosSalMm3d": 645.0,
+          "boedPreSal": 56163.0,
+          "boedPosSal": 69095.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 45832.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1578.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 55758.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 24019.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 865.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 29460.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 17936.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1539.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 27615.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 19401.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 709.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23859.0,
+          "boedPosSal": 0.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 14789.0,
+          "oleoPosSalBbld": 16039.0,
+          "gasPreSalMm3d": 246.0,
+          "gasPosSalMm3d": 346.0,
+          "boedPreSal": 16335.0,
+          "boedPosSal": 18218.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 11507.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 766.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 16324.0,
+          "boedPosSal": 0.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 13651.0,
+          "oleoPosSalBbld": 3978.0,
+          "gasPreSalMm3d": 227.0,
+          "gasPosSalMm3d": 61.0,
+          "boedPreSal": 15078.0,
+          "boedPosSal": 4361.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 9190.0,
+          "oleoPosSalBbld": 31960.0,
+          "gasPreSalMm3d": 283.0,
+          "gasPosSalMm3d": 519.0,
+          "boedPreSal": 10973.0,
+          "boedPosSal": 35225.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4777.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 147.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5703.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3816.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 184.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4975.0,
+          "boedPosSal": 0.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 3908.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 167.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4957.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 3030.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 144.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 3936.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1763.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 84.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2290.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1340.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 48.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1643.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 367.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 17.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 476.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 332.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 10.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 397.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2024/agosto.pdf"
+    },
+    {
+      "ano": 2024,
+      "mes": 9,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 850913.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 43589.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1125080.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 673855.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 28119.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 850718.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 374487.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 24903.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 531121.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 135177.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 6415.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 175528.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 139281.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5218.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 172102.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 126669.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4512.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 155047.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 77390.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1043.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 83947.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 72277.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 974.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 78401.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 65215.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1185.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 72667.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 58065.0,
+          "oleoPosSalBbld": 62352.0,
+          "gasPreSalMm3d": 2073.0,
+          "gasPosSalMm3d": 600.0,
+          "boedPreSal": 71102.0,
+          "boedPosSal": 66127.0
+        },
+        "Sururu": {
+          "oleoPreSalBbld": 57606.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1974.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 70021.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 51999.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2462.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 67487.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 50956.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1754.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 61988.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 26304.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 937.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 32197.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 17413.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1589.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 27410.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 19121.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 716.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23626.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 13582.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 903.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 19263.0,
+          "boedPosSal": 0.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 12176.0,
+          "oleoPosSalBbld": 12440.0,
+          "gasPreSalMm3d": 218.0,
+          "gasPosSalMm3d": 289.0,
+          "boedPreSal": 13544.0,
+          "boedPosSal": 14260.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 11240.0,
+          "oleoPosSalBbld": 3033.0,
+          "gasPreSalMm3d": 201.0,
+          "gasPosSalMm3d": 50.0,
+          "boedPreSal": 12502.0,
+          "boedPosSal": 3347.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 9886.0,
+          "oleoPosSalBbld": 32281.0,
+          "gasPreSalMm3d": 292.0,
+          "gasPosSalMm3d": 508.0,
+          "boedPreSal": 11720.0,
+          "boedPosSal": 35475.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 5139.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 152.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 6092.0,
+          "boedPosSal": 0.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 4349.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 181.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5491.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3896.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 184.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5056.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 3050.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 145.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 3961.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1774.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 84.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2304.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1467.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 52.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1796.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 369.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 18.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 479.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 358.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 11.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 424.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2024/setembro.pdf"
+    },
+    {
+      "ano": 2024,
+      "mes": 10,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 770786.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 39052.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1016416.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 560168.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 24012.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 711198.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 365349.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 24104.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 516962.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 136801.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5302.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 170149.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 129216.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 6148.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 167884.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 131605.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4886.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 162339.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 77838.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1051.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 84451.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 72696.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 982.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 78872.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 50291.0,
+          "oleoPosSalBbld": 62909.0,
+          "gasPreSalMm3d": 1813.0,
+          "gasPosSalMm3d": 622.0,
+          "boedPreSal": 61695.0,
+          "boedPosSal": 66823.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 46547.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2157.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 60116.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 48800.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1786.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 60034.0,
+          "boedPosSal": 0.0
+        },
+        "Sururu": {
+          "oleoPreSalBbld": 45798.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1550.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 55545.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 45477.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 863.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 50908.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 27329.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1015.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 33712.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 18780.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 728.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23358.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 12376.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1141.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 19551.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 13251.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 874.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 18750.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 9574.0,
+          "oleoPosSalBbld": 33969.0,
+          "gasPreSalMm3d": 300.0,
+          "gasPosSalMm3d": 600.0,
+          "boedPreSal": 11460.0,
+          "boedPosSal": 37745.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 8284.0,
+          "oleoPosSalBbld": 9715.0,
+          "gasPreSalMm3d": 140.0,
+          "gasPosSalMm3d": 236.0,
+          "boedPreSal": 9165.0,
+          "boedPosSal": 11202.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 7646.0,
+          "oleoPosSalBbld": 1617.0,
+          "gasPreSalMm3d": 129.0,
+          "gasPosSalMm3d": 29.0,
+          "boedPreSal": 8460.0,
+          "boedPosSal": 1802.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4976.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 156.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5957.0,
+          "boedPosSal": 0.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 3616.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 155.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4590.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3487.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 162.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4504.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 2916.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 139.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 3788.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1696.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 81.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2204.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1524.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 57.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1880.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 1045.0,
+          "oleoPosSalBbld": 33958.0,
+          "gasPreSalMm3d": 19.0,
+          "gasPosSalMm3d": 498.0,
+          "boedPreSal": 1165.0,
+          "boedPosSal": 37091.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 353.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 17.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 458.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 346.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 11.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 415.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2024/outubro.pdf"
+    },
+    {
+      "ano": 2024,
+      "mes": 11,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 775537.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 38658.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1018687.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 596844.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 25199.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 755339.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 414409.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 27287.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 586039.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 134447.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5339.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 168025.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 119302.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4388.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 146902.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 88989.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4169.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 115210.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 81623.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1076.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 88392.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 76231.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1005.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 82552.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 60155.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1106.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 67114.0,
+          "boedPosSal": 0.0
+        },
+        "Sururu": {
+          "oleoPreSalBbld": 51183.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1710.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 61939.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 47649.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2190.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 61426.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 42213.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1548.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 51952.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 24774.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 911.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 30506.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 16061.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1538.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 25736.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 20152.0,
+          "oleoPosSalBbld": 37946.0,
+          "gasPreSalMm3d": 644.0,
+          "gasPosSalMm3d": 344.0,
+          "boedPreSal": 24199.0,
+          "boedPosSal": 40112.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 18457.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 733.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23067.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 15030.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 990.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 21255.0,
+          "boedPosSal": 0.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 9810.0,
+          "oleoPosSalBbld": 9430.0,
+          "gasPreSalMm3d": 184.0,
+          "gasPosSalMm3d": 229.0,
+          "boedPreSal": 10970.0,
+          "boedPosSal": 10871.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 8970.0,
+          "oleoPosSalBbld": 43345.0,
+          "gasPreSalMm3d": 278.0,
+          "gasPosSalMm3d": 711.0,
+          "boedPreSal": 10719.0,
+          "boedPosSal": 47818.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 9056.0,
+          "oleoPosSalBbld": 2007.0,
+          "gasPreSalMm3d": 170.0,
+          "gasPosSalMm3d": 33.0,
+          "boedPreSal": 10126.0,
+          "boedPosSal": 2216.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4662.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 145.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5571.0,
+          "boedPosSal": 0.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 3852.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 163.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4875.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3570.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 164.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4602.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 2721.0,
+          "oleoPosSalBbld": 66566.0,
+          "gasPreSalMm3d": 43.0,
+          "gasPosSalMm3d": 1362.0,
+          "boedPreSal": 2989.0,
+          "boedPosSal": 75135.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 2008.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 94.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2600.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1382.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 51.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1702.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1168.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 55.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1512.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 324.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 10.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 388.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 243.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 11.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 315.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2024/novembro.pdf"
+    },
+    {
+      "ano": 2024,
+      "mes": 12,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 839908.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 42007.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1104126.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 556277.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 23311.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 702899.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 418180.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 27726.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 592574.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 129101.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5172.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 161630.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 125159.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4407.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 152876.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 93850.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4447.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 121823.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 82034.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1095.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 88920.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 76615.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1022.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 83046.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 63469.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1117.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 70497.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 51473.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2371.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 66387.0,
+          "boedPosSal": 0.0
+        },
+        "Sururu": {
+          "oleoPreSalBbld": 53905.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1745.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 64882.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 46943.0,
+          "oleoPosSalBbld": 51735.0,
+          "gasPreSalMm3d": 1601.0,
+          "gasPosSalMm3d": 537.0,
+          "boedPreSal": 57014.0,
+          "boedPosSal": 55116.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 45893.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1581.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 55839.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 25991.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 915.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 31747.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 15694.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1533.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 25334.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 17723.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 710.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 22189.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 15167.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1006.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 21492.0,
+          "boedPosSal": 0.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 8047.0,
+          "oleoPosSalBbld": 9810.0,
+          "gasPreSalMm3d": 159.0,
+          "gasPosSalMm3d": 229.0,
+          "boedPreSal": 9048.0,
+          "boedPosSal": 11248.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 7428.0,
+          "oleoPosSalBbld": 1946.0,
+          "gasPreSalMm3d": 147.0,
+          "gasPosSalMm3d": 37.0,
+          "boedPreSal": 8352.0,
+          "boedPosSal": 2178.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 6720.0,
+          "oleoPosSalBbld": 43474.0,
+          "gasPreSalMm3d": 198.0,
+          "gasPosSalMm3d": 694.0,
+          "boedPreSal": 7966.0,
+          "boedPosSal": 47840.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 5562.0,
+          "oleoPosSalBbld": 18630.0,
+          "gasPreSalMm3d": 89.0,
+          "gasPosSalMm3d": 264.0,
+          "boedPreSal": 6123.0,
+          "boedPosSal": 20292.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3856.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 178.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4973.0,
+          "boedPosSal": 0.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 3590.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 150.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4537.0,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 3493.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 103.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4140.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 3524.0,
+          "oleoPosSalBbld": 80043.0,
+          "gasPreSalMm3d": 54.0,
+          "gasPosSalMm3d": 1549.0,
+          "boedPreSal": 3863.0,
+          "boedPosSal": 89787.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 2118.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 100.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2749.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1450.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 51.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1771.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1232.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 58.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1599.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 256.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 12.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 333.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 243.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 7.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 288.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2024/dezembro.pdf"
+    },
+    {
+      "ano": 2025,
+      "mes": 1,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 788490.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 40492.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1043176.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 652442.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 28473.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 831534.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 424480.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 28066.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 601009.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 129224.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5229.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 162110.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 118936.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5645.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 154442.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 99935.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 3521.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 122081.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 81508.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1118.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 88539.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 76123.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1044.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 82690.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 58629.0,
+          "oleoPosSalBbld": 65071.0,
+          "gasPreSalMm3d": 2165.0,
+          "gasPosSalMm3d": 714.0,
+          "boedPreSal": 72246.0,
+          "boedPosSal": 69559.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 46886.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2195.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 60695.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 44696.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1513.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 54211.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 45955.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1034.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 52460.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 20753.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 731.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 25352.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 17740.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 718.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 22255.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 15396.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1018.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 21798.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 18598.0,
+          "oleoPosSalBbld": 35380.0,
+          "gasPreSalMm3d": 325.0,
+          "gasPosSalMm3d": 598.0,
+          "boedPreSal": 20644.0,
+          "boedPosSal": 39138.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 9225.0,
+          "oleoPosSalBbld": 10198.0,
+          "gasPreSalMm3d": 165.0,
+          "gasPosSalMm3d": 239.0,
+          "boedPreSal": 10262.0,
+          "boedPosSal": 11700.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 6430.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 597.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 10186.0,
+          "boedPosSal": 0.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 8516.0,
+          "oleoPosSalBbld": 1682.0,
+          "gasPreSalMm3d": 152.0,
+          "gasPosSalMm3d": 39.0,
+          "boedPreSal": 9473.0,
+          "boedPosSal": 1925.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 4211.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 184.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5367.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3512.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 164.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4547.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 2684.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 127.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 3485.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 3121.0,
+          "oleoPosSalBbld": 71314.0,
+          "gasPreSalMm3d": 54.0,
+          "gasPosSalMm3d": 1257.0,
+          "boedPreSal": 3461.0,
+          "boedPosSal": 79222.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 2635.0,
+          "oleoPosSalBbld": 31548.0,
+          "gasPreSalMm3d": 69.0,
+          "gasPosSalMm3d": 484.0,
+          "boedPreSal": 3066.0,
+          "boedPosSal": 34589.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1561.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 74.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2027.0,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 1369.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 36.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1594.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1158.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 41.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1414.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 325.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 15.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 422.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 95.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 111.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/janeiro.pdf"
+    },
+    {
+      "ano": 2025,
+      "mes": 2,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 760734.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 38169.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1000807.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 700822.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 30259.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 891144.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 429199.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 28311.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 607268.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 127263.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5930.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 164561.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 126941.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5151.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 159337.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 126929.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4534.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 155446.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 75519.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1036.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 82037.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 63255.0,
+          "oleoPosSalBbld": 61509.0,
+          "gasPreSalMm3d": 2327.0,
+          "gasPosSalMm3d": 639.0,
+          "boedPreSal": 77890.0,
+          "boedPosSal": 65530.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 70530.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 968.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 76617.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 44881.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2034.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 57678.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 44671.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1521.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 54238.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 41740.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1004.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 48057.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 26358.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 941.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 32280.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 22127.0,
+          "oleoPosSalBbld": 52430.0,
+          "gasPreSalMm3d": 413.0,
+          "gasPosSalMm3d": 678.0,
+          "boedPreSal": 24727.0,
+          "boedPosSal": 56692.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 15567.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1027.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 22025.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 17427.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 707.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 21874.0,
+          "boedPosSal": 0.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 9754.0,
+          "oleoPosSalBbld": 9848.0,
+          "gasPreSalMm3d": 180.0,
+          "gasPosSalMm3d": 256.0,
+          "boedPreSal": 10887.0,
+          "boedPosSal": 11457.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 9004.0,
+          "oleoPosSalBbld": 1942.0,
+          "gasPreSalMm3d": 166.0,
+          "gasPosSalMm3d": 46.0,
+          "boedPreSal": 10049.0,
+          "boedPosSal": 2233.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 5634.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 541.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 9036.0,
+          "boedPosSal": 0.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 4523.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 195.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5752.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3362.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 152.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4321.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 3471.0,
+          "oleoPosSalBbld": 21400.0,
+          "gasPreSalMm3d": 92.0,
+          "gasPosSalMm3d": 334.0,
+          "boedPreSal": 4050.0,
+          "boedPosSal": 23501.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 2872.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 134.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 3713.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1670.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 78.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2160.0,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 1804.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 48.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2105.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 1665.0,
+          "oleoPosSalBbld": 58945.0,
+          "gasPreSalMm3d": 34.0,
+          "gasPosSalMm3d": 1014.0,
+          "boedPreSal": 1876.0,
+          "boedPosSal": 65325.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1470.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 53.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1801.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 348.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 16.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 449.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 126.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 3.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 147.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/fevereiro.pdf"
+    },
+    {
+      "ano": 2025,
+      "mes": 3,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 780053.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 39151.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1026306.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 715042.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 31349.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 912222.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 454416.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 29949.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 642788.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 128317.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5272.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 161479.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 119947.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5717.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 155905.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 127106.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4542.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 155673.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 119061.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2798.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 136660.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 77476.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1082.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 84280.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 72358.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1010.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 78712.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 60194.0,
+          "oleoPosSalBbld": 58760.0,
+          "gasPreSalMm3d": 2123.0,
+          "gasPosSalMm3d": 559.0,
+          "boedPreSal": 73544.0,
+          "boedPosSal": 62278.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 46258.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2103.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 59486.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 43517.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1463.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 52717.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 26395.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 943.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 32327.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 16481.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1086.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23314.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 14818.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1315.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23087.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 17616.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 724.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 22168.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 18475.0,
+          "oleoPosSalBbld": 26609.0,
+          "gasPreSalMm3d": 355.0,
+          "gasPosSalMm3d": 326.0,
+          "boedPreSal": 20707.0,
+          "boedPosSal": 28662.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 9780.0,
+          "oleoPosSalBbld": 12481.0,
+          "gasPreSalMm3d": 185.0,
+          "gasPosSalMm3d": 284.0,
+          "boedPreSal": 10947.0,
+          "boedPosSal": 14268.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 9028.0,
+          "oleoPosSalBbld": 1615.0,
+          "gasPreSalMm3d": 171.0,
+          "gasPosSalMm3d": 36.0,
+          "boedPreSal": 10105.0,
+          "boedPosSal": 1839.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 8021.0,
+          "oleoPosSalBbld": 50302.0,
+          "gasPreSalMm3d": 229.0,
+          "gasPosSalMm3d": 784.0,
+          "boedPreSal": 9459.0,
+          "boedPosSal": 55237.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 4615.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 202.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5888.0,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4169.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 119.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4916.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3465.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 158.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4456.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 2707.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 129.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 3518.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1574.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 75.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2046.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1472.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 53.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1803.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 328.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 16.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 426.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 290.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 8.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 342.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 228.0,
+          "oleoPosSalBbld": 63817.0,
+          "gasPreSalMm3d": 4.0,
+          "gasPosSalMm3d": 1099.0,
+          "boedPreSal": 254.0,
+          "boedPosSal": 70731.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/marco.pdf"
+    },
+    {
+      "ano": 2025,
+      "mes": 4,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 783910.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 39810.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1034305.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 720578.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 31251.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 917142.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 455830.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 30179.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 645648.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 126567.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5261.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 159660.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 118028.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5653.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 153582.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 123675.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4444.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 151628.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 115856.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2808.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 133517.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 80863.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1117.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 87886.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 70580.0,
+          "oleoPosSalBbld": 57422.0,
+          "gasPreSalMm3d": 2529.0,
+          "gasPosSalMm3d": 558.0,
+          "boedPreSal": 86487.0,
+          "boedPosSal": 60929.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 75521.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1043.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 82080.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 45334.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2115.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 58637.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 42982.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1516.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 52516.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 25682.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 923.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 31487.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 16533.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1095.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23417.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 17375.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 722.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 21918.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 13895.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1224.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 21591.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 13625.0,
+          "oleoPosSalBbld": 21099.0,
+          "gasPreSalMm3d": 243.0,
+          "gasPosSalMm3d": 276.0,
+          "boedPreSal": 15156.0,
+          "boedPosSal": 22832.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 11089.0,
+          "oleoPosSalBbld": 18614.0,
+          "gasPreSalMm3d": 193.0,
+          "gasPosSalMm3d": 357.0,
+          "boedPreSal": 12305.0,
+          "boedPosSal": 20859.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 10236.0,
+          "oleoPosSalBbld": 2461.0,
+          "gasPreSalMm3d": 178.0,
+          "gasPosSalMm3d": 47.0,
+          "boedPreSal": 11359.0,
+          "boedPosSal": 2754.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 8451.0,
+          "oleoPosSalBbld": 44938.0,
+          "gasPreSalMm3d": 251.0,
+          "gasPosSalMm3d": 744.0,
+          "boedPreSal": 10028.0,
+          "boedPosSal": 49620.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 4651.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 202.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5920.0,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4392.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 130.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5212.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3396.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 158.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4393.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 2663.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 128.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 3466.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1549.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 74.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2016.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1433.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 51.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1756.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 322.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 15.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 419.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 306.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 9.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 363.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/abril.pdf"
+    },
+    {
+      "ano": 2025,
+      "mes": 5,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 822709.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 41002.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1080604.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 692815.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 30322.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 883533.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 499861.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 33066.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 707841.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 123664.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5102.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 155752.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 119526.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4391.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 147144.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 121377.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2895.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 139588.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 103541.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5219.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 136364.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 84679.0,
+          "oleoPosSalBbld": 51776.0,
+          "gasPreSalMm3d": 3159.0,
+          "gasPosSalMm3d": 530.0,
+          "boedPreSal": 104547.0,
+          "boedPosSal": 55107.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 80506.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1167.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 87843.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 75187.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1089.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 82040.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 49576.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2281.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 63925.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 43914.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1603.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 53997.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 24821.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 912.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 30556.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 18130.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1199.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 25673.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 16977.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 700.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 21382.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 13911.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1177.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 21312.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 14178.0,
+          "oleoPosSalBbld": 1356.0,
+          "gasPreSalMm3d": 254.0,
+          "gasPosSalMm3d": 18.0,
+          "boedPreSal": 15774.0,
+          "boedPosSal": 1467.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 8931.0,
+          "oleoPosSalBbld": 52050.0,
+          "gasPreSalMm3d": 261.0,
+          "gasPosSalMm3d": 857.0,
+          "boedPreSal": 10576.0,
+          "boedPosSal": 57438.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 4472.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 196.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5703.0,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4642.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 136.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5497.0,
+          "boedPosSal": 0.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 4553.0,
+          "oleoPosSalBbld": 12559.0,
+          "gasPreSalMm3d": 80.0,
+          "gasPosSalMm3d": 238.0,
+          "boedPreSal": 5056.0,
+          "boedPosSal": 14054.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3714.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 171.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4789.0,
+          "boedPosSal": 0.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 4203.0,
+          "oleoPosSalBbld": 1465.0,
+          "gasPreSalMm3d": 74.0,
+          "gasPosSalMm3d": 28.0,
+          "boedPreSal": 4667.0,
+          "boedPosSal": 1641.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 2336.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 118.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 3077.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1359.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 68.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1790.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1384.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 51.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1704.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 323.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 9.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 383.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 283.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 14.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 372.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/maio.pdf"
+    },
+    {
+      "ano": 2025,
+      "mes": 6,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 794598.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 40190.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1047386.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 744648.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 32741.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 950583.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 524923.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 34620.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 742673.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 126784.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5217.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 159601.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 114744.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5591.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 149911.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 114630.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4050.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 140103.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 120406.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2822.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 138154.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 89840.0,
+          "oleoPosSalBbld": 38010.0,
+          "gasPreSalMm3d": 3591.0,
+          "gasPosSalMm3d": 454.0,
+          "boedPreSal": 112424.0,
+          "boedPosSal": 40866.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 82484.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1325.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 90818.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 77034.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1237.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 84818.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 47486.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2235.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 61543.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 23804.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 841.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 29094.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 19039.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1256.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 26936.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 19097.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 773.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23957.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 21161.0,
+          "oleoPosSalBbld": 46679.0,
+          "gasPreSalMm3d": 372.0,
+          "gasPosSalMm3d": 536.0,
+          "boedPreSal": 23504.0,
+          "boedPosSal": 50048.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 15575.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1174.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 22962.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 17405.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 716.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 21910.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 8488.0,
+          "oleoPosSalBbld": 56527.0,
+          "gasPreSalMm3d": 256.0,
+          "gasPosSalMm3d": 947.0,
+          "boedPreSal": 10096.0,
+          "boedPosSal": 62484.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 4806.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 211.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 6135.0,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4412.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 133.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5248.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3557.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 167.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4610.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 2589.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 126.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 3383.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1506.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 73.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1968.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1328.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 47.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1623.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 313.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 15.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 409.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 307.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 9.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 365.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/junho.pdf"
+    },
+    {
+      "ano": 2025,
+      "mes": 7,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 799369.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 40533.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1054316.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 774226.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 34266.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 989751.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 585866.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 38575.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 828496.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 137955.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5206.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 170701.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 121286.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4276.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 148183.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 112858.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5457.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 147183.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 122104.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2980.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 140845.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 99321.0,
+          "oleoPosSalBbld": 66142.0,
+          "gasPreSalMm3d": 3993.0,
+          "gasPosSalMm3d": 714.0,
+          "boedPreSal": 124436.0,
+          "boedPosSal": 70634.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 81403.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1383.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 90102.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 76025.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1292.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 84149.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 47732.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2255.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 61916.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 41733.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1619.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 51917.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 25186.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 888.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 30772.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 21249.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1399.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 30049.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 18939.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 715.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23434.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 20934.0,
+          "oleoPosSalBbld": 45464.0,
+          "gasPreSalMm3d": 373.0,
+          "gasPosSalMm3d": 596.0,
+          "boedPreSal": 23278.0,
+          "boedPosSal": 49216.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 15375.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1078.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 22158.0,
+          "boedPosSal": 0.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 9630.0,
+          "oleoPosSalBbld": 13122.0,
+          "gasPreSalMm3d": 167.0,
+          "gasPosSalMm3d": 255.0,
+          "boedPreSal": 10682.0,
+          "boedPosSal": 14727.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 8742.0,
+          "oleoPosSalBbld": 58830.0,
+          "gasPreSalMm3d": 256.0,
+          "gasPosSalMm3d": 1016.0,
+          "boedPreSal": 10352.0,
+          "boedPosSal": 65224.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 8889.0,
+          "oleoPosSalBbld": 1413.0,
+          "gasPreSalMm3d": 154.0,
+          "gasPosSalMm3d": 25.0,
+          "boedPreSal": 9860.0,
+          "boedPosSal": 1570.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 4997.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 221.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 6388.0,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4544.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 133.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5381.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3576.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 169.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4638.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 2547.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 123.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 3321.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1481.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 72.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1932.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1405.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 50.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1716.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 308.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 15.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 402.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 316.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 9.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 374.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/julho.pdf"
+    },
+    {
+      "ano": 2025,
+      "mes": 8,
+      "campos": {
+        "Búzios": {
+          "oleoPreSalBbld": 821884.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 35771.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1046879.0,
+          "boedPosSal": 0.0
+        },
+        "Tupi": {
+          "oleoPreSalBbld": 780477.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 39148.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1026712.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 525861.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 34505.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 742889.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 138814.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5270.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 171961.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 118640.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5688.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 154419.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 121715.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4256.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 148487.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 109677.0,
+          "oleoPosSalBbld": 68282.0,
+          "gasPreSalMm3d": 4590.0,
+          "gasPosSalMm3d": 750.0,
+          "boedPreSal": 138545.0,
+          "boedPosSal": 72999.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 114493.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2743.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 131744.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 80571.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1402.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 89389.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 75248.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1309.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 83483.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 46142.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2148.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 59649.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 40893.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1596.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 50931.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 25276.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 884.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 30835.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 19073.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1251.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 26944.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 19057.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 723.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23607.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 20322.0,
+          "oleoPosSalBbld": 38816.0,
+          "gasPreSalMm3d": 403.0,
+          "gasPosSalMm3d": 571.0,
+          "boedPreSal": 22859.0,
+          "boedPosSal": 42405.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 13988.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 889.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 19579.0,
+          "boedPosSal": 0.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 12090.0,
+          "oleoPosSalBbld": 15560.0,
+          "gasPreSalMm3d": 198.0,
+          "gasPosSalMm3d": 262.0,
+          "boedPreSal": 13334.0,
+          "boedPosSal": 17209.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 11160.0,
+          "oleoPosSalBbld": 1367.0,
+          "gasPreSalMm3d": 183.0,
+          "gasPosSalMm3d": 21.0,
+          "boedPreSal": 12308.0,
+          "boedPosSal": 1499.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 7962.0,
+          "oleoPosSalBbld": 59576.0,
+          "gasPreSalMm3d": 241.0,
+          "gasPosSalMm3d": 979.0,
+          "boedPreSal": 9480.0,
+          "boedPosSal": 65734.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 5305.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 231.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 6757.0,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4138.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 125.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4927.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3457.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 161.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4469.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 2118.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 102.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2756.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 1704.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 82.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2218.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Jubarte_Sudoeste": {
+          "oleoPreSalBbld": 1737.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 73.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2194.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 1376.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 66.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1791.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1410.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 49.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1720.0,
+          "boedPosSal": 0.0
+        },
+        "Argonauta": {
+          "oleoPreSalBbld": 970.0,
+          "oleoPosSalBbld": 21879.0,
+          "gasPreSalMm3d": 41.0,
+          "gasPosSalMm3d": 229.0,
+          "boedPreSal": 1225.0,
+          "boedPosSal": 23317.0
+        },
+        "Anc_Jubarte_Nordeste": {
+          "oleoPreSalBbld": 395.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 17.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 499.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 288.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 9.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 343.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/agosto.pdf"
+    },
+    {
+      "ano": 2025,
+      "mes": 9,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 818079.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 40476.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1072665.0,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 772104.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 33004.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 979693.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 607141.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 39713.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 856931.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 137362.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5231.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 170263.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 122488.0,
+          "oleoPosSalBbld": 70292.0,
+          "gasPreSalMm3d": 4793.0,
+          "gasPosSalMm3d": 726.0,
+          "boedPreSal": 152633.0,
+          "boedPosSal": 74858.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 111862.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5380.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 145699.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 119290.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4163.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 145474.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 121948.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2981.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 140695.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 81856.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1440.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 90913.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 76449.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1345.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 84907.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 49939.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2314.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 64494.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 39188.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1568.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 49049.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 22021.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1440.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 31080.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 24772.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 864.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 30209.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 18857.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 718.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23374.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 15440.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1006.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 21766.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 18595.0,
+          "oleoPosSalBbld": 33537.0,
+          "gasPreSalMm3d": 341.0,
+          "gasPosSalMm3d": 527.0,
+          "boedPreSal": 20738.0,
+          "boedPosSal": 36854.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 10727.0,
+          "oleoPosSalBbld": 15311.0,
+          "gasPreSalMm3d": 196.0,
+          "gasPosSalMm3d": 297.0,
+          "boedPreSal": 11958.0,
+          "boedPosSal": 17177.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 9902.0,
+          "oleoPosSalBbld": 1303.0,
+          "gasPreSalMm3d": 181.0,
+          "gasPosSalMm3d": 23.0,
+          "boedPreSal": 11038.0,
+          "boedPosSal": 1448.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 8363.0,
+          "oleoPosSalBbld": 67481.0,
+          "gasPreSalMm3d": 263.0,
+          "gasPosSalMm3d": 1114.0,
+          "boedPreSal": 10018.0,
+          "boedPosSal": 74485.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 4983.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 213.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 6323.0,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4347.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 137.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5207.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3741.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 173.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4832.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1997.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 96.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2601.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Jubarte_Sudoeste": {
+          "oleoPreSalBbld": 1940.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 76.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2417.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 1607.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 77.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2093.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 1297.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 62.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1690.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1382.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 48.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1685.0,
+          "boedPosSal": 0.0
+        },
+        "Argonauta": {
+          "oleoPreSalBbld": 1083.0,
+          "oleoPosSalBbld": 21860.0,
+          "gasPreSalMm3d": 42.0,
+          "gasPosSalMm3d": 235.0,
+          "boedPreSal": 1350.0,
+          "boedPosSal": 23338.0
+        },
+        "Anc_Jubarte_Nordeste": {
+          "oleoPreSalBbld": 441.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 17.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 549.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 303.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 10.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 362.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/setembro.pdf"
+    },
+    {
+      "ano": 2025,
+      "mes": 10,
+      "campos": {
+        "Búzios": {
+          "oleoPreSalBbld": 884776.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 38012.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1123865.0,
+          "boedPosSal": 0.0
+        },
+        "Tupi": {
+          "oleoPreSalBbld": 779887.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 38636.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1022898.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 629530.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 41338.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 889540.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 136649.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5163.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 169121.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 125594.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4410.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 153330.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 117117.0,
+          "oleoPosSalBbld": 64305.0,
+          "gasPreSalMm3d": 4545.0,
+          "gasPosSalMm3d": 684.0,
+          "boedPreSal": 145706.0,
+          "boedPosSal": 68608.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 109629.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5373.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 143423.0,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 115887.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2767.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 133292.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 80227.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1434.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 89249.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 74927.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1340.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 83353.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 50455.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2333.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 65129.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 38440.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1602.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 48516.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 22833.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1499.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 32263.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 26081.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 916.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 31841.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 18759.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 709.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23217.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 18816.0,
+          "oleoPosSalBbld": 41187.0,
+          "gasPreSalMm3d": 340.0,
+          "gasPosSalMm3d": 645.0,
+          "boedPreSal": 20952.0,
+          "boedPosSal": 45246.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 13814.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 893.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 19429.0,
+          "boedPosSal": 0.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 9452.0,
+          "oleoPosSalBbld": 13320.0,
+          "gasPreSalMm3d": 182.0,
+          "gasPosSalMm3d": 244.0,
+          "boedPreSal": 10597.0,
+          "boedPosSal": 14852.0
+        },
+        "Bacalhau Norte": {
+          "oleoPreSalBbld": 7299.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 426.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 9980.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 8259.0,
+          "oleoPosSalBbld": 59843.0,
+          "gasPreSalMm3d": 245.0,
+          "gasPosSalMm3d": 1000.0,
+          "boedPreSal": 9800.0,
+          "boedPosSal": 66134.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 8725.0,
+          "oleoPosSalBbld": 1218.0,
+          "gasPreSalMm3d": 168.0,
+          "gasPosSalMm3d": 21.0,
+          "boedPreSal": 9782.0,
+          "boedPosSal": 1349.0
+        },
+        "Bacalhau": {
+          "oleoPreSalBbld": 6737.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 394.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 9212.0,
+          "boedPosSal": 0.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 5711.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 245.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 7254.0,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4293.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 127.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5094.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3780.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 175.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4879.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1957.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 96.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2560.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Jubarte_Sudoeste": {
+          "oleoPreSalBbld": 1855.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 72.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2307.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 1575.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 77.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2060.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1455.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 51.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1776.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 1525.0,
+          "oleoPosSalBbld": 65112.0,
+          "gasPreSalMm3d": 24.0,
+          "gasPosSalMm3d": 1308.0,
+          "boedPreSal": 1675.0,
+          "boedPosSal": 73337.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 1271.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 62.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1663.0,
+          "boedPosSal": 0.0
+        },
+        "Argonauta": {
+          "oleoPreSalBbld": 1036.0,
+          "oleoPosSalBbld": 23713.0,
+          "gasPreSalMm3d": 40.0,
+          "gasPosSalMm3d": 246.0,
+          "boedPreSal": 1289.0,
+          "boedPosSal": 25261.0
+        },
+        "Anc_Jubarte_Nordeste": {
+          "oleoPreSalBbld": 422.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 16.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 524.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 299.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 9.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 355.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/outubro.pdf"
+    },
+    {
+      "ano": 2025,
+      "mes": 11,
+      "campos": {
+        "Búzios": {
+          "oleoPreSalBbld": 744298.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 32386.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 948000.0,
+          "boedPosSal": 0.0
+        },
+        "Tupi": {
+          "oleoPreSalBbld": 681678.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 33361.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 891513.0,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 620636.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 40804.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 877288.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 138454.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5248.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 171462.0,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 125275.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4438.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 153191.0,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 115772.0,
+          "oleoPosSalBbld": 71072.0,
+          "gasPreSalMm3d": 4511.0,
+          "gasPosSalMm3d": 800.0,
+          "boedPreSal": 144145.0,
+          "boedPosSal": 76106.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 112471.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2753.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 129787.0,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 99224.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4851.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 129734.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 71459.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1287.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 79551.0,
+          "boedPosSal": 0.0
+        },
+        "Itapu_Eco": {
+          "oleoPreSalBbld": 66738.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1202.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 74296.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Tupi": {
+          "oleoPreSalBbld": 42938.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1957.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 55251.0,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 37892.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1598.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 47940.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Mero": {
+          "oleoPreSalBbld": 22510.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1480.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 31819.0,
+          "boedPosSal": 0.0
+        },
+        "Oeste de Atapu": {
+          "oleoPreSalBbld": 26015.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 922.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 31812.0,
+          "boedPosSal": 0.0
+        },
+        "Sépia Leste": {
+          "oleoPreSalBbld": 19007.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 720.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 23539.0,
+          "boedPosSal": 0.0
+        },
+        "Sul de Berbigão": {
+          "oleoPreSalBbld": 14075.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1083.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 20889.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 18483.0,
+          "oleoPosSalBbld": 36504.0,
+          "gasPreSalMm3d": 321.0,
+          "gasPosSalMm3d": 550.0,
+          "boedPreSal": 20505.0,
+          "boedPosSal": 39962.0
+        },
+        "Bacalhau Norte": {
+          "oleoPreSalBbld": 8288.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 431.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 11001.0,
+          "boedPosSal": 0.0
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 9304.0,
+          "oleoPosSalBbld": 15569.0,
+          "gasPreSalMm3d": 178.0,
+          "gasPosSalMm3d": 255.0,
+          "boedPreSal": 10421.0,
+          "boedPosSal": 17170.0
+        },
+        "Bacalhau": {
+          "oleoPreSalBbld": 7650.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 398.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 10155.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 8105.0,
+          "oleoPosSalBbld": 66824.0,
+          "gasPreSalMm3d": 244.0,
+          "gasPosSalMm3d": 1136.0,
+          "boedPreSal": 9643.0,
+          "boedPosSal": 73970.0
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 8589.0,
+          "oleoPosSalBbld": 1298.0,
+          "gasPreSalMm3d": 164.0,
+          "gasPosSalMm3d": 19.0,
+          "boedPreSal": 9620.0,
+          "boedPosSal": 1419.0
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 4804.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 209.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 6119.0,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4213.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 127.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5012.0,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 4041.0,
+          "oleoPosSalBbld": 60363.0,
+          "gasPreSalMm3d": 54.0,
+          "gasPosSalMm3d": 1110.0,
+          "boedPreSal": 4381.0,
+          "boedPosSal": 67346.0
+        },
+        "Anc_Tupi": {
+          "oleoPreSalBbld": 3217.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 147.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4139.0,
+          "boedPosSal": 0.0
+        },
+        "Noroeste de Sapinhoá": {
+          "oleoPreSalBbld": 1771.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 87.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2316.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Jubarte_Sudoeste": {
+          "oleoPreSalBbld": 1833.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 71.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 2283.0,
+          "boedPosSal": 0.0
+        },
+        "Sudoeste de Sapinhoá": {
+          "oleoPreSalBbld": 1425.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 70.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1863.0,
+          "boedPosSal": 0.0
+        },
+        "Anc_Norte_Atapu": {
+          "oleoPreSalBbld": 1451.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 51.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1774.0,
+          "boedPosSal": 0.0
+        },
+        "Nordeste de Sapinhoá": {
+          "oleoPreSalBbld": 1151.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 56.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1504.0,
+          "boedPosSal": 0.0
+        },
+        "Argonauta": {
+          "oleoPreSalBbld": 1024.0,
+          "oleoPosSalBbld": 13905.0,
+          "gasPreSalMm3d": 40.0,
+          "gasPosSalMm3d": 136.0,
+          "boedPreSal": 1275.0,
+          "boedPosSal": 14759.0
+        },
+        "Anc_Jubarte_Nordeste": {
+          "oleoPreSalBbld": 417.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 16.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 519.0,
+          "boedPosSal": 0.0
+        },
+        "Espadim": {
+          "oleoPreSalBbld": 293.0,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 9.0,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 349.0,
+          "boedPosSal": 0.0
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/novembro.pdf"
+    },
     {
       "ano": 2025,
       "mes": 12,
@@ -169,7 +4525,1034 @@
           "boedPreSal": 868.63,
           "boedPosSal": 0.0
         }
-      }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/dezembro.pdf"
+    },
+    {
+      "ano": 2026,
+      "mes": 1,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 917654.26,
+          "oleoPosSalBbld": 9642.99,
+          "gasPreSalMm3d": 45949.66,
+          "gasPosSalMm3d": 311.78,
+          "boedPreSal": 1206668.91,
+          "boedPosSal": 11604.01
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 875676.23,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 37965.62,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1114472.76,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 669378.16,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 43889.6,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 945435.4,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 152939.15,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 3111.36,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 172509.01,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 126648.43,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 6280.07,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 166148.88,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 123482.21,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 3897.69,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 147997.96,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 75952.04,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2851.09,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 93884.83,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 53853.98,
+          "oleoPosSalBbld": 79186.76,
+          "gasPreSalMm3d": 2616.72,
+          "gasPosSalMm3d": 1149.39,
+          "boedPreSal": 70312.64,
+          "boedPosSal": 86416.24
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 48969.31,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1765.76,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 60075.62,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 35432.52,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1581.65,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 45380.81,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 17622.61,
+          "oleoPosSalBbld": 33091.37,
+          "gasPreSalMm3d": 297.58,
+          "gasPosSalMm3d": 490.75,
+          "boedPreSal": 19494.35,
+          "boedPosSal": 36178.11
+        },
+        "Bacalhau Norte": {
+          "oleoPreSalBbld": 15821.26,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 928.46,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 21661.12,
+          "boedPosSal": 0.0
+        },
+        "Bacalhau": {
+          "oleoPreSalBbld": 14604.24,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 857.04,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 19994.88,
+          "boedPosSal": 0.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 9456.74,
+          "oleoPosSalBbld": 66347.41,
+          "gasPreSalMm3d": 250.65,
+          "gasPosSalMm3d": 1137.98,
+          "boedPreSal": 11033.29,
+          "boedPosSal": 73505.11
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 8137.21,
+          "oleoPosSalBbld": 20164.27,
+          "gasPreSalMm3d": 151.64,
+          "gasPosSalMm3d": 310.9,
+          "boedPreSal": 9090.98,
+          "boedPosSal": 22119.78
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 7511.27,
+          "oleoPosSalBbld": 2174.79,
+          "gasPreSalMm3d": 139.97,
+          "gasPosSalMm3d": 31.31,
+          "boedPreSal": 8391.68,
+          "boedPosSal": 2371.71
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 5651.96,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 245.05,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 7193.24,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4743.64,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 125.73,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5534.45,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 3236.32,
+          "oleoPosSalBbld": 73034.0,
+          "gasPreSalMm3d": 50.29,
+          "gasPosSalMm3d": 1519.21,
+          "boedPreSal": 3552.62,
+          "boedPosSal": 82589.53
+        },
+        "Argonauta": {
+          "oleoPreSalBbld": 467.16,
+          "oleoPosSalBbld": 3146.4,
+          "gasPreSalMm3d": 22.7,
+          "gasPosSalMm3d": 26.57,
+          "boedPreSal": 609.93,
+          "boedPosSal": 3313.55
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2026/janeiro.pdf"
+    },
+    {
+      "ano": 2026,
+      "mes": 2,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 933497.14,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 45986.08,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1222740.86,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 785665.63,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 34029.87,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 999707.02,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 663822.74,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 43913.66,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 940031.34,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 157955.41,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2975.85,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 176672.93,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 156175.46,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5955.61,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 193635.14,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 129148.49,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4039.29,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 154554.84,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 117328.14,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5858.74,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 154178.47,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 102552.69,
+          "oleoPosSalBbld": 83384.85,
+          "gasPreSalMm3d": 4442.76,
+          "gasPosSalMm3d": 1407.47,
+          "boedPreSal": 130496.8,
+          "boedPosSal": 92237.58
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 92983.38,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 3331.29,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 113936.54,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 32145.87,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 1396.84,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 40931.71,
+          "boedPosSal": 0.0
+        },
+        "Bacalhau Norte": {
+          "oleoPreSalBbld": 19670.8,
+          "oleoPosSalBbld": 5434.81,
+          "gasPreSalMm3d": 1222.99,
+          "gasPosSalMm3d": 356.56,
+          "boedPreSal": 27363.16,
+          "boedPosSal": 7677.48
+        },
+        "Bacalhau": {
+          "oleoPreSalBbld": 18157.66,
+          "oleoPosSalBbld": 5016.75,
+          "gasPreSalMm3d": 1128.91,
+          "gasPosSalMm3d": 329.13,
+          "boedPreSal": 25258.3,
+          "boedPosSal": 7086.9
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 18130.8,
+          "oleoPosSalBbld": 34989.41,
+          "gasPreSalMm3d": 320.02,
+          "gasPosSalMm3d": 555.97,
+          "boedPreSal": 20143.65,
+          "boedPosSal": 38486.35
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 9013.99,
+          "oleoPosSalBbld": 69950.25,
+          "gasPreSalMm3d": 234.13,
+          "gasPosSalMm3d": 1174.25,
+          "boedPreSal": 10486.61,
+          "boedPosSal": 77336.09
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 7649.31,
+          "oleoPosSalBbld": 19364.73,
+          "gasPreSalMm3d": 154.07,
+          "gasPosSalMm3d": 404.14,
+          "boedPreSal": 8618.39,
+          "boedPosSal": 21906.72
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 7060.9,
+          "oleoPosSalBbld": 2690.46,
+          "gasPreSalMm3d": 142.22,
+          "gasPosSalMm3d": 54.88,
+          "boedPreSal": 7955.44,
+          "boedPosSal": 3035.62
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 5070.99,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 219.64,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 6452.5,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4521.55,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 117.44,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5260.23,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 2682.16,
+          "oleoPosSalBbld": 68169.32,
+          "gasPreSalMm3d": 48.39,
+          "gasPosSalMm3d": 1583.02,
+          "boedPreSal": 2986.51,
+          "boedPosSal": 78126.24
+        },
+        "Argonauta": {
+          "oleoPreSalBbld": 889.6,
+          "oleoPosSalBbld": 19837.14,
+          "gasPreSalMm3d": 38.54,
+          "gasPosSalMm3d": 185.0,
+          "boedPreSal": 1132.01,
+          "boedPosSal": 21000.76
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2026/fevereiro.pdf"
+    },
+    {
+      "ano": 2026,
+      "mes": 3,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 917526.06,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 45177.15,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1201681.78,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 882625.24,
+          "oleoPosSalBbld": 3807.08,
+          "gasPreSalMm3d": 38675.43,
+          "gasPosSalMm3d": 149.36,
+          "boedPreSal": 1125886.32,
+          "boedPosSal": 4746.5
+        },
+        "Mero": {
+          "oleoPreSalBbld": 645157.8,
+          "oleoPosSalBbld": 11499.83,
+          "gasPreSalMm3d": 42828.59,
+          "gasPosSalMm3d": 755.82,
+          "boedPreSal": 914541.47,
+          "boedPosSal": 16253.8
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 156709.59,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5989.11,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 194379.95,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 152561.49,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2868.93,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 170606.52,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 151488.17,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5567.02,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 186503.64,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 123387.87,
+          "oleoPosSalBbld": 81858.05,
+          "gasPreSalMm3d": 4875.0,
+          "gasPosSalMm3d": 1418.17,
+          "boedPreSal": 154050.72,
+          "boedPosSal": 90778.08
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 116678.54,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 3278.27,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 137298.23,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 97511.51,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 4906.98,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 128375.51,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 48681.79,
+          "oleoPosSalBbld": 9770.22,
+          "gasPreSalMm3d": 1942.2,
+          "gasPosSalMm3d": 248.03,
+          "boedPreSal": 60897.88,
+          "boedPosSal": 11330.3
+        },
+        "Bacalhau Norte": {
+          "oleoPreSalBbld": 32891.93,
+          "oleoPosSalBbld": 4134.57,
+          "gasPreSalMm3d": 1740.36,
+          "gasPosSalMm3d": 215.07,
+          "boedPreSal": 43838.48,
+          "boedPosSal": 5487.31
+        },
+        "Bacalhau": {
+          "oleoPreSalBbld": 30361.78,
+          "oleoPosSalBbld": 3816.53,
+          "gasPreSalMm3d": 1606.49,
+          "gasPosSalMm3d": 198.53,
+          "boedPreSal": 40466.29,
+          "boedPosSal": 5065.21
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 16340.74,
+          "oleoPosSalBbld": 35421.63,
+          "gasPreSalMm3d": 289.86,
+          "gasPosSalMm3d": 610.98,
+          "boedPreSal": 18163.88,
+          "boedPosSal": 39264.56
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 10021.24,
+          "oleoPosSalBbld": 19783.68,
+          "gasPreSalMm3d": 181.26,
+          "gasPosSalMm3d": 393.34,
+          "boedPreSal": 11161.31,
+          "boedPosSal": 22257.74
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 9250.38,
+          "oleoPosSalBbld": 2979.35,
+          "gasPreSalMm3d": 167.31,
+          "gasPosSalMm3d": 56.61,
+          "boedPreSal": 10302.75,
+          "boedPosSal": 3335.45
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 6998.42,
+          "oleoPosSalBbld": 64715.23,
+          "gasPreSalMm3d": 181.76,
+          "gasPosSalMm3d": 1112.96,
+          "boedPreSal": 8141.65,
+          "boedPosSal": 71715.53
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 5696.81,
+          "oleoPosSalBbld": 24.57,
+          "gasPreSalMm3d": 249.63,
+          "gasPosSalMm3d": 0.96,
+          "boedPreSal": 7266.91,
+          "boedPosSal": 30.64
+        },
+        "Voador": {
+          "oleoPreSalBbld": 3510.51,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 91.17,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 4083.97,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 1797.47,
+          "oleoPosSalBbld": 70713.3,
+          "gasPreSalMm3d": 34.01,
+          "gasPosSalMm3d": 1588.91,
+          "boedPreSal": 2011.4,
+          "boedPosSal": 80707.21
+        },
+        "Argonauta": {
+          "oleoPreSalBbld": 1070.34,
+          "oleoPosSalBbld": 25376.5,
+          "gasPreSalMm3d": 42.29,
+          "gasPosSalMm3d": 241.86,
+          "boedPreSal": 1336.33,
+          "boedPosSal": 26897.72
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2026/marco.pdf"
+    },
+    {
+      "ano": 2026,
+      "mes": 4,
+      "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 917470.15,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 45420.31,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1203155.28,
+          "boedPosSal": 0.0
+        },
+        "Búzios": {
+          "oleoPreSalBbld": 910095.72,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 38010.2,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1149172.66,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 720855.59,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 47901.24,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1022145.29,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 155201.86,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2813.03,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 172895.26,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 144971.72,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5363.08,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 178704.49,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 140207.59,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5268.76,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 173347.09,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 138714.79,
+          "oleoPosSalBbld": 70477.65,
+          "gasPreSalMm3d": 5389.22,
+          "gasPosSalMm3d": 1038.31,
+          "boedPreSal": 172611.97,
+          "boedPosSal": 77008.44
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 134055.45,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 3990.26,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 159153.42,
+          "boedPosSal": 0.0
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 117164.07,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 6012.88,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 154983.96,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 79181.48,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2844.49,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 97072.77,
+          "boedPosSal": 0.0
+        },
+        "Wahoo": {
+          "oleoPreSalBbld": 30706.89,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 614.65,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 34572.91,
+          "boedPosSal": 0.0
+        },
+        "Bacalhau Norte": {
+          "oleoPreSalBbld": 16539.53,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 872.23,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 22025.72,
+          "boedPosSal": 0.0
+        },
+        "Bacalhau": {
+          "oleoPreSalBbld": 15267.26,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 805.14,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 20331.43,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 12752.91,
+          "oleoPosSalBbld": 32165.12,
+          "gasPreSalMm3d": 211.47,
+          "gasPosSalMm3d": 633.66,
+          "boedPreSal": 14083.04,
+          "boedPosSal": 36150.71
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 8882.22,
+          "oleoPosSalBbld": 23986.23,
+          "gasPreSalMm3d": 180.6,
+          "gasPosSalMm3d": 395.74,
+          "boedPreSal": 10018.18,
+          "boedPosSal": 26475.37
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 8198.97,
+          "oleoPosSalBbld": 2968.96,
+          "gasPreSalMm3d": 166.71,
+          "gasPosSalMm3d": 45.88,
+          "boedPreSal": 9247.55,
+          "boedPosSal": 3257.53
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 5874.11,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 245.33,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 7417.21,
+          "boedPosSal": 0.0
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 5805.06,
+          "oleoPosSalBbld": 63050.63,
+          "gasPreSalMm3d": 143.56,
+          "gasPosSalMm3d": 1056.6,
+          "boedPreSal": 6708.03,
+          "boedPosSal": 69696.41
+        },
+        "Voador": {
+          "oleoPreSalBbld": 2911.9,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 72.01,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 3364.84,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 1642.33,
+          "oleoPosSalBbld": 74736.21,
+          "gasPreSalMm3d": 26.26,
+          "gasPosSalMm3d": 1669.64,
+          "boedPreSal": 1807.53,
+          "boedPosSal": 85237.93
+        },
+        "Argonauta": {
+          "oleoPreSalBbld": 1203.3,
+          "oleoPosSalBbld": 24572.45,
+          "gasPreSalMm3d": 46.75,
+          "gasPosSalMm3d": 236.85,
+          "boedPreSal": 1497.34,
+          "boedPosSal": 26062.21
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2026/abril.pdf"
+    },
+    {
+      "ano": 2026,
+      "mes": 5,
+      "campos": {
+        "Búzios": {
+          "oleoPreSalBbld": 834572.91,
+          "oleoPosSalBbld": 58798.66,
+          "gasPreSalMm3d": 35772.28,
+          "gasPosSalMm3d": 2364.78,
+          "boedPreSal": 1059573.78,
+          "boedPosSal": 73672.67
+        },
+        "Tupi": {
+          "oleoPreSalBbld": 814854.72,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 41063.61,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1073137.01,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 721563.46,
+          "oleoPosSalBbld": 12725.45,
+          "gasPreSalMm3d": 48071.54,
+          "gasPosSalMm3d": 843.56,
+          "boedPreSal": 1023924.31,
+          "boedPosSal": 18031.31
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 157604.73,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2666.72,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 174377.88,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 154379.51,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5893.98,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 191451.5,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 149093.08,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5650.53,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 184633.84,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 132484.94,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 3853.22,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 156720.93,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 128560.22,
+          "oleoPosSalBbld": 61424.15,
+          "gasPreSalMm3d": 5096.89,
+          "gasPosSalMm3d": 840.78,
+          "boedPreSal": 160618.68,
+          "boedPosSal": 66712.47
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 116544.21,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 6131.91,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 155112.76,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 73956.13,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2657.5,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 90671.29,
+          "boedPosSal": 0.0
+        },
+        "Bacalhau Norte": {
+          "oleoPreSalBbld": 49729.32,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2665.59,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 66495.38,
+          "boedPosSal": 0.0
+        },
+        "Bacalhau": {
+          "oleoPreSalBbld": 45903.99,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2460.55,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 61380.35,
+          "boedPosSal": 0.0
+        },
+        "Wahoo": {
+          "oleoPreSalBbld": 28878.31,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 623.29,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 32798.66,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 20013.04,
+          "oleoPosSalBbld": 28980.42,
+          "gasPreSalMm3d": 395.93,
+          "gasPosSalMm3d": 472.07,
+          "boedPreSal": 22503.35,
+          "boedPosSal": 31949.62
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 11426.88,
+          "oleoPosSalBbld": 22127.67,
+          "gasPreSalMm3d": 221.94,
+          "gasPosSalMm3d": 344.9,
+          "boedPreSal": 12822.83,
+          "boedPosSal": 24297.06
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 10547.89,
+          "oleoPosSalBbld": 3011.68,
+          "gasPreSalMm3d": 204.87,
+          "gasPosSalMm3d": 46.77,
+          "boedPreSal": 11836.46,
+          "boedPosSal": 3305.87
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 8633.28,
+          "oleoPosSalBbld": 76633.67,
+          "gasPreSalMm3d": 227.49,
+          "gasPosSalMm3d": 1314.44,
+          "boedPreSal": 10064.15,
+          "boedPosSal": 84901.28
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 5386.66,
+          "oleoPosSalBbld": 379.51,
+          "gasPreSalMm3d": 230.89,
+          "gasPosSalMm3d": 15.26,
+          "boedPreSal": 6838.9,
+          "boedPosSal": 475.51
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4330.58,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 114.11,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5048.32,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 1675.79,
+          "oleoPosSalBbld": 67981.98,
+          "gasPreSalMm3d": 34.45,
+          "gasPosSalMm3d": 1752.88,
+          "boedPreSal": 1892.5,
+          "boedPosSal": 79007.25
+        },
+        "Argonauta": {
+          "oleoPreSalBbld": 1115.21,
+          "oleoPosSalBbld": 18807.15,
+          "gasPreSalMm3d": 44.21,
+          "gasPosSalMm3d": 176.36,
+          "boedPreSal": 1393.3,
+          "boedPosSal": 19916.41
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2026/maio.pdf"
+    },
+    {
+      "ano": 2026,
+      "mes": 6,
+      "campos": {
+        "Búzios": {
+          "oleoPreSalBbld": 1022245.34,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 43026.84,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1292876.01,
+          "boedPosSal": 0.0
+        },
+        "Tupi": {
+          "oleoPreSalBbld": 837019.06,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 41207.88,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1096208.81,
+          "boedPosSal": 0.0
+        },
+        "Mero": {
+          "oleoPreSalBbld": 761700.33,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 50492.51,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1079288.64,
+          "boedPosSal": 0.0
+        },
+        "Itapu": {
+          "oleoPreSalBbld": 156065.52,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2487.1,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 171708.88,
+          "boedPosSal": 0.0
+        },
+        "Sépia": {
+          "oleoPreSalBbld": 148337.95,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5329.05,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 181856.63,
+          "boedPosSal": 0.0
+        },
+        "Atapu": {
+          "oleoPreSalBbld": 147720.43,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 5711.45,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 183644.39,
+          "boedPosSal": 0.0
+        },
+        "Berbigão": {
+          "oleoPreSalBbld": 130013.13,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 3786.07,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 153826.82,
+          "boedPosSal": 0.0
+        },
+        "Jubarte": {
+          "oleoPreSalBbld": 116770.8,
+          "oleoPosSalBbld": 48855.27,
+          "gasPreSalMm3d": 4826.92,
+          "gasPosSalMm3d": 542.54,
+          "boedPreSal": 147131.2,
+          "boedPosSal": 52267.75
+        },
+        "Sapinhoá": {
+          "oleoPreSalBbld": 113206.22,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 6015.43,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 151042.1,
+          "boedPosSal": 0.0
+        },
+        "Lapa": {
+          "oleoPreSalBbld": 73981.03,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2671.58,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 90784.78,
+          "boedPosSal": 0.0
+        },
+        "Bacalhau Norte": {
+          "oleoPreSalBbld": 56534.27,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 3108.44,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 76085.79,
+          "boedPosSal": 0.0
+        },
+        "Bacalhau": {
+          "oleoPreSalBbld": 52185.48,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 2869.33,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 70233.04,
+          "boedPosSal": 0.0
+        },
+        "Wahoo": {
+          "oleoPreSalBbld": 35097.82,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 773.63,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 39963.78,
+          "boedPosSal": 0.0
+        },
+        "Marlim Leste": {
+          "oleoPreSalBbld": 19184.74,
+          "oleoPosSalBbld": 35029.55,
+          "gasPreSalMm3d": 339.94,
+          "gasPosSalMm3d": 459.53,
+          "boedPreSal": 21322.92,
+          "boedPosSal": 37919.92
+        },
+        "Barracuda": {
+          "oleoPreSalBbld": 10020.33,
+          "oleoPosSalBbld": 23874.41,
+          "gasPreSalMm3d": 149.99,
+          "gasPosSalMm3d": 407.63,
+          "boedPreSal": 10963.72,
+          "boedPosSal": 26438.3
+        },
+        "Caratinga": {
+          "oleoPreSalBbld": 9249.53,
+          "oleoPosSalBbld": 3631.99,
+          "gasPreSalMm3d": 138.45,
+          "gasPosSalMm3d": 61.58,
+          "boedPreSal": 10120.36,
+          "boedPosSal": 4019.32
+        },
+        "Marlim": {
+          "oleoPreSalBbld": 8876.17,
+          "oleoPosSalBbld": 73425.85,
+          "gasPreSalMm3d": 236.53,
+          "gasPosSalMm3d": 1281.1,
+          "boedPreSal": 10363.92,
+          "boedPosSal": 81483.76
+        },
+        "Tambuatá": {
+          "oleoPreSalBbld": 6597.97,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 277.71,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 8344.73,
+          "boedPosSal": 0.0
+        },
+        "Voador": {
+          "oleoPreSalBbld": 4452.41,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 118.65,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 5198.69,
+          "boedPosSal": 0.0
+        },
+        "Marlim Sul": {
+          "oleoPreSalBbld": 2572.57,
+          "oleoPosSalBbld": 63865.91,
+          "gasPreSalMm3d": 52.71,
+          "gasPosSalMm3d": 1551.77,
+          "boedPreSal": 2904.11,
+          "boedPosSal": 73626.27
+        },
+        "Argonauta": {
+          "oleoPreSalBbld": 1012.94,
+          "oleoPosSalBbld": 22849.48,
+          "gasPreSalMm3d": 41.87,
+          "gasPosSalMm3d": 219.99,
+          "boedPreSal": 1276.3,
+          "boedPosSal": 24233.15
+        }
+      },
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2026/junho.pdf"
     }
   ]
 }
