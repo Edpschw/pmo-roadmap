@@ -106,29 +106,19 @@ function computeFieldRows(campos, projects) {
 // "produção diária por mês" — sem agregação nenhuma: um ponto por mês do
 // boletim, com o valor exatamente como a ANP publicou naquele mês (bbl/d,
 // Mm³/d ou boe/d — já é uma vazão diária, não precisa converter nada).
-
-// Uma linha "Outros campos" por mês, somando todos os campos de contexto
-// (fora dos 7 contratos rastreados com produção própria) — o gráfico
-// mostra só os contratos rastreados + essa linha combinada, não uma linha
-// por campo de contexto (seriam ~20 linhas minúsculas, ilegível).
-function collapseContext(rows) {
-  const tracked = rows.filter((r) => r.isContract);
-  const contextRows = rows.filter((r) => !r.isContract);
-  if (!contextRows.length) return tracked;
-  const sum = emptyMetrics();
-  for (const r of contextRows) {
-    for (const k of METRIC_KEYS) sum[k] += r[k];
-  }
-  tracked.push({ name: 'Outros campos (contexto)', color: CONTEXT_FIELD_COLOR, isContract: false, parts: contextRows, ...sum });
-  return tracked;
-}
-
+// Campos de contexto (fora dos 7 contratos rastreados) ficam SEPARADOS,
+// uma linha por campo, cada um com cor própria (hash do nome, ver
+// colorForCompany em shared.js — não é cor de marca, só um jeito
+// determinístico de dar uma cor distinta pra cada nome sem expandir a
+// paleta) — diferente do gráfico "Mês atual" (barras), que já mostrava
+// cada campo de contexto separado desde o início.
 function computeMonthlySeries(meses, projects) {
-  return meses.map((mes) => ({
-    ano: mes.ano,
-    mes: mes.mes,
-    rows: collapseContext(computeFieldRows(mes.campos, projects)),
-  }));
+  return meses.map((mes) => {
+    const rows = computeFieldRows(mes.campos, projects).map((r) => (
+      r.isContract ? r : { ...r, color: colorForCompany(r.name) }
+    ));
+    return { ano: mes.ano, mes: mes.mes, rows };
+  });
 }
 
 /* -------------------------------- KPIs ------------------------------------ */
@@ -216,13 +206,23 @@ function buildUnitSwitch(onChange) {
 }
 
 /* ------------------------------ Gráfico de linhas --------------------------- */
-// Uma linha por campo — eixo x é o mês do boletim (todos os pontos
-// disponíveis, sem agregar), eixo y é a vazão diária na unidade escolhida.
+// Uma linha por campo — eixo x é o mês do boletim, eixo y é a vazão diária
+// na unidade escolhida. Interativo:
+//  - roda do mouse: zoom no eixo x, ancorado no cursor (mesmo padrão do
+//    roadmap principal, ver app.js);
+//  - arrastar: move a janela visível (só depois de já ter dado zoom);
+//  - clicar num campo na legenda: isola aquela linha (as outras ficam
+//    esmaecidas) — clicar de novo no mesmo campo, ou num campo diferente,
+//    troca/limpa o isolamento;
+//  - passar o mouse sobre o gráfico: mostra o valor de TODOS os campos
+//    daquele mês de uma vez (não só o campo sob o cursor), com uma linha
+//    vertical marcando o mês.
 
 const MES_ABREV = ['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const LINE_W = 900;
-const LINE_H = 420;
+const LINE_H = 460;
 const LINE_MARGIN = { top: 16, right: 16, bottom: 62, left: 64 };
+const MIN_VIEW_SPAN = 2; // menor janela de zoom, em nº de meses - 1
 
 function niceMax(v) {
   if (v <= 0) return 1;
@@ -234,7 +234,8 @@ function niceMax(v) {
 
 // Ordem fixa das linhas (mesma cor sempre no mesmo campo entre trocas de
 // unidade) — projeto rastreado por ordem de aparição em state.projects
-// (mesma ordem do roadmap/análises), "Outros campos" sempre por último.
+// (mesma ordem do roadmap/análises), depois os campos de contexto por
+// ordem de primeira aparição no boletim.
 function seriesOrder(monthlySeries) {
   const seen = new Map();
   for (const m of monthlySeries) {
@@ -248,99 +249,245 @@ function seriesOrder(monthlySeries) {
   return [...contract, ...context];
 }
 
-function renderMonthlyLineChart(container, monthlySeries, unitKey) {
-  const unit = UNITS[unitKey];
-  const order = seriesOrder(monthlySeries);
+// Quebra os pontos de uma série em trechos contínuos, cortando onde o mês
+// não tem dado (campo de contexto que só aparece em algumas edições, ver
+// nota em computeMonthlySeries) — sem isso um <polyline> ligaria os dois
+// lados do buraco com uma reta enganosa.
+function buildSegments(monthlySeries, loIdx, hiIdx, name, xAt, yAt, unitKey) {
+  const segments = [];
+  let current = [];
+  for (let i = loIdx; i <= hiIdx; i++) {
+    const r = monthlySeries[i].rows.find((row) => row.name === name);
+    if (!r) {
+      if (current.length) segments.push(current);
+      current = [];
+      continue;
+    }
+    current.push(`${xAt(i)},${yAt(r[unitKey])}`);
+  }
+  if (current.length) segments.push(current);
+  return segments;
+}
+
+function createLineChart(container, monthlySeries) {
   const n = monthlySeries.length;
-  const rowByName = (m, name) => m.rows.find((r) => r.name === name);
-  const maxVal = niceMax(Math.max(...monthlySeries.flatMap((m) => m.rows.map((r) => r[unit.key])), 0));
+  const order = seriesOrder(monthlySeries);
+  const meta = new Map(order.map((name) => {
+    const sample = monthlySeries.map((m) => m.rows.find((r) => r.name === name)).find(Boolean);
+    return [name, { color: sample.color, isContract: sample.isContract }];
+  }));
 
-  const plotW = LINE_W - LINE_MARGIN.left - LINE_MARGIN.right;
-  const plotH = LINE_H - LINE_MARGIN.top - LINE_MARGIN.bottom;
-  const xAt = (i) => LINE_MARGIN.left + (n > 1 ? (plotW * i) / (n - 1) : plotW / 2);
-  const yAt = (v) => LINE_MARGIN.top + plotH - (v / maxVal) * plotH;
+  let unitKey = 'oleo';
+  let viewStart = 0;
+  let viewEnd = n - 1;
+  let highlighted = null;
+  let isDragging = false;
 
-  const yTicks = 5;
-  let gridSvg = '';
-  for (let i = 0; i <= yTicks; i++) {
-    const v = (maxVal / yTicks) * i;
-    const y = yAt(v);
-    gridSvg += `<line x1="${LINE_MARGIN.left}" y1="${y}" x2="${LINE_W - LINE_MARGIN.right}" y2="${y}" stroke="var(--border)" stroke-width="1" />`;
-    gridSvg += `<text x="${LINE_MARGIN.left - 10}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:var(--text-faint)">${fmtNum(v)}</text>`;
+  const svgWrap = document.createElement('div');
+  svgWrap.style.position = 'relative';
+  const legendWrap = document.createElement('div');
+  legendWrap.className = 'kpi-row';
+  legendWrap.style.marginTop = '10px';
+  legendWrap.style.rowGap = '6px';
+
+  function clampView(start, end) {
+    let span = Math.max(end - start, MIN_VIEW_SPAN);
+    span = Math.min(span, n - 1);
+    if (start < 0) { start = 0; end = start + span; }
+    if (end > n - 1) { end = n - 1; start = end - span; }
+    return [start, end];
   }
 
-  // Rótulo do eixo x só em janeiro de cada ano (+ o último mês, se não for
-  // janeiro) — com muitos meses (a base cobre 2017-2026, >100 pontos),
-  // rotular todo mês vira ilegível; ano completo já orienta a leitura da
-  // tendência, e o ponto exato de cada mês continua no tooltip ao passar
-  // o mouse/focar. Uma linha vertical fina marca a virada de ano no fundo
-  // do gráfico, alinhada com o rótulo.
-  let xLabelsSvg = '';
-  monthlySeries.forEach((m, i) => {
-    const isLast = i === monthlySeries.length - 1;
-    if (m.mes !== 1 && !isLast) return;
-    const x = xAt(i);
-    const label = m.mes === 1 ? String(m.ano) : `${MES_ABREV[m.mes]}/${String(m.ano).slice(2)}`;
-    const y = LINE_MARGIN.top + plotH + 14;
-    xLabelsSvg += `<line x1="${x}" y1="${LINE_MARGIN.top}" x2="${x}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--border)" stroke-width="1" stroke-dasharray="2,3" />`;
-    xLabelsSvg += `<text x="0" y="0" transform="translate(${x} ${y}) rotate(-45)" text-anchor="end" font-size="11" style="fill:var(--text-muted)">${label}</text>`;
-  });
+  function draw() {
+    const unit = UNITS[unitKey];
+    const plotW = LINE_W - LINE_MARGIN.left - LINE_MARGIN.right;
+    const plotH = LINE_H - LINE_MARGIN.top - LINE_MARGIN.bottom;
+    const span = Math.max(viewEnd - viewStart, 0.001);
+    const xAt = (i) => LINE_MARGIN.left + ((i - viewStart) / span) * plotW;
+    const idxAt = (px) => viewStart + ((px - LINE_MARGIN.left) / plotW) * span;
+    const loIdx = Math.max(0, Math.floor(viewStart));
+    const hiIdx = Math.min(n - 1, Math.ceil(viewEnd));
 
-  let linesSvg = '';
-  let dotsSvg = '';
-  const dotMeta = [];
-  const dotR = n > 40 ? 2 : 3;
-  for (const name of order) {
-    const color = monthlySeries.map((m) => rowByName(m, name)).find(Boolean).color;
-    const pts = [];
-    monthlySeries.forEach((m, i) => {
-      const r = rowByName(m, name);
-      if (!r) return;
+    let maxVal = 0;
+    for (let i = loIdx; i <= hiIdx; i++) {
+      for (const r of monthlySeries[i].rows) maxVal = Math.max(maxVal, r[unit.key]);
+    }
+    maxVal = niceMax(maxVal);
+    const yAt = (v) => LINE_MARGIN.top + plotH - (v / maxVal) * plotH;
+
+    const yTicks = 5;
+    let gridSvg = '';
+    for (let i = 0; i <= yTicks; i++) {
+      const v = (maxVal / yTicks) * i;
+      const y = yAt(v);
+      gridSvg += `<line x1="${LINE_MARGIN.left}" y1="${y}" x2="${LINE_W - LINE_MARGIN.right}" y2="${y}" stroke="var(--border)" stroke-width="1" />`;
+      gridSvg += `<text x="${LINE_MARGIN.left - 10}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:var(--text-faint)">${fmtNum(v)}</text>`;
+    }
+
+    // Rótulo do eixo x: se a janela visível já é curta (zoom), rotula todo
+    // mês visível; senão só janeiro de cada ano (+ o último mês) — mesmo
+    // motivo de antes (>100 pontos no zoom "tudo" ficaria ilegível mês a
+    // mês), mas dando zoom o usuário já pediu pra ver o detalhe mensal.
+    const dense = span <= 15;
+    let xLabelsSvg = '';
+    for (let i = loIdx; i <= hiIdx; i++) {
+      const m = monthlySeries[i];
+      const isLast = i === n - 1;
+      if (!dense && m.mes !== 1 && !isLast) continue;
       const x = xAt(i);
-      const y = yAt(r[unit.key]);
-      pts.push(`${x},${y}`);
-      const id = `dot_${order.indexOf(name)}_${i}`;
-      dotsSvg += `<circle id="${id}" cx="${x}" cy="${y}" r="${dotR}" fill="${color}" tabindex="0" style="cursor:pointer" />`;
-      dotMeta.push({ id, name, color, value: r[unit.key], mes: m.mes, ano: m.ano, isContract: r.isContract });
+      const label = (!dense && m.mes === 1) ? String(m.ano) : `${MES_ABREV[m.mes]}/${String(m.ano).slice(2)}`;
+      const y = LINE_MARGIN.top + plotH + 14;
+      if (!dense && m.mes === 1) {
+        xLabelsSvg += `<line x1="${x}" y1="${LINE_MARGIN.top}" x2="${x}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--border)" stroke-width="1" stroke-dasharray="2,3" />`;
+      }
+      xLabelsSvg += `<text x="0" y="0" transform="translate(${x} ${y}) rotate(-45)" text-anchor="end" font-size="${dense ? 10 : 11}" style="fill:var(--text-muted)">${escapeHtml(label)}</text>`;
+    }
+
+    let linesSvg = '';
+    const dotR = span > 40 ? 1.6 : span > 15 ? 2.2 : 3;
+    for (const name of order) {
+      const { color, isContract } = meta.get(name);
+      const dimmed = highlighted && highlighted !== name;
+      const opacity = dimmed ? 0.12 : 1;
+      const width = highlighted === name ? 3 : 2;
+      const segments = buildSegments(monthlySeries, loIdx, hiIdx, name, xAt, yAt, unit.key);
+      for (const seg of segments) {
+        linesSvg += `<polyline points="${seg.join(' ')}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round" opacity="${opacity}" data-series="${escapeHtml(name)}" />`;
+        if (seg.length === 1) {
+          const [px, py] = seg[0].split(',');
+          linesSvg += `<circle cx="${px}" cy="${py}" r="${dotR}" fill="${color}" opacity="${opacity}" />`;
+        }
+      }
+      void isContract;
+    }
+
+    const axisSvg = `<line x1="${LINE_MARGIN.left}" y1="${LINE_MARGIN.top + plotH}" x2="${LINE_W - LINE_MARGIN.right}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
+    const captureSvg = `<rect id="lc-capture" x="${LINE_MARGIN.left}" y="${LINE_MARGIN.top}" width="${plotW}" height="${plotH}" fill="transparent" style="cursor:crosshair" />`;
+    const crosshairSvg = `<line id="lc-crosshair" x1="0" y1="${LINE_MARGIN.top}" x2="0" y2="${LINE_MARGIN.top + plotH}" stroke="var(--text-faint)" stroke-width="1" hidden />`;
+
+    svgWrap.innerHTML = `<svg viewBox="0 0 ${LINE_W} ${LINE_H}" style="width:100%;height:auto;display:block;touch-action:none">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${crosshairSvg}${captureSvg}</svg>`;
+    const svgEl = svgWrap.firstElementChild;
+    const capture = svgEl.querySelector('#lc-capture');
+    const crosshair = svgEl.querySelector('#lc-crosshair');
+
+    // Zoom: roda do mouse, ancorado na posição do cursor (mesma ideia do
+    // zoom do roadmap principal — ver MIN_PX_PER_DAY/wheel handler em
+    // app.js) — não deixa a página rolar enquanto o mouse está sobre o
+    // gráfico.
+    svgEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const pt = svgPoint(svgEl, e.clientX, e.clientY);
+      const cursorIdx = clampIdx(idxAt(pt.x));
+      const factor = e.deltaY > 0 ? 1.25 : 1 / 1.25;
+      let newSpan = span * factor;
+      newSpan = Math.max(MIN_VIEW_SPAN, Math.min(n - 1, newSpan));
+      const frac = span > 0 ? (cursorIdx - viewStart) / span : 0.5;
+      let newStart = cursorIdx - frac * newSpan;
+      let newEnd = newStart + newSpan;
+      [viewStart, viewEnd] = clampView(newStart, newEnd);
+      draw();
+    }, { passive: false });
+
+    // Arrastar: move a janela visível — só ativa dentro da área do
+    // gráfico, com pointer capture pra continuar recebendo o movimento
+    // mesmo se o cursor sair da área durante o arraste.
+    let dragStartClientX = 0;
+    let dragStartView = [0, 0];
+    capture.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      dragStartClientX = e.clientX;
+      dragStartView = [viewStart, viewEnd];
+      try { capture.setPointerCapture(e.pointerId); } catch (err) { /* ponteiro sintético (ex.: teste automatizado) sem sessão ativa pra capturar — arraste ainda funciona sem, só não segue o cursor fora da área do gráfico */ }
+      hideTooltip();
+      if (crosshair) crosshair.hidden = true;
     });
-    if (pts.length) {
-      linesSvg += `<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />`;
+    capture.addEventListener('pointermove', (e) => {
+      if (isDragging) {
+        const dxPx = e.clientX - dragStartClientX;
+        const dxIdx = -(dxPx / plotW) * (dragStartView[1] - dragStartView[0]);
+        [viewStart, viewEnd] = clampView(dragStartView[0] + dxIdx, dragStartView[1] + dxIdx);
+        draw();
+        return;
+      }
+      const pt = svgPoint(svgEl, e.clientX, e.clientY);
+      const idx = clampIdx(Math.round(idxAt(pt.x)));
+      showCrosshair(idx, xAt, unit);
+    });
+    capture.addEventListener('pointerup', (e) => {
+      isDragging = false;
+      try { capture.releasePointerCapture(e.pointerId); } catch (err) { /* idem — nada a liberar se a captura não pegou */ }
+    });
+    capture.addEventListener('pointerleave', () => {
+      if (!isDragging) {
+        hideTooltip();
+        if (crosshair) crosshair.hidden = true;
+      }
+    });
+
+    function showCrosshair(idx, xAtFn, unitObj) {
+      if (!crosshair) return;
+      const x = xAtFn(idx);
+      crosshair.setAttribute('x1', x);
+      crosshair.setAttribute('x2', x);
+      crosshair.hidden = false;
+      const m = monthlySeries[idx];
+      const rows = [...m.rows].sort((a, b) => b[unitObj.key] - a[unitObj.key]);
+      const html = `<strong>${escapeHtml(MESES_PT[m.mes])}/${m.ano}</strong>`
+        + rows.map((r) => `<div class="viz-tooltip-row"><span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${r.color};margin-right:5px;vertical-align:middle"></span>${escapeHtml(r.name)}</span><strong>${escapeHtml(unitObj.fmt(r[unitObj.key]))}</strong></div>`).join('');
+      const t = ensureTooltip();
+      t.innerHTML = html;
+      t.hidden = false;
+      const rect = svgEl.getBoundingClientRect();
+      const scale = rect.width / LINE_W;
+      positionTooltip(rect.left + x * scale, rect.top + LINE_MARGIN.top * scale);
     }
   }
 
-  const axisSvg = `<line x1="${LINE_MARGIN.left}" y1="${LINE_MARGIN.top + plotH}" x2="${LINE_W - LINE_MARGIN.right}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
-
-  const svgWrap = document.createElement('div');
-  svgWrap.innerHTML = `<svg viewBox="0 0 ${LINE_W} ${LINE_H}" style="width:100%;height:auto;display:block">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${dotsSvg}</svg>`;
-  const svgEl = svgWrap.firstElementChild;
-
-  for (const meta of dotMeta) {
-    const el = svgEl.querySelector(`#${meta.id}`);
-    if (!el) continue;
-    attachTooltip(el, () => `<strong>${escapeHtml(meta.name)}</strong>`
-      + tooltipRowHTML('Mês', `${MESES_PT[meta.mes]}/${meta.ano}`)
-      + tooltipRowHTML(unit.label, unit.fmt(meta.value))
-      + (meta.isContract ? '' : tooltipRowHTML('Contrato', 'Fora dos 7 com produção própria rastreados')));
+  function svgPoint(svgEl, clientX, clientY) {
+    const rect = svgEl.getBoundingClientRect();
+    const scale = LINE_W / rect.width;
+    return { x: (clientX - rect.left) * scale, y: (clientY - rect.top) * scale };
+  }
+  function clampIdx(i) {
+    return Math.max(0, Math.min(n - 1, i));
   }
 
+  function drawLegend() {
+    legendWrap.innerHTML = '';
+    for (const name of order) {
+      const { color } = meta.get(name);
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.style.display = 'inline-flex';
+      item.style.alignItems = 'center';
+      item.style.gap = '6px';
+      item.style.fontSize = '12px';
+      item.style.background = 'none';
+      item.style.border = 'none';
+      item.style.padding = '2px 4px';
+      item.style.cursor = 'pointer';
+      item.style.color = highlighted && highlighted !== name ? 'var(--text-faint)' : 'var(--text-muted)';
+      item.style.opacity = highlighted && highlighted !== name ? '0.5' : '1';
+      item.innerHTML = `<span style="width:16px;height:2px;background:${color};flex:0 0 auto"></span>${escapeHtml(name)}`;
+      item.addEventListener('click', () => {
+        highlighted = highlighted === name ? null : name;
+        drawLegend();
+        draw();
+      });
+      legendWrap.appendChild(item);
+    }
+  }
+
+  draw();
+  drawLegend();
   container.appendChild(svgWrap);
+  container.appendChild(legendWrap);
 
-  const legend = document.createElement('div');
-  legend.className = 'kpi-row';
-  legend.style.marginTop = '10px';
-  for (const name of order) {
-    const sample = monthlySeries.map((m) => rowByName(m, name)).find(Boolean);
-    if (!sample) continue;
-    const item = document.createElement('div');
-    item.style.display = 'flex';
-    item.style.alignItems = 'center';
-    item.style.gap = '6px';
-    item.style.fontSize = '12px';
-    item.style.color = 'var(--text-muted)';
-    item.innerHTML = `<span style="width:16px;height:2px;background:${sample.color};flex:0 0 auto"></span>${escapeHtml(name)}`;
-    legend.appendChild(item);
-  }
-  container.appendChild(legend);
+  return {
+    setUnit(key) { unitKey = key; draw(); },
+    resetZoom() { viewStart = 0; viewEnd = n - 1; draw(); },
+    isZoomed() { return viewStart > 0 || viewEnd < n - 1; },
+  };
 }
 
 /* -------------------------------- Seções ------------------------------ */
@@ -395,17 +542,24 @@ function buildEvolutionSection(producaoData) {
 
   const card = chartCard(
     'Produção diária por mês, por campo',
-    'Um ponto por mês do boletim, exatamente como a ANP publicou — sem agregar nem estimar nada entre meses. Uma linha por contrato rastreado, mais uma linha combinada dos demais campos do pré-sal (contexto). Uma linha só aparece a partir do mês em que o campo passou a ter produção própria no boletim (ex.: Norte de Carcará entra em outubro/2025, primeiro mês de produção do FPSO).',
+    'Um ponto por mês do boletim, exatamente como a ANP publicou — sem agregar nem estimar nada entre meses. Uma linha por contrato rastreado, mais uma linha por campo de contexto (fora dos 7 rastreados) — cada um só aparece a partir do mês em que passou a ter produção no boletim. Role o mouse sobre o gráfico pra zoom (ancorado no cursor), arraste pra mover a janela visível, clique num campo na legenda pra isolar a linha, e passe o mouse sobre qualquer ponto pra ver o valor de todos os campos naquele mês de uma vez.',
   );
-  const unitSwitch = buildUnitSwitch((unitKey) => {
-    const oldSvg = card.querySelector('svg');
-    if (oldSvg) oldSvg.parentElement.remove();
-    const oldLegend = card.querySelector('.kpi-row');
-    if (oldLegend) oldLegend.remove();
-    renderMonthlyLineChart(card, monthlySeries, unitKey);
-  });
-  card.insertBefore(unitSwitch, card.querySelector('h3').nextSibling);
-  renderMonthlyLineChart(card, monthlySeries, 'oleo');
+  const controlsRow = document.createElement('div');
+  controlsRow.style.display = 'flex';
+  controlsRow.style.alignItems = 'center';
+  controlsRow.style.gap = '8px';
+  controlsRow.style.flexWrap = 'wrap';
+  const resetBtn = document.createElement('button');
+  resetBtn.type = 'button';
+  resetBtn.className = 'btn-ghost';
+  resetBtn.textContent = 'Ver tudo';
+  controlsRow.appendChild(resetBtn);
+  card.insertBefore(controlsRow, card.querySelector('h3').nextSibling);
+
+  const chart = createLineChart(card, monthlySeries);
+  const unitSwitch = buildUnitSwitch((unitKey) => chart.setUnit(unitKey));
+  controlsRow.insertBefore(unitSwitch, resetBtn);
+  resetBtn.addEventListener('click', () => chart.resetZoom());
   section.appendChild(card);
 
   const note = document.createElement('p');
