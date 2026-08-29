@@ -171,6 +171,20 @@ function computeFieldRows(campos, projects, knownNames) {
     contextGroups.get(jazida).push({ nome, dados });
   }
   for (const [jazida, parts] of contextGroups) {
+    // Um grupo com UM SÓ pedaço, e esse pedaço é só a Área Não Contratada
+    // ("Anc_X", renomeada pra "X" por contextJazidaBase) sem o campo "X"
+    // em si nem nenhuma outra sub-área junto: a ANC sozinha é sempre só
+    // uma fração do campo (por definição, é a parte FORA do contrato) —
+    // um mês assim não tem o total do campo publicado no boletim, só esse
+    // fragmento. Mostrar isso com o nome do campo inteiro ("Tupi") daria
+    // a impressão de produção quase zero num mês em que na verdade o
+    // boletim simplesmente não trouxe o total (ex.: jan/2024 — só
+    // "Anc_Tupi", ~3 mil bbl/d, contra os ~750-850 mil bbl/d normais de
+    // Tupi) — melhor não ter o ponto nesse mês (linha corta ali, ver
+    // buildSegments) do que ter um número enganoso.
+    if (parts.length === 1 && parts[0].nome.toLowerCase().startsWith('anc_') && jazida !== parts[0].nome) {
+      continue;
+    }
     const sum = emptyMetrics();
     for (const part of parts) {
       for (const k of METRIC_KEYS) sum[k] += part.dados[k];
@@ -714,7 +728,14 @@ async function init() {
   const wrapper = document.getElementById('producaoWrapper');
   let producaoData = null;
   try {
-    producaoData = await fetch(PRODUCAO_URL).then((r) => r.json());
+    // no-store: data/producao.json é reprocessado com frequência (novo mês,
+    // correção de parser) sem nenhum deploy de código junto — o navegador
+    // não tem como saber que precisa buscar de novo só olhando a URL
+    // (diferente de shared.js/producao.js, versionados por ?v=N). Sem
+    // isso, quem já abriu a página antes continua vendo os dados antigos
+    // em cache até limpar o cache à mão, mesmo com o arquivo já atualizado
+    // no servidor.
+    producaoData = await fetch(PRODUCAO_URL, { cache: 'no-store' }).then((r) => r.json());
   } catch (err) {
     console.error('Falha ao carregar dados de produção', err);
   }
