@@ -9,7 +9,9 @@
    "tracts" — só disponível pros projetos/campos com sumário executivo de
    PD publicado) + data/campos_presal.geojson (campos de contexto, fora dos
    30 projetos rastreados). Sem servidor: tudo é derivado desses arquivos
-   estáticos a cada carga.
+   estáticos a cada carga. Infra de gráfico (tooltip, fmtNum, chartCard,
+   barRow, CONTEXT_FIELD_COLOR) vem de shared.js — compartilhada com
+   producao.js.
    ========================================================================= */
 
 const PD_URL = 'data/planos_desenvolvimento.json';
@@ -20,18 +22,9 @@ const POCOS_URL = 'data/pocos.json';
 // projeto próprio — ver seedState em shared.js).
 const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
 
-// Cor neutra pros campos de contexto — só os 30 projetos rastreados têm
-// cor própria (a mesma do roadmap/mapa, project.color); campo de contexto
-// usa este cinza.
-const CONTEXT_FIELD_COLOR = '#7a828f';
-
 let pdData = {};
 
 /* -------------------------------- Helpers -------------------------------- */
-
-function fmtNum(n, opts) {
-  return n.toLocaleString('pt-BR', opts || { maximumFractionDigits: 0 });
-}
 
 function yearOfISO(iso) {
   const y = parseInt(String(iso).slice(0, 4), 10);
@@ -43,61 +36,6 @@ function yearOfISO(iso) {
 // (contrato ou campo de contexto) usada nesta tela.
 function displayName(r) {
   return projectDisplayName(r.name);
-}
-
-/* --------------------------- Tooltip de hover ----------------------------- */
-// Um só elemento reaproveitado por todo mark hoverável do gráfico (barras)
-// — mostra a mesma informação acessível via foco de teclado, nunca só no
-// hover (ver skill de dataviz).
-
-let tooltipEl = null;
-function ensureTooltip() {
-  if (!tooltipEl) {
-    tooltipEl = document.createElement('div');
-    tooltipEl.className = 'viz-tooltip';
-    tooltipEl.hidden = true;
-    document.body.appendChild(tooltipEl);
-  }
-  return tooltipEl;
-}
-function positionTooltip(x, y) {
-  const el = ensureTooltip();
-  const pad = 14;
-  const rect = el.getBoundingClientRect();
-  let left = x + pad;
-  let top = y + pad;
-  if (left + rect.width > window.innerWidth - 8) left = x - rect.width - pad;
-  if (top + rect.height > window.innerHeight - 8) top = y - rect.height - pad;
-  el.style.left = Math.max(4, left) + 'px';
-  el.style.top = Math.max(4, top) + 'px';
-}
-function hideTooltip() {
-  if (tooltipEl) tooltipEl.hidden = true;
-}
-function tooltipRowHTML(label, value) {
-  return `<div class="viz-tooltip-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`;
-}
-// htmlFn é preguiçoso (só chamado no hover/foco) pra não montar milhares de
-// strings de tooltip que talvez nunca sejam vistas.
-function attachTooltip(el, htmlFn) {
-  const show = (x, y) => {
-    const t = ensureTooltip();
-    t.innerHTML = htmlFn();
-    t.hidden = false;
-    positionTooltip(x, y);
-    el.classList.add('is-hovered');
-  };
-  const hide = () => {
-    hideTooltip();
-    el.classList.remove('is-hovered');
-  };
-  el.addEventListener('pointermove', (e) => show(e.clientX, e.clientY));
-  el.addEventListener('pointerleave', hide);
-  el.addEventListener('focus', () => {
-    const rect = el.getBoundingClientRect();
-    show(rect.left + rect.width / 2, rect.top);
-  });
-  el.addEventListener('blur', hide);
 }
 
 /* ----------------------------- Cálculo por linha --------------------------- */
@@ -257,50 +195,6 @@ function computeWellAggregates(pocosData, outrosPocos) {
   const emPerfuracao = wells.filter((w) => w.sit === 'EM PERFURAÇÃO');
   const furadosNoAno = wells.filter((w) => w.d && w.d.slice(0, 4) === yearStr && w.sit !== 'EM PERFURAÇÃO');
   return { year, furadosNoAno: furadosNoAno.length, emPerfuracao: emPerfuracao.length };
-}
-
-/* -------------------------------- Barra ------------------------------------ */
-// Uma linha de barra horizontal — mesmo bloco reaproveitado por todo
-// gráfico desta tela.
-function barRow(label, widthPct, valueText, color, tooltipHtmlFn) {
-  const row = document.createElement('div');
-  row.className = 'hbar-row';
-  const name = document.createElement('div');
-  name.className = 'hbar-name';
-  name.textContent = label;
-  name.title = label;
-  const track = document.createElement('div');
-  track.className = 'hbar-track';
-  const fill = document.createElement('div');
-  fill.className = 'hbar-fill';
-  fill.style.width = Math.max(3, widthPct) + '%';
-  fill.style.background = color;
-  fill.tabIndex = 0;
-  attachTooltip(fill, tooltipHtmlFn);
-  track.appendChild(fill);
-  const value = document.createElement('div');
-  value.className = 'hbar-value';
-  value.textContent = valueText;
-  track.appendChild(value);
-  row.appendChild(name);
-  row.appendChild(track);
-  return row;
-}
-
-function chartCard(title, subtitle) {
-  const card = document.createElement('div');
-  card.className = 'chart-card';
-  const h3 = document.createElement('h3');
-  h3.className = 'chart-card-title';
-  h3.textContent = title;
-  card.appendChild(h3);
-  if (subtitle) {
-    const sub = document.createElement('p');
-    sub.className = 'chart-card-subtitle';
-    sub.textContent = subtitle;
-    card.appendChild(sub);
-  }
-  return card;
 }
 
 /* ------------------------------ Página Executivo ---------------------------- */

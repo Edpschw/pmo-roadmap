@@ -11,9 +11,8 @@
 const POCOS_URL = 'data/pocos.json';
 const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
 
-// Mesmo cinza neutro do resto do app pra campo sem contrato próprio (ver
-// CONTEXT_FIELD_COLOR em analises.js/mapa.js).
-const CONTEXT_FIELD_COLOR = '#7a828f';
+// CONTEXT_FIELD_COLOR (cinza neutro pra campo sem contrato próprio) vem de
+// shared.js — compartilhada com analises.js e producao.js.
 
 const GROUP_BADGES = {
   producao: 'Produção',
