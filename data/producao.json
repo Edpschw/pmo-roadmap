@@ -15986,6 +15986,14 @@
       "ano": 2025,
       "mes": 2,
       "campos": {
+        "Tupi": {
+          "oleoPreSalBbld": 760734.2404135957,
+          "oleoPosSalBbld": 0.0,
+          "gasPreSalMm3d": 38168.53035714289,
+          "gasPosSalMm3d": 0.0,
+          "boedPreSal": 1000807.0443392566,
+          "boedPosSal": 0.0
+        },
         "Búzios": {
           "oleoPreSalBbld": 700822.426514019,
           "oleoPosSalBbld": 0.0,
@@ -16203,7 +16211,7 @@
           "boedPosSal": 0.0
         }
       },
-      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/tabelas-fevereiro_2025.xlsm"
+      "fonteUrl": "https://www.gov.br/anp/pt-br/centrais-de-conteudo/publicacoes/boletins-anp/arquivos-bmppgn/2025/tabelasfevereiro.xlsm"
     },
     {
       "ano": 2025,

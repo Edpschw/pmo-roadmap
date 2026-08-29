@@ -75,17 +75,53 @@ def find_field_table(wb):
     return None
 
 
+# O número de linhas de cabeçalho entre o título e o primeiro campo MUDA
+# por edição — a maioria tem título / linha em branco / cabeçalho "Campo |
+# Petróleo | Gás natural | Produção" / subcabeçalho "Pré-sal | Pós-sal |
+# ..." (4 linhas antes do primeiro campo), mas algumas (confirmado em
+# fev/2025) já trazem o texto completo da coluna numa única linha de
+# cabeçalho ("Petróleo (bbl/d) Pré Sal" etc.), sem subcabeçalho separado —
+# 3 linhas antes do primeiro campo, não 4. Assumir 4 sempre pulava a
+# primeira linha de dado da tabela — que é sempre o maior produtor do mês
+# (a tabela vem ordenada por produção decrescente), então o campo que
+# sumia era sempre Tupi (ver bug reportado: "Tupi quase sem produção" em
+# vários meses — não era queda real, era essa linha pulada). Por isso a
+# busca aqui é pelo conteúdo, não por offset fixo: acha a linha de
+# cabeçalho ("Campo" na coluna B) e, a partir dela, a primeira linha
+# seguinte que já parece dado de verdade (texto na coluna B + pelo menos
+# um número nas colunas de métrica) — pula quantas linhas de subcabeçalho
+# existirem no meio (0 ou 1, conforme a edição) sem precisar saber de
+# antemão quantas são.
+def find_data_start(sheet, title_row):
+    header_row = None
+    for i in range(title_row + 1, min(title_row + 8, sheet.max_row) + 1):
+        cell = sheet.cell(row=i, column=2).value
+        if cell is not None and str(cell).strip().lower() == 'campo':
+            header_row = i
+            break
+    if header_row is None:
+        return None
+    for i in range(header_row + 1, min(header_row + 4, sheet.max_row) + 1):
+        nome = sheet.cell(row=i, column=2).value
+        if nome is None or str(nome).strip() == '':
+            continue
+        vals = [sheet.cell(row=i, column=c).value for c in range(3, 9)]
+        if any(isinstance(v, (int, float)) for v in vals):
+            return i
+    return None
+
+
 def parse_xlsm(path):
     wb = openpyxl.load_workbook(path, data_only=True)
     found = find_field_table(wb)
     if not found:
         raise RuntimeError('Tabela de produção por campo do pré-sal não encontrada (nenhuma aba/título reconhecido).')
     sheet, title_row = found
-    # title_row+1: linha em branco. title_row+2: cabeçalho "Campo |
-    # Petróleo | Gás natural | Produção". title_row+3: subcabeçalho
-    # "Pré-sal | Pós-sal | ...". Dados começam em title_row+4.
+    data_start = find_data_start(sheet, title_row)
+    if data_start is None:
+        raise RuntimeError('Cabeçalho "Campo" não encontrado logo após o título da tabela — layout não reconhecido.')
     campos = {}
-    for row in sheet.iter_rows(min_row=title_row + 4, max_row=sheet.max_row, values_only=True):
+    for row in sheet.iter_rows(min_row=data_start, max_row=sheet.max_row, values_only=True):
         if len(row) < 8:
             continue
         nome_raw = row[1]
