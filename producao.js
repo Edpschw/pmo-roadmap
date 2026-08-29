@@ -49,6 +49,30 @@ const PROJECT_FIELD_BASE = {
   'Norte de Carcará': 'Bacalhau',
 };
 
+// Reduz o nome de um campo de CONTEXTO (fora dos 7 tracked acima) ao nome
+// da jazida, quando o próprio nome já diz que é uma sub-área dela — "Anc_"
+// (Área Não Contratada) ou "<Direção> de <Campo>" ("Sul de Tupi", "Norte
+// de Berbigão") são a convenção da ANP pra declarar uma fatia do MESMO
+// campo, não um campo à parte. Sem isso, um mês em que a ANP só publica a
+// tabela com "Anc_Tupi" + "Sul de Tupi" (sem uma linha "Tupi" separada,
+// bem comum) fazia o campo sumir da série mensal naquele mês — a
+// produção está lá, só picada entre as partes (ver nota em
+// computeFieldRows).
+//
+// Não pega nomes como "Marlim Leste"/"Marlim Sul" (direção DEPOIS do nome,
+// sem "de") — esses são campos oficialmente distintos de "Marlim" pra ANP
+// (cada um com seu próprio registro), não sub-áreas do mesmo campo; juntar
+// esses seria dado errado, não simplificação.
+const JAZIDA_DIRECTIONS = ['Norte', 'Sul', 'Leste', 'Oeste', 'Sudoeste', 'Nordeste', 'Noroeste', 'Sudeste'];
+const JAZIDA_DIRECTION_RE = new RegExp(`^(?:${JAZIDA_DIRECTIONS.join('|')})\\s+de\\s+(.+)$`, 'i');
+function jazidaBase(nome) {
+  const ancMatch = nome.match(/^Anc[_\s]+(.+)$/i);
+  if (ancMatch) return ancMatch[1].replace(/_/g, ' ');
+  const dirMatch = nome.match(JAZIDA_DIRECTION_RE);
+  if (dirMatch) return dirMatch[1];
+  return nome;
+}
+
 const UNITS = {
   oleo: { label: 'Petróleo (bbl/d)', key: 'oleoPreSalBbld', fmt: (n) => fmtNum(n) + ' bbl/d' },
   gas: { label: 'Gás natural (Mm³/d)', key: 'gasPreSalMm3d', fmt: (n) => fmtNum(n, { maximumFractionDigits: 1 }) + ' Mm³/d' },
@@ -114,15 +138,30 @@ function computeFieldRows(campos, projects) {
     });
   }
 
+  // Campos de contexto ainda quebrados por sub-área da mesma jazida (ver
+  // jazidaBase) juntam aqui numa linha só — sem isso, um mês em que a ANP
+  // só publica "Anc_Tupi" + "Sul de Tupi" (sem uma linha "Tupi" à parte,
+  // caso comum) aparecia como se Tupi não tivesse produção naquele mês,
+  // quando na verdade a produção está lá, só dividida entre as partes.
+  const contextGroups = new Map();
   for (const [nome, dados] of Object.entries(campos)) {
     if (usedFieldNames.has(nome)) continue;
+    const base = jazidaBase(nome);
+    if (!contextGroups.has(base)) contextGroups.set(base, []);
+    contextGroups.get(base).push({ nome, dados });
+  }
+  for (const [base, parts] of contextGroups) {
+    const sum = emptyMetrics();
+    for (const part of parts) {
+      for (const k of METRIC_KEYS) sum[k] += part.dados[k];
+    }
     rows.push({
-      name: nome,
+      name: base,
       color: CONTEXT_FIELD_COLOR,
       isContract: false,
-      parts: [{ nome, dados }],
-      ...dados,
-      rgo: computeRGO(dados.oleoPreSalBbld, dados.gasPreSalMm3d),
+      parts,
+      ...sum,
+      rgo: computeRGO(sum.oleoPreSalBbld, sum.gasPreSalMm3d),
     });
   }
 
@@ -308,6 +347,7 @@ function createLineChart(container, monthlySeries) {
   let unitKey = 'oleo';
   let viewStart = 0;
   let viewEnd = n - 1;
+  let yMaxOverride = null; // null = auto-ajusta ao máximo visível (ver draw)
   let highlighted = null;
   let isDragging = false;
 
@@ -336,11 +376,15 @@ function createLineChart(container, monthlySeries) {
     const loIdx = Math.max(0, Math.floor(viewStart));
     const hiIdx = Math.min(n - 1, Math.ceil(viewEnd));
 
-    let maxVal = 0;
+    let rawMax = 0;
     for (let i = loIdx; i <= hiIdx; i++) {
-      for (const r of monthlySeries[i].rows) maxVal = Math.max(maxVal, r[unit.key]);
+      for (const r of monthlySeries[i].rows) rawMax = Math.max(rawMax, r[unit.key]);
     }
-    maxVal = niceMax(maxVal);
+    const autoMax = niceMax(rawMax);
+    // yMaxOverride persiste entre trocas de unidade/pan/zoom em x até o
+    // usuário resetar ("Ver tudo") — dar zoom em x não desfaz um zoom em y
+    // já ajustado, e vice-versa (são eixos independentes).
+    const maxVal = yMaxOverride !== null ? yMaxOverride : autoMax;
     const yAt = (v) => LINE_MARGIN.top + plotH - (v / maxVal) * plotH;
 
     const yTicks = 5;
@@ -391,22 +435,38 @@ function createLineChart(container, monthlySeries) {
 
     const axisSvg = `<line x1="${LINE_MARGIN.left}" y1="${LINE_MARGIN.top + plotH}" x2="${LINE_W - LINE_MARGIN.right}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
     const captureSvg = `<rect id="lc-capture" x="${LINE_MARGIN.left}" y="${LINE_MARGIN.top}" width="${plotW}" height="${plotH}" fill="transparent" style="cursor:crosshair" />`;
+    // Faixa invisível sobre os rótulos do eixo y — só pra indicar com o
+    // cursor (ns-resize) que rolar o mouse ali zoom o eixo y, não o x; o
+    // zoom em si é tratado no wheel handler abaixo (checa a posição do
+    // cursor, não depende de qual elemento recebeu o evento).
+    const yAxisHintSvg = `<rect x="0" y="${LINE_MARGIN.top}" width="${LINE_MARGIN.left}" height="${plotH}" fill="transparent" style="cursor:ns-resize" />`;
     const crosshairSvg = `<line id="lc-crosshair" x1="0" y1="${LINE_MARGIN.top}" x2="0" y2="${LINE_MARGIN.top + plotH}" stroke="var(--text-faint)" stroke-width="1" hidden />`;
 
-    svgWrap.innerHTML = `<svg viewBox="0 0 ${LINE_W} ${LINE_H}" style="width:100%;height:auto;display:block;touch-action:none">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${crosshairSvg}${captureSvg}</svg>`;
+    svgWrap.innerHTML = `<svg viewBox="0 0 ${LINE_W} ${LINE_H}" style="width:100%;height:auto;display:block;touch-action:none">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
     const svgEl = svgWrap.firstElementChild;
     const capture = svgEl.querySelector('#lc-capture');
     const crosshair = svgEl.querySelector('#lc-crosshair');
 
-    // Zoom: roda do mouse, ancorado na posição do cursor (mesma ideia do
-    // zoom do roadmap principal — ver MIN_PX_PER_DAY/wheel handler em
-    // app.js) — não deixa a página rolar enquanto o mouse está sobre o
-    // gráfico.
+    // Zoom: roda do mouse sobre a área do gráfico dá zoom no eixo x
+    // (tempo), ancorado no cursor (mesma ideia do zoom do roadmap
+    // principal — ver MIN_PX_PER_DAY/wheel handler em app.js); roda sobre
+    // a faixa de rótulos do eixo y (à esquerda da área do gráfico) dá
+    // zoom só no eixo y — a base (0) fica fixa, só o teto visível muda,
+    // pra não inventar uma linha de base que não é zero num gráfico de
+    // vazão. Os dois eixos são independentes: zoom em um não reseta o
+    // outro (só "Ver tudo" reseta os dois).
     svgEl.addEventListener('wheel', (e) => {
       e.preventDefault();
       const pt = svgPoint(svgEl, e.clientX, e.clientY);
-      const cursorIdx = clampIdx(idxAt(pt.x));
       const factor = e.deltaY > 0 ? 1.25 : 1 / 1.25;
+      if (pt.x < LINE_MARGIN.left) {
+        const base = yMaxOverride !== null ? yMaxOverride : autoMax;
+        const floor = Math.max(rawMax * 0.02, 1);
+        yMaxOverride = Math.max(floor, base * factor);
+        draw();
+        return;
+      }
+      const cursorIdx = clampIdx(idxAt(pt.x));
       let newSpan = span * factor;
       newSpan = Math.max(MIN_VIEW_SPAN, Math.min(n - 1, newSpan));
       const frac = span > 0 ? (cursorIdx - viewStart) / span : 0.5;
@@ -513,8 +573,8 @@ function createLineChart(container, monthlySeries) {
 
   return {
     setUnit(key) { unitKey = key; draw(); },
-    resetZoom() { viewStart = 0; viewEnd = n - 1; draw(); },
-    isZoomed() { return viewStart > 0 || viewEnd < n - 1; },
+    resetZoom() { viewStart = 0; viewEnd = n - 1; yMaxOverride = null; draw(); },
+    isZoomed() { return viewStart > 0 || viewEnd < n - 1 || yMaxOverride !== null; },
   };
 }
 
@@ -570,7 +630,7 @@ function buildEvolutionSection(producaoData) {
 
   const card = chartCard(
     'Produção diária por mês, por campo',
-    'Um ponto por mês do boletim, exatamente como a ANP publicou — sem agregar nem estimar nada entre meses (RGO é a exceção: calculado aqui a partir do óleo e gás do próprio mês, não vem pronto do boletim). Uma linha por contrato rastreado, mais uma linha por campo de contexto (fora dos 7 rastreados) — cada um só aparece a partir do mês em que passou a ter produção no boletim. Role o mouse sobre o gráfico pra zoom (ancorado no cursor), arraste pra mover a janela visível, clique num campo na legenda pra isolar a linha, e passe o mouse sobre qualquer ponto pra ver o valor de todos os campos naquele mês de uma vez.',
+    'Um ponto por mês do boletim, exatamente como a ANP publicou — sem agregar nem estimar nada entre meses (RGO é a exceção: calculado aqui a partir do óleo e gás do próprio mês, não vem pronto do boletim). Uma linha por contrato rastreado, mais uma linha por campo de contexto (fora dos 7 rastreados) — sub-áreas da mesma jazida ("Anc_X", "Sul de X"...) já somadas numa linha só, cada uma só aparece a partir do mês em que passou a ter produção no boletim. Role o mouse sobre a área do gráfico pra zoom no tempo (ancorado no cursor), ou sobre os números do eixo vertical pra zoom só no eixo y; arraste pra mover a janela visível; clique num campo na legenda pra isolar a linha; passe o mouse sobre qualquer ponto pra ver o valor de todos os campos naquele mês de uma vez; "Ver tudo" reseta os dois eixos.',
   );
   const controlsRow = document.createElement('div');
   controlsRow.style.display = 'flex';
