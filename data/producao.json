@@ -7,7 +7,7 @@
       "ano": 2017,
       "mes": 10,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 808125.049306183,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 34488.5422625806,
@@ -134,7 +134,7 @@
       "ano": 2017,
       "mes": 11,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 840034.197081609,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 35491.455017,
@@ -182,7 +182,7 @@
           "boedPreSal": 31523.6934815337,
           "boedPosSal": 0.0
         },
-        "Malim Leste": {
+        "Marlim Leste": {
           "oleoPreSalBbld": 19701.1890232313,
           "oleoPosSalBbld": 22961.336341372,
           "gasPreSalMm3d": 375.835429,
@@ -245,7 +245,7 @@
       "ano": 2017,
       "mes": 12,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 803478.095069793,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 33084.3824809677,
@@ -380,7 +380,7 @@
       "ano": 2018,
       "mes": 1,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 842235.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 35363.0,
@@ -507,7 +507,7 @@
       "ano": 2018,
       "mes": 2,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 850265.155303307,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 36154.2881992857,
@@ -642,7 +642,7 @@
       "ano": 2018,
       "mes": 3,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 831807.092935177,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 34770.2913245161,
@@ -769,7 +769,7 @@
       "ano": 2018,
       "mes": 4,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 897779.07461804,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 38008.1410013333,
@@ -912,7 +912,7 @@
       "ano": 2018,
       "mes": 5,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 871917.988401058,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 37386.2799609677,
@@ -1055,7 +1055,7 @@
       "ano": 2018,
       "mes": 6,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 835366.694712273,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 35742.017784,
@@ -1198,7 +1198,7 @@
       "ano": 2018,
       "mes": 7,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 878717.619965093,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 36798.5275758065,
@@ -1333,7 +1333,7 @@
       "ano": 2018,
       "mes": 8,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 802340.09394929,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 33036.7891103226,
@@ -1476,7 +1476,7 @@
       "ano": 2018,
       "mes": 9,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 851005.820865299,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 35538.4283923333,
@@ -1603,7 +1603,7 @@
       "ano": 2018,
       "mes": 10,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 898690.830461255,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 37872.0980322581,
@@ -1738,7 +1738,7 @@
       "ano": 2018,
       "mes": 11,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 902917.950024999,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 38206.0307473333,
@@ -1802,7 +1802,7 @@
           "boedPreSal": 23936.9338531393,
           "boedPosSal": 58696.4311173065
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4930.30874159626,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 203.487882666667,
@@ -1818,7 +1818,7 @@
           "boedPreSal": 3698.91522191317,
           "boedPosSal": 56655.6111192664
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2867.88270318589,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 118.36563,
@@ -1850,7 +1850,7 @@
           "boedPreSal": 2518.23683022831,
           "boedPosSal": 82081.6519380998
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 596.718264536143,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 24.6281356666667,
@@ -1881,7 +1881,7 @@
       "ano": 2018,
       "mes": 12,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 897089.170924174,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 38548.8849045161,
@@ -1953,7 +1953,7 @@
           "boedPreSal": 14066.4237717255,
           "boedPosSal": 0.0
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5632.10918783372,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 232.76519,
@@ -1961,7 +1961,7 @@
           "boedPreSal": 7096.15800754762,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3276.1089128428,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 135.395761612903,
@@ -2009,7 +2009,7 @@
           "boedPreSal": 884.95570540821,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 681.657663681087,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 28.1715703225806,
@@ -2032,7 +2032,7 @@
       "ano": 2019,
       "mes": 1,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 889060.595702919,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 38255.1588312903,
@@ -2104,7 +2104,7 @@
           "boedPreSal": 20700.7580272298,
           "boedPosSal": 42532.2915264515
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5107.25452137977,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 208.33789,
@@ -2112,7 +2112,7 @@
           "boedPreSal": 6417.66026528067,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2970.80920698203,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 121.186797419355,
@@ -2152,7 +2152,7 @@
           "boedPreSal": 2373.14392315489,
           "boedPosSal": 11886.5607754132
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 618.134078598061,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 25.215124516129,
@@ -2183,7 +2183,7 @@
       "ano": 2019,
       "mes": 2,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 885273.051010942,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 37497.2819996429,
@@ -2247,7 +2247,7 @@
           "boedPreSal": 27963.6397425074,
           "boedPosSal": 2776.90912153281
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 11061.2874962368,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 342.596581428571,
@@ -2263,7 +2263,7 @@
           "boedPreSal": 13005.9459927229,
           "boedPosSal": 27739.5605596244
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5673.8137578939,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 228.847134285714,
@@ -2271,7 +2271,7 @@
           "boedPreSal": 7113.21875159553,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3300.36780994679,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 133.1166875,
@@ -2311,7 +2311,7 @@
           "boedPreSal": 902.346837523363,
           "boedPosSal": 9068.67007907408
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 686.705203380235,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 27.6973607142857,
@@ -2342,7 +2342,7 @@
       "ano": 2019,
       "mes": 3,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 909235.095336363,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 38003.634493871,
@@ -2398,7 +2398,7 @@
           "boedPreSal": 28474.3220526937,
           "boedPosSal": 0.0
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 23378.3340662306,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 762.834361935484,
@@ -2422,7 +2422,7 @@
           "boedPreSal": 15313.0447309659,
           "boedPosSal": 33709.8474348909
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5664.49721516303,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 232.62734516129,
@@ -2430,7 +2430,7 @@
           "boedPreSal": 7127.67901703196,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3294.94852102752,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 135.315582580645,
@@ -2454,7 +2454,7 @@
           "boedPreSal": 2126.60895850776,
           "boedPosSal": 10975.4220092257
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 685.577503707647,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 28.1548764516129,
@@ -2501,7 +2501,7 @@
       "ano": 2019,
       "mes": 4,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 872798.718116431,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 37240.796473,
@@ -2533,7 +2533,7 @@
           "boedPreSal": 118073.363435228,
           "boedPosSal": 58175.5709762859
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 49070.8139933595,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 1861.82173933333,
@@ -2581,7 +2581,7 @@
           "boedPreSal": 18604.0132580501,
           "boedPosSal": 58709.6565414516
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5275.97903111997,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 215.742777333333,
@@ -2589,7 +2589,7 @@
           "boedPreSal": 6632.96010941894,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 3676.13837115027,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 139.477982333333,
@@ -2597,7 +2597,7 @@
           "boedPreSal": 4553.42837921029,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3068.9535923123,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 125.494098,
@@ -2621,7 +2621,7 @@
           "boedPreSal": 2851.22342016934,
           "boedPosSal": 10937.8889915768
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 638.554872853041,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 26.1113286666667,
@@ -2668,7 +2668,7 @@
       "ano": 2019,
       "mes": 5,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 910140.371979341,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 39100.1489506452,
@@ -2700,7 +2700,7 @@
           "boedPreSal": 180028.109032216,
           "boedPosSal": 75213.1451481044
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 53021.4101373147,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2077.76946129032,
@@ -2732,7 +2732,7 @@
           "boedPreSal": 23237.206638992,
           "boedPosSal": 52206.3566066432
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5587.10041529187,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 234.546644193548,
@@ -2740,7 +2740,7 @@
           "boedPreSal": 7062.35424340689,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 3972.09701383269,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 155.655668387097,
@@ -2748,7 +2748,7 @@
           "boedPreSal": 4951.14159341054,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3249.92806769981,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 136.432013225806,
@@ -2788,7 +2788,7 @@
           "boedPreSal": 2231.33501529246,
           "boedPosSal": 83614.1690520042
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 676.21018097834,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 28.3871722580645,
@@ -2811,7 +2811,7 @@
       "ano": 2019,
       "mes": 6,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 798963.014407573,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 32988.2903713333,
@@ -2843,7 +2843,7 @@
           "boedPreSal": 191728.880527053,
           "boedPosSal": 79988.4853569505
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 51209.6444441534,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2005.425302,
@@ -2875,7 +2875,7 @@
           "boedPreSal": 24427.6715657258,
           "boedPosSal": 45078.6264695524
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5465.89431532698,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 229.156057,
@@ -2883,7 +2883,7 @@
           "boedPreSal": 6907.24237420615,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 3836.36753217351,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 150.235831,
@@ -2891,7 +2891,7 @@
           "boedPreSal": 4781.32236435562,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3179.42438930245,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 133.296384,
@@ -2931,7 +2931,7 @@
           "boedPreSal": 1362.03377282592,
           "boedPosSal": 65102.4565130828
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 661.540501279279,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 27.7347486666667,
@@ -2954,7 +2954,7 @@
       "ano": 2019,
       "mes": 7,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 928383.413850035,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 39456.9336374194,
@@ -2986,7 +2986,7 @@
           "boedPreSal": 157053.665664188,
           "boedPosSal": 80266.1694389647
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 54729.9349138218,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2140.19606612903,
@@ -3018,7 +3018,7 @@
           "boedPreSal": 18375.406797247,
           "boedPosSal": 36874.7477672575
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5058.66607796792,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 215.49303483871,
@@ -3026,7 +3026,7 @@
           "boedPreSal": 6414.07632342679,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 4100.08992388828,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 160.332148387097,
@@ -3034,7 +3034,7 @@
           "boedPreSal": 5108.54867413493,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2942.54604313764,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 125.348827096774,
@@ -3074,7 +3074,7 @@
           "boedPreSal": 1611.92820378575,
           "boedPosSal": 67779.1504017678
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 612.253365956345,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 26.081115483871,
@@ -3097,7 +3097,7 @@
       "ano": 2019,
       "mes": 8,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 1026179.2745982,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 43372.129196129,
@@ -3129,7 +3129,7 @@
           "boedPreSal": 187942.744536044,
           "boedPosSal": 83124.4842355538
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 59883.3168362491,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2332.20718709677,
@@ -3161,7 +3161,7 @@
           "boedPreSal": 22521.4993769898,
           "boedPosSal": 48485.3903471331
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5400.39888941755,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 230.465260967742,
@@ -3169,7 +3169,7 @@
           "boedPreSal": 6849.98159250506,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 4486.15544460845,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 174.716619677419,
@@ -3177,7 +3177,7 @@
           "boedPreSal": 5585.08978622167,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3141.32661752657,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 134.057928064516,
@@ -3201,7 +3201,7 @@
           "boedPreSal": 2472.3469525608,
           "boedPosSal": 6548.08801556947
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 653.61342783308,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 27.8931906451613,
@@ -3240,7 +3240,7 @@
       "ano": 2019,
       "mes": 9,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 962214.72132684,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 39748.3627803333,
@@ -3272,7 +3272,7 @@
           "boedPreSal": 200287.601469349,
           "boedPosSal": 86980.1785276487
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 57527.9243256469,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2218.30603866667,
@@ -3304,7 +3304,7 @@
           "boedPreSal": 17534.8535939232,
           "boedPosSal": 0.0
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5408.83318416622,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 234.564549666667,
@@ -3312,7 +3312,7 @@
           "boedPreSal": 6884.19963430512,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 4309.70087504408,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 166.183695333333,
@@ -3320,7 +3320,7 @@
           "boedPreSal": 5354.96474378863,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3146.23274744195,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 136.442415666667,
@@ -3344,7 +3344,7 @@
           "boedPreSal": 2701.58791147407,
           "boedPosSal": 3619.75561486744
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 654.634176682699,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 28.3893293333333,
@@ -3367,7 +3367,7 @@
       "ano": 2019,
       "mes": 10,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 1021616.95085506,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 43010.0726158065,
@@ -3399,7 +3399,7 @@
           "boedPreSal": 190955.192287255,
           "boedPosSal": 83120.4772999198
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 58368.0993875548,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2238.30547612903,
@@ -3431,7 +3431,7 @@
           "boedPreSal": 21926.1674949923,
           "boedPosSal": 39252.9322792193
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5557.05433581797,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 235.632529677419,
@@ -3439,7 +3439,7 @@
           "boedPreSal": 7039.13817730829,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 4372.6440084605,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 167.682162903226,
@@ -3447,7 +3447,7 @@
           "boedPreSal": 5427.33295351084,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3232.45066598547,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 137.063648709677,
@@ -3495,7 +3495,7 @@
           "boedPreSal": 2037.40971364712,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 672.573562980193,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 28.5185896774193,
@@ -3526,7 +3526,7 @@
       "ano": 2019,
       "mes": 11,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 1063232.92575229,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 44713.8318663333,
@@ -3558,7 +3558,7 @@
           "boedPreSal": 205870.602867947,
           "boedPosSal": 83593.1055022006
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 61191.5316488066,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2342.55626,
@@ -3598,7 +3598,7 @@
           "boedPreSal": 18200.8711609945,
           "boedPosSal": 23573.1399960582
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4589.08382351193,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 199.243940333333,
@@ -3606,7 +3606,7 @@
           "boedPreSal": 5842.29035185993,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 4584.16017282355,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 175.491885333333,
@@ -3646,7 +3646,7 @@
           "boedPreSal": 3546.9193970207,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2669.3975004388,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 115.896987333333,
@@ -3662,7 +3662,7 @@
           "boedPreSal": 2089.32789543011,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 555.419441264053,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 24.1144723333333,
@@ -3693,7 +3693,7 @@
       "ano": 2019,
       "mes": 12,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 1073854.40919651,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 44997.1087387097,
@@ -3725,7 +3725,7 @@
           "boedPreSal": 184690.136692764,
           "boedPosSal": 68238.7605119927
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 62791.6320127994,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2413.09173451613,
@@ -3765,7 +3765,7 @@
           "boedPreSal": 17774.3336801591,
           "boedPosSal": 40965.9194689663
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5069.72160396197,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 222.065346774194,
@@ -3773,7 +3773,7 @@
           "boedPreSal": 6466.47044275576,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 4704.03659748591,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 180.776636774194,
@@ -3789,7 +3789,7 @@
           "boedPreSal": 3838.58398391372,
           "boedPosSal": 94570.3088330289
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2948.97687473578,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 129.171839354839,
@@ -3829,7 +3829,7 @@
           "boedPreSal": 1995.14386637714,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 613.591303904981,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 26.8765425806452,
@@ -3860,7 +3860,7 @@
       "ano": 2020,
       "mes": 1,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 1052445.48006748,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 44096.5302025806,
@@ -3892,7 +3892,7 @@
           "boedPreSal": 187484.348111614,
           "boedPosSal": 83332.1868445588
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 60216.3515485796,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2286.66238483871,
@@ -3932,7 +3932,7 @@
           "boedPreSal": 17533.103184167,
           "boedPosSal": 44471.4416375554
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5474.60984777046,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 235.11244483871,
@@ -3940,7 +3940,7 @@
           "boedPreSal": 6953.42245444143,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 4511.10941767359,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 171.305182258065,
@@ -3948,7 +3948,7 @@
           "boedPreSal": 5588.58646609219,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3184.49397311899,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 136.76111516129,
@@ -3996,7 +3996,7 @@
           "boedPreSal": 1762.64471216459,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 662.595233904693,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 28.4556390322581,
@@ -4027,7 +4027,7 @@
       "ano": 2020,
       "mes": 2,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 974346.404259797,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 41341.3231055172,
@@ -4059,7 +4059,7 @@
           "boedPreSal": 177437.365235857,
           "boedPosSal": 82407.0310325599
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 54332.3326557133,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2065.06622172414,
@@ -4099,7 +4099,7 @@
           "boedPreSal": 12113.1352349804,
           "boedPosSal": 47004.785042324
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5423.7225009124,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 236.950342758621,
@@ -4107,7 +4107,7 @@
           "boedPreSal": 6914.09513629901,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 4070.3079775341,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 154.704303103448,
@@ -4115,7 +4115,7 @@
           "boedPreSal": 5043.3686502372,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3154.8936759179,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 137.830190344828,
@@ -4163,7 +4163,7 @@
           "boedPreSal": 1570.9640598415,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 656.436302606999,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 28.6780820689655,
@@ -4194,7 +4194,7 @@
       "ano": 2020,
       "mes": 3,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 876623.369766009,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 37917.8231322581,
@@ -4226,7 +4226,7 @@
           "boedPreSal": 165402.598102243,
           "boedPosSal": 81168.7369045447
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 55174.5150766782,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2174.78314709677,
@@ -4266,7 +4266,7 @@
           "boedPreSal": 8471.86729189241,
           "boedPosSal": 43871.3082525739
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5230.36534989837,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 231.41766,
@@ -4274,7 +4274,7 @@
           "boedPreSal": 6685.93846194297,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 4133.39557565643,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 162.923225806452,
@@ -4290,7 +4290,7 @@
           "boedPreSal": 4160.07709373336,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3042.42088309171,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 134.611930322581,
@@ -4330,7 +4330,7 @@
           "boedPreSal": 1664.35029247951,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 633.034236751807,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 28.0084693548387,
@@ -4361,7 +4361,7 @@
       "ano": 2020,
       "mes": 4,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 1032997.51290772,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 45681.675154,
@@ -4393,7 +4393,7 @@
           "boedPreSal": 115041.611397993,
           "boedPosSal": 55969.0460008871
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 61758.0302968612,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2475.115259,
@@ -4433,7 +4433,7 @@
           "boedPreSal": 6884.13688925716,
           "boedPosSal": 42917.6359048321
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4535.35953299992,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 226.694742666667,
@@ -4441,7 +4441,7 @@
           "boedPreSal": 5961.22639237215,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 4626.59910173246,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 185.422501,
@@ -4457,7 +4457,7 @@
           "boedPreSal": 4113.9044528554,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2638.1468960409,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 131.864693666667,
@@ -4481,7 +4481,7 @@
           "boedPreSal": 1383.74583423354,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 548.917192931303,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 27.436874,
@@ -4528,7 +4528,7 @@
       "ano": 2020,
       "mes": 5,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 888655.19983898,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 39281.161983871,
@@ -4560,7 +4560,7 @@
           "boedPreSal": 143113.272730781,
           "boedPosSal": 57510.1769994417
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 52598.2736045624,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2110.22890806452,
@@ -4600,7 +4600,7 @@
           "boedPreSal": 7003.96803919082,
           "boedPosSal": 35610.3280801996
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4925.49932440813,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 230.110587419355,
@@ -4608,7 +4608,7 @@
           "boedPreSal": 6372.85119826426,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 3940.39749548261,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 158.087326129032,
@@ -4624,7 +4624,7 @@
           "boedPreSal": 3760.78595503369,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2865.08513184184,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 133.851628709677,
@@ -4672,7 +4672,7 @@
           "boedPreSal": 800.410266618916,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 596.136091017148,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 27.8502861290322,
@@ -4695,7 +4695,7 @@
       "ano": 2020,
       "mes": 7,
       "campos": {
-        "Lula": {
+        "Tupi": {
           "oleoPreSalBbld": 987510.547699547,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 43150.7590593548,
@@ -4727,7 +4727,7 @@
           "boedPreSal": 149070.259560993,
           "boedPosSal": 56502.4391162033
         },
-        "Sul De Lula": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 57450.9882905416,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2261.78789129032,
@@ -4783,7 +4783,7 @@
           "boedPreSal": 9704.98838120549,
           "boedPosSal": 35273.1794851751
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4875.84466081067,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 217.67099516129,
@@ -4791,7 +4791,7 @@
           "boedPreSal": 6244.95386288611,
           "boedPosSal": 0.0
         },
-        "Oeste De Atapu": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 4588.69072810661,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 169.44571,
@@ -4799,7 +4799,7 @@
           "boedPreSal": 5654.47204932171,
           "boedPosSal": 0.0
         },
-        "Anc_Lula": {
+        "Anc_Tupi": {
           "oleoPreSalBbld": 4303.93840514925,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 169.441335483871,
@@ -4831,7 +4831,7 @@
           "boedPreSal": 3744.68851937261,
           "boedPosSal": 9563.91412518003
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2836.20178867351,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 126.615708387097,
@@ -4863,7 +4863,7 @@
           "boedPreSal": 1087.83561679831,
           "boedPosSal": 19323.5721531763
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 590.126350024681,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 26.3447135483871,
@@ -5014,7 +5014,7 @@
           "boedPreSal": 4120.09433387101,
           "boedPosSal": 0.0
         },
-        "Noroeste de Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2888.7668285168,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 128.780638387097,
@@ -5125,7 +5125,7 @@
           "boedPreSal": 144700.080438309,
           "boedPosSal": 55728.2815213818
         },
-        "Sul De Tupi": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 55858.2956407119,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2255.776232,
@@ -5189,7 +5189,7 @@
           "boedPreSal": 5247.5405567444,
           "boedPosSal": 0.0
         },
-        "Oeste De Atapu": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 3987.11212725929,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 145.482335333333,
@@ -5205,7 +5205,7 @@
           "boedPreSal": 4839.56971804013,
           "boedPosSal": 0.0
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 2885.87301692521,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 125.089246333333,
@@ -5237,7 +5237,7 @@
           "boedPreSal": 2261.38983699357,
           "boedPosSal": 5927.63150030953
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 1678.6666974251,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 72.7624046666667,
@@ -5245,7 +5245,7 @@
           "boedPreSal": 2136.32839792155,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 349.278921248977,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 15.139553,
@@ -5300,7 +5300,7 @@
           "boedPreSal": 157228.569176346,
           "boedPosSal": 67921.5182667839
         },
-        "Sul De Tupi": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 56524.7822033402,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2318.38600032258,
@@ -5356,7 +5356,7 @@
           "boedPreSal": 8912.90692069986,
           "boedPosSal": 31264.0240713938
         },
-        "Oeste De Atapu": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 5801.6704742153,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 208.147168387097,
@@ -5380,7 +5380,7 @@
           "boedPreSal": 5085.08008433865,
           "boedPosSal": 35199.7161336388
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 3587.22685527125,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 165.016942580645,
@@ -5396,7 +5396,7 @@
           "boedPreSal": 4565.08123845045,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2086.63315801583,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 95.9877029032258,
@@ -5420,7 +5420,7 @@
           "boedPreSal": 1929.90912225185,
           "boedPosSal": 6712.12393111081
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 434.164233438506,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 19.972004516129,
@@ -5571,7 +5571,7 @@
           "boedPreSal": 3792.72225754206,
           "boedPosSal": 0.0
         },
-        "Noroeste de Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2550.22709531617,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 121.780412,
@@ -5650,7 +5650,7 @@
           "boedPreSal": 121029.109345661,
           "boedPosSal": 62885.7199901638
         },
-        "Sul De Tupi": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 55608.9801111496,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2325.47890580645,
@@ -5698,7 +5698,7 @@
           "boedPreSal": 36322.0286196094,
           "boedPosSal": 0.0
         },
-        "Oeste De Atapu": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 8692.78025087019,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 307.239059032258,
@@ -5722,7 +5722,7 @@
           "boedPreSal": 8471.71223590209,
           "boedPosSal": 61178.3018042777
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4356.33021348029,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 200.718091612903,
@@ -5754,7 +5754,7 @@
           "boedPreSal": 3270.26937410893,
           "boedPosSal": 6071.61900499503
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2534.00840084287,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 116.754470967742,
@@ -5786,7 +5786,7 @@
           "boedPreSal": 776.879850019313,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 527.249158570503,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 24.292894516129,
@@ -5945,7 +5945,7 @@
           "boedPreSal": 4126.49543495757,
           "boedPosSal": 0.0
         },
-        "Noroeste de Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2829.74803376137,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 134.104237741935,
@@ -6152,7 +6152,7 @@
           "boedPreSal": 4475.63083944753,
           "boedPosSal": 0.0
         },
-        "Noroeste de Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3259.24855163432,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 160.132209677419,
@@ -6215,7 +6215,7 @@
           "boedPreSal": 83664.2218448844,
           "boedPosSal": 0.0
         },
-        "Sul De Tupi": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 56045.2379246194,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2476.04093133333,
@@ -6255,7 +6255,7 @@
           "boedPreSal": 50909.9067543099,
           "boedPosSal": 0.0
         },
-        "Oeste De Atapu": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 14423.9956667165,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 468.990508,
@@ -6271,7 +6271,7 @@
           "boedPreSal": 14878.4652362229,
           "boedPosSal": 44523.7704904342
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 5990.00511821287,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 287.661510333333,
@@ -6295,7 +6295,7 @@
           "boedPreSal": 4677.0927781002,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3485.48791298443,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 167.385554,
@@ -6462,7 +6462,7 @@
           "boedPreSal": 4498.13586078637,
           "boedPosSal": 0.0
         },
-        "Noroeste de Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 3407.94457825995,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 164.13745,
@@ -6780,7 +6780,7 @@
           "boedPreSal": 4587.98539084218,
           "boedPosSal": 0.0
         },
-        "Noroeste de Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2723.74965392017,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 129.775344516129,
@@ -6899,7 +6899,7 @@
           "boedPreSal": 69180.9442119455,
           "boedPosSal": 0.0
         },
-        "Sul De Tupi": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 54562.529155472,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2309.82769516129,
@@ -6923,7 +6923,7 @@
           "boedPreSal": 45226.3480059051,
           "boedPosSal": 0.0
         },
-        "Oeste De Atapu": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 27114.9620500313,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 910.186071935484,
@@ -6955,7 +6955,7 @@
           "boedPreSal": 8634.79562870393,
           "boedPosSal": 0.0
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4687.62636754456,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 220.25068,
@@ -6979,7 +6979,7 @@
           "boedPreSal": 4320.03254981941,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoa": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2726.7180993151,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 128.116260967742,
@@ -7019,7 +7019,7 @@
           "boedPreSal": 1185.39520812594,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 567.346025731113,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 26.6569122580645,
@@ -7042,7 +7042,7 @@
       "ano": 2021,
       "mes": 9,
       "campos": {
-        "Tupi c": {
+        "Tupi": {
           "oleoPreSalBbld": 948076.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 43119.0,
@@ -7050,7 +7050,7 @@
           "boedPreSal": 1219285.0,
           "boedPosSal": 0.0
         },
-        "*Búzios co+P": {
+        "Búzios": {
           "oleoPreSalBbld": 566196.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 22815.0,
@@ -7058,7 +7058,7 @@
           "boedPreSal": 709697.0,
           "boedPosSal": 0.0
         },
-        "Sapinhoá c": {
+        "Sapinhoá": {
           "oleoPreSalBbld": 201778.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 9780.0,
@@ -7066,7 +7066,7 @@
           "boedPreSal": 263291.0,
           "boedPosSal": 0.0
         },
-        "Atapu co": {
+        "Atapu": {
           "oleoPreSalBbld": 132041.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 4493.0,
@@ -7074,7 +7074,7 @@
           "boedPreSal": 160298.0,
           "boedPosSal": 0.0
         },
-        "Jubarte c": {
+        "Jubarte": {
           "oleoPreSalBbld": 95936.0,
           "oleoPosSalBbld": 30879.0,
           "gasPreSalMm3d": 3345.0,
@@ -7082,7 +7082,7 @@
           "boedPreSal": 116974.0,
           "boedPosSal": 32996.0
         },
-        "Lapa c": {
+        "Lapa": {
           "oleoPreSalBbld": 57858.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2350.0,
@@ -7090,7 +7090,7 @@
           "boedPreSal": 72639.0,
           "boedPosSal": 0.0
         },
-        "Sul De Tupi co": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 57162.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2426.0,
@@ -7098,7 +7098,7 @@
           "boedPreSal": 72421.0,
           "boedPosSal": 0.0
         },
-        "Sururu c": {
+        "Sururu": {
           "oleoPreSalBbld": 56688.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 1885.0,
@@ -7106,7 +7106,7 @@
           "boedPreSal": 68546.0,
           "boedPosSal": 0.0
         },
-        "Sépia co": {
+        "Sépia": {
           "oleoPreSalBbld": 43698.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 1066.0,
@@ -7114,7 +7114,7 @@
           "boedPreSal": 50401.0,
           "boedPosSal": 0.0
         },
-        "Oeste de Atapu c": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 27420.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 933.0,
@@ -7122,7 +7122,7 @@
           "boedPreSal": 33288.0,
           "boedPosSal": 0.0
         },
-        "Berbigão c": {
+        "Berbigão": {
           "oleoPreSalBbld": 29473.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 383.0,
@@ -7130,7 +7130,7 @@
           "boedPreSal": 31884.0,
           "boedPosSal": 0.0
         },
-        "Marlim Leste c": {
+        "Marlim Leste": {
           "oleoPreSalBbld": 11966.0,
           "oleoPosSalBbld": 54456.0,
           "gasPreSalMm3d": 233.0,
@@ -7138,7 +7138,7 @@
           "boedPreSal": 13434.0,
           "boedPosSal": 62014.0
         },
-        "Sépia Leste c": {
+        "Sépia Leste": {
           "oleoPreSalBbld": 5999.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 146.0,
@@ -7146,7 +7146,7 @@
           "boedPreSal": 6919.0,
           "boedPosSal": 0.0
         },
-        "Sudoeste de Sapinhoá P": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4553.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 221.0,
@@ -7162,7 +7162,7 @@
           "boedPreSal": 5425.0,
           "boedPosSal": 0.0
         },
-        "Tambuatá c": {
+        "Tambuatá": {
           "oleoPreSalBbld": 3654.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 147.0,
@@ -7170,7 +7170,7 @@
           "boedPreSal": 4581.0,
           "boedPosSal": 0.0
         },
-        "Noroeste de Sapinhoá p": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2648.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 128.0,
@@ -7178,7 +7178,7 @@
           "boedPreSal": 3456.0,
           "boedPosSal": 0.0
         },
-        "Barracuda c": {
+        "Barracuda": {
           "oleoPreSalBbld": 1983.0,
           "oleoPosSalBbld": 24101.0,
           "gasPreSalMm3d": 28.0,
@@ -7186,7 +7186,7 @@
           "boedPreSal": 2162.0,
           "boedPosSal": 25969.0
         },
-        "Caratinga c": {
+        "Caratinga": {
           "oleoPreSalBbld": 1831.0,
           "oleoPosSalBbld": 2244.0,
           "gasPreSalMm3d": 26.0,
@@ -7202,7 +7202,7 @@
           "boedPreSal": 1857.0,
           "boedPosSal": 0.0
         },
-        "Nordeste de Sapinhoá P": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 551.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 27.0,
@@ -7225,7 +7225,7 @@
       "ano": 2021,
       "mes": 10,
       "campos": {
-        "Tupi c": {
+        "Tupi": {
           "oleoPreSalBbld": 898565.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 41270.0,
@@ -7233,7 +7233,7 @@
           "boedPreSal": 1158146.0,
           "boedPosSal": 0.0
         },
-        "Búzios co+P": {
+        "Búzios": {
           "oleoPreSalBbld": 466236.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 18562.0,
@@ -7241,7 +7241,7 @@
           "boedPreSal": 430710.0,
           "boedPosSal": 0.0
         },
-        "Sapinhoá c": {
+        "Sapinhoá": {
           "oleoPreSalBbld": 187463.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 9545.0,
@@ -7249,7 +7249,7 @@
           "boedPreSal": 247498.0,
           "boedPosSal": 0.0
         },
-        "Atapu co": {
+        "Atapu": {
           "oleoPreSalBbld": 129449.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 4437.0,
@@ -7257,7 +7257,7 @@
           "boedPreSal": 157357.0,
           "boedPosSal": 0.0
         },
-        "Jubarte c": {
+        "Jubarte": {
           "oleoPreSalBbld": 99787.0,
           "oleoPosSalBbld": 51101.0,
           "gasPreSalMm3d": 3472.0,
@@ -7265,7 +7265,7 @@
           "boedPreSal": 121624.0,
           "boedPosSal": 54329.0
         },
-        "Lapa c": {
+        "Lapa": {
           "oleoPreSalBbld": 57753.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2426.0,
@@ -7273,7 +7273,7 @@
           "boedPreSal": 73013.0,
           "boedPosSal": 0.0
         },
-        "Sul de Tupi co": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 54939.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2370.0,
@@ -7281,7 +7281,7 @@
           "boedPreSal": 69844.0,
           "boedPosSal": 0.0
         },
-        "Sururu c": {
+        "Sururu": {
           "oleoPreSalBbld": 57186.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 1832.0,
@@ -7289,7 +7289,7 @@
           "boedPreSal": 68709.0,
           "boedPosSal": 0.0
         },
-        "Sépia c": {
+        "Sépia": {
           "oleoPreSalBbld": 43655.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 1163.0,
@@ -7297,7 +7297,7 @@
           "boedPreSal": 50973.0,
           "boedPosSal": 0.0
         },
-        "Oeste de Atapu c": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 26882.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 921.0,
@@ -7305,7 +7305,7 @@
           "boedPreSal": 32677.0,
           "boedPosSal": 0.0
         },
-        "Berbigão c": {
+        "Berbigão": {
           "oleoPreSalBbld": 23871.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 307.0,
@@ -7313,7 +7313,7 @@
           "boedPreSal": 25804.0,
           "boedPosSal": 0.0
         },
-        "Marlim Leste c": {
+        "Marlim Leste": {
           "oleoPreSalBbld": 11102.0,
           "oleoPosSalBbld": 45991.0,
           "gasPreSalMm3d": 222.0,
@@ -7321,7 +7321,7 @@
           "boedPreSal": 12501.0,
           "boedPosSal": 52624.0
         },
-        "Sépia Leste co": {
+        "Sépia Leste": {
           "oleoPreSalBbld": 5993.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 160.0,
@@ -7329,7 +7329,7 @@
           "boedPreSal": 6998.0,
           "boedPosSal": 0.0
         },
-        "Albacora c": {
+        "Albacora": {
           "oleoPreSalBbld": 5092.0,
           "oleoPosSalBbld": 6205.0,
           "gasPreSalMm3d": 161.0,
@@ -7337,7 +7337,7 @@
           "boedPreSal": 6107.0,
           "boedPosSal": 6782.0
         },
-        "Sudoeste de Sapinhoá P": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4230.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 215.0,
@@ -7353,7 +7353,7 @@
           "boedPreSal": 5232.0,
           "boedPosSal": 0.0
         },
-        "Tambuatá c": {
+        "Tambuatá": {
           "oleoPreSalBbld": 3009.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 120.0,
@@ -7361,7 +7361,7 @@
           "boedPreSal": 3763.0,
           "boedPosSal": 0.0
         },
-        "Noroeste de Sapinhoá P": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2461.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 125.0,
@@ -7369,7 +7369,7 @@
           "boedPreSal": 3249.0,
           "boedPosSal": 0.0
         },
-        "Barracuda c": {
+        "Barracuda": {
           "oleoPreSalBbld": 2311.0,
           "oleoPosSalBbld": 26116.0,
           "gasPreSalMm3d": 34.0,
@@ -7377,7 +7377,7 @@
           "boedPreSal": 2525.0,
           "boedPosSal": 28357.0
         },
-        "Caratinga c": {
+        "Caratinga": {
           "oleoPreSalBbld": 2133.0,
           "oleoPosSalBbld": 3017.0,
           "gasPreSalMm3d": 31.0,
@@ -7393,7 +7393,7 @@
           "boedPreSal": 1823.0,
           "boedPosSal": 0.0
         },
-        "Nordeste de Sapinhoá P": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 512.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 26.0,
@@ -7401,7 +7401,7 @@
           "boedPreSal": 676.0,
           "boedPosSal": 0.0
         },
-        "Marlim c": {
+        "Marlim": {
           "oleoPreSalBbld": 324.0,
           "oleoPosSalBbld": 26178.0,
           "gasPreSalMm3d": 11.0,
@@ -7409,7 +7409,7 @@
           "boedPreSal": 392.0,
           "boedPosSal": 28582.0
         },
-        "Voador c": {
+        "Voador": {
           "oleoPreSalBbld": 168.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 6.0,
@@ -7424,7 +7424,7 @@
       "ano": 2021,
       "mes": 11,
       "campos": {
-        "Tupi c": {
+        "Tupi": {
           "oleoPreSalBbld": 874356.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 40903.0,
@@ -7432,7 +7432,7 @@
           "boedPreSal": 1131631.0,
           "boedPosSal": 0.0
         },
-        "Búzios co+p": {
+        "Búzios": {
           "oleoPreSalBbld": 588443.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 23912.0,
@@ -7440,7 +7440,7 @@
           "boedPreSal": 738845.0,
           "boedPosSal": 0.0
         },
-        "Sapinhoá c": {
+        "Sapinhoá": {
           "oleoPreSalBbld": 169701.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 8965.0,
@@ -7448,7 +7448,7 @@
           "boedPreSal": 226087.0,
           "boedPosSal": 0.0
         },
-        "Atapu co": {
+        "Atapu": {
           "oleoPreSalBbld": 129698.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 4467.0,
@@ -7456,7 +7456,7 @@
           "boedPreSal": 157794.0,
           "boedPosSal": 0.0
         },
-        "Jubarte c": {
+        "Jubarte": {
           "oleoPreSalBbld": 99185.0,
           "oleoPosSalBbld": 55392.0,
           "gasPreSalMm3d": 3510.0,
@@ -7464,7 +7464,7 @@
           "boedPreSal": 121263.0,
           "boedPosSal": 58927.0
         },
-        "Sururu c": {
+        "Sururu": {
           "oleoPreSalBbld": 55659.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 1745.0,
@@ -7472,7 +7472,7 @@
           "boedPreSal": 66635.0,
           "boedPosSal": 0.0
         },
-        "Sul de Tupi c": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 50209.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2153.0,
@@ -7480,7 +7480,7 @@
           "boedPreSal": 63753.0,
           "boedPosSal": 0.0
         },
-        "Lapa c": {
+        "Lapa": {
           "oleoPreSalBbld": 34752.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 1482.0,
@@ -7488,7 +7488,7 @@
           "boedPreSal": 44072.0,
           "boedPosSal": 0.0
         },
-        "Sépia c": {
+        "Sépia": {
           "oleoPreSalBbld": 36878.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 1037.0,
@@ -7496,7 +7496,7 @@
           "boedPreSal": 43403.0,
           "boedPosSal": 0.0
         },
-        "Berbigão c": {
+        "Berbigão": {
           "oleoPreSalBbld": 32753.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 435.0,
@@ -7504,7 +7504,7 @@
           "boedPreSal": 35492.0,
           "boedPosSal": 0.0
         },
-        "Oeste de Atapu c": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 26933.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 928.0,
@@ -7512,7 +7512,7 @@
           "boedPreSal": 32768.0,
           "boedPosSal": 0.0
         },
-        "Marlim Leste c": {
+        "Marlim Leste": {
           "oleoPreSalBbld": 10025.0,
           "oleoPosSalBbld": 52196.0,
           "gasPreSalMm3d": 231.0,
@@ -7520,7 +7520,7 @@
           "boedPreSal": 11480.0,
           "boedPosSal": 58678.0
         },
-        "Sépia Leste c": {
+        "Sépia Leste": {
           "oleoPreSalBbld": 5063.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 142.0,
@@ -7528,7 +7528,7 @@
           "boedPreSal": 5958.0,
           "boedPosSal": 0.0
         },
-        "Albacora c": {
+        "Albacora": {
           "oleoPreSalBbld": 4647.0,
           "oleoPosSalBbld": 6915.0,
           "gasPreSalMm3d": 128.0,
@@ -7536,7 +7536,7 @@
           "boedPreSal": 5451.0,
           "boedPosSal": 7630.0
         },
-        "Sudoeste de Sapinhoá P": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 3829.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 202.0,
@@ -7552,7 +7552,7 @@
           "boedPreSal": 4776.0,
           "boedPosSal": 0.0
         },
-        "Tambuatá c": {
+        "Tambuatá": {
           "oleoPreSalBbld": 3798.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 154.0,
@@ -7560,7 +7560,7 @@
           "boedPreSal": 4769.0,
           "boedPosSal": 0.0
         },
-        "Barracuda c": {
+        "Barracuda": {
           "oleoPreSalBbld": 2671.0,
           "oleoPosSalBbld": 25967.0,
           "gasPreSalMm3d": 102.0,
@@ -7568,7 +7568,7 @@
           "boedPreSal": 3313.0,
           "boedPosSal": 28879.0
         },
-        "Caratinga c": {
+        "Caratinga": {
           "oleoPreSalBbld": 2466.0,
           "oleoPosSalBbld": 3173.0,
           "gasPreSalMm3d": 94.0,
@@ -7576,7 +7576,7 @@
           "boedPreSal": 3058.0,
           "boedPosSal": 4091.0
         },
-        "Noroeste de Sapinhoá P": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2227.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 118.0,
@@ -7584,7 +7584,7 @@
           "boedPreSal": 2968.0,
           "boedPosSal": 0.0
         },
-        "Marlim c": {
+        "Marlim": {
           "oleoPreSalBbld": 1889.0,
           "oleoPosSalBbld": 34701.0,
           "gasPreSalMm3d": 53.0,
@@ -7600,7 +7600,7 @@
           "boedPreSal": 1828.0,
           "boedPosSal": 0.0
         },
-        "Voador c": {
+        "Voador": {
           "oleoPreSalBbld": 982.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 28.0,
@@ -7608,7 +7608,7 @@
           "boedPreSal": 1156.0,
           "boedPosSal": 0.0
         },
-        "Nordeste de Sapinhoá P": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 463.0,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 24.0,
@@ -7671,7 +7671,7 @@
           "boedPreSal": 75999.1497350548,
           "boedPosSal": 0.0
         },
-        "Sul De Tupi": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 49867.5508846688,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2169.26657580645,
@@ -7703,7 +7703,7 @@
           "boedPreSal": 41383.8733788571,
           "boedPosSal": 0.0
         },
-        "Oeste De Atapu": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 27451.2487767392,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 950.97024483871,
@@ -7751,7 +7751,7 @@
           "boedPreSal": 4674.91155315103,
           "boedPosSal": 0.0
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 3455.69993227935,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 172.553986774194,
@@ -7791,7 +7791,7 @@
           "boedPreSal": 3384.24147797025,
           "boedPosSal": 33310.1821194522
         },
-        "Noroeste De Sapinhoá": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2010.12594829165,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 100.371875483871,
@@ -7878,7 +7878,7 @@
           "boedPreSal": 70242.2407647185,
           "boedPosSal": 0.0
         },
-        "Sul De Tupi": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 51675.1830063399,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2240.99055903226,
@@ -7902,7 +7902,7 @@
           "boedPreSal": 42252.8905231179,
           "boedPosSal": 0.0
         },
-        "Oeste De Atapu": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 27032.1828568461,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 943.406292903226,
@@ -7934,7 +7934,7 @@
           "boedPreSal": 6465.73769003561,
           "boedPosSal": 61111.434529822
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4290.71272832958,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 216.473207419355,
@@ -7966,7 +7966,7 @@
           "boedPreSal": 3525.99163292037,
           "boedPosSal": 34019.6043679418
         },
-        "Noroeste De Sapinhoá": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2495.83973377792,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 125.918985483871,
@@ -8085,7 +8085,7 @@
           "boedPreSal": 68004.237356994,
           "boedPosSal": 0.0
         },
-        "Sul De Tupi": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 52485.1932388761,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2275.63096428571,
@@ -8101,7 +8101,7 @@
           "boedPreSal": 34474.3427120632,
           "boedPosSal": 0.0
         },
-        "Oeste De Atapu": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 17761.113546633,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 650.263123928571,
@@ -8133,7 +8133,7 @@
           "boedPreSal": 6603.97866839319,
           "boedPosSal": 5698.09264912998
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4023.57140823063,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 193.945740714286,
@@ -8165,7 +8165,7 @@
           "boedPreSal": 3161.72215035871,
           "boedPosSal": 37411.7817886087
         },
-        "Noroeste De Sapinhoá": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2340.44784354031,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 112.815115357143,
@@ -8197,7 +8197,7 @@
           "boedPreSal": 1218.7985497013,
           "boedPosSal": 0.0
         },
-        "Nordeste De Sapinhoá": {
+        "Nordeste de Sapinhoá": {
           "oleoPreSalBbld": 486.975074563879,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 23.4732417857143,
@@ -8268,7 +8268,7 @@
           "boedPreSal": 71406.5815785018,
           "boedPosSal": 0.0
         },
-        "Sul De Tupi": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 52663.711343175,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2283.01234645161,
@@ -8300,7 +8300,7 @@
           "boedPreSal": 39575.2237140428,
           "boedPosSal": 0.0
         },
-        "Oeste De Atapu": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 16309.6500055742,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 554.900348387097,
@@ -8308,7 +8308,7 @@
           "boedPreSal": 19799.8677658629,
           "boedPosSal": 0.0
         },
-        "Sul De Berbigão": {
+        "Sul de Berbigão": {
           "oleoPreSalBbld": 17820.5932260568,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 225.986780967742,
@@ -8332,7 +8332,7 @@
           "boedPreSal": 13334.3110884432,
           "boedPosSal": 71622.2042614765
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4473.44445685417,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 225.557161935484,
@@ -8364,7 +8364,7 @@
           "boedPreSal": 4532.9779609647,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoá": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2602.13187818069,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 131.20297,
@@ -8682,7 +8682,7 @@
           "boedPreSal": 70367.5904957439,
           "boedPosSal": 0.0
         },
-        "Sul De Tupi": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 46156.4874582535,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 2030.42124774194,
@@ -8698,7 +8698,7 @@
           "boedPreSal": 38309.180207027,
           "boedPosSal": 0.0
         },
-        "Oeste De Atapu": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 27080.9009799083,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 941.455541290323,
@@ -8714,7 +8714,7 @@
           "boedPreSal": 23637.0094577931,
           "boedPosSal": 0.0
         },
-        "Sul De Berbigão": {
+        "Sul de Berbigão": {
           "oleoPreSalBbld": 18042.0418130803,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 251.657790967742,
@@ -8722,7 +8722,7 @@
           "boedPreSal": 19624.9215032871,
           "boedPosSal": 0.0
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4281.96573912601,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 208.772226129032,
@@ -8754,7 +8754,7 @@
           "boedPreSal": 3467.02181549513,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoá": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2490.75226153884,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 121.439528064516,
@@ -8857,7 +8857,7 @@
           "boedPreSal": 66045.940586413,
           "boedPosSal": 51037.2657750142
         },
-        "Sul De Tupi": {
+        "Sul de Tupi": {
           "oleoPreSalBbld": 41380.2982630269,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 1761.49676533333,
@@ -8881,7 +8881,7 @@
           "boedPreSal": 44382.2458049505,
           "boedPosSal": 0.0
         },
-        "Oeste De Atapu": {
+        "Oeste de Atapu": {
           "oleoPreSalBbld": 25261.5994181787,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 888.648188,
@@ -8897,7 +8897,7 @@
           "boedPreSal": 24698.8972512182,
           "boedPosSal": 0.0
         },
-        "Sul De Berbigão": {
+        "Sul de Berbigão": {
           "oleoPreSalBbld": 18665.278491925,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 249.32011,
@@ -8921,7 +8921,7 @@
           "boedPreSal": 10722.394718996,
           "boedPosSal": 53381.4696133397
         },
-        "Sudoeste De Sapinhoá": {
+        "Sudoeste de Sapinhoá": {
           "oleoPreSalBbld": 4269.960798776,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 207.437665666667,
@@ -8945,7 +8945,7 @@
           "boedPreSal": 3930.02552446464,
           "boedPosSal": 0.0
         },
-        "Noroeste De Sapinhoá": {
+        "Noroeste de Sapinhoá": {
           "oleoPreSalBbld": 2483.76916203349,
           "oleoPosSalBbld": 0.0,
           "gasPreSalMm3d": 120.663235666667,

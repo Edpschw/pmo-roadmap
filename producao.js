@@ -80,6 +80,42 @@ function computeRGO(oleoBbld, gasMm3d) {
   return (gasMm3d * 1000) / oleoM3;
 }
 
+// Fusão de campo de CONTEXTO fragmentado em mais de uma linha pelo próprio
+// boletim — mesma ideia de "a jazida inteira é o que importa acompanhar"
+// já usada em PROJECT_FIELD_BASE (contratos rastreados), aqui por
+// igualdade de nome já normalizado (ver scripts/producao_common.py
+// normalize_field_name — data/producao.json já chega limpo de sufixo de
+// regime/nota de rodapé, então essa função só cuida de fusão de JAZIDA,
+// não de variação de grafia):
+//   - "Anc_X" (Área Não Contratada) funde no campo "X" (primeiro pedaço
+//     depois de "Anc_") — mesmo padrão já usado pra Anc_Norte_Atapu/
+//     Anc_Mero nos contratos rastreados (esses dois já caem no contrato
+//     certo por substring, antes de chegar aqui) — só quando "X" já é
+//     nome de outro campo em ALGUM mês do boletim inteiro (não só do mês
+//     sendo processado agora: "Tupi" e "Anc_Tupi" nem sempre aparecem
+//     juntos no mesmo mês — de jan/2024 a jun/2025 o boletim só lista
+//     "Anc_Tupi", sem "Tupi" separado naquele período — então o alvo
+//     precisa vir do conjunto de nomes de TODO o histórico, ver
+//     allFieldNames, senão "Anc_Tupi" vira linha própria só nesses meses).
+//     Sem alvo confirmado em nenhum mês (ex.: Anc_Brava/Anc_Forno, sem
+//     campo "Brava"/"Forno" avulso no boletim inteiro), fica como está.
+//   - Sul de Berbigão funde em Berbigão — mesmo PD (berbigao.pdf,
+//     "Berbigão, Norte de Berbigão e Sul de Berbigão 2025" em data/
+//     planos_desenvolvimento.json), Sul de Tupi NÃO funde em Tupi (PD
+//     próprio, sul-de-lula.pdf — campo satélite diferente, só o nome
+//     mudou junto quando Lula virou Tupi em 2019, ver normalize_field_name).
+const CONTEXT_JAZIDA_ALIAS = {
+  'Sul de Berbigão': 'Berbigão',
+};
+function contextJazidaBase(name, knownNames) {
+  if (CONTEXT_JAZIDA_ALIAS[name]) return CONTEXT_JAZIDA_ALIAS[name];
+  if (name.startsWith('Anc_')) {
+    const base = name.slice(4).split('_')[0];
+    if (knownNames.has(base)) return base;
+  }
+  return name;
+}
+
 /* ------------------------------ Linhas por campo -------------------------- */
 
 // Um projeto rastreado por campo-base (soma por substring, ver
@@ -87,10 +123,23 @@ function computeRGO(oleoBbld, gasMm3d) {
 // Berbigão, Jubarte, Lapa...) entram como contexto — mesmo campo pré-sal,
 // mas fora dos 30 contratos de partilha rastreados neste app
 // (Concessão/Cessão Onerosa sem CPP próprio nesta lista), mesmo padrão de
-// contexto usado em analises.js. "campos" tem o mesmo formato num mês só
-// (data/producao.json) ou já com métricas médias de um ano (ver
-// averageCampos) — esta função não distingue os dois.
-function computeFieldRows(campos, projects) {
+// contexto usado em analises.js, com fusão por jazida (ver
+// contextJazidaBase) quando o próprio boletim traz mais de um nome pra
+// mesma jazida. "campos" tem o mesmo formato num mês só (data/
+// producao.json) ou já com métricas médias de um ano (ver averageCampos)
+// — esta função não distingue os dois.
+// Nomes de campo (já normalizados, ver data/producao.json) vistos em
+// QUALQUER mês do boletim — usado por contextJazidaBase pra achar o alvo
+// de fusão de um "Anc_X" mesmo em meses onde "X" não aparece sozinho.
+function allFieldNames(meses) {
+  const names = new Set();
+  for (const mes of meses) {
+    for (const nome of Object.keys(mes.campos)) names.add(nome);
+  }
+  return names;
+}
+
+function computeFieldRows(campos, projects, knownNames) {
   const usedFieldNames = new Set();
   const rows = [];
 
@@ -114,15 +163,25 @@ function computeFieldRows(campos, projects) {
     });
   }
 
+  const contextGroups = new Map();
   for (const [nome, dados] of Object.entries(campos)) {
     if (usedFieldNames.has(nome)) continue;
+    const jazida = contextJazidaBase(nome, knownNames);
+    if (!contextGroups.has(jazida)) contextGroups.set(jazida, []);
+    contextGroups.get(jazida).push({ nome, dados });
+  }
+  for (const [jazida, parts] of contextGroups) {
+    const sum = emptyMetrics();
+    for (const part of parts) {
+      for (const k of METRIC_KEYS) sum[k] += part.dados[k];
+    }
     rows.push({
-      name: nome,
+      name: jazida,
       color: CONTEXT_FIELD_COLOR,
       isContract: false,
-      parts: [{ nome, dados }],
-      ...dados,
-      rgo: computeRGO(dados.oleoPreSalBbld, dados.gasPreSalMm3d),
+      parts,
+      ...sum,
+      rgo: computeRGO(sum.oleoPreSalBbld, sum.gasPreSalMm3d),
     });
   }
 
@@ -140,8 +199,9 @@ function computeFieldRows(campos, projects) {
 // paleta) — diferente do gráfico "Mês atual" (barras), que já mostrava
 // cada campo de contexto separado desde o início.
 function computeMonthlySeries(meses, projects) {
+  const knownNames = allFieldNames(meses);
   return meses.map((mes) => {
-    const rows = computeFieldRows(mes.campos, projects).map((r) => (
+    const rows = computeFieldRows(mes.campos, projects, knownNames).map((r) => (
       r.isContract ? r : { ...r, color: colorForCompany(r.name) }
     ));
     return { ano: mes.ano, mes: mes.mes, rows };
@@ -309,7 +369,21 @@ function createLineChart(container, monthlySeries) {
   let viewStart = 0;
   let viewEnd = n - 1;
   let highlighted = null;
+  // Estado do arraste (pan) precisa sobreviver a um redraw no meio do
+  // próprio arraste — draw() troca svgWrap.innerHTML a cada pointermove
+  // durante o drag, o que recria #lc-capture do zero e derruba a captura
+  // de ponteiro do elemento antigo (removido do DOM). Por isso mora aqui
+  // fora, não redeclarado dentro de draw(): dragPointerId é reusado logo
+  // depois de cada redraw pra recapturar o ponteiro no elemento novo (ver
+  // final de draw()), e um pointerup/pointercancel na window (não só no
+  // elemento de captura, que pode já ter sido trocado) garante que
+  // isDragging sempre volta a false, mesmo se a recaptura falhar.
   let isDragging = false;
+  let dragPointerId = null;
+  let dragStartClientX = 0;
+  let dragStartView = [0, 0];
+  window.addEventListener('pointerup', () => { isDragging = false; dragPointerId = null; });
+  window.addEventListener('pointercancel', () => { isDragging = false; dragPointerId = null; });
 
   const svgWrap = document.createElement('div');
   svgWrap.style.position = 'relative';
@@ -398,6 +472,14 @@ function createLineChart(container, monthlySeries) {
     const capture = svgEl.querySelector('#lc-capture');
     const crosshair = svgEl.querySelector('#lc-crosshair');
 
+    // Redraw no meio de um arraste (ver isDragging lá em cima) troca este
+    // elemento por um novo — recaptura o ponteiro nele pra continuar
+    // seguindo o cursor fora da área do gráfico sem esperar o mouse voltar
+    // pra cima do retângulo.
+    if (isDragging && dragPointerId != null) {
+      try { capture.setPointerCapture(dragPointerId); } catch (err) { /* elemento novo, ponteiro pode já ter soltado — arraste some, próximo pointerup na window ainda limpa isDragging */ }
+    }
+
     // Zoom: roda do mouse, ancorado na posição do cursor (mesma ideia do
     // zoom do roadmap principal — ver MIN_PX_PER_DAY/wheel handler em
     // app.js) — não deixa a página rolar enquanto o mouse está sobre o
@@ -418,11 +500,13 @@ function createLineChart(container, monthlySeries) {
 
     // Arrastar: move a janela visível — só ativa dentro da área do
     // gráfico, com pointer capture pra continuar recebendo o movimento
-    // mesmo se o cursor sair da área durante o arraste.
-    let dragStartClientX = 0;
-    let dragStartView = [0, 0];
+    // mesmo se o cursor sair da área durante o arraste (recapturada a
+    // cada redraw no elemento novo, ver logo acima). dragStartClientX/
+    // dragStartView moram fora de draw() (topo de createLineChart) pra
+    // não resetar a cada um desses redraws no meio do próprio arraste.
     capture.addEventListener('pointerdown', (e) => {
       isDragging = true;
+      dragPointerId = e.pointerId;
       dragStartClientX = e.clientX;
       dragStartView = [viewStart, viewEnd];
       try { capture.setPointerCapture(e.pointerId); } catch (err) { /* ponteiro sintético (ex.: teste automatizado) sem sessão ativa pra capturar — arraste ainda funciona sem, só não segue o cursor fora da área do gráfico */ }
@@ -443,6 +527,7 @@ function createLineChart(container, monthlySeries) {
     });
     capture.addEventListener('pointerup', (e) => {
       isDragging = false;
+      dragPointerId = null;
       try { capture.releasePointerCapture(e.pointerId); } catch (err) { /* idem — nada a liberar se a captura não pegou */ }
     });
     capture.addEventListener('pointerleave', () => {
@@ -522,7 +607,10 @@ function createLineChart(container, monthlySeries) {
 
 function buildMonthlySection(producaoData) {
   const mesRef = producaoData.meses[producaoData.meses.length - 1];
-  const rows = computeFieldRows(mesRef.campos, state.projects);
+  // knownNames de TODO o histórico (não só mesRef) — mesmo motivo de
+  // computeMonthlySeries: "Anc_X" precisa achar "X" mesmo quando o mês de
+  // referência atual é um dos que só lista a área não contratada.
+  const rows = computeFieldRows(mesRef.campos, state.projects, allFieldNames(producaoData.meses));
 
   const section = document.createElement('section');
   section.className = 'analytics-section';

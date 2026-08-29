@@ -31,15 +31,14 @@ import argparse
 import json
 import re
 import sys
-import unicodedata
 from pathlib import Path
 
 import openpyxl
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-DATA_PATH = REPO_ROOT / 'data' / 'producao.json'
-
-METRIC_KEYS = ['oleoPreSalBbld', 'oleoPosSalBbld', 'gasPreSalMm3d', 'gasPosSalMm3d', 'boedPreSal', 'boedPosSal']
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from producao_common import (  # noqa: E402
+    METRIC_KEYS, REPO_ROOT, DATA_PATH, clean_field_name, load_existing, save, strip_accents, upsert_month,
+)
 
 # Nome da aba muda de posição/vizinhas entre edições (nº de abas varia),
 # mas o texto "Dados de Produção" (com o número "2." na frente ou não) é
@@ -60,20 +59,6 @@ MONTH_NAME_TO_NUM = {
     'janeiro': 1, 'fevereiro': 2, 'marco': 3, 'abril': 4, 'maio': 5, 'junho': 6,
     'julho': 7, 'agosto': 8, 'setembro': 9, 'outubro': 10, 'novembro': 11, 'dezembro': 12,
 }
-
-
-def strip_accents(s):
-    return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
-
-
-def clean_field_name(raw):
-    # Tira marcador de nota de rodapé colado no nome ("Jubarte³") — só os
-    # dígitos sobrescritos ¹²³ observados nesta base, direto ou via
-    # unicodedata (normaliza "³" pra "3" e some com dígito solto no fim).
-    s = str(raw).strip()
-    s = re.sub(r'[¹²³⁴⁵⁶⁷⁸⁹⁰]+$', '', s)
-    s = re.sub(r'\s+', ' ', s).strip()
-    return s
 
 
 def to_num(v):
@@ -140,29 +125,6 @@ def infer_ano_mes(filename, url=None):
         if name in normalized:
             return ano, num
     raise RuntimeError(f'Não consegui inferir o mês a partir de "{filename}".')
-
-
-def load_existing():
-    if DATA_PATH.exists():
-        return json.loads(DATA_PATH.read_text(encoding='utf-8'))
-    return {'fonte': {}, 'meses': []}
-
-
-def upsert_month(existing, ano, mes, campos, url):
-    existing.setdefault('meses', [])
-    existing['meses'] = [m for m in existing['meses'] if not (m['ano'] == ano and m['mes'] == mes)]
-    entry = {'ano': ano, 'mes': mes, 'campos': campos}
-    if url:
-        entry['fonteUrl'] = url
-    existing['meses'].append(entry)
-    existing['meses'].sort(key=lambda m: (m['ano'], m['mes']))
-    return existing
-
-
-def save(existing):
-    existing.setdefault('fonte', {})
-    existing['fonte']['nome'] = 'ANP — Boletim da Produção de Petróleo e Gás Natural (pré-sal)'
-    DATA_PATH.write_text(json.dumps(existing, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 
 def main():
