@@ -403,9 +403,7 @@ function createLineChart(container, monthlySeries) {
   const svgWrap = document.createElement('div');
   svgWrap.style.position = 'relative';
   const legendWrap = document.createElement('div');
-  legendWrap.className = 'kpi-row';
   legendWrap.style.marginTop = '10px';
-  legendWrap.style.rowGap = '6px';
 
   function clampView(start, end) {
     let span = Math.max(end - start, MIN_VIEW_SPAN);
@@ -601,9 +599,24 @@ function createLineChart(container, monthlySeries) {
     return Math.max(0, Math.min(n - 1, i));
   }
 
-  function drawLegend() {
-    legendWrap.innerHTML = '';
-    for (const name of order) {
+  // Legenda em dois grupos — contratos de Partilha da Produção rastreados
+  // (isContract: true) separados dos demais campos do pré-sal (contexto,
+  // fora dos 7 rastreados) — mesma distinção que já colore as linhas
+  // (cor do projeto x cor por hash do nome), só deixando explícito na
+  // legenda pra não misturar contrato com campo de contexto na mesma
+  // lista corrida.
+  function legendGroup(title, names) {
+    const group = document.createElement('div');
+    if (!names.length) return group;
+    const label = document.createElement('div');
+    label.className = 'stat-tile-label';
+    label.style.margin = '10px 0 4px';
+    label.textContent = title;
+    group.appendChild(label);
+    const row = document.createElement('div');
+    row.className = 'kpi-row';
+    row.style.rowGap = '6px';
+    for (const name of names) {
       const { color } = meta.get(name);
       const item = document.createElement('button');
       item.type = 'button';
@@ -623,8 +636,18 @@ function createLineChart(container, monthlySeries) {
         drawLegend();
         draw();
       });
-      legendWrap.appendChild(item);
+      row.appendChild(item);
     }
+    group.appendChild(row);
+    return group;
+  }
+
+  function drawLegend() {
+    legendWrap.innerHTML = '';
+    const contractNames = order.filter((name) => meta.get(name).isContract);
+    const contextNames = order.filter((name) => !meta.get(name).isContract);
+    legendWrap.appendChild(legendGroup('Partilha da Produção', contractNames));
+    legendWrap.appendChild(legendGroup('Outros projetos', contextNames));
   }
 
   draw();
