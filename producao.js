@@ -269,17 +269,27 @@ function renderMonthlyLineChart(container, monthlySeries, unitKey) {
     gridSvg += `<text x="${LINE_MARGIN.left - 10}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:var(--text-faint)">${fmtNum(v)}</text>`;
   }
 
+  // Rótulo do eixo x só em janeiro de cada ano (+ o último mês, se não for
+  // janeiro) — com muitos meses (a base cobre 2017-2026, >100 pontos),
+  // rotular todo mês vira ilegível; ano completo já orienta a leitura da
+  // tendência, e o ponto exato de cada mês continua no tooltip ao passar
+  // o mouse/focar. Uma linha vertical fina marca a virada de ano no fundo
+  // do gráfico, alinhada com o rótulo.
   let xLabelsSvg = '';
   monthlySeries.forEach((m, i) => {
+    const isLast = i === monthlySeries.length - 1;
+    if (m.mes !== 1 && !isLast) return;
     const x = xAt(i);
-    const label = `${MES_ABREV[m.mes]}/${String(m.ano).slice(2)}`;
+    const label = m.mes === 1 ? String(m.ano) : `${MES_ABREV[m.mes]}/${String(m.ano).slice(2)}`;
     const y = LINE_MARGIN.top + plotH + 14;
-    xLabelsSvg += `<text x="0" y="0" transform="translate(${x} ${y}) rotate(-60)" text-anchor="end" font-size="10" style="fill:var(--text-faint)">${label}</text>`;
+    xLabelsSvg += `<line x1="${x}" y1="${LINE_MARGIN.top}" x2="${x}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--border)" stroke-width="1" stroke-dasharray="2,3" />`;
+    xLabelsSvg += `<text x="0" y="0" transform="translate(${x} ${y}) rotate(-45)" text-anchor="end" font-size="11" style="fill:var(--text-muted)">${label}</text>`;
   });
 
   let linesSvg = '';
   let dotsSvg = '';
   const dotMeta = [];
+  const dotR = n > 40 ? 2 : 3;
   for (const name of order) {
     const color = monthlySeries.map((m) => rowByName(m, name)).find(Boolean).color;
     const pts = [];
@@ -290,7 +300,7 @@ function renderMonthlyLineChart(container, monthlySeries, unitKey) {
       const y = yAt(r[unit.key]);
       pts.push(`${x},${y}`);
       const id = `dot_${order.indexOf(name)}_${i}`;
-      dotsSvg += `<circle id="${id}" cx="${x}" cy="${y}" r="3" fill="${color}" tabindex="0" style="cursor:pointer" />`;
+      dotsSvg += `<circle id="${id}" cx="${x}" cy="${y}" r="${dotR}" fill="${color}" tabindex="0" style="cursor:pointer" />`;
       dotMeta.push({ id, name, color, value: r[unit.key], mes: m.mes, ano: m.ano, isContract: r.isContract });
     });
     if (pts.length) {
@@ -372,9 +382,15 @@ function buildEvolutionSection(producaoData) {
 
   const first = producaoData.meses[0];
   const last = producaoData.meses[producaoData.meses.length - 1];
+  const seen = new Set(producaoData.meses.map((m) => `${m.ano}-${m.mes}`));
+  let gaps = 0;
+  for (let y = first.ano, m = first.mes; y < last.ano || (y === last.ano && m <= last.mes); m++) {
+    if (m > 12) { m = 1; y++; }
+    if (!seen.has(`${y}-${m}`)) gaps++;
+  }
   const row = document.createElement('div');
   row.className = 'kpi-row';
-  row.appendChild(statTileP('Período coberto', `${MESES_PT[first.mes]}/${first.ano} – ${MESES_PT[last.mes]}/${last.ano}`, `${producaoData.meses.length} boletins mensais`));
+  row.appendChild(statTileP('Período coberto', `${MESES_PT[first.mes]}/${first.ano} – ${MESES_PT[last.mes]}/${last.ano}`, `${producaoData.meses.length} boletins mensais${gaps ? ` · ${gaps} mês(es) sem boletim compatível no meio do período` : ''}`));
   section.appendChild(row);
 
   const card = chartCard(
@@ -394,7 +410,7 @@ function buildEvolutionSection(producaoData) {
 
   const note = document.createElement('p');
   note.className = 'analytics-table-note';
-  note.textContent = `Fonte: ${producaoData.fonte.nome}. Só edições do boletim com layout compatível com extração automática entraram nesta base — coberto: ${producaoData.meses.length} de todos os boletins publicados desde 2010 (a maioria das edições mais antigas usa um layout de tabela que a extração de texto não reconstitui com segurança).`;
+  note.textContent = `Fonte: ${producaoData.fonte.nome}. De out/2017 a jun/2025, vem da planilha Excel oficial que acompanha o boletim (número de célula exato, sem risco de extração de texto); de jul/2025 em diante, do PDF (a ANP ainda não publicou o Excel desses meses). Antes de out/2017 a ANP não publicava essa tabela por campo. Meses faltando no meio do período são edições sem o arquivo correspondente disponível no site da ANP.`;
   section.appendChild(note);
 
   return section;
