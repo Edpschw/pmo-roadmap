@@ -102,43 +102,15 @@ function computeFieldRows(campos, projects) {
   return rows;
 }
 
-/* -------------------------------- Agregação anual -------------------------- */
-// "producao de cada campo sendo somada" por ano: cada segmento do
-// empilhado é a MÉDIA diária do campo nos meses do boletim disponíveis
-// naquele ano (petróleo/gás/produção são vazões, bbl/d e Mm³/d — não faz
-// sentido "somar" meses de uma taxa; a leitura fiel de "ano" pra uma vazão
-// é a média do período), e o empilhado então SOMA essa média entre os
-// campos — a altura total da barra do ano é a produção pré-sal média
-// somada de todos os campos, exatamente o que foi pedido. 2024 (a partir
-// de junho) e 2026 (até junho, o mês mais recente coberto) são anos
-// parciais — sinalizado no eixo x e na legenda do gráfico, pra não
-// comparar a barra inteira de um ano parcial com um ano completo sem
-// ressalva.
-function averageCampos(mesesSubset) {
-  const sums = {};
-  const counts = {};
-  for (const mes of mesesSubset) {
-    for (const [nome, dados] of Object.entries(mes.campos)) {
-      if (!sums[nome]) {
-        sums[nome] = emptyMetrics();
-        counts[nome] = 0;
-      }
-      for (const k of METRIC_KEYS) sums[nome][k] += dados[k];
-      counts[nome] += 1;
-    }
-  }
-  const avg = {};
-  for (const nome of Object.keys(sums)) {
-    avg[nome] = {};
-    for (const k of METRIC_KEYS) avg[nome][k] = sums[nome][k] / counts[nome];
-  }
-  return avg;
-}
+/* ------------------------------ Série mensal -------------------------------- */
+// "produção diária por mês" — sem agregação nenhuma: um ponto por mês do
+// boletim, com o valor exatamente como a ANP publicou naquele mês (bbl/d,
+// Mm³/d ou boe/d — já é uma vazão diária, não precisa converter nada).
 
-// Uma linha "Outros campos" por ano, somando todos os campos de contexto
-// (fora dos 7 contratos rastreados com produção própria) — o empilhado
-// mostra só os contratos rastreados + esse total combinado, não uma barra
-// por campo de contexto (seriam ~20 fatias minúsculas, ilegível).
+// Uma linha "Outros campos" por mês, somando todos os campos de contexto
+// (fora dos 7 contratos rastreados com produção própria) — o gráfico
+// mostra só os contratos rastreados + essa linha combinada, não uma linha
+// por campo de contexto (seriam ~20 linhas minúsculas, ilegível).
 function collapseContext(rows) {
   const tracked = rows.filter((r) => r.isContract);
   const contextRows = rows.filter((r) => !r.isContract);
@@ -151,20 +123,12 @@ function collapseContext(rows) {
   return tracked;
 }
 
-function computeAnnualData(meses, projects) {
-  const byYear = new Map();
-  for (const mes of meses) {
-    if (!byYear.has(mes.ano)) byYear.set(mes.ano, []);
-    byYear.get(mes.ano).push(mes);
-  }
-  const years = [...byYear.keys()].sort((a, b) => a - b);
-  return years.map((year) => {
-    const mesesDoAno = byYear.get(year);
-    const avgCampos = averageCampos(mesesDoAno);
-    const rows = collapseContext(computeFieldRows(avgCampos, projects));
-    const mesesNums = mesesDoAno.map((m) => m.mes).sort((a, b) => a - b);
-    return { year, monthCount: mesesDoAno.length, isPartial: mesesDoAno.length < 12, mesesNums, rows };
-  });
+function computeMonthlySeries(meses, projects) {
+  return meses.map((mes) => ({
+    ano: mes.ano,
+    mes: mes.mes,
+    rows: collapseContext(computeFieldRows(mes.campos, projects)),
+  }));
 }
 
 /* -------------------------------- KPIs ------------------------------------ */
@@ -251,32 +215,14 @@ function buildUnitSwitch(onChange) {
   return wrap;
 }
 
-/* ---------------------------- Gráfico anual (empilhado) -------------------- */
-// Barra vertical por ano, empilhada por campo — cada segmento é a MÉDIA
-// diária daquele campo nos meses do ano disponíveis no boletim (ver
-// computeAnnualData/averageCampos), somada entre campos pra formar a
-// altura total da barra do ano.
+/* ------------------------------ Gráfico de linhas --------------------------- */
+// Uma linha por campo — eixo x é o mês do boletim (todos os pontos
+// disponíveis, sem agregar), eixo y é a vazão diária na unidade escolhida.
 
-const STACK_W = 900;
-const STACK_H = 380;
-const STACK_MARGIN = { top: 16, right: 16, bottom: 44, left: 64 };
-
-// Ordem fixa de empilhamento (mesma em todo ano, pra ler a evolução de um
-// campo específico comparando a mesma faixa de cor entre barras) — projeto
-// rastreado por ordem de aparição em state.projects (mesma ordem do
-// roadmap/análises), "Outros campos" sempre por último (no topo).
-function stackOrder(annualData) {
-  const seen = new Map();
-  for (const y of annualData) {
-    for (const r of y.rows) {
-      if (!seen.has(r.name)) seen.set(r.name, r);
-    }
-  }
-  const names = [...seen.keys()];
-  const contract = names.filter((n) => seen.get(n).isContract);
-  const context = names.filter((n) => !seen.get(n).isContract);
-  return [...contract, ...context];
-}
+const MES_ABREV = ['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const LINE_W = 900;
+const LINE_H = 420;
+const LINE_MARGIN = { top: 16, right: 16, bottom: 62, left: 64 };
 
 function niceMax(v) {
   if (v <= 0) return 1;
@@ -286,63 +232,85 @@ function niceMax(v) {
   return step * mag;
 }
 
-function renderAnnualStackedChart(container, annualData, unitKey) {
-  const unit = UNITS[unitKey];
-  const order = stackOrder(annualData);
-  const rowByName = (y, name) => y.rows.find((r) => r.name === name);
-  const totals = annualData.map((y) => order.reduce((s, name) => {
-    const r = rowByName(y, name);
-    return s + (r ? r[unit.key] : 0);
-  }, 0));
-  const maxTotal = niceMax(Math.max(...totals, 0));
+// Ordem fixa das linhas (mesma cor sempre no mesmo campo entre trocas de
+// unidade) — projeto rastreado por ordem de aparição em state.projects
+// (mesma ordem do roadmap/análises), "Outros campos" sempre por último.
+function seriesOrder(monthlySeries) {
+  const seen = new Map();
+  for (const m of monthlySeries) {
+    for (const r of m.rows) {
+      if (!seen.has(r.name)) seen.set(r.name, r);
+    }
+  }
+  const names = [...seen.keys()];
+  const contract = names.filter((n) => seen.get(n).isContract);
+  const context = names.filter((n) => !seen.get(n).isContract);
+  return [...contract, ...context];
+}
 
-  const plotW = STACK_W - STACK_MARGIN.left - STACK_MARGIN.right;
-  const plotH = STACK_H - STACK_MARGIN.top - STACK_MARGIN.bottom;
-  const bandW = plotW / annualData.length;
-  const barW = Math.min(96, bandW * 0.6);
+function renderMonthlyLineChart(container, monthlySeries, unitKey) {
+  const unit = UNITS[unitKey];
+  const order = seriesOrder(monthlySeries);
+  const n = monthlySeries.length;
+  const rowByName = (m, name) => m.rows.find((r) => r.name === name);
+  const maxVal = niceMax(Math.max(...monthlySeries.flatMap((m) => m.rows.map((r) => r[unit.key])), 0));
+
+  const plotW = LINE_W - LINE_MARGIN.left - LINE_MARGIN.right;
+  const plotH = LINE_H - LINE_MARGIN.top - LINE_MARGIN.bottom;
+  const xAt = (i) => LINE_MARGIN.left + (n > 1 ? (plotW * i) / (n - 1) : plotW / 2);
+  const yAt = (v) => LINE_MARGIN.top + plotH - (v / maxVal) * plotH;
 
   const yTicks = 5;
   let gridSvg = '';
   for (let i = 0; i <= yTicks; i++) {
-    const v = (maxTotal / yTicks) * i;
-    const y = STACK_MARGIN.top + plotH - (v / maxTotal) * plotH;
-    gridSvg += `<line x1="${STACK_MARGIN.left}" y1="${y}" x2="${STACK_W - STACK_MARGIN.right}" y2="${y}" stroke="var(--border)" stroke-width="1" />`;
-    gridSvg += `<text x="${STACK_MARGIN.left - 10}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:var(--text-faint)">${fmtNum(v)}</text>`;
+    const v = (maxVal / yTicks) * i;
+    const y = yAt(v);
+    gridSvg += `<line x1="${LINE_MARGIN.left}" y1="${y}" x2="${LINE_W - LINE_MARGIN.right}" y2="${y}" stroke="var(--border)" stroke-width="1" />`;
+    gridSvg += `<text x="${LINE_MARGIN.left - 10}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:var(--text-faint)">${fmtNum(v)}</text>`;
   }
 
-  let barsSvg = '';
-  const rectMeta = [];
-  annualData.forEach((y, i) => {
-    const cx = STACK_MARGIN.left + bandW * i + bandW / 2;
-    let yTop = STACK_MARGIN.top + plotH;
-    for (const name of order) {
-      const r = rowByName(y, name);
-      const v = r ? r[unit.key] : 0;
-      if (v <= 0) continue;
-      const h = (v / maxTotal) * plotH;
-      const rectY = yTop - h;
-      const id = `seg_${i}_${order.indexOf(name)}`;
-      barsSvg += `<rect id="${id}" x="${cx - barW / 2}" y="${rectY}" width="${barW}" height="${Math.max(h, 0.5)}" fill="${r.color}" data-hoverable="1" tabindex="0" style="cursor:pointer" />`;
-      rectMeta.push({ id, year: y.year, name, value: v, row: r, monthCount: y.monthCount });
-      yTop = rectY;
-    }
-    const xLabel = y.isPartial ? `${y.year} (${y.monthCount} m.)` : String(y.year);
-    barsSvg += `<text x="${cx}" y="${STACK_MARGIN.top + plotH + 20}" text-anchor="middle" font-size="12" style="fill:var(--text-muted)">${xLabel}</text>`;
+  let xLabelsSvg = '';
+  monthlySeries.forEach((m, i) => {
+    const x = xAt(i);
+    const label = `${MES_ABREV[m.mes]}/${String(m.ano).slice(2)}`;
+    const y = LINE_MARGIN.top + plotH + 14;
+    xLabelsSvg += `<text x="0" y="0" transform="translate(${x} ${y}) rotate(-60)" text-anchor="end" font-size="10" style="fill:var(--text-faint)">${label}</text>`;
   });
 
-  const axisSvg = `<line x1="${STACK_MARGIN.left}" y1="${STACK_MARGIN.top + plotH}" x2="${STACK_W - STACK_MARGIN.right}" y2="${STACK_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
+  let linesSvg = '';
+  let dotsSvg = '';
+  const dotMeta = [];
+  for (const name of order) {
+    const color = monthlySeries.map((m) => rowByName(m, name)).find(Boolean).color;
+    const pts = [];
+    monthlySeries.forEach((m, i) => {
+      const r = rowByName(m, name);
+      if (!r) return;
+      const x = xAt(i);
+      const y = yAt(r[unit.key]);
+      pts.push(`${x},${y}`);
+      const id = `dot_${order.indexOf(name)}_${i}`;
+      dotsSvg += `<circle id="${id}" cx="${x}" cy="${y}" r="3" fill="${color}" tabindex="0" style="cursor:pointer" />`;
+      dotMeta.push({ id, name, color, value: r[unit.key], mes: m.mes, ano: m.ano, isContract: r.isContract });
+    });
+    if (pts.length) {
+      linesSvg += `<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />`;
+    }
+  }
+
+  const axisSvg = `<line x1="${LINE_MARGIN.left}" y1="${LINE_MARGIN.top + plotH}" x2="${LINE_W - LINE_MARGIN.right}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
 
   const svgWrap = document.createElement('div');
-  svgWrap.innerHTML = `<svg viewBox="0 0 ${STACK_W} ${STACK_H}" style="width:100%;height:auto;display:block">${gridSvg}${axisSvg}${barsSvg}</svg>`;
+  svgWrap.innerHTML = `<svg viewBox="0 0 ${LINE_W} ${LINE_H}" style="width:100%;height:auto;display:block">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${dotsSvg}</svg>`;
   const svgEl = svgWrap.firstElementChild;
 
-  for (const meta of rectMeta) {
+  for (const meta of dotMeta) {
     const el = svgEl.querySelector(`#${meta.id}`);
     if (!el) continue;
     attachTooltip(el, () => `<strong>${escapeHtml(meta.name)}</strong>`
-      + tooltipRowHTML('Ano', `${meta.year}${meta.monthCount < 12 ? ` (${meta.monthCount} meses)` : ''}`)
+      + tooltipRowHTML('Mês', `${MESES_PT[meta.mes]}/${meta.ano}`)
       + tooltipRowHTML(unit.label, unit.fmt(meta.value))
-      + (meta.row.isContract ? '' : tooltipRowHTML('Contrato', 'Fora dos 7 com produção própria rastreados')));
+      + (meta.isContract ? '' : tooltipRowHTML('Contrato', 'Fora dos 7 com produção própria rastreados')));
   }
 
   container.appendChild(svgWrap);
@@ -351,7 +319,7 @@ function renderAnnualStackedChart(container, annualData, unitKey) {
   legend.className = 'kpi-row';
   legend.style.marginTop = '10px';
   for (const name of order) {
-    const sample = annualData.map((y) => rowByName(y, name)).find(Boolean);
+    const sample = monthlySeries.map((m) => rowByName(m, name)).find(Boolean);
     if (!sample) continue;
     const item = document.createElement('div');
     item.style.display = 'flex';
@@ -359,7 +327,7 @@ function renderAnnualStackedChart(container, annualData, unitKey) {
     item.style.gap = '6px';
     item.style.fontSize = '12px';
     item.style.color = 'var(--text-muted)';
-    item.innerHTML = `<span style="width:10px;height:10px;border-radius:2px;background:${sample.color};flex:0 0 auto"></span>${escapeHtml(name)}`;
+    item.innerHTML = `<span style="width:16px;height:2px;background:${sample.color};flex:0 0 auto"></span>${escapeHtml(name)}`;
     legend.appendChild(item);
   }
   container.appendChild(legend);
@@ -396,8 +364,8 @@ function buildMonthlySection(producaoData) {
   return section;
 }
 
-function buildAnnualSection(producaoData) {
-  const annualData = computeAnnualData(producaoData.meses, state.projects);
+function buildEvolutionSection(producaoData) {
+  const monthlySeries = computeMonthlySeries(producaoData.meses, state.projects);
 
   const section = document.createElement('section');
   section.className = 'analytics-section';
@@ -406,23 +374,22 @@ function buildAnnualSection(producaoData) {
   const last = producaoData.meses[producaoData.meses.length - 1];
   const row = document.createElement('div');
   row.className = 'kpi-row';
-  row.appendChild(statTileP('Período coberto', `${annualData[0].year}–${annualData[annualData.length - 1].year}`, `${producaoData.meses.length} boletins mensais, de ${MESES_PT[first.mes]}/${first.ano} a ${MESES_PT[last.mes]}/${last.ano}`));
-  row.appendChild(statTileP('Anos completos', String(annualData.filter((y) => !y.isPartial).length), `${annualData.filter((y) => y.isPartial).length} ano(s) parcial(is) no boletim ainda`));
+  row.appendChild(statTileP('Período coberto', `${MESES_PT[first.mes]}/${first.ano} – ${MESES_PT[last.mes]}/${last.ano}`, `${producaoData.meses.length} boletins mensais`));
   section.appendChild(row);
 
   const card = chartCard(
-    'Produção pré-sal por ano, por campo',
-    'Cada barra é a soma, entre os campos, da produção MÉDIA diária de cada um nos meses do boletim disponíveis naquele ano — não dá pra "somar" uma vazão (bbl/d) entre meses, mas dá pra somar a média de cada campo pra formar o total do ano. Anos marcados com "(N m.)" têm boletim disponível só pra parte do ano — não comparar a barra inteira com um ano completo sem essa ressalva.',
+    'Produção diária por mês, por campo',
+    'Um ponto por mês do boletim, exatamente como a ANP publicou — sem agregar nem estimar nada entre meses. Uma linha por contrato rastreado, mais uma linha combinada dos demais campos do pré-sal (contexto). Uma linha só aparece a partir do mês em que o campo passou a ter produção própria no boletim (ex.: Norte de Carcará entra em outubro/2025, primeiro mês de produção do FPSO).',
   );
   const unitSwitch = buildUnitSwitch((unitKey) => {
     const oldSvg = card.querySelector('svg');
     if (oldSvg) oldSvg.parentElement.remove();
     const oldLegend = card.querySelector('.kpi-row');
     if (oldLegend) oldLegend.remove();
-    renderAnnualStackedChart(card, annualData, unitKey);
+    renderMonthlyLineChart(card, monthlySeries, unitKey);
   });
   card.insertBefore(unitSwitch, card.querySelector('h3').nextSibling);
-  renderAnnualStackedChart(card, annualData, 'oleo');
+  renderMonthlyLineChart(card, monthlySeries, 'oleo');
   section.appendChild(card);
 
   const note = document.createElement('p');
@@ -455,19 +422,19 @@ async function init() {
   }
 
   const monthlySection = buildMonthlySection(producaoData);
-  const annualSection = buildAnnualSection(producaoData);
-  annualSection.hidden = true;
+  const evolutionSection = buildEvolutionSection(producaoData);
+  evolutionSection.hidden = true;
 
   const pageSwitch = buildPageSwitch(
-    [['mensal', 'Mensal'], ['anual', 'Por ano']],
+    [['mensal', 'Mês atual'], ['evolucao', 'Evolução mensal']],
     (page) => {
       monthlySection.hidden = page !== 'mensal';
-      annualSection.hidden = page !== 'anual';
+      evolutionSection.hidden = page !== 'evolucao';
     },
   );
   wrapper.appendChild(pageSwitch);
   wrapper.appendChild(monthlySection);
-  wrapper.appendChild(annualSection);
+  wrapper.appendChild(evolutionSection);
 }
 
 function buildPageSwitch(tabs, onChange) {
