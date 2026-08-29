@@ -53,12 +53,31 @@ const UNITS = {
   oleo: { label: 'Petróleo (bbl/d)', key: 'oleoPreSalBbld', fmt: (n) => fmtNum(n) + ' bbl/d' },
   gas: { label: 'Gás natural (Mm³/d)', key: 'gasPreSalMm3d', fmt: (n) => fmtNum(n, { maximumFractionDigits: 1 }) + ' Mm³/d' },
   boe: { label: 'Produção (boe/d)', key: 'boedPreSal', fmt: (n) => fmtNum(n) + ' boe/d' },
+  rgo: { label: 'RGO (m³/m³)', key: 'rgo', fmt: (n) => fmtNum(n) + ' m³/m³' },
 };
 
 function emptyMetrics() {
   const m = {};
   for (const k of METRIC_KEYS) m[k] = 0;
   return m;
+}
+
+// RGO (Razão Gás-Óleo) = volume de gás produzido / volume de óleo
+// produzido, os dois em m³ — mesma unidade que a indústria usa pra
+// caracterizar um campo (Búzios ~270 m³/m³, por exemplo). O boletim vem
+// em bbl/d (óleo) e "Mm³/d" (gás) — aqui "M" é "mil" (milhares de m³/dia),
+// não "mega" (milhões): dá pra confirmar pelo total do pré-sal no
+// boletim (~150 mil m³/d em dez/2025) — se fosse milhão, seria mais gás
+// só no pré-sal brasileiro do que o mundo inteiro produz. Por isso o
+// fator aqui é ×1.000 (não ×1.000.000) pra converter gás pra m³/d puro;
+// óleo usa a conversão padrão de 1 bbl = 0,158987 m³. Sempre calculado a
+// partir dos volumes JÁ somados (nunca soma/média de RGO direto — RGO é
+// uma razão, não dá pra somar razão entre campos ou meses).
+const BBL_TO_M3 = 0.158987;
+function computeRGO(oleoBbld, gasMm3d) {
+  const oleoM3 = oleoBbld * BBL_TO_M3;
+  if (oleoM3 <= 0) return 0;
+  return (gasMm3d * 1000) / oleoM3;
 }
 
 /* ------------------------------ Linhas por campo -------------------------- */
@@ -91,12 +110,20 @@ function computeFieldRows(campos, projects) {
       isContract: true,
       parts,
       ...sum,
+      rgo: computeRGO(sum.oleoPreSalBbld, sum.gasPreSalMm3d),
     });
   }
 
   for (const [nome, dados] of Object.entries(campos)) {
     if (usedFieldNames.has(nome)) continue;
-    rows.push({ name: nome, color: CONTEXT_FIELD_COLOR, isContract: false, parts: [{ nome, dados }], ...dados });
+    rows.push({
+      name: nome,
+      color: CONTEXT_FIELD_COLOR,
+      isContract: false,
+      parts: [{ nome, dados }],
+      ...dados,
+      rgo: computeRGO(dados.oleoPreSalBbld, dados.gasPreSalMm3d),
+    });
   }
 
   return rows;
@@ -177,6 +204,7 @@ function renderProductionChart(container, rows, unitKey) {
         + tooltipRowHTML('Petróleo', fmtNum(r.oleoPreSalBbld) + ' bbl/d')
         + tooltipRowHTML('Gás natural', fmtNum(r.gasPreSalMm3d, { maximumFractionDigits: 1 }) + ' Mm³/d')
         + tooltipRowHTML('Produção', fmtNum(r.boedPreSal) + ' boe/d')
+        + tooltipRowHTML('RGO', fmtNum(r.rgo) + ' m³/m³')
         + (r.isContract ? '' : tooltipRowHTML('Contrato', 'Fora dos 30 rastreados (contexto)'))
         + (multi ? `<div class="viz-tooltip-row"><span>${escapeHtml(r.parts.map((p) => p.nome).join(' + '))}</span></div>` : ''),
     ));
@@ -502,7 +530,7 @@ function buildMonthlySection(producaoData) {
 
   const card = chartCard(
     'Produção por campo — pré-sal',
-    'Os contratos rastreados (cor do projeto) e os demais campos do pré-sal em produção fora desta lista (cinza, contexto). Só a fração pré-sal de cada campo — a fração pós-sal (quando existe) fica de fora.',
+    'Os contratos rastreados (cor do projeto) e os demais campos do pré-sal em produção fora desta lista (cinza, contexto). Só a fração pré-sal de cada campo — a fração pós-sal (quando existe) fica de fora. RGO (Razão Gás-Óleo, m³ de gás por m³ de óleo) é calculado aqui, não vem pronto do boletim.',
   );
   const unitSwitch = buildUnitSwitch((unitKey) => {
     const list = card.querySelector('.hbar-list');
@@ -542,7 +570,7 @@ function buildEvolutionSection(producaoData) {
 
   const card = chartCard(
     'Produção diária por mês, por campo',
-    'Um ponto por mês do boletim, exatamente como a ANP publicou — sem agregar nem estimar nada entre meses. Uma linha por contrato rastreado, mais uma linha por campo de contexto (fora dos 7 rastreados) — cada um só aparece a partir do mês em que passou a ter produção no boletim. Role o mouse sobre o gráfico pra zoom (ancorado no cursor), arraste pra mover a janela visível, clique num campo na legenda pra isolar a linha, e passe o mouse sobre qualquer ponto pra ver o valor de todos os campos naquele mês de uma vez.',
+    'Um ponto por mês do boletim, exatamente como a ANP publicou — sem agregar nem estimar nada entre meses (RGO é a exceção: calculado aqui a partir do óleo e gás do próprio mês, não vem pronto do boletim). Uma linha por contrato rastreado, mais uma linha por campo de contexto (fora dos 7 rastreados) — cada um só aparece a partir do mês em que passou a ter produção no boletim. Role o mouse sobre o gráfico pra zoom (ancorado no cursor), arraste pra mover a janela visível, clique num campo na legenda pra isolar a linha, e passe o mouse sobre qualquer ponto pra ver o valor de todos os campos naquele mês de uma vez.',
   );
   const controlsRow = document.createElement('div');
   controlsRow.style.display = 'flex';
