@@ -45,6 +45,20 @@ const WELL_CATEGORY_DOT = {
 };
 const RGO_LINE_COLOR = '#e0a72e';
 
+// Ordem/rótulo de exibição da legenda do mini-mapa — mesma categorização
+// do mapa completo (ver WELL_CATEGORY_LABELS em mapa.js), sem separar
+// injeção por subtipo (água/gás) já que aqui a cor do PONTO carrega só a
+// categoria, sem ícone próprio pra cada subtipo.
+const WELL_CATEGORY_LABELS = [
+  ['producao', 'Produção (óleo)'],
+  ['gas', 'Produção/indício de gás'],
+  ['injecao', 'Injeção'],
+  ['indicio', 'Indício de óleo (poço seco)'],
+  ['seco', 'Seco, sem indícios'],
+  ['abandonado', 'Abandonado'],
+  ['indefinido', 'Sem resultado registrado'],
+];
+
 function slug(name) {
   return name
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -66,6 +80,81 @@ function extractProjectSeries(monthlySeries, displayName) {
 }
 
 /* ------------------------------- Mini-mapa --------------------------------- */
+// Escala e legenda desenhadas do zero (não o L.control.scale padrão do
+// Leaflet nem os .map-legend-row de mapa.js) — os dois herdados de um
+// tema claro de fábrica e presos ao layout do resto do mapa completo;
+// aqui têm cartão próprio (mesmo fundo "vidro fosco" de
+// .map-well-legend-fixed em mapa.js) coerente com o resto do app.
+
+// Distância "redonda" (1/2/3/5 × potência de 10) mais próxima do
+// máximo que cabe em SCALE_MAX_WIDTH px na latitude atual — mesma tabela
+// que o próprio L.Control.Scale usa por baixo dos panos, mas aqui
+// controlamos o desenho da barra e o texto por inteiro.
+const SCALE_MAX_WIDTH = 90;
+function niceScaleDistance(maxMeters) {
+  const pow10 = Math.pow(10, Math.floor(Math.log10(maxMeters)));
+  const frac = maxMeters / pow10;
+  const step = frac >= 5 ? 5 : frac >= 3 ? 3 : frac >= 2 ? 2 : 1;
+  return step * pow10;
+}
+function formatScaleDistance(meters) {
+  return meters >= 1000 ? fmtNum(meters / 1000, { maximumFractionDigits: 1 }) + ' km' : fmtNum(meters) + ' m';
+}
+
+const CampoScaleControl = L.Control.extend({
+  options: { position: 'bottomleft' },
+  onAdd(map) {
+    this._map = map;
+    const el = L.DomUtil.create('div', 'leaflet-control campo-map-scale');
+    el.innerHTML = '<div class="campo-map-scale-label"></div><div class="campo-map-scale-bar"></div>';
+    this._label = el.querySelector('.campo-map-scale-label');
+    this._bar = el.querySelector('.campo-map-scale-bar');
+    L.DomEvent.disableClickPropagation(el);
+    map.on('move zoom', this._update, this);
+    this._update();
+    return el;
+  },
+  onRemove(map) { map.off('move zoom', this._update, this); },
+  _update() {
+    const map = this._map;
+    const y = map.getSize().y / 2;
+    const maxMeters = map.distance(map.containerPointToLatLng([0, y]), map.containerPointToLatLng([SCALE_MAX_WIDTH, y]));
+    if (!isFinite(maxMeters) || maxMeters <= 0) return;
+    const dist = niceScaleDistance(maxMeters);
+    this._bar.style.width = Math.round(SCALE_MAX_WIDTH * dist / maxMeters) + 'px';
+    this._label.textContent = formatScaleDistance(dist);
+  },
+});
+
+// Legenda só das categorias de poço REALMENTE presentes neste projeto
+// (não a lista fixa inteira de mapa.js) — um bloco exploratório sem poço
+// nenhum, ou só com poços secos, não precisa de 7 linhas de legenda pra
+// dizer isso; null quando não há nenhum poço com coordenada (nada a
+// legendar).
+function buildWellCategoryLegendRows(wells) {
+  const present = new Set(wells.filter((w) => w.c).map((w) => wellCategory(w)));
+  if (!present.size) return null;
+  return WELL_CATEGORY_LABELS.filter(([cat]) => present.has(cat));
+}
+
+const CampoLegendControl = L.Control.extend({
+  options: { position: 'topright' },
+  initialize(rows, options) {
+    L.Util.setOptions(this, options);
+    this._rows = rows;
+  },
+  onAdd() {
+    const el = L.DomUtil.create('div', 'leaflet-control campo-map-legend');
+    for (const [cat, label] of this._rows) {
+      const row = L.DomUtil.create('div', 'campo-map-legend-row', el);
+      const dot = L.DomUtil.create('span', 'campo-map-legend-dot', row);
+      dot.style.background = WELL_CATEGORY_DOT[cat] || WELL_CATEGORY_DOT.indefinido;
+      row.appendChild(document.createTextNode(label));
+    }
+    L.DomEvent.disableClickPropagation(el);
+    return el;
+  },
+});
 
 function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) {
   const mapDiv = document.createElement('div');
@@ -81,9 +170,11 @@ function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) 
   L.tileLayer('https://server.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
     maxNativeZoom: 16, maxZoom: 18,
   }).addTo(map);
-  // Escala numérica + gráfica (barra com tique nas pontas), padrão do
-  // próprio Leaflet — só métrico, a base da ANP não usa milhas.
-  L.control.scale({ metric: true, imperial: false, position: 'bottomleft' }).addTo(map);
+  // Escala numérica + gráfica, desenho próprio (ver CampoScaleControl
+  // acima) — só métrico, a base da ANP não usa milhas.
+  new CampoScaleControl().addTo(map);
+  const legendRows = buildWellCategoryLegendRows(wells);
+  if (legendRows) new CampoLegendControl(legendRows).addTo(map);
 
   const bounds = L.latLngBounds([]);
   // Poligonal PRÓPRIA (own) em traço cheio; as da MESMA jazida mas de
