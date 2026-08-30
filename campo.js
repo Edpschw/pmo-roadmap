@@ -62,6 +62,21 @@ function extractProjectSeries(monthlySeries, displayName) {
   });
 }
 
+// Marcos tipo 'fpso' (entrada de cada FPSO do campo, ver seedState em
+// shared.js) de todas as workstreams do projeto — mesmo critério que o
+// roadmap principal usa pra desenhar o ícone de FPSO (ver
+// MILESTONE_ICON_BUILDERS), aqui só extraído pra virar marcador no
+// gráfico de produção mensal (ver markers em createLineChart).
+function fpsoMilestonesOf(project) {
+  const items = [];
+  for (const ws of project.workstreams) {
+    for (const it of ws.items) {
+      if (it.type === 'milestone' && it.icon === 'fpso') items.push({ date: it.date, name: it.name });
+    }
+  }
+  return items;
+}
+
 /* ------------------------------- Mini-mapa --------------------------------- */
 // Escala e legenda desenhadas do zero (não o L.control.scale padrão do
 // Leaflet nem os .map-legend-row de mapa.js) — os dois herdados de um
@@ -633,7 +648,8 @@ function buildProjectPanel(project, ctx) {
     return panel;
   }
 
-  const prodCard = chartCard('Produção mensal', 'Um ponto por mês do boletim da ANP — só a fração pré-sal deste campo. Role o mouse pra zoom, arraste pra mover a janela, "Ver tudo" reseta.');
+  const fpsoMarkers = fpsoMilestonesOf(project);
+  const prodCard = chartCard('Produção mensal', 'Um ponto por mês do boletim da ANP — só a fração pré-sal deste campo. Ícone de FPSO acima do gráfico marca quando cada unidade entrou; ícone pequeno abaixo do eixo marca a conclusão de cada poço perfurado (cor neutra, forma = categoria — mesma legenda do mapa acima). Role o mouse pra zoom, arraste pra mover a janela, "Ver tudo" reseta.');
   const prodControls = document.createElement('div');
   prodControls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
   const prodReset = document.createElement('button');
@@ -642,7 +658,7 @@ function buildProjectPanel(project, ctx) {
   prodReset.textContent = 'Ver tudo';
   prodControls.appendChild(prodReset);
   prodCard.insertBefore(prodControls, prodCard.querySelector('h3').nextSibling);
-  const prodChart = createLineChart(prodCard, series);
+  const prodChart = createLineChart(prodCard, series, { fpsos: fpsoMarkers, wells });
   const prodUnitSwitch = buildUnitSwitch((unitKey) => prodChart.setUnit(unitKey), ['oleo', 'gas', 'boe']);
   prodControls.insertBefore(prodUnitSwitch, prodReset);
   prodReset.addEventListener('click', () => prodChart.resetZoom());

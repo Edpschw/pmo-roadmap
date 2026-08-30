@@ -887,13 +887,63 @@ function buildSegments(monthlySeries, loIdx, hiIdx, name, xAt, yAt, unitKey) {
   return segments;
 }
 
-function createLineChart(container, monthlySeries) {
+// Posição contínua (índice fracionário, mesma escala que xAt/idxAt em
+// createLineChart) de uma data ISO dentro de monthlySeries — usada pelos
+// marcadores de FPSO/poço (ver markers em createLineChart), que têm data
+// exata (dia), não só mês. Interpola linearmente pelo número de dias
+// corridos entre o 1º dia do primeiro mês da série e o 1º dia do último,
+// ignorando os poucos meses sem boletim no meio do período (ver nota em
+// buildEvolutionSection/producao.js — gap raro, a distorção de posição
+// que isso causa é pequena demais pra valer o custo de contornar). Pode
+// vir fora de [0, n-1] (data antes/depois do período coberto pelo
+// gráfico) — quem chama decide se corta ou não.
+function dateToContinuousIndex(monthlySeries, isoDate) {
+  const first = monthlySeries[0];
+  const last = monthlySeries[monthlySeries.length - 1];
+  const firstDate = new Date(Date.UTC(first.ano, first.mes - 1, 1));
+  const lastDate = new Date(Date.UTC(last.ano, last.mes - 1, 1));
+  const totalDays = diffDays(firstDate, lastDate);
+  if (totalDays <= 0) return 0;
+  const targetDays = diffDays(firstDate, parseDate(isoDate));
+  return (targetDays / totalDays) * (monthlySeries.length - 1);
+}
+
+// Marcadores opcionais desenhados JUNTO com o gráfico de linha (não por
+// cima, via CSS/HTML — precisam acompanhar pan/zoom exatamente como as
+// linhas, então entram no mesmo viewBox/redraw de createLineChart) — hoje
+// só usados por campo.js na "Produção mensal" de um projeto (produao.js,
+// com vários campos na mesma linha do tempo, não passa isso):
+//   - fpsos: [{date:'AAAA-MM-DD', name}] — marcos tipo 'fpso' do roadmap
+//     do projeto (ver fpsoMilestonesOf em campo.js), numa faixa reservada
+//     ACIMA do gráfico (ver topExtra abaixo).
+//   - wells: [poço da base ANP/BDEP, mesmo formato de data/pocos.json,
+//     precisa de w.d pra posicionar] — ícone de categoria (WELL_SHAPES)
+//     bem pequeno numa faixa logo ABAIXO do eixo x, dentro da margem
+//     inferior que já existia (não precisa de altura extra).
+// Sem markers (chamada de producao.js, ou de campo.js pro gráfico de
+// RGO), tudo aqui cai pra array vazio e o layout fica idêntico a antes.
+function createLineChart(container, monthlySeries, markers) {
   const n = monthlySeries.length;
   const order = seriesOrder(monthlySeries);
   const meta = new Map(order.map((name) => {
     const sample = monthlySeries.map((m) => m.rows.find((r) => r.name === name)).find(Boolean);
     return [name, { color: sample.color, isContract: sample.isContract }];
   }));
+  const fpsoMarkers = (markers && markers.fpsos) || [];
+  const wellMarkers = (markers && markers.wells) || [];
+  // Cor do ícone de FPSO: a mesma da própria série (cor do projeto, no
+  // caso de uso real — gráfico de um campo só, ver campo.js) — poucos
+  // FPSOs por projeto (1 a 6), risco baixo de confundir com a linha de
+  // dados. Ícone de poço usa WELL_LEGEND_COLOR (neutro) em vez disso: com
+  // dezenas/centenas de poços, a mesma cor da linha ficaria repetitiva
+  // demais, e o que importa ali é a FORMA (categoria), não destacar cor.
+  const fpsoMarkerColor = order.length ? meta.get(order[0]).color : '#e8eaed';
+  // Faixa reservada acima do gráfico pros ícones de FPSO — só cresce o
+  // canvas quando tem FPSO pra mostrar (ver H/marginTop dentro de draw()).
+  // Poço não precisa do equivalente embaixo: a margem inferior (62px) já
+  // sobra bastante além de onde o rótulo do eixo x começa (+14px), dá pra
+  // encaixar o ícone ali sem esticar o gráfico.
+  const topExtra = fpsoMarkers.length ? 20 : 0;
 
   let unitKey = 'oleo';
   let viewStart = 0;
@@ -934,6 +984,12 @@ function createLineChart(container, monthlySeries) {
     const unit = UNITS[unitKey];
     const plotW = LINE_W - LINE_MARGIN.left - LINE_MARGIN.right;
     const plotH = LINE_H - LINE_MARGIN.top - LINE_MARGIN.bottom;
+    // marginTop/H (não LINE_MARGIN.top/LINE_H direto) — os dois só diferem
+    // do padrão quando há marcador de FPSO (ver topExtra acima): a área de
+    // dados (plotH, grid, linhas) continua com a MESMA altura de sempre,
+    // só desce topExtra px pra abrir espaço acima pros ícones.
+    const marginTop = LINE_MARGIN.top + topExtra;
+    const H = LINE_H + topExtra;
     const span = Math.max(viewEnd - viewStart, 0.001);
     const xAt = (i) => LINE_MARGIN.left + ((i - viewStart) / span) * plotW;
     const idxAt = (px) => viewStart + ((px - LINE_MARGIN.left) / plotW) * span;
@@ -949,7 +1005,7 @@ function createLineChart(container, monthlySeries) {
     // usuário resetar ("Ver tudo") — dar zoom em x não desfaz um zoom em y
     // já ajustado, e vice-versa (são eixos independentes).
     const maxVal = yMaxOverride !== null ? yMaxOverride : autoMax;
-    const yAt = (v) => LINE_MARGIN.top + plotH - (v / maxVal) * plotH;
+    const yAt = (v) => marginTop + plotH - (v / maxVal) * plotH;
 
     const yTicks = 5;
     let gridSvg = '';
@@ -972,9 +1028,9 @@ function createLineChart(container, monthlySeries) {
       if (!dense && m.mes !== 1 && !isLast) continue;
       const x = xAt(i);
       const label = (!dense && m.mes === 1) ? String(m.ano) : `${MES_ABREV[m.mes]}/${String(m.ano).slice(2)}`;
-      const y = LINE_MARGIN.top + plotH + 14;
+      const y = marginTop + plotH + 14;
       if (!dense && m.mes === 1) {
-        xLabelsSvg += `<line x1="${x}" y1="${LINE_MARGIN.top}" x2="${x}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--border)" stroke-width="1" stroke-dasharray="2,3" />`;
+        xLabelsSvg += `<line x1="${x}" y1="${marginTop}" x2="${x}" y2="${marginTop + plotH}" stroke="var(--border)" stroke-width="1" stroke-dasharray="2,3" />`;
       }
       xLabelsSvg += `<text x="0" y="0" transform="translate(${x} ${y}) rotate(-45)" text-anchor="end" font-size="${dense ? 10 : 11}" style="fill:var(--text-muted)">${escapeHtml(label)}</text>`;
     }
@@ -997,16 +1053,42 @@ function createLineChart(container, monthlySeries) {
       void isContract;
     }
 
-    const axisSvg = `<line x1="${LINE_MARGIN.left}" y1="${LINE_MARGIN.top + plotH}" x2="${LINE_W - LINE_MARGIN.right}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
-    const captureSvg = `<rect id="lc-capture" x="${LINE_MARGIN.left}" y="${LINE_MARGIN.top}" width="${plotW}" height="${plotH}" fill="transparent" style="cursor:crosshair" />`;
+    const axisSvg = `<line x1="${LINE_MARGIN.left}" y1="${marginTop + plotH}" x2="${LINE_W - LINE_MARGIN.right}" y2="${marginTop + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
+    const captureSvg = `<rect id="lc-capture" x="${LINE_MARGIN.left}" y="${marginTop}" width="${plotW}" height="${plotH}" fill="transparent" style="cursor:crosshair" />`;
     // Faixa invisível sobre os rótulos do eixo y — só pra indicar com o
     // cursor (ns-resize) que rolar o mouse ali zoom o eixo y, não o x; o
     // zoom em si é tratado no wheel handler abaixo (checa a posição do
     // cursor, não depende de qual elemento recebeu o evento).
-    const yAxisHintSvg = `<rect x="0" y="${LINE_MARGIN.top}" width="${LINE_MARGIN.left}" height="${plotH}" fill="transparent" style="cursor:ns-resize" />`;
-    const crosshairSvg = `<line id="lc-crosshair" x1="0" y1="${LINE_MARGIN.top}" x2="0" y2="${LINE_MARGIN.top + plotH}" stroke="var(--text-faint)" stroke-width="1" hidden />`;
+    const yAxisHintSvg = `<rect x="0" y="${marginTop}" width="${LINE_MARGIN.left}" height="${plotH}" fill="transparent" style="cursor:ns-resize" />`;
+    const crosshairSvg = `<line id="lc-crosshair" x1="0" y1="${marginTop}" x2="0" y2="${marginTop + plotH}" stroke="var(--text-faint)" stroke-width="1" hidden />`;
 
-    svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
+    // Marcadores de FPSO (faixa reservada acima, ver topExtra) e poço
+    // (faixa dentro da margem inferior já existente, logo abaixo do eixo
+    // x) — só desenha o que cai dentro da janela visível atual (loIdx/
+    // hiIdx, respeitando zoom/pan como tudo mais no gráfico). <title>
+    // nativo no lugar do tooltip rico (crosshair já cobre esse papel pros
+    // dados da linha): são elementos estáticos por redraw, sem handler
+    // próprio de hover, mais simples que replicar ensureTooltip aqui.
+    let fpsoSvg = '';
+    for (const fp of fpsoMarkers) {
+      const idx = dateToContinuousIndex(monthlySeries, fp.date);
+      if (idx < loIdx - 0.5 || idx > hiIdx + 0.5) continue;
+      const x = xAt(idx);
+      const size = 12;
+      fpsoSvg += `<svg x="${x - size / 2}" y="${topExtra / 2 - size / 2 + 2}" width="${size}" height="${size}" viewBox="0 0 16 16" style="overflow:visible"><title>${escapeHtml(fp.name)} — ${formatBR(fp.date)}</title>${fpsoIconSVG(fpsoMarkerColor)}</svg>`;
+    }
+    let wellSvg = '';
+    for (const w of wellMarkers) {
+      if (!w.d) continue;
+      const idx = dateToContinuousIndex(monthlySeries, w.d);
+      if (idx < loIdx - 0.5 || idx > hiIdx + 0.5) continue;
+      const x = xAt(idx);
+      const size = 6;
+      const shape = WELL_SHAPES[wellCategory(w)] || WELL_SHAPES.indefinido;
+      wellSvg += `<svg x="${x - size / 2}" y="${marginTop + plotH + 5}" width="${size}" height="${size}" viewBox="0 0 16 16"><title>${escapeHtml(w.n)} — ${formatBR(w.d)}</title>${shape(WELL_LEGEND_COLOR)}</svg>`;
+    }
+
+    svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${H}">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${fpsoSvg}${wellSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
     const svgEl = svgWrap.firstElementChild;
     const capture = svgEl.querySelector('#lc-capture');
     const crosshair = svgEl.querySelector('#lc-crosshair');
@@ -1103,7 +1185,7 @@ function createLineChart(container, monthlySeries) {
       t.hidden = false;
       const rect = svgEl.getBoundingClientRect();
       const scale = rect.width / LINE_W;
-      positionTooltip(rect.left + x * scale, rect.top + LINE_MARGIN.top * scale);
+      positionTooltip(rect.left + x * scale, rect.top + marginTop * scale);
     }
   }
 
