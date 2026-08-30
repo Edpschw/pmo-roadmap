@@ -925,31 +925,41 @@ function addWellMarker(targetLayer, latlng, color, entries) {
   );
 }
 
-/* ---------------------------- Sonda em perfuração --------------------------- */
-// Ícone de sonda/vessel de perfuração — aparece SÓ no zoom baixo, antes dos
-// poços em si (ver updateRigVisibility, regra de zoom oposta à de
-// updateWellsVisibility): um aviso antecipado de "tem perfuração ativa por
+/* ------------------------- Sonda em perfuração/completação ------------------ */
+// Ícone de sonda/vessel — aparece SÓ no zoom baixo, antes dos poços em si
+// (ver updateRigVisibility, regra de zoom oposta à de
+// updateWellsVisibility): um aviso antecipado de "tem uma sonda ativa por
 // aqui" pra quem ainda não deu zoom o bastante pra ver os poços um a um.
-// Cor fixa (não a do projeto) — é indicador de SITUAÇÃO (perfurando agora),
-// não de propriedade, mesmo raciocínio de OUTROS_POCOS_COLOR/ANC_RING_COLOR.
-// Maior que o ícone de poço comum (ver wellDivIcon) de propósito: no zoom
-// baixo em que aparece, precisa se destacar sozinho, sem outros poços por
-// perto pra dar contexto de escala.
-const RIG_COLOR = '#f2a93b';
-function rigDivIcon() {
+// Mesmo desenho (derrick sobre um casco) pras duas situações que ganham
+// ícone — só a cor muda, codificando a fase: vermelho perfurando (situação
+// mais "chamativa", poço ainda formando), cinza completando (poço já
+// perfurado, preparando pra entrar em produção). Cor fixa por situação
+// (não a do projeto) — é indicador de SITUAÇÃO, não de propriedade, mesmo
+// raciocínio de OUTROS_POCOS_COLOR/ANC_RING_COLOR. Maior que o ícone de
+// poço comum (ver wellDivIcon) de propósito: no zoom baixo em que aparece,
+// precisa se destacar sozinho, sem outros poços por perto pra dar contexto
+// de escala.
+const RIG_STATUS_STYLE = {
+  'EM PERFURAÇÃO': { color: '#e5484d', label: 'Em perfuração' },
+  'EM COMPLETAÇÃO': { color: '#9aa1ad', label: 'Em completação' },
+};
+function rigIconSvg(color, size) {
+  return `<svg viewBox="0 0 20 20" width="${size}" height="${size}" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8))">
+      <path d="M4 15.5 L16 15.5 L14 18.4 L6 18.4 Z" fill="#14171b" stroke="${color}" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M10 2 L6.3 15.5 M10 2 L13.7 15.5 M7.6 9.6 L12.4 9.6" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="10" cy="2" r="1.3" fill="${color}"/>
+    </svg>`;
+}
+function rigDivIcon(color) {
   return L.divIcon({
     className: 'map-rig-icon',
-    html: `<svg viewBox="0 0 20 20" width="20" height="20" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8))">
-      <path d="M4 15.5 L16 15.5 L14 18.4 L6 18.4 Z" fill="#14171b" stroke="${RIG_COLOR}" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="M10 2 L6.3 15.5 M10 2 L13.7 15.5 M7.6 9.6 L12.4 9.6" fill="none" stroke="${RIG_COLOR}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="10" cy="2" r="1.3" fill="${RIG_COLOR}"/>
-    </svg>`,
+    html: rigIconSvg(color, 20),
     iconSize: [20, 20],
     iconAnchor: [10, 18],
   });
 }
 
-function rigPopupHTML(w) {
+function rigPopupHTML(w, style) {
   const rows = [];
   if (w.op) rows.push(['Operador', w.op]);
   if (w.sonda) rows.push(['Sonda', w.sonda]);
@@ -957,26 +967,27 @@ function rigPopupHTML(w) {
   if (w.lam) rows.push(['Lâmina d\'água', w.lam.toLocaleString('pt-BR') + ' m']);
   const rowsHTML = rows.map(([k, v]) => `<tr><td class="k">${k}</td><td>${escapeHtml(v)}</td></tr>`).join('');
   return `<div class="map-popup">
-    <h3 style="color:${RIG_COLOR}">${escapeHtml(w.n)}</h3>
-    <p class="map-popup-source">Poço em perfuração</p>
+    <h3 style="color:${style.color}">${escapeHtml(w.n)}</h3>
+    <p class="map-popup-source">Poço ${style.label.toLowerCase()}</p>
     <table>${rowsHTML}</table>
     <p class="map-popup-source">Fonte: ANP/BDEP — cadastro de poços</p>
   </div>`;
 }
 
-function addRigMarker(targetLayer, w) {
-  const marker = L.marker(w.c, { icon: rigDivIcon(), zIndexOffset: 600 });
-  marker.bindTooltip(`${escapeHtml(w.n)}<br>Em perfuração`, { direction: 'top', offset: [0, -16], className: 'map-well-tooltip' });
-  marker.bindPopup(rigPopupHTML(w));
+function addRigMarker(targetLayer, w, style) {
+  const marker = L.marker(w.c, { icon: rigDivIcon(style.color), zIndexOffset: 600 });
+  marker.bindTooltip(`${escapeHtml(w.n)}<br>${escapeHtml(style.label)}`, { direction: 'top', offset: [0, -16], className: 'map-well-tooltip' });
+  marker.bindPopup(rigPopupHTML(w, style));
   targetLayer.addLayer(marker);
 }
 
-// Poços "EM PERFURAÇÃO" de uma chave (contrato ou campo de contexto) —
-// mesma base de poços dos marcadores normais (contractOwnWells), só
-// filtrando por situação.
+// Poços com situação em RIG_STATUS_STYLE de uma chave (contrato ou campo de
+// contexto) — mesma base de poços dos marcadores normais
+// (contractOwnWells), só filtrando por situação.
 function addRigMarkersFor(key, targetLayer) {
   for (const w of contractOwnWells(pocosData, key)) {
-    if (w.sit === 'EM PERFURAÇÃO') addRigMarker(targetLayer, w);
+    const style = RIG_STATUS_STYLE[w.sit];
+    if (style) addRigMarker(targetLayer, w, style);
   }
 }
 
@@ -1199,6 +1210,9 @@ async function init() {
   // "Camadas" (que começa recolhido, ver panelCollapsed), pra quem só
   // quer lembrar o que cada ícone significa sem abrir o painel inteiro.
   document.getElementById('mapWellLegendFixed').appendChild(buildWellShapeLegend());
+  // Legenda das sondas — começa escondida (hidden no HTML): só aparece no
+  // zoom baixo, junto com os próprios ícones de sonda (ver updateRigVisibility).
+  document.getElementById('mapRigLegendFixed').appendChild(buildRigLegend());
 
   // Contornos de fundo (ver CONTORNO_*_STYLE acima) — puramente decorativos,
   // falha em silêncio sem toast: o mapa funciona perfeitamente sem eles.
@@ -1376,7 +1390,8 @@ async function init() {
   // — pontos genéricos, sem o casamento com marco do roadmap dos outros.
   for (const w of outrosPocos) {
     addOutrosPocoMarker(outrosPocosLayer, w);
-    if (w.sit === 'EM PERFURAÇÃO') addRigMarker(rigOutrosLayer, w);
+    const rigStyle = RIG_STATUS_STYLE[w.sit];
+    if (rigStyle) addRigMarker(rigOutrosLayer, w, rigStyle);
   }
 
   if (allBounds.length) {
@@ -1596,6 +1611,13 @@ function updateRigVisibility() {
   for (const g of GROUP_DEFS) showOrHide(rigGroupLayers[g.id], rigZoomOk && groupVisible[g.id]);
   showOrHide(rigPresaltLayer, rigZoomOk && presaltFieldsVisible);
   showOrHide(rigOutrosLayer, rigZoomOk && outrosPocosVisible);
+  // Legenda das sondas só faz sentido com pelo menos um ícone de verdade na
+  // tela — não só zoom baixo (também depende dos toggles de grupo/contexto
+  // no painel, e pode simplesmente não ter nenhum poço em perfuração ou
+  // completação agora).
+  const allRigLayers = [...Object.values(rigGroupLayers), rigPresaltLayer, rigOutrosLayer];
+  const anyRigVisible = allRigLayers.some((l) => map.hasLayer(l) && l.getLayers().length > 0);
+  document.getElementById('mapRigLegendFixed').hidden = !anyRigVisible;
 }
 
 // Nome do projeto sobre o polígono só no zoom em que os poços ainda não
@@ -1860,6 +1882,27 @@ function buildWellShapeLegend() {
   ancRow.appendChild(ancIcon);
   ancRow.appendChild(document.createTextNode('Anel laranja: área não concedida (AnC), sem contrato formal'));
   legend.appendChild(ancRow);
+  return legend;
+}
+
+// Legenda das sondas (ver RIG_STATUS_STYLE) — mesmo padrão visual de
+// buildWellShapeLegend, mas fica no lugar do #mapWellLegendFixed quando ELE
+// some (ver updateRigVisibility): as sondas só aparecem no zoom baixo,
+// exatamente quando os poços (e a legenda deles) ainda não apareceram, então
+// as duas nunca disputam o mesmo canto ao mesmo tempo.
+function buildRigLegend() {
+  const legend = document.createElement('div');
+  legend.className = 'map-legend';
+  for (const style of Object.values(RIG_STATUS_STYLE)) {
+    const row = document.createElement('div');
+    row.className = 'map-legend-row';
+    const icon = document.createElement('span');
+    icon.className = 'map-legend-well-icon';
+    icon.innerHTML = rigIconSvg(style.color, 15);
+    row.appendChild(icon);
+    row.appendChild(document.createTextNode(style.label));
+    legend.appendChild(row);
+  }
   return legend;
 }
 
