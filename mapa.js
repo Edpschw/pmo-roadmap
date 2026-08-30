@@ -211,6 +211,15 @@ for (const g of GROUP_DEFS) wellGroupLayers[g.id] = L.layerGroup();
 // Poços dos campos de contexto (ver presaltFieldsLayer) — mesma separação.
 const wellPresaltLayer = L.layerGroup();
 
+// Sonda de perfuração (ver rigDivIcon) — mesma separação por grupo/contexto
+// dos poços em si, mas com a regra de zoom INVERTIDA (ver updateRigVisibility):
+// aparece só ANTES do zoom em que os poços passam a aparecer, como aviso
+// antecipado de que tem perfuração ativa ali.
+const rigGroupLayers = {};
+for (const g of GROUP_DEFS) rigGroupLayers[g.id] = L.layerGroup();
+const rigPresaltLayer = L.layerGroup();
+const rigOutrosLayer = L.layerGroup();
+
 const layerByProjectId = {};
 const featureByProject = {};
 
@@ -916,6 +925,61 @@ function addWellMarker(targetLayer, latlng, color, entries) {
   );
 }
 
+/* ---------------------------- Sonda em perfuração --------------------------- */
+// Ícone de sonda/vessel de perfuração — aparece SÓ no zoom baixo, antes dos
+// poços em si (ver updateRigVisibility, regra de zoom oposta à de
+// updateWellsVisibility): um aviso antecipado de "tem perfuração ativa por
+// aqui" pra quem ainda não deu zoom o bastante pra ver os poços um a um.
+// Cor fixa (não a do projeto) — é indicador de SITUAÇÃO (perfurando agora),
+// não de propriedade, mesmo raciocínio de OUTROS_POCOS_COLOR/ANC_RING_COLOR.
+// Maior que o ícone de poço comum (ver wellDivIcon) de propósito: no zoom
+// baixo em que aparece, precisa se destacar sozinho, sem outros poços por
+// perto pra dar contexto de escala.
+const RIG_COLOR = '#f2a93b';
+function rigDivIcon() {
+  return L.divIcon({
+    className: 'map-rig-icon',
+    html: `<svg viewBox="0 0 20 20" width="20" height="20" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8))">
+      <path d="M4 15.5 L16 15.5 L14 18.4 L6 18.4 Z" fill="#14171b" stroke="${RIG_COLOR}" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M10 2 L6.3 15.5 M10 2 L13.7 15.5 M7.6 9.6 L12.4 9.6" fill="none" stroke="${RIG_COLOR}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="10" cy="2" r="1.3" fill="${RIG_COLOR}"/>
+    </svg>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 18],
+  });
+}
+
+function rigPopupHTML(w) {
+  const rows = [];
+  if (w.op) rows.push(['Operador', w.op]);
+  if (w.sonda) rows.push(['Sonda', w.sonda]);
+  if (w.d) rows.push(['Último boletim', formatBR(w.d)]);
+  if (w.lam) rows.push(['Lâmina d\'água', w.lam.toLocaleString('pt-BR') + ' m']);
+  const rowsHTML = rows.map(([k, v]) => `<tr><td class="k">${k}</td><td>${escapeHtml(v)}</td></tr>`).join('');
+  return `<div class="map-popup">
+    <h3 style="color:${RIG_COLOR}">${escapeHtml(w.n)}</h3>
+    <p class="map-popup-source">Poço em perfuração</p>
+    <table>${rowsHTML}</table>
+    <p class="map-popup-source">Fonte: ANP/BDEP — cadastro de poços</p>
+  </div>`;
+}
+
+function addRigMarker(targetLayer, w) {
+  const marker = L.marker(w.c, { icon: rigDivIcon(), zIndexOffset: 600 });
+  marker.bindTooltip(`${escapeHtml(w.n)}<br>Em perfuração`, { direction: 'top', offset: [0, -16], className: 'map-well-tooltip' });
+  marker.bindPopup(rigPopupHTML(w));
+  targetLayer.addLayer(marker);
+}
+
+// Poços "EM PERFURAÇÃO" de uma chave (contrato ou campo de contexto) —
+// mesma base de poços dos marcadores normais (contractOwnWells), só
+// filtrando por situação.
+function addRigMarkersFor(key, targetLayer) {
+  for (const w of contractOwnWells(pocosData, key)) {
+    if (w.sit === 'EM PERFURAÇÃO') addRigMarker(targetLayer, w);
+  }
+}
+
 // Distância em metros entre duas coordenadas [lat, lng] (haversine) — usada
 // só por splitCellByWellhead, pra decidir se duas entradas da mesma célula
 // de WELL_MERGE_GRID são de fato o mesmo poço.
@@ -1230,6 +1294,7 @@ async function init() {
       );
       if (linkedProject) linkedPresaltLayers.push({ layer, project: linkedProject });
       registerWellSet(props.nome, null, layer.getBounds(), color, wellPresaltLayer);
+      addRigMarkersFor(props.nome, rigPresaltLayer);
     }
   } catch (e) {
     // Camada de contexto é opcional — segue sem ela se não carregar.
@@ -1303,12 +1368,16 @@ async function init() {
     const layer = layerByProjectId[project.id];
     const targetLayer = wellGroupLayers[project.group] || wellGroupLayers[GROUP_FALLBACK];
     registerWellSet(project.name, project, layer ? layer.getBounds() : null, project.color, targetLayer);
+    addRigMarkersFor(project.name, rigGroupLayers[project.group] || rigGroupLayers[GROUP_FALLBACK]);
   }
 
   // "Todos os poços do pré-sal": todo poço offshore de Santos/Campos que
   // não é de nenhum dos 24 contratos/campos acima (ver scripts/build_pocos.py)
   // — pontos genéricos, sem o casamento com marco do roadmap dos outros.
-  for (const w of outrosPocos) addOutrosPocoMarker(outrosPocosLayer, w);
+  for (const w of outrosPocos) {
+    addOutrosPocoMarker(outrosPocosLayer, w);
+    if (w.sit === 'EM PERFURAÇÃO') addRigMarker(rigOutrosLayer, w);
+  }
 
   if (allBounds.length) {
     let bounds = allBounds[0];
@@ -1514,6 +1583,19 @@ function updateWellsVisibility() {
   // explicar — mesmo corte de zoom que revela os próprios poços.
   document.getElementById('mapWellLegendFixed').hidden = !zoomOk;
   updateProjectLabels();
+  updateRigVisibility();
+}
+
+// Sonda de perfuração (ver addRigMarkersFor) — regra de zoom OPOSTA à dos
+// poços em si (zoom < wellsMinZoom, não >=): aparece só antes do zoom em
+// que os poços passam a aparecer, como aviso antecipado. Mesmos toggles de
+// grupo/contexto/outros que já controlam os poços — desligar um contrato no
+// painel some com a sonda dele também, sem controle novo.
+function updateRigVisibility() {
+  const rigZoomOk = map.getZoom() < wellsMinZoom;
+  for (const g of GROUP_DEFS) showOrHide(rigGroupLayers[g.id], rigZoomOk && groupVisible[g.id]);
+  showOrHide(rigPresaltLayer, rigZoomOk && presaltFieldsVisible);
+  showOrHide(rigOutrosLayer, rigZoomOk && outrosPocosVisible);
 }
 
 // Nome do projeto sobre o polígono só no zoom em que os poços ainda não
