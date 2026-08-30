@@ -332,6 +332,640 @@ function barRow(label, widthPct, valueText, color, tooltipHtmlFn) {
   return row;
 }
 
+/* ------------------------- Produção mensal (ANP) -------------------------- */
+// Compartilhada entre producao.js (visão por campo) e campo.js (visão por
+// projeto) — os dois calculam a mesma série mensal a partir de data/
+// producao.json, só mudam o que mostram em cima dela.
+
+const MESES_PT = [
+  '', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+];
+const MES_ABREV = ['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+const METRIC_KEYS = ['oleoPreSalBbld', 'oleoPosSalBbld', 'gasPreSalMm3d', 'gasPosSalMm3d', 'boedPreSal', 'boedPosSal'];
+
+// Campo-base do boletim da ANP de cada projeto rastreado com produção
+// própria — casado por SUBSTRING contra as chaves de data/producao.json
+// (nome do campo como a ANP publica), não por igualdade exata. Motivo: a
+// granularidade da tabela varia por edição do boletim — meses mais
+// recentes trazem só "Atapu", outros trazem "Atapu" + "Oeste de Atapu" +
+// "Anc_Norte_Atapu" (Área Não Contratada) como linhas separadas da MESMA
+// jazida/contrato (confirmado pela ligação de poço->campo já usada no
+// roadmap, ver contractOwnWells acima: poços de Atapu citam "Atapu /
+// Atapu_Eco / Anc_Norte_Atapu / Oeste De Atapu" juntos). Casar por
+// substring soma essas sub-áreas automaticamente em qualquer mês, sem
+// precisar listar cada variante à mão. Norte de Carcará é o único caso
+// que soma duas jazidas por nome DIFERENTE ("Bacalhau Norte", dentro do
+// CPP rastreado aqui, + "Bacalhau", Concessão anterior e fora dele) — "
+// Bacalhau" como base já casa as duas por conter a substring, mesmo
+// critério já usado no roadmap para "Poços Perfurados" desse contrato. Os
+// demais projetos em produção (Libra) não têm campo próprio no boletim —
+// a produção de Libra/Mero sai inteira sob "Mero".
+const PROJECT_FIELD_BASE = {
+  'Búzios': 'Búzios',
+  'Mero': 'Mero',
+  'Itapu': 'Itapu',
+  'Sépia': 'Sépia',
+  'Atapu': 'Atapu',
+  'Entorno de Sapinhoá': 'Sapinhoá',
+  'Norte de Carcará': 'Bacalhau',
+};
+
+const UNITS = {
+  oleo: { label: 'Petróleo (bbl/d)', key: 'oleoPreSalBbld', fmt: (n) => fmtNum(n) + ' bbl/d' },
+  gas: { label: 'Gás natural (Mm³/d)', key: 'gasPreSalMm3d', fmt: (n) => fmtNum(n, { maximumFractionDigits: 1 }) + ' Mm³/d' },
+  boe: { label: 'Produção (boe/d)', key: 'boedPreSal', fmt: (n) => fmtNum(n) + ' boe/d' },
+  rgo: { label: 'RGO (m³/m³)', key: 'rgo', fmt: (n) => fmtNum(n) + ' m³/m³' },
+};
+
+function emptyMetrics() {
+  const m = {};
+  for (const k of METRIC_KEYS) m[k] = 0;
+  return m;
+}
+
+// RGO (Razão Gás-Óleo) = volume de gás produzido / volume de óleo
+// produzido, os dois em m³ — mesma unidade que a indústria usa pra
+// caracterizar um campo (Búzios ~270 m³/m³, por exemplo). O boletim vem
+// em bbl/d (óleo) e "Mm³/d" (gás) — aqui "M" é "mil" (milhares de m³/dia),
+// não "mega" (milhões): dá pra confirmar pelo total do pré-sal no
+// boletim (~150 mil m³/d em dez/2025) — se fosse milhão, seria mais gás
+// só no pré-sal brasileiro do que o mundo inteiro produz. Por isso o
+// fator aqui é ×1.000 (não ×1.000.000) pra converter gás pra m³/d puro;
+// óleo usa a conversão padrão de 1 bbl = 0,158987 m³. Sempre calculado a
+// partir dos volumes JÁ somados (nunca soma/média de RGO direto — RGO é
+// uma razão, não dá pra somar razão entre campos ou meses).
+const BBL_TO_M3 = 0.158987;
+function computeRGO(oleoBbld, gasMm3d) {
+  const oleoM3 = oleoBbld * BBL_TO_M3;
+  if (oleoM3 <= 0) return 0;
+  return (gasMm3d * 1000) / oleoM3;
+}
+
+// Fusão de campo de CONTEXTO fragmentado em mais de uma linha pelo próprio
+// boletim — mesma ideia de "a jazida inteira é o que importa acompanhar"
+// já usada em PROJECT_FIELD_BASE (contratos rastreados), aqui por
+// igualdade de nome já normalizado (ver scripts/producao_common.py
+// normalize_field_name — data/producao.json já chega limpo de sufixo de
+// regime/nota de rodapé, então essa função só cuida de fusão de JAZIDA,
+// não de variação de grafia):
+//   - "Anc_X" (Área Não Contratada) funde no campo "X" (primeiro pedaço
+//     depois de "Anc_") — mesmo padrão já usado pra Anc_Norte_Atapu/
+//     Anc_Mero nos contratos rastreados (esses dois já caem no contrato
+//     certo por substring, antes de chegar aqui) — só quando "X" já é
+//     nome de outro campo em ALGUM mês do boletim inteiro (não só do mês
+//     sendo processado agora: "Tupi" e "Anc_Tupi" nem sempre aparecem
+//     juntos no mesmo mês — de jan/2024 a jun/2025 o boletim só lista
+//     "Anc_Tupi", sem "Tupi" separado naquele período — então o alvo
+//     precisa vir do conjunto de nomes de TODO o histórico, ver
+//     allFieldNames, senão "Anc_Tupi" vira linha própria só nesses meses).
+//     Sem alvo confirmado em nenhum mês (ex.: Anc_Brava/Anc_Forno, sem
+//     campo "Brava"/"Forno" avulso no boletim inteiro), fica como está.
+//   - Sul de Berbigão funde em Berbigão — mesmo PD (berbigao.pdf,
+//     "Berbigão, Norte de Berbigão e Sul de Berbigão 2025" em data/
+//     planos_desenvolvimento.json), Sul de Tupi NÃO funde em Tupi (PD
+//     próprio, sul-de-lula.pdf — campo satélite diferente, só o nome
+//     mudou junto quando Lula virou Tupi em 2019, ver normalize_field_name).
+const CONTEXT_JAZIDA_ALIAS = {
+  'Sul de Berbigão': 'Berbigão',
+};
+function contextJazidaBase(name, knownNames) {
+  if (CONTEXT_JAZIDA_ALIAS[name]) return CONTEXT_JAZIDA_ALIAS[name];
+  if (name.startsWith('Anc_')) {
+    const base = name.slice(4).split('_')[0];
+    if (knownNames.has(base)) return base;
+  }
+  return name;
+}
+
+// Nomes de campo (já normalizados, ver data/producao.json) vistos em
+// QUALQUER mês do boletim — usado por contextJazidaBase pra achar o alvo
+// de fusão de um "Anc_X" mesmo em meses onde "X" não aparece sozinho.
+function allFieldNames(meses) {
+  const names = new Set();
+  for (const mes of meses) {
+    for (const nome of Object.keys(mes.campos)) names.add(nome);
+  }
+  return names;
+}
+
+// Um projeto rastreado por campo-base (soma por substring, ver
+// PROJECT_FIELD_BASE) mapeado; os demais campos do boletim (Tupi,
+// Berbigão, Jubarte, Lapa...) entram como contexto — mesmo campo pré-sal,
+// mas fora dos 30 contratos de partilha rastreados neste app
+// (Concessão/Cessão Onerosa sem CPP próprio nesta lista), com fusão por
+// jazida (ver contextJazidaBase) quando o próprio boletim traz mais de um
+// nome pra mesma jazida. "campos" tem o mesmo formato num mês só (data/
+// producao.json) ou já com métricas médias de um ano — esta função não
+// distingue os dois.
+function computeFieldRows(campos, projects, knownNames) {
+  const usedFieldNames = new Set();
+  const rows = [];
+
+  for (const p of projects) {
+    const base = PROJECT_FIELD_BASE[p.name];
+    if (!base) continue;
+    const parts = Object.keys(campos).filter((n) => n.includes(base)).map((n) => ({ nome: n, dados: campos[n] }));
+    if (!parts.length) continue;
+    parts.forEach((part) => usedFieldNames.add(part.nome));
+    const sum = emptyMetrics();
+    for (const part of parts) {
+      for (const k of METRIC_KEYS) sum[k] += part.dados[k];
+    }
+    rows.push({
+      name: projectDisplayName(p.name),
+      color: p.color,
+      isContract: true,
+      parts,
+      ...sum,
+      rgo: computeRGO(sum.oleoPreSalBbld, sum.gasPreSalMm3d),
+    });
+  }
+
+  const contextGroups = new Map();
+  for (const [nome, dados] of Object.entries(campos)) {
+    if (usedFieldNames.has(nome)) continue;
+    const jazida = contextJazidaBase(nome, knownNames);
+    if (!contextGroups.has(jazida)) contextGroups.set(jazida, []);
+    contextGroups.get(jazida).push({ nome, dados });
+  }
+  for (const [jazida, parts] of contextGroups) {
+    // Um grupo com UM SÓ pedaço, e esse pedaço é só a Área Não Contratada
+    // ("Anc_X", renomeada pra "X" por contextJazidaBase) sem o campo "X"
+    // em si nem nenhuma outra sub-área junto: a ANC sozinha é sempre só
+    // uma fração do campo (por definição, é a parte FORA do contrato) —
+    // um mês assim não tem o total do campo publicado no boletim, só esse
+    // fragmento. Mostrar isso com o nome do campo inteiro ("Tupi") daria
+    // a impressão de produção quase zero num mês em que na verdade o
+    // boletim simplesmente não trouxe o total — melhor não ter o ponto
+    // nesse mês (linha corta ali, ver buildSegments) do que ter um
+    // número enganoso.
+    if (parts.length === 1 && parts[0].nome.toLowerCase().startsWith('anc_') && jazida !== parts[0].nome) {
+      continue;
+    }
+    const sum = emptyMetrics();
+    for (const part of parts) {
+      for (const k of METRIC_KEYS) sum[k] += part.dados[k];
+    }
+    rows.push({
+      name: jazida,
+      color: CONTEXT_FIELD_COLOR,
+      isContract: false,
+      parts,
+      ...sum,
+      rgo: computeRGO(sum.oleoPreSalBbld, sum.gasPreSalMm3d),
+    });
+  }
+
+  return rows;
+}
+
+// Campo de contexto (fora dos 7 rastreados) que nunca passou de 50 mil
+// bbl/d de petróleo pré-sal em NENHUM mês do histórico inteiro vira uma
+// linha cinza só, "Campos menores", somando todos esses juntos por mês —
+// evita 20+ linhas minúsculas disputando espaço com as grandes. O corte
+// usa sempre petróleo (bbl/d) e o máximo do campo em TODO o período, não
+// o valor do mês nem a unidade escolhida no momento (gás/boe/RGO) — sem
+// isso um campo trocaria de grupo (linha própria ↔ "Campos menores") só
+// por variar de mês pra mês perto do limiar, ou ao trocar de aba de
+// unidade, o que quebraria a cor/posição na legenda entre uma visita e
+// outra.
+const SMALL_FIELD_THRESHOLD_BBLD = 50000;
+const SMALL_FIELDS_LABEL = 'Campos menores';
+function groupSmallContextFields(monthlySeries) {
+  const maxOleo = new Map();
+  for (const m of monthlySeries) {
+    for (const r of m.rows) {
+      if (r.isContract) continue;
+      maxOleo.set(r.name, Math.max(maxOleo.get(r.name) || 0, r.oleoPreSalBbld));
+    }
+  }
+  const smallNames = new Set([...maxOleo.entries()].filter(([, v]) => v < SMALL_FIELD_THRESHOLD_BBLD).map(([k]) => k));
+  if (!smallNames.size) return monthlySeries;
+
+  return monthlySeries.map((m) => {
+    const kept = m.rows.filter((r) => r.isContract || !smallNames.has(r.name));
+    const smallRows = m.rows.filter((r) => !r.isContract && smallNames.has(r.name));
+    if (!smallRows.length) return { ...m, rows: kept };
+    const sum = emptyMetrics();
+    for (const r of smallRows) {
+      for (const k of METRIC_KEYS) sum[k] += r[k];
+    }
+    kept.push({
+      name: SMALL_FIELDS_LABEL,
+      color: CONTEXT_FIELD_COLOR,
+      isContract: false,
+      parts: smallRows.flatMap((r) => r.parts),
+      ...sum,
+      rgo: computeRGO(sum.oleoPreSalBbld, sum.gasPreSalMm3d),
+    });
+    return { ...m, rows: kept };
+  });
+}
+
+// "produção diária por mês" — sem agregação nenhuma: um ponto por mês do
+// boletim, com o valor exatamente como a ANP publicou naquele mês (bbl/d,
+// Mm³/d ou boe/d — já é uma vazão diária, não precisa converter nada).
+// Campos de contexto (fora dos 7 contratos rastreados) ficam SEPARADOS,
+// uma linha por campo (agrupados em "Campos menores" quando pequenos, ver
+// groupSmallContextFields), cada um com cor própria (hash do nome, ver
+// colorForCompany acima — não é cor de marca, só um jeito determinístico
+// de dar uma cor distinta pra cada nome sem expandir a paleta).
+function computeMonthlySeries(meses, projects) {
+  const knownNames = allFieldNames(meses);
+  const raw = meses.map((mes) => {
+    const rows = computeFieldRows(mes.campos, projects, knownNames).map((r) => (
+      r.isContract ? r : { ...r, color: colorForCompany(r.name) }
+    ));
+    return { ano: mes.ano, mes: mes.mes, rows };
+  });
+  return groupSmallContextFields(raw);
+}
+
+/* ---------------------- Gráfico de linhas (produção/RGO) ------------------ */
+// Uma linha por campo — eixo x é o mês do boletim, eixo y é a vazão diária
+// na unidade escolhida. Interativo:
+//  - roda do mouse sobre a área do gráfico: zoom no tempo (eixo x),
+//    ancorado no cursor; sobre os números do eixo vertical: zoom só no
+//    eixo y (base sempre 0, só o teto visível muda);
+//  - arrastar: move a janela visível (eixo x) — só depois de já ter dado
+//    zoom, com pointer capture pra continuar seguindo o cursor fora da
+//    área do gráfico durante o arraste;
+//  - clicar num campo na legenda: isola aquela linha (as outras ficam
+//    esmaecidas) — clicar de novo no mesmo campo, ou num campo diferente,
+//    troca/limpa o isolamento;
+//  - passar o mouse sobre o gráfico: mostra o valor de TODOS os campos
+//    daquele mês de uma vez (não só o campo sob o cursor), com uma linha
+//    vertical marcando o mês.
+// Compartilhado entre producao.js (todos os campos) e campo.js (só o
+// projeto selecionado, monthlySeries com uma linha só).
+
+const LINE_W = 900;
+const LINE_H = 460;
+const LINE_MARGIN = { top: 16, right: 16, bottom: 62, left: 64 };
+const MIN_VIEW_SPAN = 2; // menor janela de zoom, em nº de meses - 1
+
+function niceMax(v) {
+  if (v <= 0) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  const norm = v / mag;
+  const step = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+  return step * mag;
+}
+
+// Ordem fixa das linhas (mesma cor sempre no mesmo campo entre trocas de
+// unidade) — projeto rastreado por ordem de aparição em state.projects
+// (mesma ordem do roadmap/análises), depois os campos de contexto por
+// ordem de primeira aparição no boletim.
+function seriesOrder(monthlySeries) {
+  const seen = new Map();
+  for (const m of monthlySeries) {
+    for (const r of m.rows) {
+      if (!seen.has(r.name)) seen.set(r.name, r);
+    }
+  }
+  const names = [...seen.keys()];
+  const contract = names.filter((n) => seen.get(n).isContract);
+  const context = names.filter((n) => !seen.get(n).isContract);
+  return [...contract, ...context];
+}
+
+// Quebra os pontos de uma série em trechos contínuos, cortando onde o mês
+// não tem dado (campo de contexto que só aparece em algumas edições, ver
+// nota em computeMonthlySeries) — sem isso um <polyline> ligaria os dois
+// lados do buraco com uma reta enganosa.
+function buildSegments(monthlySeries, loIdx, hiIdx, name, xAt, yAt, unitKey) {
+  const segments = [];
+  let current = [];
+  for (let i = loIdx; i <= hiIdx; i++) {
+    const r = monthlySeries[i].rows.find((row) => row.name === name);
+    if (!r) {
+      if (current.length) segments.push(current);
+      current = [];
+      continue;
+    }
+    current.push(`${xAt(i)},${yAt(r[unitKey])}`);
+  }
+  if (current.length) segments.push(current);
+  return segments;
+}
+
+function createLineChart(container, monthlySeries) {
+  const n = monthlySeries.length;
+  const order = seriesOrder(monthlySeries);
+  const meta = new Map(order.map((name) => {
+    const sample = monthlySeries.map((m) => m.rows.find((r) => r.name === name)).find(Boolean);
+    return [name, { color: sample.color, isContract: sample.isContract }];
+  }));
+
+  let unitKey = 'oleo';
+  let viewStart = 0;
+  let viewEnd = n - 1;
+  let yMaxOverride = null; // null = auto-ajusta ao máximo visível (ver draw)
+  let highlighted = null;
+  // Estado do arraste (pan) precisa sobreviver a um redraw no meio do
+  // próprio arraste — draw() troca svgWrap.innerHTML a cada pointermove
+  // durante o drag, o que recria #lc-capture do zero e derruba a captura
+  // de ponteiro do elemento antigo (removido do DOM). Por isso mora aqui
+  // fora, não redeclarado dentro de draw(): dragPointerId é reusado logo
+  // depois de cada redraw pra recapturar o ponteiro no elemento novo (ver
+  // final de draw()), e um pointerup/pointercancel na window (não só no
+  // elemento de captura, que pode já ter sido trocado) garante que
+  // isDragging sempre volta a false, mesmo se a recaptura falhar.
+  let isDragging = false;
+  let dragPointerId = null;
+  let dragStartClientX = 0;
+  let dragStartView = [0, 0];
+  window.addEventListener('pointerup', () => { isDragging = false; dragPointerId = null; });
+  window.addEventListener('pointercancel', () => { isDragging = false; dragPointerId = null; });
+
+  const svgWrap = document.createElement('div');
+  svgWrap.style.position = 'relative';
+  const legendWrap = document.createElement('div');
+  legendWrap.style.marginTop = '10px';
+
+  function clampView(start, end) {
+    let span = Math.max(end - start, MIN_VIEW_SPAN);
+    span = Math.min(span, n - 1);
+    if (start < 0) { start = 0; end = start + span; }
+    if (end > n - 1) { end = n - 1; start = end - span; }
+    return [start, end];
+  }
+
+  function draw() {
+    const unit = UNITS[unitKey];
+    const plotW = LINE_W - LINE_MARGIN.left - LINE_MARGIN.right;
+    const plotH = LINE_H - LINE_MARGIN.top - LINE_MARGIN.bottom;
+    const span = Math.max(viewEnd - viewStart, 0.001);
+    const xAt = (i) => LINE_MARGIN.left + ((i - viewStart) / span) * plotW;
+    const idxAt = (px) => viewStart + ((px - LINE_MARGIN.left) / plotW) * span;
+    const loIdx = Math.max(0, Math.floor(viewStart));
+    const hiIdx = Math.min(n - 1, Math.ceil(viewEnd));
+
+    let rawMax = 0;
+    for (let i = loIdx; i <= hiIdx; i++) {
+      for (const r of monthlySeries[i].rows) rawMax = Math.max(rawMax, r[unit.key]);
+    }
+    const autoMax = niceMax(rawMax);
+    // yMaxOverride persiste entre trocas de unidade/pan/zoom em x até o
+    // usuário resetar ("Ver tudo") — dar zoom em x não desfaz um zoom em y
+    // já ajustado, e vice-versa (são eixos independentes).
+    const maxVal = yMaxOverride !== null ? yMaxOverride : autoMax;
+    const yAt = (v) => LINE_MARGIN.top + plotH - (v / maxVal) * plotH;
+
+    const yTicks = 5;
+    let gridSvg = '';
+    for (let i = 0; i <= yTicks; i++) {
+      const v = (maxVal / yTicks) * i;
+      const y = yAt(v);
+      gridSvg += `<line x1="${LINE_MARGIN.left}" y1="${y}" x2="${LINE_W - LINE_MARGIN.right}" y2="${y}" stroke="var(--border)" stroke-width="1" />`;
+      gridSvg += `<text x="${LINE_MARGIN.left - 10}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:var(--text-faint)">${fmtNum(v)}</text>`;
+    }
+
+    // Rótulo do eixo x: se a janela visível já é curta (zoom), rotula todo
+    // mês visível; senão só janeiro de cada ano (+ o último mês) — mesmo
+    // motivo de antes (>100 pontos no zoom "tudo" ficaria ilegível mês a
+    // mês), mas dando zoom o usuário já pediu pra ver o detalhe mensal.
+    const dense = span <= 15;
+    let xLabelsSvg = '';
+    for (let i = loIdx; i <= hiIdx; i++) {
+      const m = monthlySeries[i];
+      const isLast = i === n - 1;
+      if (!dense && m.mes !== 1 && !isLast) continue;
+      const x = xAt(i);
+      const label = (!dense && m.mes === 1) ? String(m.ano) : `${MES_ABREV[m.mes]}/${String(m.ano).slice(2)}`;
+      const y = LINE_MARGIN.top + plotH + 14;
+      if (!dense && m.mes === 1) {
+        xLabelsSvg += `<line x1="${x}" y1="${LINE_MARGIN.top}" x2="${x}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--border)" stroke-width="1" stroke-dasharray="2,3" />`;
+      }
+      xLabelsSvg += `<text x="0" y="0" transform="translate(${x} ${y}) rotate(-45)" text-anchor="end" font-size="${dense ? 10 : 11}" style="fill:var(--text-muted)">${escapeHtml(label)}</text>`;
+    }
+
+    let linesSvg = '';
+    const dotR = span > 40 ? 1.6 : span > 15 ? 2.2 : 3;
+    for (const name of order) {
+      const { color, isContract } = meta.get(name);
+      const dimmed = highlighted && highlighted !== name;
+      const opacity = dimmed ? 0.12 : 1;
+      const width = highlighted === name ? 3 : 2;
+      const segments = buildSegments(monthlySeries, loIdx, hiIdx, name, xAt, yAt, unit.key);
+      for (const seg of segments) {
+        linesSvg += `<polyline points="${seg.join(' ')}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round" opacity="${opacity}" data-series="${escapeHtml(name)}" />`;
+        if (seg.length === 1) {
+          const [px, py] = seg[0].split(',');
+          linesSvg += `<circle cx="${px}" cy="${py}" r="${dotR}" fill="${color}" opacity="${opacity}" />`;
+        }
+      }
+      void isContract;
+    }
+
+    const axisSvg = `<line x1="${LINE_MARGIN.left}" y1="${LINE_MARGIN.top + plotH}" x2="${LINE_W - LINE_MARGIN.right}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
+    const captureSvg = `<rect id="lc-capture" x="${LINE_MARGIN.left}" y="${LINE_MARGIN.top}" width="${plotW}" height="${plotH}" fill="transparent" style="cursor:crosshair" />`;
+    // Faixa invisível sobre os rótulos do eixo y — só pra indicar com o
+    // cursor (ns-resize) que rolar o mouse ali zoom o eixo y, não o x; o
+    // zoom em si é tratado no wheel handler abaixo (checa a posição do
+    // cursor, não depende de qual elemento recebeu o evento).
+    const yAxisHintSvg = `<rect x="0" y="${LINE_MARGIN.top}" width="${LINE_MARGIN.left}" height="${plotH}" fill="transparent" style="cursor:ns-resize" />`;
+    const crosshairSvg = `<line id="lc-crosshair" x1="0" y1="${LINE_MARGIN.top}" x2="0" y2="${LINE_MARGIN.top + plotH}" stroke="var(--text-faint)" stroke-width="1" hidden />`;
+
+    svgWrap.innerHTML = `<svg viewBox="0 0 ${LINE_W} ${LINE_H}" style="width:100%;height:auto;display:block;touch-action:none">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
+    const svgEl = svgWrap.firstElementChild;
+    const capture = svgEl.querySelector('#lc-capture');
+    const crosshair = svgEl.querySelector('#lc-crosshair');
+
+    // Redraw no meio de um arraste (ver isDragging lá em cima) troca este
+    // elemento por um novo — recaptura o ponteiro nele pra continuar
+    // seguindo o cursor fora da área do gráfico sem esperar o mouse voltar
+    // pra cima do retângulo.
+    if (isDragging && dragPointerId != null) {
+      try { capture.setPointerCapture(dragPointerId); } catch (err) { /* elemento novo, ponteiro pode já ter soltado — arraste some, próximo pointerup na window ainda limpa isDragging */ }
+    }
+
+    // Zoom: roda do mouse sobre a área do gráfico dá zoom no eixo x
+    // (tempo), ancorado no cursor (mesma ideia do zoom do roadmap
+    // principal — ver MIN_PX_PER_DAY/wheel handler em app.js); roda sobre
+    // a faixa de rótulos do eixo y (à esquerda da área do gráfico) dá
+    // zoom só no eixo y — a base (0) fica fixa, só o teto visível muda,
+    // pra não inventar uma linha de base que não é zero num gráfico de
+    // vazão. Os dois eixos são independentes: zoom em um não reseta o
+    // outro (só "Ver tudo" reseta os dois). Não deixa a página rolar
+    // enquanto o mouse está sobre o gráfico.
+    svgEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const pt = svgPoint(svgEl, e.clientX, e.clientY);
+      const factor = e.deltaY > 0 ? 1.25 : 1 / 1.25;
+      if (pt.x < LINE_MARGIN.left) {
+        const base = yMaxOverride !== null ? yMaxOverride : autoMax;
+        const floor = Math.max(rawMax * 0.02, 1);
+        yMaxOverride = Math.max(floor, base * factor);
+        draw();
+        return;
+      }
+      const cursorIdx = clampIdx(idxAt(pt.x));
+      let newSpan = span * factor;
+      newSpan = Math.max(MIN_VIEW_SPAN, Math.min(n - 1, newSpan));
+      const frac = span > 0 ? (cursorIdx - viewStart) / span : 0.5;
+      let newStart = cursorIdx - frac * newSpan;
+      let newEnd = newStart + newSpan;
+      [viewStart, viewEnd] = clampView(newStart, newEnd);
+      draw();
+    }, { passive: false });
+
+    // Arrastar: move a janela visível — só ativa dentro da área do
+    // gráfico, com pointer capture pra continuar recebendo o movimento
+    // mesmo se o cursor sair da área durante o arraste (recapturada a
+    // cada redraw no elemento novo, ver logo acima). dragStartClientX/
+    // dragStartView moram fora de draw() (topo de createLineChart) pra
+    // não resetar a cada um desses redraws no meio do próprio arraste.
+    capture.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      dragPointerId = e.pointerId;
+      dragStartClientX = e.clientX;
+      dragStartView = [viewStart, viewEnd];
+      try { capture.setPointerCapture(e.pointerId); } catch (err) { /* ponteiro sintético (ex.: teste automatizado) sem sessão ativa pra capturar — arraste ainda funciona sem, só não segue o cursor fora da área do gráfico */ }
+      hideTooltip();
+      if (crosshair) crosshair.hidden = true;
+    });
+    capture.addEventListener('pointermove', (e) => {
+      if (isDragging) {
+        const dxPx = e.clientX - dragStartClientX;
+        const dxIdx = -(dxPx / plotW) * (dragStartView[1] - dragStartView[0]);
+        [viewStart, viewEnd] = clampView(dragStartView[0] + dxIdx, dragStartView[1] + dxIdx);
+        draw();
+        return;
+      }
+      const pt = svgPoint(svgEl, e.clientX, e.clientY);
+      const idx = clampIdx(Math.round(idxAt(pt.x)));
+      showCrosshair(idx, xAt, unit);
+    });
+    capture.addEventListener('pointerup', (e) => {
+      isDragging = false;
+      dragPointerId = null;
+      try { capture.releasePointerCapture(e.pointerId); } catch (err) { /* idem — nada a liberar se a captura não pegou */ }
+    });
+    capture.addEventListener('pointerleave', () => {
+      if (!isDragging) {
+        hideTooltip();
+        if (crosshair) crosshair.hidden = true;
+      }
+    });
+
+    function showCrosshair(idx, xAtFn, unitObj) {
+      if (!crosshair) return;
+      const x = xAtFn(idx);
+      crosshair.setAttribute('x1', x);
+      crosshair.setAttribute('x2', x);
+      crosshair.hidden = false;
+      const m = monthlySeries[idx];
+      const rows = [...m.rows].sort((a, b) => b[unitObj.key] - a[unitObj.key]);
+      const html = `<strong>${escapeHtml(MESES_PT[m.mes])}/${m.ano}</strong>`
+        + rows.map((r) => `<div class="viz-tooltip-row"><span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${r.color};margin-right:5px;vertical-align:middle"></span>${escapeHtml(r.name)}</span><strong>${escapeHtml(unitObj.fmt(r[unitObj.key]))}</strong></div>`).join('');
+      const t = ensureTooltip();
+      t.innerHTML = html;
+      t.hidden = false;
+      const rect = svgEl.getBoundingClientRect();
+      const scale = rect.width / LINE_W;
+      positionTooltip(rect.left + x * scale, rect.top + LINE_MARGIN.top * scale);
+    }
+  }
+
+  function svgPoint(svgEl, clientX, clientY) {
+    const rect = svgEl.getBoundingClientRect();
+    const scale = LINE_W / rect.width;
+    return { x: (clientX - rect.left) * scale, y: (clientY - rect.top) * scale };
+  }
+  function clampIdx(i) {
+    return Math.max(0, Math.min(n - 1, i));
+  }
+
+  // Legenda em dois grupos — contratos de Partilha da Produção rastreados
+  // (isContract: true) separados dos demais campos do pré-sal (contexto,
+  // fora dos 7 rastreados) — mesma distinção que já colore as linhas
+  // (cor do projeto x cor por hash do nome), só deixando explícito na
+  // legenda pra não misturar contrato com campo de contexto na mesma
+  // lista corrida.
+  function legendGroup(title, names) {
+    const group = document.createElement('div');
+    if (!names.length) return group;
+    const label = document.createElement('div');
+    label.className = 'stat-tile-label';
+    label.style.margin = '10px 0 4px';
+    label.textContent = title;
+    group.appendChild(label);
+    const row = document.createElement('div');
+    row.className = 'kpi-row';
+    row.style.rowGap = '6px';
+    for (const name of names) {
+      const { color } = meta.get(name);
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.style.display = 'inline-flex';
+      item.style.alignItems = 'center';
+      item.style.gap = '6px';
+      item.style.fontSize = '12px';
+      item.style.background = 'none';
+      item.style.border = 'none';
+      item.style.padding = '2px 4px';
+      item.style.cursor = 'pointer';
+      item.style.color = highlighted && highlighted !== name ? 'var(--text-faint)' : 'var(--text-muted)';
+      item.style.opacity = highlighted && highlighted !== name ? '0.5' : '1';
+      item.innerHTML = `<span style="width:16px;height:2px;background:${color};flex:0 0 auto"></span>${escapeHtml(name)}`;
+      item.addEventListener('click', () => {
+        highlighted = highlighted === name ? null : name;
+        drawLegend();
+        draw();
+      });
+      row.appendChild(item);
+    }
+    group.appendChild(row);
+    return group;
+  }
+
+  function drawLegend() {
+    legendWrap.innerHTML = '';
+    const contractNames = order.filter((name) => meta.get(name).isContract);
+    const contextNames = order.filter((name) => !meta.get(name).isContract);
+    legendWrap.appendChild(legendGroup('Partilha da Produção', contractNames));
+    legendWrap.appendChild(legendGroup('Outros projetos', contextNames));
+  }
+
+  draw();
+  drawLegend();
+  container.appendChild(svgWrap);
+  container.appendChild(legendWrap);
+
+  return {
+    setUnit(key) { unitKey = key; draw(); },
+    resetZoom() { viewStart = 0; viewEnd = n - 1; yMaxOverride = null; draw(); },
+    isZoomed() { return viewStart > 0 || viewEnd < n - 1 || yMaxOverride !== null; },
+  };
+}
+
+// Seletor de unidade (Petróleo/Gás/Produção/RGO, ver UNITS) — botões estilo
+// .scale-switch, reaproveitados pelo gráfico de barras e pelo de linhas de
+// producao.js, e pelos gráficos por campo de campo.js. keys restringe quais
+// abas mostrar (ex.: campo.js não repete "RGO" aqui — tem gráfico próprio
+// só de RGO); omitido, mostra as 4.
+function buildUnitSwitch(onChange, keys) {
+  const wrap = document.createElement('div');
+  wrap.className = 'scale-switch analytics-tab-switch';
+  (keys || Object.keys(UNITS)).forEach((key, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'scale-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = UNITS[key].label;
+    btn.dataset.unit = key;
+    wrap.appendChild(btn);
+  });
+  wrap.addEventListener('click', (e) => {
+    const btn = e.target.closest('.scale-btn');
+    if (!btn) return;
+    wrap.querySelectorAll('.scale-btn').forEach((b) => b.classList.toggle('active', b === btn));
+    onChange(btn.dataset.unit);
+  });
+  return wrap;
+}
+
 /* --------------------- Poços do contrato x campo ligado ------------------ */
 // Compartilhada entre analises.js, mapa.js e pocos.js.
 
