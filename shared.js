@@ -1241,6 +1241,7 @@ const COMPANY_LOGO_FILES = {
   'ExxonMobil': 'assets/logos/exxonmobil.png',
   'Ecopetrol': 'assets/logos/ecopetrol.png',
   'Chevron': 'assets/logos/chevron.png',
+  'QatarEnergy': 'assets/logos/qatarenergy.png',
 };
 
 function companyBadge(rawName) {
