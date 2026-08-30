@@ -865,6 +865,21 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 }
 .campo-mapa .leaflet-tooltip-top::before { border-top-color: var(--border-strong); }
 
+/* Cartões dentro do painel do projeto ficam com a mesma largura máxima das
+   outras páginas de gráfico (analytics-section/pocos-content) — sem isso
+   esticariam até a borda da área de conteúdo, bem mais larga que 1180px em
+   telas grandes, ficando desproporcionais aos gráficos de linha (que têm
+   largura própria fixa, ver LINE_W em shared.js). */
+.campo-panel-inner { max-width: 1180px; margin: 0 auto; }
+
+/* Mini-roadmap: recorte do roadmap principal pra um projeto só, ver
+   buildRoadmapSection em campo.js — reaproveita as classes .row/
+   .label-cell/.timeline-cell/.task-bar/.milestone/.today-line do roadmap
+   principal (topo deste arquivo), só read-only e posicionado em % (não px
+   fixo) pra acompanhar a largura do cartão. */
+.campo-roadmap { position: relative; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.campo-roadmap .row:last-child { border-bottom: none; }
+
 /* ---------- Telas estreitas (celular), incluindo paisagem: usa a
    condição de altura curta + orientação para pegar o celular deitado, que
    tem largura grande mas continua sendo uma tela pequena. ---------- */

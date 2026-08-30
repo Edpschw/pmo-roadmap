@@ -97,15 +97,22 @@ function buildMiniMap(container, project, feature, wells) {
     bounds.extend(w.c);
   }
 
-  if (bounds.isValid()) {
-    map.fitBounds(bounds, { padding: [24, 24] });
-  }
-  // Container criado hidden==false (painel só é montado na primeira vez em
-  // que fica visível), mas o tamanho definitivo do flex layout só se
-  // assenta depois do primeiro reflow — sem isso o Leaflet mede a largura
-  // errada e o mapa nasce cortado/desalinhado até o usuário redimensionar
-  // a janela.
-  requestAnimationFrame(() => map.invalidateSize());
+  // buildMiniMap roda ANTES do painel entrar no DOM (activate() só faz
+  // content.appendChild(panel) depois que esta função retorna) — mapDiv
+  // está sem layout nenhum aqui (tamanho 0), e fitBounds calculado contra
+  // um container de tamanho 0 dá um zoom absurdo (Leaflet cai pro
+  // maxZoom das camadas, 18, tentando "encher" uma janela de tamanho
+  // zero) — o mapa nasce todo destorcido, cru: percentual quase inteiro
+  // ocupado por um zoom altíssimo, poços somem da vista. invalidateSize()
+  // sozinho não resolve: ele só reata o mapa ao tamanho real do
+  // container, sem refazer o cálculo de zoom do fitBounds. Por isso os
+  // dois (invalidateSize seguido de fitBounds) vão pro próximo frame,
+  // depois que o painel já está anexado e visível (ver activate() em
+  // campo.js) e mapDiv já tem o tamanho definitivo do layout flex.
+  requestAnimationFrame(() => {
+    map.invalidateSize();
+    if (bounds.isValid()) map.fitBounds(bounds, { padding: [24, 24] });
+  });
 
   return { map, hasShape: !!feature, hasWells: wells.some((w) => w.c) };
 }
@@ -228,6 +235,230 @@ function buildComboChart(container, series, projectColor) {
   container.appendChild(legend);
 }
 
+/* -------------------------------- Mini-roadmap ------------------------------ */
+// Recorte do Roadmap principal (index.html/app.js) pra um projeto só —
+// mesmos dados (project.workstreams), mesma linguagem visual (reaproveita
+// as classes .row/.label-cell/.timeline-cell/.task-bar/.milestone/
+// .progress-fill/.today-line do CSS do roadmap principal, ver style.css),
+// mas SEM a parte interativa de edição/zoom/scroll do board completo — só
+// leitura, com tooltip nativo (title) em vez do popover rico com clique.
+// Posiciona tudo em porcentagem (não pixel fixo como app.js, que depende
+// de currentPxPerDay/scroll) pra a barra de tempo acompanhar a largura do
+// cartão sem precisar recalcular em resize.
+const ROADMAP_HEADER_H = 24;
+const ROADMAP_ROW_MIN_H = 34;
+const ROADMAP_LANE_H = 32;
+const ROADMAP_LANE_PAD = 14;
+const ROADMAP_BAR_H = 18;
+
+function roadmapRange(project) {
+  const allItems = project.workstreams.flatMap((w) => w.items);
+  const today = parseDate(todayISO());
+  let min = today;
+  let max = today;
+  for (const it of allItems) {
+    const s = parseDate(it.type === 'milestone' ? it.date : it.start);
+    const e = parseDate(it.type === 'milestone' ? it.date : it.end);
+    if (s < min) min = s;
+    if (e > max) max = e;
+  }
+  const rangeStart = addDays(min, -20);
+  let rangeEnd = addDays(max, 20);
+  const minSpanDays = 180;
+  if (diffDays(rangeStart, rangeEnd) < minSpanDays) rangeEnd = addDays(rangeStart, minSpanDays);
+  return { rangeStart, rangeEnd };
+}
+
+// Um tique por janeiro de cada ano coberto (rótulo = ano) + o próprio
+// início do intervalo quando não cai perto de um janeiro (senão a ponta
+// esquerda do gráfico ficaria sem nenhuma referência de data).
+function roadmapAxisTicks(rangeStart, rangeEnd) {
+  const ticks = [];
+  let d = new Date(Date.UTC(rangeStart.getUTCFullYear(), 0, 1));
+  if (d < rangeStart) d = new Date(Date.UTC(rangeStart.getUTCFullYear() + 1, 0, 1));
+  while (d <= rangeEnd) {
+    ticks.push({ date: d, label: String(d.getUTCFullYear()) });
+    d = new Date(Date.UTC(d.getUTCFullYear() + 1, 0, 1));
+  }
+  if (!ticks.length || diffDays(rangeStart, ticks[0].date) > 60) {
+    ticks.unshift({ date: rangeStart, label: `${MES_ABREV[rangeStart.getUTCMonth() + 1]}/${String(rangeStart.getUTCFullYear()).slice(2)}` });
+  }
+  return ticks;
+}
+
+function roadmapPctLeft(rangeStart, totalDays, date) {
+  return Math.max(0, Math.min(100, (diffDays(rangeStart, date) / totalDays) * 100));
+}
+
+function buildRoadmapTaskBar(project, item, lane, rangeStart, totalDays) {
+  const start = parseDate(item.start);
+  const end = parseDate(item.end);
+  const leftPct = roadmapPctLeft(rangeStart, totalDays, start);
+  const widthPct = Math.max(0.6, ((diffDays(start, end) + 1) / totalDays) * 100);
+  const top = ROADMAP_LANE_PAD / 2 + lane * ROADMAP_LANE_H;
+
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:absolute;left:0;top:0;right:0';
+
+  const bar = document.createElement('div');
+  bar.className = 'task-bar';
+  bar.style.left = leftPct + '%';
+  bar.style.width = widthPct + '%';
+  bar.style.top = top + 'px';
+  bar.style.height = ROADMAP_BAR_H + 'px';
+  bar.style.background = project.color;
+
+  const actualProgress = Math.min(100, Math.max(0, item.progress || 0));
+  const expectedProgress = computeExpectedProgress(item);
+  const fill = document.createElement('div');
+  fill.className = 'progress-fill';
+  fill.style.width = actualProgress + '%';
+  bar.appendChild(fill);
+
+  const labelSpan = document.createElement('span');
+  labelSpan.className = 'bar-label';
+  labelSpan.textContent = item.name;
+  bar.appendChild(labelSpan);
+
+  bar.title = `${item.name}\n${formatBR(item.start)} → ${formatBR(item.end)}\n`
+    + `Progresso real: ${actualProgress}%\nProgresso esperado (hoje): ${expectedProgress}%`;
+  wrapper.appendChild(bar);
+
+  const statusClass = progressStatusClass(actualProgress, expectedProgress);
+  const numbers = document.createElement('div');
+  numbers.className = 'progress-numbers';
+  numbers.style.left = leftPct + '%';
+  numbers.style.width = widthPct + '%';
+  numbers.style.top = (top + ROADMAP_BAR_H + 2) + 'px';
+  numbers.innerHTML = `<span class="actual ${statusClass}">${actualProgress}%</span><span class="sep">/</span><span class="expected">${expectedProgress}%</span>`;
+  wrapper.appendChild(numbers);
+
+  return wrapper;
+}
+
+function buildRoadmapMilestone(project, item, lane, rangeStart, totalDays) {
+  const date = parseDate(item.date);
+  const isPast = date < parseDate(todayISO());
+  const leftPct = roadmapPctLeft(rangeStart, totalDays, date);
+  const top = ROADMAP_LANE_PAD / 2 + lane * ROADMAP_LANE_H + ROADMAP_BAR_H / 2;
+
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:absolute;left:0;top:0;right:0';
+
+  const iconBuilder = MILESTONE_ICON_BUILDERS[item.icon];
+  const dia = document.createElement('div');
+  dia.className = 'milestone' + (iconBuilder ? ` milestone-icon milestone-${item.icon}` : '');
+  dia.style.left = leftPct + '%';
+  dia.style.top = top + 'px';
+  if (iconBuilder) {
+    dia.innerHTML = iconBuilder(project.color);
+  } else {
+    dia.style.background = project.color;
+  }
+  if (isPast) {
+    if (item.done) dia.style.opacity = '0.5';
+    else dia.style.border = `2px solid ${MILESTONE_OVERDUE_LABEL_COLOR}`;
+  }
+
+  const typeLabel = MILESTONE_TYPE_LABELS[item.icon] || 'Marco';
+  const statusText = isPast ? (item.done ? 'Realizado' : 'Atrasado (não realizado)') : 'Previsto';
+  dia.title = `${item.name}\n${typeLabel} · ${formatBR(item.date)}\n${statusText}`
+    + (item.approx ? '\n(data aproximada — só o mês era conhecido)' : '');
+
+  wrapper.appendChild(dia);
+  return wrapper;
+}
+
+function buildRoadmapRow(labelText, items, rangeStart, totalDays, project) {
+  const { placements, laneCount } = packLanes(items);
+  const rowHeight = Math.max(ROADMAP_ROW_MIN_H, laneCount * ROADMAP_LANE_H + ROADMAP_LANE_PAD);
+
+  const row = document.createElement('div');
+  row.className = 'row workstream-row';
+  row.style.height = rowHeight + 'px';
+
+  const labelCell = document.createElement('div');
+  labelCell.className = 'label-cell';
+  const label = document.createElement('span');
+  label.className = 'label-text';
+  label.textContent = labelText;
+  label.title = labelText;
+  labelCell.appendChild(label);
+  row.appendChild(labelCell);
+
+  const timelineCell = document.createElement('div');
+  timelineCell.className = 'timeline-cell';
+  for (const { item, lane } of placements) {
+    timelineCell.appendChild(
+      item.type === 'task'
+        ? buildRoadmapTaskBar(project, item, lane, rangeStart, totalDays)
+        : buildRoadmapMilestone(project, item, lane, rangeStart, totalDays),
+    );
+  }
+  row.appendChild(timelineCell);
+  return row;
+}
+
+function buildRoadmapSection(project) {
+  const wrap = document.createElement('div');
+  wrap.className = 'campo-roadmap';
+  wrap.style.setProperty('--sidebar-w', '150px');
+  wrap.style.setProperty('--header-h', ROADMAP_HEADER_H + 'px');
+
+  const allItems = project.workstreams.flatMap((w) => w.items);
+  if (!allItems.length) {
+    const note = document.createElement('div');
+    note.className = 'campo-empty-note';
+    note.textContent = 'Sem marcos ou tarefas cadastradas para este projeto ainda.';
+    wrap.appendChild(note);
+    return wrap;
+  }
+
+  const { rangeStart, rangeEnd } = roadmapRange(project);
+  const totalDays = diffDays(rangeStart, rangeEnd);
+
+  const headerRow = document.createElement('div');
+  headerRow.className = 'row';
+  headerRow.style.height = ROADMAP_HEADER_H + 'px';
+  const cornerCell = document.createElement('div');
+  cornerCell.className = 'label-cell';
+  headerRow.appendChild(cornerCell);
+  const headerTimeline = document.createElement('div');
+  headerTimeline.className = 'timeline-cell';
+  for (const tick of roadmapAxisTicks(rangeStart, rangeEnd)) {
+    const t = document.createElement('div');
+    t.className = 'header-tier-label fine';
+    t.style.left = roadmapPctLeft(rangeStart, totalDays, tick.date) + '%';
+    t.style.top = '0';
+    t.style.height = ROADMAP_HEADER_H + 'px';
+    t.textContent = tick.label;
+    headerTimeline.appendChild(t);
+  }
+  headerRow.appendChild(headerTimeline);
+  wrap.appendChild(headerRow);
+
+  for (const ws of project.workstreams) {
+    if (!ws.items.length) continue;
+    wrap.appendChild(buildRoadmapRow(ws.name, ws.items, rangeStart, totalDays, project));
+  }
+
+  const today = parseDate(todayISO());
+  if (today >= rangeStart && today <= rangeEnd) {
+    const leftPct = roadmapPctLeft(rangeStart, totalDays, today) + '%';
+    const line = document.createElement('div');
+    line.className = 'today-line';
+    line.style.left = leftPct;
+    wrap.appendChild(line);
+    const flag = document.createElement('div');
+    flag.className = 'today-flag';
+    flag.style.left = leftPct;
+    flag.textContent = 'Hoje';
+    wrap.appendChild(flag);
+  }
+
+  return wrap;
+}
+
 /* -------------------------------- Painel do projeto ------------------------ */
 
 function buildProjectPanel(project, ctx) {
@@ -235,16 +466,24 @@ function buildProjectPanel(project, ctx) {
   panel.className = 'campo-panel';
   panel.hidden = true;
 
+  const inner = document.createElement('div');
+  inner.className = 'campo-panel-inner';
+  panel.appendChild(inner);
+
   const header = document.createElement('div');
   header.className = 'campo-panel-header';
   header.innerHTML = `
     <h2 class="campo-panel-title"><span class="proj-dot" style="background:${project.color}"></span>${escapeHtml(project.name)}</h2>
     <span class="campo-panel-badge">${GROUP_BADGES[project.group] || ''}</span>
   `;
-  panel.appendChild(header);
+  inner.appendChild(header);
+
+  const roadmapCard = chartCard('Roadmap do projeto', 'Marcos e tarefas de cada workstream — mesmos dados do Roadmap principal (index.html), num recorte só deste projeto. Passe o mouse sobre uma barra ou marco para ver os detalhes.');
+  roadmapCard.appendChild(buildRoadmapSection(project));
+  inner.appendChild(roadmapCard);
 
   const mapCard = chartCard('Contorno e poços', 'Poligonal do contrato/campo (quando disponível na ANP) e os poços perfurados dentro dela — cor do ponto por categoria (produção, injeção, seco...), mesmo critério de mapa.html.');
-  panel.appendChild(mapCard);
+  inner.appendChild(mapCard);
 
   const feature = ctx.featureByProject[project.name];
   const wells = contractOwnWells(ctx.pocosData, project.name);
@@ -264,7 +503,7 @@ function buildProjectPanel(project, ctx) {
     const note = document.createElement('div');
     note.className = 'campo-empty-note';
     note.textContent = 'Sem dados de produção próprios no Boletim da Produção da ANP — campo ainda em exploração, ou produção não individualizada por campo neste contrato.';
-    panel.appendChild(note);
+    inner.appendChild(note);
     panel.dataset.ready = '1';
     return panel;
   }
@@ -276,7 +515,7 @@ function buildProjectPanel(project, ctx) {
     const note = document.createElement('div');
     note.className = 'campo-empty-note';
     note.textContent = 'Campo listado no boletim, mas sem produção registrada em nenhum mês do período coberto.';
-    panel.appendChild(note);
+    inner.appendChild(note);
     panel.dataset.ready = '1';
     return panel;
   }
@@ -294,7 +533,7 @@ function buildProjectPanel(project, ctx) {
   const prodUnitSwitch = buildUnitSwitch((unitKey) => prodChart.setUnit(unitKey), ['oleo', 'gas', 'boe']);
   prodControls.insertBefore(prodUnitSwitch, prodReset);
   prodReset.addEventListener('click', () => prodChart.resetZoom());
-  panel.appendChild(prodCard);
+  inner.appendChild(prodCard);
 
   const rgoCard = chartCard('RGO mensal (Razão Gás-Óleo)', 'm³ de gás por m³ de óleo produzido no mês — calculado aqui a partir do óleo e gás do próprio boletim, não vem pronto da ANP.');
   const rgoControls = document.createElement('div');
@@ -308,11 +547,11 @@ function buildProjectPanel(project, ctx) {
   const rgoChart = createLineChart(rgoCard, series);
   rgoChart.setUnit('rgo');
   rgoReset.addEventListener('click', () => rgoChart.resetZoom());
-  panel.appendChild(rgoCard);
+  inner.appendChild(rgoCard);
 
   const comboCard = chartCard('Produção e RGO juntos', 'As duas curvas na mesma área, cada uma no seu eixo (produção à esquerda, RGO à direita) — pra comparar a forma ao longo do tempo. Sem zoom/arraste, mesmo período completo do boletim.');
   buildComboChart(comboCard, series, project.color);
-  panel.appendChild(comboCard);
+  inner.appendChild(comboCard);
 
   panel.dataset.ready = '1';
   return panel;

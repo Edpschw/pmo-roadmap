@@ -126,6 +126,65 @@ function progressStatusClass(actualProgress, expectedProgress) {
   return 'behind';
 }
 
+// Ícones de marco por tipo: "contrato" (documento com dobra e linhas de
+// texto) e "fpso" (casco + superestrutura de navio) substituem o losango
+// padrão para deixar visualmente óbvio o que aquele marco representa. Sem
+// tipo definido (marco genérico), mantém o losango de sempre (via CSS).
+// Compartilhado entre app.js (roadmap principal) e campo.js (mini-roadmap
+// por projeto).
+function contractIconSVG(color) {
+  return `<svg viewBox="0 0 16 16">
+    <path d="M3 1h6l4 4v9.3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" fill="${color}"/>
+    <path d="M9 1v4h4" fill="none" stroke="#fff" stroke-opacity="0.6" stroke-width="1" stroke-linejoin="round"/>
+    <line x1="4" y1="9" x2="10" y2="9" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2" stroke-linecap="round"/>
+    <line x1="4" y1="11.5" x2="9" y2="11.5" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2" stroke-linecap="round"/>
+  </svg>`;
+}
+function fpsoIconSVG(color) {
+  return `<svg viewBox="0 0 16 16">
+    <path d="M1 10.5h14l-2.3 4H3.3z" fill="${color}"/>
+    <rect x="8.3" y="5.3" width="4.2" height="5.2" rx="0.6" fill="${color}"/>
+    <rect x="9.9" y="2.8" width="1.2" height="2.8" fill="${color}"/>
+    <line x1="3.3" y1="10.5" x2="12.7" y2="10.5" stroke="#fff" stroke-opacity="0.35" stroke-width="0.8"/>
+  </svg>`;
+}
+function wellIconSVG(color) {
+  return `<svg viewBox="0 0 16 16">
+    <path d="M8 1L3.2 13.5h1.7L8 4.6l3.1 8.9h1.7z" fill="${color}"/>
+    <line x1="4.6" y1="9.6" x2="11.4" y2="9.6" stroke="#fff" stroke-opacity="0.6" stroke-width="0.9"/>
+    <line x1="5.7" y1="6.8" x2="10.3" y2="6.8" stroke="#fff" stroke-opacity="0.6" stroke-width="0.9"/>
+    <rect x="2.6" y="13.5" width="10.8" height="1.3" rx="0.3" fill="${color}"/>
+  </svg>`;
+}
+const MILESTONE_ICON_BUILDERS = { contract: contractIconSVG, fpso: fpsoIconSVG, well: wellIconSVG };
+const MILESTONE_TYPE_LABELS = { contract: 'Marco de contrato', fpso: 'FPSO', well: 'Poço' };
+
+// Empacota itens que se sobrepõem no tempo em "raias" verticais dentro da
+// linha de uma workstream, para que não fiquem desenhados um sobre o outro
+// — compartilhada entre app.js (roadmap principal) e campo.js (mini-roadmap
+// por projeto).
+function packLanes(items) {
+  const withRange = items.map((it) => {
+    const s = parseDate(it.type === 'milestone' ? it.date : it.start);
+    const e = it.type === 'milestone' ? s : parseDate(it.end);
+    return { item: it, s, e };
+  }).sort((a, b) => a.s - b.s);
+
+  const lanes = []; // cada lane = data do último "e" ocupado
+  const placements = [];
+  for (const entry of withRange) {
+    let laneIndex = lanes.findIndex((lastEnd) => entry.s > lastEnd);
+    if (laneIndex === -1) {
+      laneIndex = lanes.length;
+      lanes.push(entry.e);
+    } else {
+      lanes[laneIndex] = entry.e;
+    }
+    placements.push({ item: entry.item, lane: laneIndex });
+  }
+  return { placements, laneCount: Math.max(1, lanes.length) };
+}
+
 /* ---------------------------- Poços (ANP/BDEP) --------------------------- */
 // Compartilhado entre mapa.js, app.js e analises.js — as três páginas usam a
 // mesma classificação de poço (data/pocos.json) e o mesmo jeito de casar um
