@@ -866,6 +866,14 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   font-size: 11px; padding: 4px 7px; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
 .campo-mapa .leaflet-tooltip-top::before { border-top-color: var(--border-strong); }
+/* Escala numérica+gráfica (L.control.scale, ver buildMiniMap em campo.js)
+   — tema escuro por cima do padrão do Leaflet (fundo/borda claros de
+   fábrica, destoava do resto do app). */
+.campo-mapa .leaflet-control-scale-line {
+  background: rgba(11, 13, 16, 0.78); color: var(--text);
+  border: 2px solid rgba(255, 255, 255, 0.65); border-top: none;
+  font-size: 10.5px; box-shadow: none;
+}
 
 /* Cartões dentro do painel do projeto ficam com a mesma largura máxima das
    outras páginas de gráfico (analytics-section/pocos-content) — sem isso

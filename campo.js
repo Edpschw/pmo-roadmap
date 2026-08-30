@@ -21,6 +21,7 @@ const GEOJSON_URL = 'data/contratos.geojson';
 const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
 const POCOS_URL = 'data/pocos.json';
 const PRODUCAO_URL = 'data/producao.json';
+const PD_URL = 'data/planos_desenvolvimento.json';
 
 const GROUP_BADGES = {
   producao: 'Produção',
@@ -66,7 +67,7 @@ function extractProjectSeries(monthlySeries, displayName) {
 
 /* ------------------------------- Mini-mapa --------------------------------- */
 
-function buildMiniMap(container, project, feature, wells) {
+function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) {
   const mapDiv = document.createElement('div');
   mapDiv.className = 'campo-mapa';
   container.appendChild(mapDiv);
@@ -80,11 +81,26 @@ function buildMiniMap(container, project, feature, wells) {
   L.tileLayer('https://server.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
     maxNativeZoom: 16, maxZoom: 18,
   }).addTo(map);
+  // Escala numérica + gráfica (barra com tique nas pontas), padrão do
+  // próprio Leaflet — só métrico, a base da ANP não usa milhas.
+  L.control.scale({ metric: true, imperial: false, position: 'bottomleft' }).addTo(map);
 
   const bounds = L.latLngBounds([]);
-  if (feature) {
-    const layer = L.geoJSON(feature, {
+  // Poligonal PRÓPRIA (own) em traço cheio; as da MESMA jazida mas de
+  // outro contrato/campo (extra — ver jazidaFeaturesByProject em init())
+  // em traço tracejado, mesmo padrão visual que mapa.js já usa pra campo
+  // de contexto ligado a um projeto rastreado (ver linkedPresaltLayers) —
+  // sinaliza "mesmo reservatório, contrato diferente" sem inventar uma
+  // legenda nova.
+  if (jazidaFeatures.own) {
+    const layer = L.geoJSON(jazidaFeatures.own, {
       style: { color: project.color, weight: 2, fillColor: project.color, fillOpacity: 0.32 },
+    }).addTo(map);
+    bounds.extend(layer.getBounds());
+  }
+  for (const feat of jazidaFeatures.extra) {
+    const layer = L.geoJSON(feat, {
+      style: { color: project.color, weight: 1.5, fillColor: project.color, fillOpacity: 0.22, dashArray: '4 3' },
     }).addTo(map);
     bounds.extend(layer.getBounds());
   }
@@ -99,22 +115,32 @@ function buildMiniMap(container, project, feature, wells) {
 
   // buildMiniMap roda ANTES do painel entrar no DOM (activate() só faz
   // content.appendChild(panel) depois que esta função retorna) — mapDiv
-  // está sem layout nenhum aqui (tamanho 0), e fitBounds calculado contra
-  // um container de tamanho 0 dá um zoom absurdo (Leaflet cai pro
-  // maxZoom das camadas, 18, tentando "encher" uma janela de tamanho
-  // zero) — o mapa nasce todo destorcido, cru: percentual quase inteiro
-  // ocupado por um zoom altíssimo, poços somem da vista. invalidateSize()
-  // sozinho não resolve: ele só reata o mapa ao tamanho real do
-  // container, sem refazer o cálculo de zoom do fitBounds. Por isso os
-  // dois (invalidateSize seguido de fitBounds) vão pro próximo frame,
-  // depois que o painel já está anexado e visível (ver activate() em
-  // campo.js) e mapDiv já tem o tamanho definitivo do layout flex.
+  // está sem layout nenhum aqui (tamanho 0), e fitBounds/getBoundsZoom
+  // calculado contra um container de tamanho 0 dá um zoom absurdo
+  // (Leaflet cai pro maxZoom das camadas, 18, tentando "encher" uma
+  // janela de tamanho zero) — o mapa nasce todo destorcido, cru: poços
+  // somem da vista. invalidateSize() sozinho não resolve: ele só reata o
+  // mapa ao tamanho real do container, sem refazer o cálculo de zoom. Por
+  // isso os dois vão pro próximo frame, depois que o painel já está
+  // anexado e visível (ver activate() em campo.js) e mapDiv já tem o
+  // tamanho definitivo do layout flex.
   requestAnimationFrame(() => {
     map.invalidateSize();
-    if (bounds.isValid()) map.fitBounds(bounds, { padding: [24, 24] });
+    if (bounds.isValid()) {
+      // Mesma escala (zoom) pra TODOS os projetos — calculada pelo maior
+      // (biggestBounds, ver init()), não pelo contorno deste projeto —
+      // cada mapa só centraliza no seu próprio campo. Sem isso, cada
+      // mini-mapa dava fitBounds no próprio contorno e todo campo parecia
+      // do mesmo tamanho na tela, por menor que fosse de verdade; com o
+      // mesmo zoom em todos, o campo maior ocupa o mini-mapa quase
+      // inteiro e um campo pequeno aparece pequeno, do jeito que é.
+      const fitTarget = biggestBounds.isValid() ? biggestBounds : bounds;
+      const zoom = map.getBoundsZoom(fitTarget, false, L.point(24, 24));
+      map.setView(bounds.getCenter(), zoom);
+    }
   });
 
-  return { map, hasShape: !!feature, hasWells: wells.some((w) => w.c) };
+  return { map, hasShape: !!(jazidaFeatures.own || jazidaFeatures.extra.length), hasWells: wells.some((w) => w.c) };
 }
 
 /* ----------------------- Gráfico combinado (produção + RGO) --------------- */
@@ -482,12 +508,12 @@ function buildProjectPanel(project, ctx) {
   roadmapCard.appendChild(buildRoadmapSection(project));
   inner.appendChild(roadmapCard);
 
-  const mapCard = chartCard('Contorno e poços', 'Poligonal do contrato/campo (quando disponível na ANP) e os poços perfurados dentro dela — cor do ponto por categoria (produção, injeção, seco...), mesmo critério de mapa.html.');
+  const mapCard = chartCard('Contorno e poços', 'Poligonal do contrato/campo (quando disponível na ANP) e os poços perfurados dentro dela — cor do ponto por categoria (produção, injeção, seco...), mesmo critério de mapa.html. Escala igual em todos os projetos, calculada pelo maior campo — dá pra comparar tamanho de campo a olho entre um painel e outro.');
   inner.appendChild(mapCard);
 
-  const feature = ctx.featureByProject[project.name];
+  const jazidaFeatures = ctx.jazidaFeaturesByProject[project.name];
   const wells = contractOwnWells(ctx.pocosData, project.name);
-  const mapInfo = buildMiniMap(mapCard, project, feature, wells);
+  const mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells, ctx.biggestBounds);
   panel._miniMap = mapInfo.map;
   if (!mapInfo.hasShape) {
     const note = document.createElement('p');
@@ -495,6 +521,12 @@ function buildProjectPanel(project, ctx) {
     note.textContent = wells.length
       ? 'Sem poligonal disponível para este contrato nos shapefiles da ANP — mostrando só os poços perfurados.'
       : 'Sem poligonal nem poço registrado para este contrato ainda.';
+    mapCard.appendChild(note);
+  } else if (jazidaFeatures.extra.length) {
+    const names = jazidaFeatures.extra.map((f) => f.properties.projeto || f.properties.nome).join(', ');
+    const note = document.createElement('p');
+    note.className = 'analytics-table-note';
+    note.textContent = `Jazida compartilhada (mesmo Plano de Desenvolvimento) — poligonal tracejada combinada com: ${names}.`;
     mapCard.appendChild(note);
   }
 
@@ -597,8 +629,9 @@ async function init() {
   let presalGeojson = null;
   let pocosJson = null;
   let producaoData = null;
+  let pdData = null;
   try {
-    [geojson, presalGeojson, pocosJson, producaoData] = await Promise.all([
+    [geojson, presalGeojson, pocosJson, producaoData, pdData] = await Promise.all([
       fetch(GEOJSON_URL).then((r) => r.json()),
       fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
       fetch(POCOS_URL).then((r) => r.json()),
@@ -606,6 +639,7 @@ async function init() {
       // reprocessado sem deploy de código junto, o navegador não tem como
       // saber que precisa buscar de novo só pela URL.
       fetch(PRODUCAO_URL, { cache: 'no-store' }).then((r) => r.json()),
+      fetch(PD_URL).then((r) => r.json()),
     ]);
   } catch (err) {
     console.error('Falha ao carregar dados de campo', err);
@@ -615,11 +649,11 @@ async function init() {
 
   const pocosData = pocosJson.pocos || {};
 
-  // featureByProject: poligonal do contrato (contratos.geojson, casada por
-  // nome exato de props.projeto) — quando o projeto não tem poligonal
-  // própria ali (hoje só Mero, que só existe como CAMPO dentro do bloco de
-  // Libra), cai pra campos_presal.geojson (área declarada do campo em si),
-  // mesmo fallback que mapa.js usa pra esse caso.
+  // featureByProject: poligonal PRÓPRIA do contrato (contratos.geojson,
+  // casada por nome exato de props.projeto) — quando o projeto não tem
+  // poligonal própria ali (hoje só Mero, que só existe como CAMPO dentro
+  // do bloco de Libra), cai pra campos_presal.geojson (área declarada do
+  // campo em si), mesmo fallback que mapa.js usa pra esse caso.
   const featureByProject = {};
   for (const feat of geojson.features) featureByProject[feat.properties.projeto] = feat;
   const trackedByUpperName = new Map(state.projects.map((p) => [p.name.toUpperCase(), p]));
@@ -630,8 +664,74 @@ async function init() {
     }
   }
 
+  // jazidaFeaturesByProject: além da poligonal PRÓPRIA (own, acima), os
+  // OUTROS contratos/campos que compartilham a MESMA jazida — mesmo PD
+  // (data/planos_desenvolvimento.json, campo "fonte") citado por mais de
+  // um nome (ex.: Norte de Carcará + BACALHAU, um só reservatório
+  // dividido entre o bloco de Partilha rastreado aqui e a Concessão
+  // anterior fora dele; Atapu + OESTE DE ATAPU; Entorno de Sapinhoá +
+  // SAPINHOÁ) — mesmo critério de vínculo já usado em mapa.js
+  // (projectByPdFonte/groupByPdFonte, shared.js), aplicado aqui pra
+  // desenhar TODOS os pedaços da jazida juntos, não só o contrato
+  // rastreado. projectByPdFonte já ignora fonte citada por mais de um
+  // projeto RASTREADO (ambíguo demais pra decidir sozinho).
+  const fonteToProject = projectByPdFonte(state.projects, pdData);
+  const jazidaFeaturesByProject = {};
+  for (const project of state.projects) {
+    const own = featureByProject[project.name] || null;
+    const extra = [];
+    const pd = byNameOrUpper(pdData, project.name);
+    const fonte = pd && pd.fonte;
+    if (fonte && fonteToProject.get(fonte) === project) {
+      for (const feat of geojson.features) {
+        if (feat === own) continue;
+        const otherPd = byNameOrUpper(pdData, feat.properties.projeto);
+        if (otherPd && otherPd.fonte === fonte) extra.push(feat);
+      }
+      for (const feat of presalGeojson.features) {
+        if (feat === own) continue;
+        const otherPd = byNameOrUpper(pdData, feat.properties.nome);
+        if (otherPd && otherPd.fonte === fonte) extra.push(feat);
+      }
+    }
+    jazidaFeaturesByProject[project.name] = { own, extra };
+  }
+
+  // Limites de mapa de cada projeto (poligonal própria + jazida
+  // compartilhada + poços) — pra achar o maior campo entre os 30, ver
+  // biggestBounds abaixo. L.geoJSON(...).getBounds() funciona sem
+  // precisar de um mapa Leaflet de verdade (só computa a bounding box da
+  // geometria) — bem mais barato que montar 30 mapas escondidos só pra
+  // medir tamanho.
+  const jazidaBoundsByProject = {};
+  for (const project of state.projects) {
+    const { own, extra } = jazidaFeaturesByProject[project.name];
+    const b = L.latLngBounds([]);
+    if (own) b.extend(L.geoJSON(own).getBounds());
+    for (const feat of extra) b.extend(L.geoJSON(feat).getBounds());
+    for (const w of contractOwnWells(pocosData, project.name)) {
+      if (w.c) b.extend(w.c);
+    }
+    jazidaBoundsByProject[project.name] = b;
+  }
+  // Maior campo entre os 30 (diagonal NE-SW em metros, ver
+  // L.LatLng.distanceTo) — referência de escala pro mini-mapa de TODOS os
+  // projetos (ver buildMiniMap): mesmo zoom pra todos, cada um só
+  // centralizado no próprio campo — dá pra comparar tamanho de campo a
+  // olho entre um painel e outro. Sem isso, cada mini-mapa dava fitBounds
+  // no próprio contorno e todo campo parecia do mesmo tamanho na tela,
+  // por menor que fosse de verdade.
+  let biggestBounds = L.latLngBounds([]);
+  let biggestSpan = -1;
+  for (const project of state.projects) {
+    const b = jazidaBoundsByProject[project.name];
+    if (!b.isValid()) continue;
+    const span = b.getNorthEast().distanceTo(b.getSouthWest());
+    if (span > biggestSpan) { biggestSpan = span; biggestBounds = b; }
+  }
+
   const monthlySeries = computeMonthlySeries(producaoData.meses || [], state.projects);
-  const ctx = { featureByProject, pocosData, monthlySeries };
+  const ctx = { jazidaFeaturesByProject, biggestBounds, pocosData, monthlySeries };
 
   // Ordem: mesmo agrupamento por status de pocos.js/analises.js (Produção,
   // Exploração, Devolvidos), cada grupo alfabético.
