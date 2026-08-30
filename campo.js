@@ -223,7 +223,8 @@ function buildComboChart(container, series, projectColor) {
   const captureSvg = `<rect id="cc-capture" x="${COMBO_MARGIN.left}" y="${COMBO_MARGIN.top}" width="${plotW}" height="${plotH}" fill="transparent" style="cursor:crosshair" />`;
 
   const svgWrap = document.createElement('div');
-  svgWrap.innerHTML = `<svg viewBox="0 0 ${LINE_W} ${LINE_H}" style="width:100%;height:auto;display:block">${gridSvg}${axisSvg}${xLabelsSvg}${lineSvg('boedPreSal', yBoeAt, projectColor)}${lineSvg('rgo', yRgoAt, RGO_LINE_COLOR)}${crosshairSvg}${captureSvg}</svg>`;
+  svgWrap.className = 'line-chart-wrap';
+  svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${lineSvg('boedPreSal', yBoeAt, projectColor)}${lineSvg('rgo', yRgoAt, RGO_LINE_COLOR)}${crosshairSvg}${captureSvg}</svg>`;
   const svgEl = svgWrap.firstElementChild;
   const capture = svgEl.querySelector('#cc-capture');
   const crosshair = svgEl.querySelector('#cc-crosshair');

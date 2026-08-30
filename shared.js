@@ -740,6 +740,7 @@ function createLineChart(container, monthlySeries) {
   window.addEventListener('pointercancel', () => { isDragging = false; dragPointerId = null; });
 
   const svgWrap = document.createElement('div');
+  svgWrap.className = 'line-chart-wrap';
   svgWrap.style.position = 'relative';
   const legendWrap = document.createElement('div');
   legendWrap.style.marginTop = '10px';
@@ -828,7 +829,7 @@ function createLineChart(container, monthlySeries) {
     const yAxisHintSvg = `<rect x="0" y="${LINE_MARGIN.top}" width="${LINE_MARGIN.left}" height="${plotH}" fill="transparent" style="cursor:ns-resize" />`;
     const crosshairSvg = `<line id="lc-crosshair" x1="0" y1="${LINE_MARGIN.top}" x2="0" y2="${LINE_MARGIN.top + plotH}" stroke="var(--text-faint)" stroke-width="1" hidden />`;
 
-    svgWrap.innerHTML = `<svg viewBox="0 0 ${LINE_W} ${LINE_H}" style="width:100%;height:auto;display:block;touch-action:none">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
+    svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
     const svgEl = svgWrap.firstElementChild;
     const capture = svgEl.querySelector('#lc-capture');
     const crosshair = svgEl.querySelector('#lc-crosshair');

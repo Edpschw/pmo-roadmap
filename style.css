@@ -717,6 +717,19 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .chart-card-title { font-size: 13px; font-weight: 700; margin: 0 0 2px; }
 .chart-card-subtitle { font-size: 11px; color: var(--text-faint); margin: 0 0 14px; }
 
+/* Gráfico de linhas (createLineChart em shared.js, buildComboChart em
+   campo.js) — viewBox fixo (LINE_W×LINE_H) escalado por CSS, não por JS:
+   em telas largas .lc-svg estica pra 100% do cartão; em telas estreitas
+   (ver media query no fim do arquivo) o texto do próprio SVG (números de
+   eixo, rótulos de mês) encolheria proporcionalmente até ficar ilegível
+   se continuasse escalando pra 100% de um cartão de ~340px — ali
+   .lc-svg ganha uma largura mínima maior que a tela, e .line-chart-wrap
+   rola na horizontal pra mostrar o resto, mesmo padrão que .data-table já
+   usa em tabela larga (ver .pocos-table-wrapper/.analytics-table).
+   width:100% aqui (fora da media query) é o comportamento padrão de
+   desktop, sem precisar de min-width nenhum. */
+.lc-svg { width: 100%; height: auto; display: block; touch-action: none; }
+
 /* ---- Barra horizontal (STOIIP, poços por categoria) ---- */
 .hbar-list { display: flex; flex-direction: column; gap: 9px; }
 .hbar-row { display: grid; grid-template-columns: 152px 1fr; align-items: center; gap: 10px; }
@@ -968,4 +981,39 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   .hbar-row { grid-template-columns: 74px 1fr; }
   .hbar-name { font-size: 10.5px; }
   .kpi-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+
+  /* Gráfico de linhas (ver .lc-svg acima): largura mínima maior que a
+     tela, rolando na horizontal, em vez de encolher pra 100% do cartão —
+     nessa largura o texto do próprio SVG (que escala junto com o
+     desenho) ficaria pequeno demais pra ler. */
+  .line-chart-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .lc-svg { width: 760px; max-width: none; }
+
+  /* ---------- Campo (campo.html): nav lateral fixa vira uma faixa de
+     pills no topo, rolando a página inteira pra baixo até o conteúdo —
+     mesmo padrão de "muita coisa pra escolher" já usado em pocos.html
+     (.pocos-nav-pill), em vez da coluna fixa de 270px do desktop, que no
+     celular sobrava mal 100px pra tudo o resto (mapa, roadmap, gráficos
+     — tudo espremido e ilegível). ---------- */
+  .campo-wrapper { flex-direction: column; overflow: hidden; }
+  .campo-nav {
+    flex: 0 0 auto; width: 100%; max-height: 46vh; overflow-y: auto;
+    border-right: none; border-bottom: 1px solid var(--border); padding: 10px 12px;
+  }
+  .campo-nav-list { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+  .campo-nav-item {
+    width: auto; flex: 0 0 auto; padding: 5px 10px 5px 8px;
+    border-radius: 12px; border: 1px solid var(--border-strong); background: var(--panel);
+  }
+  .campo-nav-group-label { width: 100%; margin: 6px 0 0; }
+  .campo-nav-group-label:first-of-type { margin-top: 0; }
+  .campo-content { padding: 14px 12px 32px; }
+  .campo-panel-title { font-size: 15px; gap: 8px; }
+  .campo-mapa { height: 220px; }
+  /* --sidebar-w/--header-h do mini-roadmap são fixados via JS
+     (style.setProperty, ver buildRoadmapSection em campo.js) — inline
+     style sempre vence uma regra de folha de estilo normal, então só um
+     !important aqui consegue encolher a coluna de nome de workstream no
+     celular sem precisar tocar no JS. */
+  .campo-roadmap { --sidebar-w: 84px !important; }
 }
