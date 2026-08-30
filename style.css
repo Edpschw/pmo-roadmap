@@ -806,6 +806,65 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .pocos-table-wrapper .data-table th, .pocos-table-wrapper .data-table td { white-space: nowrap; }
 .pocos-anc { color: var(--text-faint); font-weight: 400; }
 
+/* ---------- Visão em campo (campo.html) — uma sub-aba por projeto,
+   contorno+poços num mini-mapa e os gráficos de produção/RGO do projeto.
+   Layout de duas colunas (nav fixa à esquerda, conteúdo rolável à
+   direita) — diferente de pocos.html (nav horizontal + scroll-to-anchor
+   numa lista corrida): aqui só um projeto fica montado/visível por vez
+   (troca de aba de verdade, ver campo.js), então a nav é uma lista
+   vertical com o item ativo destacado, como um menu de app. ---------- */
+.campo-wrapper { flex: 1 1 auto; display: flex; overflow: hidden; }
+.campo-nav {
+  flex: 0 0 270px; overflow-y: auto; background: var(--panel); border-right: 1px solid var(--border);
+  padding: 14px 12px 24px; display: flex; flex-direction: column; gap: 8px;
+}
+.campo-search {
+  border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 12px; font-size: 13px;
+  font-family: inherit; color: var(--text); background: var(--bg); width: 100%;
+}
+.campo-search:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.campo-nav-filter-result { font-size: 11px; color: var(--text-faint); }
+.campo-nav-group-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--text-faint); margin: 8px 0 2px; padding: 0 9px;
+}
+.campo-nav-group-label:first-of-type { margin-top: 2px; }
+.campo-nav-list { display: flex; flex-direction: column; gap: 2px; }
+.campo-nav-item {
+  display: flex; align-items: center; gap: 8px; padding: 7px 9px; border-radius: 6px; border: none;
+  background: transparent; color: var(--text-muted); font-size: 12.5px; text-align: left;
+  cursor: pointer; font-family: inherit; width: 100%;
+}
+.campo-nav-item:hover { background: var(--surface); color: var(--text); }
+.campo-nav-item.active { background: var(--accent-soft); color: var(--text); font-weight: 600; }
+.campo-nav-item[hidden] { display: none; }
+.campo-nav-dot { width: 8px; height: 8px; border-radius: 2px; flex: 0 0 8px; }
+.campo-nav-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.campo-content { flex: 1 1 auto; overflow-y: auto; padding: 20px 24px 44px; }
+.campo-panel[hidden] { display: none; }
+.campo-panel-header {
+  max-width: 1180px; margin: 0 auto 16px; display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.campo-panel-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; margin: 0; }
+.campo-panel-badge {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  padding: 3px 8px; border-radius: 10px; background: var(--surface); color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.campo-section { max-width: 1180px; margin: 0 auto 16px; }
+.campo-mapa { height: 340px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: var(--bg); }
+.campo-empty-note {
+  font-size: 12px; color: var(--text-faint); padding: 22px; text-align: center;
+  border: 1px dashed var(--border-strong); border-radius: var(--radius);
+}
+.campo-mapa .leaflet-tooltip {
+  background: var(--panel); color: var(--text); border: 1px solid var(--border-strong);
+  font-size: 11px; padding: 4px 7px; box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.campo-mapa .leaflet-tooltip-top::before { border-top-color: var(--border-strong); }
+
 /* ---------- Telas estreitas (celular), incluindo paisagem: usa a
    condição de altura curta + orientação para pegar o celular deitado, que
    tem largura grande mas continua sendo uma tela pequena. ---------- */
