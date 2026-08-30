@@ -192,6 +192,17 @@ const MAP_LABEL_SCALE_ZOOM_REF = 7;
 const MAP_LABEL_SCALE_ZOOM_RANGE = [3, 14];
 const MAP_LABEL_SCALE_RANGE = [0.6, 1.9];
 
+// Ícone de sonda (ver rigDivIcon) usa a MESMA referência/faixa de zoom do
+// rótulo de projeto acima, mas um piso bem menor: no zoom mínimo do mapa
+// (3, visão geral do Brasil inteiro) dezenas de sondas ficam visíveis ao
+// mesmo tempo, e mesmo o piso de 0.6 do rótulo (pensado pra um texto, que
+// precisa continuar legível) ainda deixava o ícone — bem mais "pesado"
+// visualmente que um nome de projeto — poluindo a tela. --map-rig-scale é
+// uma variável CSS separada de --map-label-scale (ver .map-rig-icon-wrap
+// em style.css) justamente pra poder ter esse piso próprio sem encolher o
+// rótulo de projeto junto.
+const MAP_RIG_SCALE_RANGE = [0.32, 1.9];
+
 // Selo de operador/parceiro (ver mapLabelOperatorBadgeHTML/
 // mapLabelPartnerBadgesHTML) some abaixo deste
 // zoom — na visão geral (todos os 30 contratos na tela, zoom inicial ~7
@@ -1667,25 +1678,30 @@ function updateProjectLabels() {
   }
 }
 
-// Escala do nome/selo sobre o polígono (ver .map-project-label-wrap em
-// style.css, que lê --map-label-scale) — uma variável CSS só, no
-// container do mapa: todo rótulo herda sem precisar tocar em cada marker
-// individualmente. Interpolação linear em duas pernas ao redor de
-// MAP_LABEL_SCALE_ZOOM_REF (ver constantes acima).
-function updateMapLabelScale() {
-  const zoom = map.getZoom();
+// Interpolação linear em duas pernas ao redor de MAP_LABEL_SCALE_ZOOM_REF
+// (escala 1 exatamente nesse zoom), piso/teto próprios por faixa — usada
+// tanto pro rótulo de projeto (MAP_LABEL_SCALE_RANGE) quanto pro ícone de
+// sonda (MAP_RIG_SCALE_RANGE), ver updateMapLabelScale.
+function scaleForZoom(zoom, [sMin, sMax]) {
   const [zMin, zMax] = MAP_LABEL_SCALE_ZOOM_RANGE;
-  const [sMin, sMax] = MAP_LABEL_SCALE_RANGE;
-  let scale;
   if (zoom <= MAP_LABEL_SCALE_ZOOM_REF) {
     const t = (Math.max(zMin, zoom) - zMin) / (MAP_LABEL_SCALE_ZOOM_REF - zMin);
-    scale = sMin + t * (1 - sMin);
-  } else {
-    const t = (Math.min(zMax, zoom) - MAP_LABEL_SCALE_ZOOM_REF) / (zMax - MAP_LABEL_SCALE_ZOOM_REF);
-    scale = 1 + t * (sMax - 1);
+    return sMin + t * (1 - sMin);
   }
+  const t = (Math.min(zMax, zoom) - MAP_LABEL_SCALE_ZOOM_REF) / (zMax - MAP_LABEL_SCALE_ZOOM_REF);
+  return 1 + t * (sMax - 1);
+}
+
+// Escala do nome/selo sobre o polígono e do ícone de sonda (ver
+// .map-project-label-wrap/.map-rig-icon-wrap em style.css, que leem
+// --map-label-scale/--map-rig-scale) — duas variáveis CSS no container do
+// mapa: todo rótulo/ícone herda sem precisar tocar em cada marker
+// individualmente.
+function updateMapLabelScale() {
+  const zoom = map.getZoom();
   const mapEl = document.getElementById('map');
-  mapEl.style.setProperty('--map-label-scale', scale.toFixed(3));
+  mapEl.style.setProperty('--map-label-scale', scaleForZoom(zoom, MAP_LABEL_SCALE_RANGE).toFixed(3));
+  mapEl.style.setProperty('--map-rig-scale', scaleForZoom(zoom, MAP_RIG_SCALE_RANGE).toFixed(3));
   // Abaixo de MAP_LABEL_BADGES_MIN_ZOOM some só o selo — o nome continua
   // (menor, ver escala acima), pra não poluir a visão geral com dezenas
   // de selos ao mesmo tempo.

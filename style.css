@@ -666,14 +666,16 @@ body.map-page .leaflet-popup-content { max-height: 70vh; overflow-y: auto; paddi
    define a forma) e escurece o tooltip de hover pra bater com o resto. */
 .map-well-icon { background: transparent; border: none; }
 .map-rig-icon { background: transparent; border: none; }
-/* Acompanha --map-label-scale (ver updateMapLabelScale/rigDivIcon em
-   mapa.js) — mesmo zoom em que aparece o rótulo do projeto, mesmo tamanho
-   relativo, pra não virar uma nuvem de ícones grandes no zoom bem
-   afastado. Origem perto da base do desenho (não o centro): o "pé" da
-   sonda fica fixo sobre a coordenada do poço enquanto o ícone cresce/
-   encolhe, em vez de derivar pro lado. */
+/* Acompanha --map-rig-scale (ver updateMapLabelScale/rigDivIcon em
+   mapa.js) — mesmo zoom em que aparece o rótulo do projeto, mas com um
+   piso próprio (MAP_RIG_SCALE_RANGE), menor que o do rótulo: no zoom bem
+   afastado dezenas de sondas ficam visíveis ao mesmo tempo, e o ícone
+   (mais "pesado" visualmente que um texto) precisa encolher mais que o
+   nome do projeto pra não virar uma nuvem. Origem perto da base do
+   desenho (não o centro): o "pé" da sonda fica fixo sobre a coordenada do
+   poço enquanto o ícone cresce/encolhe, em vez de derivar pro lado. */
 .map-rig-icon-wrap {
-  transform: scale(var(--map-label-scale, 1));
+  transform: scale(var(--map-rig-scale, 1));
   transform-origin: 50% 90%;
 }
 body.map-page .leaflet-tooltip.map-well-tooltip {
