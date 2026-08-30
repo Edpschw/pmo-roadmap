@@ -903,15 +903,15 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   content: ''; position: absolute; left: 0; right: 0; top: 50%;
   height: 2px; background: var(--accent); transform: translateY(-50%);
 }
-.campo-map-legend {
-  padding: 8px 10px;
-  display: flex; flex-direction: column; gap: 4px; max-width: 180px;
-}
-.campo-map-legend-row {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 10.5px; color: var(--text-muted); line-height: 1.3;
-}
-.campo-map-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; border: 1px solid rgba(0, 0, 0, 0.4); }
+.campo-map-legend { padding: 8px 10px; max-width: 220px; }
+/* Conteúdo de dentro (.map-legend/.map-legend-row/.map-legend-well-icon)
+   é o mesmo de buildWellShapeLegend/buildRigLegend em shared.js — as
+   mesmas classes de mapa.js, só que lá o texto usa --map-text-muted (só
+   existe sob body.map-page, mapa.html); aqui remapeia pras cores normais
+   do app. */
+.campo-map-legend .map-legend { margin: 0; gap: 4px; }
+.campo-map-legend .map-legend-row { font-size: 10.5px; color: var(--text-muted); line-height: 1.3; }
+.campo-map-legend .map-legend-well-icon { width: 14px; height: 14px; }
 
 /* Cartões dentro do painel do projeto ficam com a mesma largura máxima das
    outras páginas de gráfico (analytics-section/pocos-content) — sem isso
@@ -1044,9 +1044,10 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   /* Escala/legenda do mini-mapa proporcionalmente grandes demais pros
      220px de altura do mapa no celular (ver .campo-mapa acima) —
      encolhe pra caber sem tampar tanto do contorno/poços por baixo. */
-  .campo-map-legend { padding: 6px 8px; gap: 3px; max-width: 150px; }
-  .campo-map-legend-row { font-size: 9.5px; gap: 5px; }
-  .campo-map-legend-dot { width: 7px; height: 7px; flex: 0 0 7px; }
+  .campo-map-legend { padding: 6px 8px; max-width: 150px; }
+  .campo-map-legend .map-legend { gap: 3px; }
+  .campo-map-legend .map-legend-row { font-size: 9.5px; gap: 5px; }
+  .campo-map-legend .map-legend-well-icon { width: 12px; height: 12px; }
   .campo-map-scale { padding: 4px 7px 5px; }
   .campo-map-scale-label { font-size: 9.5px; }
 }

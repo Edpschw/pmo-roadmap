@@ -192,16 +192,19 @@ const MAP_LABEL_SCALE_ZOOM_REF = 7;
 const MAP_LABEL_SCALE_ZOOM_RANGE = [3, 14];
 const MAP_LABEL_SCALE_RANGE = [0.6, 1.9];
 
-// Ícone de sonda (ver rigDivIcon) usa a MESMA referência/faixa de zoom do
-// rótulo de projeto acima, mas um piso bem menor: no zoom mínimo do mapa
-// (3, visão geral do Brasil inteiro) dezenas de sondas ficam visíveis ao
-// mesmo tempo, e mesmo o piso de 0.6 do rótulo (pensado pra um texto, que
-// precisa continuar legível) ainda deixava o ícone — bem mais "pesado"
-// visualmente que um nome de projeto — poluindo a tela. --map-rig-scale é
-// uma variável CSS separada de --map-label-scale (ver .map-rig-icon-wrap
-// em style.css) justamente pra poder ter esse piso próprio sem encolher o
-// rótulo de projeto junto.
-const MAP_RIG_SCALE_RANGE = [0.32, 1.9];
+// Ícone de sonda (ver rigDivIcon/RIG_ICON_BASE_SIZE em shared.js) usa a
+// MESMA referência/faixa de zoom do rótulo de projeto acima, mas um piso
+// bem menor: no zoom mínimo do mapa (3, visão geral do Brasil inteiro)
+// dezenas de sondas ficam visíveis ao mesmo tempo, e mesmo o piso de 0.6
+// do rótulo (pensado pra um texto, que precisa continuar legível) ainda
+// deixava o ícone — bem mais "pesado" visualmente que um nome de projeto —
+// poluindo a tela. --map-rig-scale é uma variável CSS separada de
+// --map-label-scale (ver .map-rig-icon-wrap em style.css) justamente pra
+// poder ter esse piso próprio sem encolher o rótulo de projeto junto. Duas
+// rodadas de ajuste já: RIG_ICON_BASE_SIZE (14px, era 20) encolhe o ícone
+// em TODO zoom; este piso (0.26, era 0.32) encolhe mais especificamente no
+// zoom baixo, onde o excesso de sondas empilhadas incomoda mais.
+const MAP_RIG_SCALE_RANGE = [0.26, 1.9];
 
 // Selo de operador/parceiro (ver mapLabelOperatorBadgeHTML/
 // mapLabelPartnerBadgesHTML) some abaixo deste
@@ -640,74 +643,12 @@ function popupHTML(project, props) {
 // o mapa desenha com ícone próprio, ver WELL_SHAPES) agora vive em
 // shared.js, compartilhada com app.js e analises.js.
 
-// Um desenho por situação, todos no mesmo viewBox 16×16 (assim o mesmo
-// iconAnchor serve pra todos). Vocabulário de símbolo de poço mais comum em
-// mapas de E&P (o mesmo círculo/triângulo usado pelos basemaps de agências
-// como a Texas RRC e a Colorado COGCC, e pelo estilo "Petroleum" do
-// ArcGIS) em vez de pictogramas desenhados — mais reconhecível pra quem já
-// viu um mapa de poços antes, e mais simples de manter legível pequeno:
-// círculo = óleo, triângulo = gás, seta pra baixo = injeção (fluido volta
-// pro reservatório), vazio = não achou nada (seco) ou achou pela metade
-// (indício), X = abandonado.
-const WELL_SHAPES = {
-  producao: (c) => `
-    <circle cx="8" cy="8" r="5.4" fill="${c}" stroke="#0b0d10" stroke-width="1.4"/>`,
-  gas: (c) => `
-    <path d="M8 2 L13.7 12.6 L2.3 12.6 Z" fill="${c}" stroke="#0b0d10" stroke-width="1.4" stroke-linejoin="round"/>`,
-  injecao: (c) => `
-    <path d="M6.2 2.2H9.8V7.4H12.8L8 13L3.2 7.4H6.2Z" fill="${c}" stroke="#0b0d10" stroke-width="1.4" stroke-linejoin="round"/>`,
-  indicio: (c) => `
-    <circle cx="8" cy="8" r="5.4" fill="none" stroke="#0b0d10" stroke-width="1.4"/>
-    <path d="M8 2.6 A5.4 5.4 0 0 0 8 13.4 Z" fill="${c}"/>`,
-  seco: (c) => `
-    <circle cx="8" cy="8" r="4.2" fill="none" stroke="#0b0d10" stroke-width="1.6"/>
-    <circle cx="8" cy="8" r="4.2" fill="none" stroke="${c}" stroke-width="0.9"/>`,
-  abandonado: (c) => `
-    <circle cx="8" cy="8" r="5.4" fill="none" stroke="#0b0d10" stroke-width="1.4"/>
-    <path d="M5 5 L11 11 M11 5 L5 11" stroke="#0b0d10" stroke-width="2.4" stroke-linecap="round"/>
-    <path d="M5 5 L11 11 M11 5 L5 11" stroke="${c}" stroke-width="1.3" stroke-linecap="round"/>`,
-  indefinido: (c) => `
-    <circle cx="8" cy="8" r="2.6" fill="${c}" stroke="#0b0d10" stroke-width="1" fill-opacity="0.55"/>`,
-};
-
-// Selo no canto superior direito da seta de injeção, indicando o fluido
-// injetado (os únicos dois valores de RECLASSIFICACAO observados na base
-// são "INJEÇÃO DE ÁGUA" e "INJEÇÃO DE GÁS NATURAL" — ver wellInjectionType).
-// Cor fixa (não a cor do projeto): assim o selo se reconhece à distância
-// como "água" ou "gás" em qualquer contrato, igual o anel laranja de AnC.
-const INJECTION_BADGES = {
-  agua: `<path d="M13 0.6C14.6 2.9 15.5 4.5 15.5 5.7A2.5 2.5 0 1 1 10.5 5.7C10.5 4.5 11.4 2.9 13 0.6Z" fill="#3aa8ff" stroke="#0b0d10" stroke-width="0.6"/>`,
-  gas: `<path d="M13.4 0.5C13.7 2.1 14.7 2.9 15.4 3.8A2.6 2.6 0 1 1 10.5 4.9C10.5 4.4 10.65 4.0 10.9 3.6C11.0 4.1 11.25 4.3 11.6 4.1C11.35 3.0 11.75 1.9 13.4 0.5Z" fill="#ff6b35" stroke="#0b0d10" stroke-width="0.6"/>`,
-};
+// WELL_SHAPES/INJECTION_BADGES/ANC_RING_COLOR/wellDivIcon agora vivem em
+// shared.js — compartilhados com campo.js (mini-mapa por projeto, mesmos
+// ícones e legenda do mapa completo).
 
 // wellInjectionType (qual fluido, pra escolher o selo em INJECTION_BADGES)
 // agora vive em shared.js, compartilhada com analises.js.
-
-// Ícone de poço no mapa: uma silhueta por situação (ver WELL_SHAPES e
-// wellCategory), como divIcon do Leaflet (contorno escuro pra destacar
-// tanto sobre o tile escuro quanto sobre o preenchimento colorido do
-// polígono). Pequeno de propósito: contratos densos (Búzios chega a 137
-// marcadores) já ficam cheios mesmo assim — um ícone maior só empilharia
-// mais um em cima do outro.
-// Anel tracejado laranja em volta do símbolo normal — não troca o símbolo
-// (a categoria do poço continua valendo), só avisa que ele fica numa Área
-// Não Concedida (AnC): a ANP ainda não deu um nome/contrato formal a essa
-// área específica, então ela não tem polígono nenhum no mapa (ver
-// CAMPOS_CONTEXTO_ALIASES em build_pocos.py) — o anel é a única pista
-// visual de que aquele ponto está fora de qualquer contorno desenhado.
-const ANC_RING_COLOR = '#e8a33d';
-
-function wellDivIcon(color, category, anc, injType) {
-  const shape = WELL_SHAPES[category] || WELL_SHAPES.indefinido;
-  const ring = anc ? `<circle cx="8" cy="8" r="7.2" fill="none" stroke="${ANC_RING_COLOR}" stroke-width="1.1" stroke-dasharray="2 1.4"/>` : '';
-  const badge = category === 'injecao' && INJECTION_BADGES[injType] ? INJECTION_BADGES[injType] : '';
-  return L.divIcon({
-    className: 'map-well-icon',
-    html: `<svg viewBox="0 0 16 16" width="13" height="13" style="filter:drop-shadow(0 1px 1px rgba(0,0,0,0.7))">${shape(color)}${badge}${ring}</svg>`,
-    iconSize: [13, 13],
-    iconAnchor: [6.5, 6.5],
-  });
-}
 
 // Poços a menos disto um do outro (em graus, ~110 m) viram um marcador só.
 // Além de limpar a mancha, é o mais honesto: são o mesmo ponto no mapa.
@@ -959,47 +900,11 @@ function addWellMarker(targetLayer, latlng, color, entries) {
 }
 
 /* ------------------------- Sonda em perfuração/completação ------------------ */
-// Ícone de sonda/vessel — aparece SÓ no zoom baixo, antes dos poços em si
-// (ver updateRigVisibility, regra de zoom oposta à de
+// RIG_STATUS_STYLE/rigIconSvg/rigDivIcon agora vivem em shared.js —
+// compartilhados com campo.js. Aqui, ícone aparece SÓ no zoom baixo, antes
+// dos poços em si (ver updateRigVisibility, regra de zoom oposta à de
 // updateWellsVisibility): um aviso antecipado de "tem uma sonda ativa por
 // aqui" pra quem ainda não deu zoom o bastante pra ver os poços um a um.
-// Mesmo desenho (derrick sobre um casco) pras duas situações que ganham
-// ícone — só a cor muda, codificando a fase: vermelho perfurando (situação
-// mais "chamativa", poço ainda formando), cinza completando (poço já
-// perfurado, preparando pra entrar em produção). Cor fixa por situação
-// (não a do projeto) — é indicador de SITUAÇÃO, não de propriedade, mesmo
-// raciocínio de OUTROS_POCOS_COLOR/ANC_RING_COLOR. Maior que o ícone de
-// poço comum (ver wellDivIcon) de propósito: no zoom baixo em que aparece,
-// precisa se destacar sozinho, sem outros poços por perto pra dar contexto
-// de escala.
-const RIG_STATUS_STYLE = {
-  'EM PERFURAÇÃO': { color: '#e5484d', label: 'Em perfuração' },
-  'EM COMPLETAÇÃO': { color: '#9aa1ad', label: 'Em completação' },
-};
-function rigIconSvg(color, size) {
-  return `<svg viewBox="0 0 20 20" width="${size}" height="${size}" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8))">
-      <path d="M4 15.5 L16 15.5 L14 18.4 L6 18.4 Z" fill="#14171b" stroke="${color}" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="M10 2 L6.3 15.5 M10 2 L13.7 15.5 M7.6 9.6 L12.4 9.6" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="10" cy="2" r="1.3" fill="${color}"/>
-    </svg>`;
-}
-// Acompanha o zoom (ver --map-label-scale, mesmo cálculo do nome do
-// projeto em updateMapLabelScale — a sonda só aparece no mesmo intervalo
-// de zoom que o rótulo, zoom < wellsMinZoom, então reaproveita a mesma
-// variável, sem cálculo próprio) — sem isso, com dezenas de sondas visíveis
-// no zoom bem afastado (visão geral do Brasil) todas no tamanho fixo de
-// perto, a tela vira uma nuvem de ícones de 20px em cima uns dos outros.
-// O wrap interno (não a classe do próprio divIcon, que o Leaflet já usa
-// pra posicionar via transform inline) é quem recebe o scale — mesmo
-// motivo de .map-project-label-wrap não estar na classe do ícone.
-function rigDivIcon(color) {
-  return L.divIcon({
-    className: 'map-rig-icon',
-    html: `<div class="map-rig-icon-wrap">${rigIconSvg(color, 20)}</div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 18],
-  });
-}
 
 function rigPopupHTML(w, style) {
   const rows = [];
@@ -1018,7 +923,7 @@ function rigPopupHTML(w, style) {
 
 function addRigMarker(targetLayer, w, style) {
   const marker = L.marker(w.c, { icon: rigDivIcon(style.color), zIndexOffset: 600 });
-  marker.bindTooltip(`${escapeHtml(w.n)}<br>${escapeHtml(style.label)}`, { direction: 'top', offset: [0, -16], className: 'map-well-tooltip' });
+  marker.bindTooltip(`${escapeHtml(w.n)}<br>${escapeHtml(style.label)}`, { direction: 'top', offset: [0, -11], className: 'map-well-tooltip' });
   marker.bindPopup(rigPopupHTML(w, style));
   targetLayer.addLayer(marker);
 }
@@ -1885,73 +1790,12 @@ function renderWellFilterSection(container) {
   container.appendChild(section);
 }
 
-// Ordem de exibição na legenda — do resultado mais positivo (achou e
-// produz) ao mais neutro (sem registro), agrupando injeção/abandonado
-// (intervenção/descontinuado) no meio.
-const WELL_CATEGORY_LABELS = [
-  ['producao', 'Produção (óleo)'],
-  ['gas', 'Produção/indício de gás'],
-  ['indicio', 'Indício de óleo (poço seco)'],
-  ['seco', 'Seco, sem indícios'],
-  ['abandonado', 'Abandonado'],
-  ['indefinido', 'Sem resultado registrado'],
-];
-const WELL_LEGEND_COLOR = '#c7cad1';
-
-function buildWellShapeLegend() {
-  const legend = document.createElement('div');
-  legend.className = 'map-legend';
-  for (const [category, label] of WELL_CATEGORY_LABELS) {
-    const row = document.createElement('div');
-    row.className = 'map-legend-row';
-    const icon = document.createElement('span');
-    icon.className = 'map-legend-well-icon';
-    icon.innerHTML = `<svg viewBox="0 0 16 16" width="15" height="15">${WELL_SHAPES[category](WELL_LEGEND_COLOR)}</svg>`;
-    row.appendChild(icon);
-    row.appendChild(document.createTextNode(label));
-    legend.appendChild(row);
-  }
-  for (const [injType, label] of [['agua', 'Injeção de água'], ['gas', 'Injeção de gás']]) {
-    const row = document.createElement('div');
-    row.className = 'map-legend-row';
-    const icon = document.createElement('span');
-    icon.className = 'map-legend-well-icon';
-    icon.innerHTML = `<svg viewBox="0 0 16 16" width="15" height="15">${WELL_SHAPES.injecao(WELL_LEGEND_COLOR)}${INJECTION_BADGES[injType]}</svg>`;
-    row.appendChild(icon);
-    row.appendChild(document.createTextNode(label));
-    legend.appendChild(row);
-  }
-  const ancRow = document.createElement('div');
-  ancRow.className = 'map-legend-row';
-  const ancIcon = document.createElement('span');
-  ancIcon.className = 'map-legend-well-icon';
-  ancIcon.innerHTML = `<svg viewBox="0 0 16 16" width="15" height="15">${WELL_SHAPES.indefinido(WELL_LEGEND_COLOR)}<circle cx="8" cy="8" r="7.2" fill="none" stroke="${ANC_RING_COLOR}" stroke-width="1.1" stroke-dasharray="2 1.4"/></svg>`;
-  ancRow.appendChild(ancIcon);
-  ancRow.appendChild(document.createTextNode('Anel laranja: área não concedida (AnC), sem contrato formal'));
-  legend.appendChild(ancRow);
-  return legend;
-}
-
-// Legenda das sondas (ver RIG_STATUS_STYLE) — mesmo padrão visual de
-// buildWellShapeLegend, mas fica no lugar do #mapWellLegendFixed quando ELE
-// some (ver updateRigVisibility): as sondas só aparecem no zoom baixo,
-// exatamente quando os poços (e a legenda deles) ainda não apareceram, então
-// as duas nunca disputam o mesmo canto ao mesmo tempo.
-function buildRigLegend() {
-  const legend = document.createElement('div');
-  legend.className = 'map-legend';
-  for (const style of Object.values(RIG_STATUS_STYLE)) {
-    const row = document.createElement('div');
-    row.className = 'map-legend-row';
-    const icon = document.createElement('span');
-    icon.className = 'map-legend-well-icon';
-    icon.innerHTML = rigIconSvg(style.color, 15);
-    row.appendChild(icon);
-    row.appendChild(document.createTextNode(style.label));
-    legend.appendChild(row);
-  }
-  return legend;
-}
+// WELL_CATEGORY_LABELS/WELL_LEGEND_COLOR/buildWellShapeLegend/
+// buildRigLegend agora vivem em shared.js — compartilhados com campo.js.
+// buildRigLegend fica no lugar do #mapWellLegendFixed quando ELE some (ver
+// updateRigVisibility): as sondas só aparecem no zoom baixo, exatamente
+// quando os poços (e a legenda deles) ainda não apareceram, então as duas
+// nunca disputam o mesmo canto ao mesmo tempo.
 
 function buildLegend(entries) {
   const legend = document.createElement('div');

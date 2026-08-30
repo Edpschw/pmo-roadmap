@@ -30,34 +30,17 @@ const GROUP_BADGES = {
 };
 const GROUP_ORDER = ['producao', 'exploracao', 'devolvidos'];
 
-// Cor do marcador de poço no mini-mapa por categoria (ver wellCategory em
-// shared.js) — diferente do mapa completo (mapa.js), que colore o poço
-// pela cor do PROJETO (a forma do ícone já diz a categoria): aqui só há um
-// projeto por mini-mapa, então a cor do próprio poço carrega a categoria.
-const WELL_CATEGORY_DOT = {
-  producao: '#1c9e6b',
-  injecao: '#2f9ed6',
-  indicio: '#e0a72e',
-  gas: '#e07b2e',
-  seco: '#d64545',
-  abandonado: '#7a828f',
-  indefinido: '#aeb4bd',
-};
 const RGO_LINE_COLOR = '#e0a72e';
 
-// Ordem/rótulo de exibição da legenda do mini-mapa — mesma categorização
-// do mapa completo (ver WELL_CATEGORY_LABELS em mapa.js), sem separar
-// injeção por subtipo (água/gás) já que aqui a cor do PONTO carrega só a
-// categoria, sem ícone próprio pra cada subtipo.
-const WELL_CATEGORY_LABELS = [
-  ['producao', 'Produção (óleo)'],
-  ['gas', 'Produção/indício de gás'],
-  ['injecao', 'Injeção'],
-  ['indicio', 'Indício de óleo (poço seco)'],
-  ['seco', 'Seco, sem indícios'],
-  ['abandonado', 'Abandonado'],
-  ['indefinido', 'Sem resultado registrado'],
-];
+// WELL_SHAPES/wellDivIcon/RIG_STATUS_STYLE/rigDivIcon/buildWellShapeLegend/
+// buildRigLegend agora vêm de shared.js — mesmos ícones e legenda do mapa
+// completo (mapa.js), reaproveitados aqui num mini-mapa por projeto só.
+// Diferente do mapa completo (que colore o poço pela cor do PROJETO, já
+// que várias cores de projeto convivem na mesma tela e a FORMA do ícone
+// já diz a categoria): aqui também usamos a cor do projeto — um mini-mapa
+// só tem um projeto mesmo, então a cor da poligonal e a do poço batem, e a
+// legenda (mesma do mapa completo) continua ensinando o que cada FORMA
+// quer dizer, independente da cor de quem está olhando.
 
 function slug(name) {
   return name
@@ -126,31 +109,18 @@ const CampoScaleControl = L.Control.extend({
   },
 });
 
-// Legenda só das categorias de poço REALMENTE presentes neste projeto
-// (não a lista fixa inteira de mapa.js) — um bloco exploratório sem poço
-// nenhum, ou só com poços secos, não precisa de 7 linhas de legenda pra
-// dizer isso; null quando não há nenhum poço com coordenada (nada a
-// legendar).
-function buildWellCategoryLegendRows(wells) {
-  const present = new Set(wells.filter((w) => w.c).map((w) => wellCategory(w)));
-  if (!present.size) return null;
-  return WELL_CATEGORY_LABELS.filter(([cat]) => present.has(cat));
-}
-
+// Wrapper genérico pro cartão de legenda — recebe o conteúdo já pronto de
+// buildWellShapeLegend()/buildRigLegend() (shared.js, mesmas funções do
+// mapa completo), só cuidando do posicionamento/cartão em volta.
 const CampoLegendControl = L.Control.extend({
   options: { position: 'topright' },
-  initialize(rows, options) {
+  initialize(contentEl, options) {
     L.Util.setOptions(this, options);
-    this._rows = rows;
+    this._content = contentEl;
   },
   onAdd() {
     const el = L.DomUtil.create('div', 'leaflet-control campo-map-legend');
-    for (const [cat, label] of this._rows) {
-      const row = L.DomUtil.create('div', 'campo-map-legend-row', el);
-      const dot = L.DomUtil.create('span', 'campo-map-legend-dot', row);
-      dot.style.background = WELL_CATEGORY_DOT[cat] || WELL_CATEGORY_DOT.indefinido;
-      row.appendChild(document.createTextNode(label));
-    }
+    el.appendChild(this._content);
     L.DomEvent.disableClickPropagation(el);
     return el;
   },
@@ -173,8 +143,14 @@ function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) 
   // Escala numérica + gráfica, desenho próprio (ver CampoScaleControl
   // acima) — só métrico, a base da ANP não usa milhas.
   new CampoScaleControl().addTo(map);
-  const legendRows = buildWellCategoryLegendRows(wells);
-  if (legendRows) new CampoLegendControl(legendRows).addTo(map);
+  // Legenda dos ícones — mesma de mapa.js (buildWellShapeLegend/
+  // buildRigLegend, shared.js): só aparece quando há o que legendar (sem
+  // poço nenhum, sem legenda de poço; sem sonda ativa, sem legenda de
+  // sonda), mesmo critério condicional que o mapa completo já usa.
+  const hasWells = wells.some((w) => w.c);
+  const hasRigs = wells.some((w) => w.c && RIG_STATUS_STYLE[w.sit]);
+  if (hasWells) new CampoLegendControl(buildWellShapeLegend()).addTo(map);
+  if (hasRigs) new CampoLegendControl(buildRigLegend()).addTo(map);
 
   const bounds = L.latLngBounds([]);
   // Poligonal PRÓPRIA (own) em traço cheio; as da MESMA jazida mas de
@@ -195,12 +171,25 @@ function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) 
     }).addTo(map);
     bounds.extend(layer.getBounds());
   }
+  // Poço com sonda ativa (EM PERFURAÇÃO/EM COMPLETAÇÃO) ganha o ícone de
+  // sonda em vez do ícone de categoria normal — mesma exclusão mútua do
+  // mapa completo (lá os dois nunca aparecem juntos porque só um é visível
+  // de cada vez, conforme o zoom; aqui, sem esse zoom, a exclusão é
+  // explícita: wellCategory(w) pra esses poços cairia em "indefinido" (sem
+  // reclassificação ainda, ainda perfurando) — mostrar os dois ícones no
+  // mesmo ponto seria redundante e confuso).
   for (const w of wells) {
     if (!w.c) continue;
-    const color = WELL_CATEGORY_DOT[wellCategory(w)] || WELL_CATEGORY_DOT.indefinido;
-    L.circleMarker(w.c, { radius: 4, weight: 1, color: '#0b0d10', fillColor: color, fillOpacity: 0.95 })
-      .bindTooltip(w.n, { direction: 'top', offset: [0, -6] })
-      .addTo(map);
+    const rigStyle = RIG_STATUS_STYLE[w.sit];
+    if (rigStyle) {
+      L.marker(w.c, { icon: rigDivIcon(rigStyle.color) })
+        .bindTooltip(`${escapeHtml(w.n)}<br>${escapeHtml(rigStyle.label)}`, { direction: 'top', offset: [0, -11] })
+        .addTo(map);
+    } else {
+      L.marker(w.c, { icon: wellDivIcon(project.color, wellCategory(w), !!w.anc, wellInjectionType(w)) })
+        .bindTooltip(w.n, { direction: 'top', offset: [0, -8] })
+        .addTo(map);
+    }
     bounds.extend(w.c);
   }
 
@@ -231,7 +220,7 @@ function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) 
     }
   });
 
-  return { map, hasShape: !!(jazidaFeatures.own || jazidaFeatures.extra.length), hasWells: wells.some((w) => w.c) };
+  return { map, hasShape: !!(jazidaFeatures.own || jazidaFeatures.extra.length), hasWells };
 }
 
 /* ----------------------- Gráfico combinado (produção + RGO) --------------- */
