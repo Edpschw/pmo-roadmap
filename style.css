@@ -577,11 +577,12 @@ body.map-page .btn-ghost:hover { background: #1e222a; }
   text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.8);
   letter-spacing: 0.01em;
 }
-/* Selo do operador ACIMA do nome, selos dos parceiros ABAIXO — direto
-   sobre o polígono (ver mapLabelOperatorBadgeHTML/mapLabelPartnerBadgesHTML
-   em mapa.js) — mesmos selos do popup, com uma sombra no lugar do fundo
-   branco do chip de logo (não dá pra pintar um retângulo sólido atrás de
-   cada um sem poluir o mapa). */
+/* Selo do operador e selos dos parceiros, os dois ABAIXO do nome mas em
+   linhas separadas — operador primeiro, parceiros depois (ver
+   mapLabelOperatorBadgeHTML/mapLabelPartnerBadgesHTML em mapa.js) — direto
+   sobre o polígono, mesmos selos do popup, com uma sombra no lugar do
+   fundo branco do chip de logo (não dá pra pintar um retângulo sólido
+   atrás de cada um sem poluir o mapa). */
 .map-label-badges { display: flex; align-items: center; gap: 1.5px; justify-content: center; }
 .map-label-badges .company-badge { box-shadow: 0 1px 3px rgba(0,0,0,0.85); }
 .map-label-badges .company-logo-chip { box-shadow: 0 1px 3px rgba(0,0,0,0.85); }
@@ -589,11 +590,12 @@ body.map-page .btn-ghost:hover { background: #1e222a; }
    etc. lá em cima) — sobre o polígono ele já escala com o zoom (ver
    --map-label-scale), então o tamanho-base tem que ser bem discreto: no
    zoom em que aparece pela primeira vez (MAP_LABEL_BADGES_MIN_ZOOM) a
-   escala já passa de 1×. */
-.map-label-badges .company-badge-operador { width: 7px; height: 7px; font-size: 3px; }
+   escala já passa de 1×. Operador sempre 25% maior que parceiro (linha
+   própria, ver acima) — cada dimensão do operador é a do parceiro × 1,25. */
+.map-label-badges .company-badge-operador { width: 6.25px; height: 6.25px; font-size: 3.125px; }
 .map-label-badges .company-badge-parceiro { width: 5px; height: 5px; font-size: 2.5px; }
-.map-label-badges .company-logo-chip-operador { height: 8px; padding: 1px 2px; }
-.map-label-badges .company-logo-chip-operador img { height: 5.5px; max-width: 20px; }
+.map-label-badges .company-logo-chip-operador { height: 8.125px; padding: 1px 2px; }
+.map-label-badges .company-logo-chip-operador img { height: 5.625px; max-width: 18.75px; }
 .map-label-badges .company-logo-chip-parceiro { height: 6.5px; padding: 0 1px; }
 .map-label-badges .company-logo-chip-parceiro img { height: 4.5px; max-width: 15px; }
 /* Abaixo de MAP_LABEL_BADGES_MIN_ZOOM (ver updateMapLabelScale em

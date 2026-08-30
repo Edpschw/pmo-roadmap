@@ -396,8 +396,8 @@ function finalizeMapLabels() {
       icon: L.divIcon({
         className: 'map-project-label-icon',
         html: `<div class="map-project-label-wrap">
-          ${mapLabelOperatorBadgeHTML(rep.operatorRaw, rep.badgeKey)}
           <span class="map-project-label">${escapeHtml(rep.name)}</span>
+          ${mapLabelOperatorBadgeHTML(rep.operatorRaw, rep.badgeKey)}
           ${mapLabelPartnerBadgesHTML(rep.operatorRaw, rep.badgeKey)}
         </div>`,
         iconSize: null,
@@ -563,10 +563,11 @@ function companyBadgesHTML(operadorRaw, key) {
   return `<div class="map-popup-badges">${items}</div>`;
 }
 
-// Selo do OPERADOR pro rótulo fixo sobre o polígono — vai ACIMA do nome
-// (ver finalizeMapLabels), maior/mais em destaque que os parceiros, que
-// ficam abaixo dele (ver mapLabelPartnerBadgesHTML). String vazia sem
-// operador identificado, pro wrap não sobrar com um <div> vazio.
+// Selo do OPERADOR pro rótulo fixo sobre o polígono — linha própria
+// logo abaixo do nome (ver finalizeMapLabels), ANTES da linha de
+// parceiros, 25% maior que eles (ver .map-label-badges-operador em
+// style.css). String vazia sem operador identificado, pro wrap não
+// sobrar com um <div> vazio.
 function mapLabelOperatorBadgeHTML(operadorRaw, key) {
   const items = companyBadgesForLabel(operadorRaw, key)
     .filter((b) => b.role === 'operador')
@@ -576,9 +577,9 @@ function mapLabelOperatorBadgeHTML(operadorRaw, key) {
   return `<div class="map-label-badges map-label-badges-operador">${items}</div>`;
 }
 
-// Selos dos PARCEIROS pro rótulo fixo — ficam ABAIXO do nome, menores que
-// o selo do operador acima dele (ver .map-label-badges-parceiros em
-// style.css). String vazia sem parceiro na tabela de participação do PD.
+// Selos dos PARCEIROS pro rótulo fixo — linha própria, depois da do
+// operador (ver mapLabelOperatorBadgeHTML), 25% menores que ele. String
+// vazia sem parceiro na tabela de participação do PD.
 function mapLabelPartnerBadgesHTML(operadorRaw, key) {
   const items = companyBadgesForLabel(operadorRaw, key)
     .filter((b) => b.role === 'parceiro')
