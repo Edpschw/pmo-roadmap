@@ -972,10 +972,19 @@ function rigIconSvg(color, size) {
       <circle cx="10" cy="2" r="1.3" fill="${color}"/>
     </svg>`;
 }
+// Acompanha o zoom (ver --map-label-scale, mesmo cálculo do nome do
+// projeto em updateMapLabelScale — a sonda só aparece no mesmo intervalo
+// de zoom que o rótulo, zoom < wellsMinZoom, então reaproveita a mesma
+// variável, sem cálculo próprio) — sem isso, com dezenas de sondas visíveis
+// no zoom bem afastado (visão geral do Brasil) todas no tamanho fixo de
+// perto, a tela vira uma nuvem de ícones de 20px em cima uns dos outros.
+// O wrap interno (não a classe do próprio divIcon, que o Leaflet já usa
+// pra posicionar via transform inline) é quem recebe o scale — mesmo
+// motivo de .map-project-label-wrap não estar na classe do ícone.
 function rigDivIcon(color) {
   return L.divIcon({
     className: 'map-rig-icon',
-    html: rigIconSvg(color, 20),
+    html: `<div class="map-rig-icon-wrap">${rigIconSvg(color, 20)}</div>`,
     iconSize: [20, 20],
     iconAnchor: [10, 18],
   });
