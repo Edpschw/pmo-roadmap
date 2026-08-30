@@ -577,10 +577,11 @@ body.map-page .btn-ghost:hover { background: #1e222a; }
   text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.8);
   letter-spacing: 0.01em;
 }
-/* Selos de operador/parceiro embaixo do nome, direto sobre o polígono
-   (ver mapLabelBadgesHTML em mapa.js) — mesmos selos do popup, com uma
-   sombra no lugar do fundo branco do chip de logo (não dá pra pintar um
-   retângulo sólido atrás de cada um sem poluir o mapa). */
+/* Selo do operador ACIMA do nome, selos dos parceiros ABAIXO — direto
+   sobre o polígono (ver mapLabelOperatorBadgeHTML/mapLabelPartnerBadgesHTML
+   em mapa.js) — mesmos selos do popup, com uma sombra no lugar do fundo
+   branco do chip de logo (não dá pra pintar um retângulo sólido atrás de
+   cada um sem poluir o mapa). */
 .map-label-badges { display: flex; align-items: center; gap: 1.5px; justify-content: center; }
 .map-label-badges .company-badge { box-shadow: 0 1px 3px rgba(0,0,0,0.85); }
 .map-label-badges .company-logo-chip { box-shadow: 0 1px 3px rgba(0,0,0,0.85); }

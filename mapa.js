@@ -192,7 +192,8 @@ const MAP_LABEL_SCALE_ZOOM_REF = 7;
 const MAP_LABEL_SCALE_ZOOM_RANGE = [3, 14];
 const MAP_LABEL_SCALE_RANGE = [0.6, 1.9];
 
-// Selo de operador/parceiro (ver mapLabelBadgesHTML) some abaixo deste
+// Selo de operador/parceiro (ver mapLabelOperatorBadgeHTML/
+// mapLabelPartnerBadgesHTML) some abaixo deste
 // zoom — na visão geral (todos os 30 contratos na tela, zoom inicial ~7
 // pra baixo), dezenas de selos ao mesmo tempo só poluem; o nome sozinho
 // (que continua, só menor, ver MAP_LABEL_SCALE_*) já basta pra orientar
@@ -395,8 +396,9 @@ function finalizeMapLabels() {
       icon: L.divIcon({
         className: 'map-project-label-icon',
         html: `<div class="map-project-label-wrap">
+          ${mapLabelOperatorBadgeHTML(rep.operatorRaw, rep.badgeKey)}
           <span class="map-project-label">${escapeHtml(rep.name)}</span>
-          ${mapLabelBadgesHTML(rep.operatorRaw, rep.badgeKey)}
+          ${mapLabelPartnerBadgesHTML(rep.operatorRaw, rep.badgeKey)}
         </div>`,
         iconSize: null,
       }),
@@ -534,37 +536,56 @@ function contextFieldMapLabel(props) {
   return titleCasePt(props.nome);
 }
 
-// HTML de cada selo (operador + parceiros do PD, ver companyBadgesFor em
-// shared.js), sem o <div> em volta — a mesma lista de <span> alimenta
-// tanto o popup (companyBadgesHTML, key = nome usado em pdSectionHTML)
-// quanto o rótulo sobre o polígono (mapLabelBadgesHTML). key é o nome
-// usado pra procurar o PD (pdData). String vazia sem operador nem
-// parceiros (ex.: PD ainda não carregou).
-function companyBadgeItemsHTML(operadorRaw, key) {
+// Lista de selos (operador + parceiros do PD, ver companyBadgesFor em
+// shared.js) de um projeto/campo — key é o nome usado pra procurar o PD
+// (pdData). Array vazio sem operador nem parceiros (ex.: PD ainda não
+// carregou).
+function companyBadgesForLabel(operadorRaw, key) {
   const pd = byNameOrUpper(pdData, key);
-  const badges = companyBadgesFor(operadorRaw, pd ? pd.participacao : null);
-  return badges.map((b) => {
-    const isOp = b.role === 'operador';
-    const title = `${b.name}${isOp ? ' (operador)' : b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
-    if (b.logo) {
-      return `<span class="company-logo-chip ${isOp ? 'company-logo-chip-operador' : 'company-logo-chip-parceiro'}" title="${escapeHtml(title)}"><img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name)}"/></span>`;
-    }
-    return `<span class="company-badge ${isOp ? 'company-badge-operador' : 'company-badge-parceiro'}" style="background:${b.color}" title="${escapeHtml(title)}">${escapeHtml(b.initials)}</span>`;
-  }).join('');
+  return companyBadgesFor(operadorRaw, pd ? pd.participacao : null);
+}
+
+// HTML de um selo só — usado tanto pelo popup (todos os selos numa lista
+// só) quanto pelo rótulo fixo sobre o polígono (operador e parceiros em
+// linhas separadas, ver mapLabelOperatorBadgeHTML/mapLabelPartnerBadgesHTML).
+function companyBadgeHTML(b) {
+  const isOp = b.role === 'operador';
+  const title = `${b.name}${isOp ? ' (operador)' : b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
+  if (b.logo) {
+    return `<span class="company-logo-chip ${isOp ? 'company-logo-chip-operador' : 'company-logo-chip-parceiro'}" title="${escapeHtml(title)}"><img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name)}"/></span>`;
+  }
+  return `<span class="company-badge ${isOp ? 'company-badge-operador' : 'company-badge-parceiro'}" style="background:${b.color}" title="${escapeHtml(title)}">${escapeHtml(b.initials)}</span>`;
 }
 
 function companyBadgesHTML(operadorRaw, key) {
-  const items = companyBadgeItemsHTML(operadorRaw, key);
+  const items = companyBadgesForLabel(operadorRaw, key).map(companyBadgeHTML).join('');
   if (!items) return '';
   return `<div class="map-popup-badges">${items}</div>`;
 }
 
-// Mesmos selos, agora pro rótulo fixo sobre o polígono (não só no popup) —
-// ver mapLabelEntries/finalizeMapLabels mais abaixo.
-function mapLabelBadgesHTML(operadorRaw, key) {
-  const items = companyBadgeItemsHTML(operadorRaw, key);
+// Selo do OPERADOR pro rótulo fixo sobre o polígono — vai ACIMA do nome
+// (ver finalizeMapLabels), maior/mais em destaque que os parceiros, que
+// ficam abaixo dele (ver mapLabelPartnerBadgesHTML). String vazia sem
+// operador identificado, pro wrap não sobrar com um <div> vazio.
+function mapLabelOperatorBadgeHTML(operadorRaw, key) {
+  const items = companyBadgesForLabel(operadorRaw, key)
+    .filter((b) => b.role === 'operador')
+    .map(companyBadgeHTML)
+    .join('');
   if (!items) return '';
-  return `<div class="map-label-badges">${items}</div>`;
+  return `<div class="map-label-badges map-label-badges-operador">${items}</div>`;
+}
+
+// Selos dos PARCEIROS pro rótulo fixo — ficam ABAIXO do nome, menores que
+// o selo do operador acima dele (ver .map-label-badges-parceiros em
+// style.css). String vazia sem parceiro na tabela de participação do PD.
+function mapLabelPartnerBadgesHTML(operadorRaw, key) {
+  const items = companyBadgesForLabel(operadorRaw, key)
+    .filter((b) => b.role === 'parceiro')
+    .map(companyBadgeHTML)
+    .join('');
+  if (!items) return '';
+  return `<div class="map-label-badges map-label-badges-parceiros">${items}</div>`;
 }
 
 function popupHTML(project, props) {
