@@ -649,7 +649,7 @@ function buildProjectPanel(project, ctx) {
   }
 
   const fpsoMarkers = fpsoMilestonesOf(project);
-  const prodCard = chartCard('Produção mensal', 'Um ponto por mês do boletim da ANP — só a fração pré-sal deste campo. Sobre a própria linha: ícone de FPSO marca quando cada unidade entrou, ícone pequeno marca a conclusão de cada poço perfurado (cor neutra, forma = categoria — mesma legenda do mapa acima). Role o mouse pra zoom, arraste pra mover a janela, "Ver tudo" reseta.');
+  const prodCard = chartCard('Produção mensal', 'Um ponto por mês do boletim da ANP — só a fração pré-sal deste campo. Acompanhando a linha: ícone de FPSO acima marca quando cada unidade entrou; ícone de poço (bem pequeno, mesma forma por categoria do mapa acima) abaixo marca a conclusão de cada poço perfurado. Role o mouse pra zoom, arraste pra mover a janela, "Ver tudo" reseta.');
   const prodControls = document.createElement('div');
   prodControls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
   const prodReset = document.createElement('button');

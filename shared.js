@@ -933,13 +933,13 @@ function createLineChart(container, monthlySeries, markers) {
   }));
   const fpsoMarkers = (markers && markers.fpsos) || [];
   const wellMarkers = (markers && markers.wells) || [];
-  // Cor do ícone de FPSO: a mesma da própria série (cor do projeto, no
-  // caso de uso real — gráfico de um campo só, ver campo.js) — poucos
-  // FPSOs por projeto (1 a 6), risco baixo de confundir com a linha de
-  // dados. Ícone de poço usa WELL_LEGEND_COLOR (neutro) em vez disso: com
-  // dezenas/centenas de poços, a mesma cor da linha ficaria repetitiva
-  // demais, e o que importa ali é a FORMA (categoria), não destacar cor.
-  const fpsoMarkerColor = order.length ? meta.get(order[0]).color : '#e8eaed';
+  // Cor dos dois: a mesma da própria série (cor do projeto, no caso de uso
+  // real — gráfico de um campo só, ver campo.js), mesmos ícones/cor do
+  // mapa principal (WELL_SHAPES/wellDivIcon coloridos pelo projeto, ver
+  // mapa.js) — FPSO ACIMA da linha, poço ABAIXO (ver fpsoSvg/wellSvg
+  // abaixo), então não colidem com o próprio traço mesmo usando a mesma
+  // cor dele.
+  const markerColor = order.length ? meta.get(order[0]).color : '#e8eaed';
 
   let unitKey = 'oleo';
   let viewStart = 0;
@@ -1053,12 +1053,13 @@ function createLineChart(container, monthlySeries, markers) {
     const crosshairSvg = `<line id="lc-crosshair" x1="0" y1="${LINE_MARGIN.top}" x2="0" y2="${LINE_MARGIN.top + plotH}" stroke="var(--text-faint)" stroke-width="1" hidden />`;
 
     // Valor da série na posição fracionária idxFrac (interpola entre os
-    // dois meses vizinhos) — só pra plotar os marcadores de FPSO/poço EM
-    // CIMA da própria linha (ver fpsoSvg/wellSvg abaixo), não numa faixa à
-    // parte. Só faz sentido com uma série só (o uso real é o gráfico de um
-    // projeto em campo.js, nunca o de vários campos de producao.js) — com
-    // mais de uma linha pega a primeira (rows[0]); markers não são usados
-    // nesse outro caso mesmo.
+    // dois meses vizinhos) — pra ancorar os marcadores de FPSO/poço na
+    // altura da própria linha ali (ver fpsoSvg/wellSvg abaixo: poço um
+    // tanto ABAIXO desse valor, FPSO um tanto ACIMA, não em cima do
+    // traço). Só faz sentido com uma série só (o uso real é o gráfico de
+    // um projeto em campo.js, nunca o de vários campos de producao.js) —
+    // com mais de uma linha pega a primeira (rows[0]); markers não são
+    // usados nesse outro caso mesmo.
     function valueAt(idxFrac) {
       const i0 = Math.max(0, Math.min(n - 1, Math.floor(idxFrac)));
       const i1 = Math.min(n - 1, i0 + 1);
@@ -1070,16 +1071,17 @@ function createLineChart(container, monthlySeries, markers) {
       return r0[unit.key] + (r1[unit.key] - r0[unit.key]) * (idxFrac - i0);
     }
 
-    // Marcadores de FPSO e poço, plotados na posição exata da linha (x =
-    // data, y = valor interpolado ali) — só o que cai dentro da janela
-    // visível atual (loIdx/hiIdx, respeitando zoom/pan) e onde a série
-    // realmente tem dado (valueAt null = mês sem produção registrada, sem
-    // onde pousar o ícone). Poço desenhado ANTES do FPSO (fica por baixo):
-    // são muitos e bem pequenos, o FPSO (poucos, maior) precisa continuar
-    // visível por cima se caírem perto um do outro. <title> nativo no
-    // lugar do tooltip rico (crosshair já cobre esse papel pros dados da
-    // linha): elementos estáticos por redraw, sem handler próprio de
-    // hover, mais simples que replicar ensureTooltip aqui.
+    // Marcadores de FPSO (acima da linha) e poço (abaixo), ancorados no x
+    // = data e y = valor interpolado da série ali (ver valueAt) mais um
+    // deslocamento vertical fixo pra não tampar o próprio traço — só o
+    // que cai dentro da janela visível atual (loIdx/hiIdx, respeitando
+    // zoom/pan) e onde a série realmente tem dado (valueAt null = mês sem
+    // produção registrada, sem onde ancorar o ícone). Mesmos ícones de
+    // poço do mapa completo (WELL_SHAPES, coloridos pelo projeto — ver
+    // wellDivIcon em mapa.js). <title> nativo no lugar do tooltip rico
+    // (crosshair já cobre esse papel pros dados da linha): elementos
+    // estáticos por redraw, sem handler próprio de hover, mais simples
+    // que replicar ensureTooltip aqui.
     let wellSvg = '';
     for (const w of wellMarkers) {
       if (!w.d) continue;
@@ -1088,10 +1090,10 @@ function createLineChart(container, monthlySeries, markers) {
       const val = valueAt(idx);
       if (val == null) continue;
       const x = xAt(idx);
-      const y = yAt(val);
-      const size = 6;
+      const size = 7;
+      const y = yAt(val) + size;
       const shape = WELL_SHAPES[wellCategory(w)] || WELL_SHAPES.indefinido;
-      wellSvg += `<svg x="${x - size / 2}" y="${y - size / 2}" width="${size}" height="${size}" viewBox="0 0 16 16"><title>${escapeHtml(w.n)} — ${formatBR(w.d)}</title>${shape(WELL_LEGEND_COLOR)}</svg>`;
+      wellSvg += `<svg x="${x - size / 2}" y="${y - size / 2}" width="${size}" height="${size}" viewBox="0 0 16 16"><title>${escapeHtml(w.n)} — ${formatBR(w.d)}</title>${shape(markerColor)}</svg>`;
     }
     let fpsoSvg = '';
     for (const fp of fpsoMarkers) {
@@ -1100,9 +1102,9 @@ function createLineChart(container, monthlySeries, markers) {
       const val = valueAt(idx);
       if (val == null) continue;
       const x = xAt(idx);
-      const y = yAt(val);
       const size = 13;
-      fpsoSvg += `<svg x="${x - size / 2}" y="${y - size / 2}" width="${size}" height="${size}" viewBox="0 0 16 16" style="overflow:visible"><title>${escapeHtml(fp.name)} — ${formatBR(fp.date)}</title>${fpsoIconSVG(fpsoMarkerColor)}</svg>`;
+      const y = yAt(val) - size;
+      fpsoSvg += `<svg x="${x - size / 2}" y="${y - size / 2}" width="${size}" height="${size}" viewBox="0 0 16 16" style="overflow:visible"><title>${escapeHtml(fp.name)} — ${formatBR(fp.date)}</title>${fpsoIconSVG(markerColor)}</svg>`;
     }
 
     svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${wellSvg}${fpsoSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
