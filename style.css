@@ -823,27 +823,53 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 
 /* ---------- Visão em campo (campo.html) — uma sub-aba por projeto,
    contorno+poços num mini-mapa e os gráficos de produção/RGO do projeto.
-   Layout de duas colunas (nav fixa à esquerda, conteúdo rolável à
-   direita) — diferente de pocos.html (nav horizontal + scroll-to-anchor
-   numa lista corrida): aqui só um projeto fica montado/visível por vez
-   (troca de aba de verdade, ver campo.js), então a nav é uma lista
-   vertical com o item ativo destacado, como um menu de app. ---------- */
-.campo-wrapper { flex: 1 1 auto; display: flex; overflow: hidden; }
-.campo-nav {
-  flex: 0 0 270px; overflow-y: auto; background: var(--panel); border-right: 1px solid var(--border);
-  padding: 14px 12px 24px; display: flex; flex-direction: column; gap: 8px;
+   Um seletor compacto (botão + painel flutuante, ver .campo-selector
+   abaixo) troca a jazida em vez de uma nav fixa de coluna inteira — só
+   ocupa uma linha até o usuário clicar, deixando a área de conteúdo
+   inteira pro dashboard (mapa grande + roadmap/produção ao redor dele,
+   ver .campo-dashboard-grid). ---------- */
+.campo-content { flex: 1 1 auto; overflow-y: auto; padding: 20px 24px 44px; }
+
+/* Seletor de jazida — botão compacto (nome + status + seta) que abre um
+   painel flutuante com busca + lista agrupada por status, igual ao
+   conteúdo da antiga nav de coluna inteira, só que escondido por padrão
+   (position:absolute, sai do fluxo) em vez de reservar 270px fixos o
+   tempo todo. */
+.campo-selector { position: relative; max-width: 1440px; margin: 0 auto 16px; }
+.campo-selector-btn {
+  display: inline-flex; align-items: center; gap: 8px; max-width: 100%;
+  background: var(--panel); border: 1px solid var(--border-strong); border-radius: 8px;
+  padding: 9px 12px; font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--text);
+  cursor: pointer;
 }
+.campo-selector-btn:hover { background: var(--surface); }
+.campo-selector-dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 9px; }
+.campo-selector-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 320px; }
+.campo-selector-badge {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  padding: 2px 7px; border-radius: 9px; background: var(--surface); color: var(--text-muted);
+  border: 1px solid var(--border); flex: 0 0 auto;
+}
+.campo-selector-chevron { color: var(--text-faint); font-size: 10px; transition: transform .15s; flex: 0 0 auto; }
+.campo-selector.open .campo-selector-chevron { transform: rotate(180deg); }
+.campo-selector-panel {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 60;
+  width: min(380px, 90vw); max-height: 66vh; overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--border-strong); border-radius: 10px;
+  box-shadow: var(--shadow); padding: 10px;
+}
+.campo-selector-panel[hidden] { display: none; }
 .campo-search {
   border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 12px; font-size: 13px;
   font-family: inherit; color: var(--text); background: var(--bg); width: 100%;
 }
 .campo-search:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-.campo-nav-filter-result { font-size: 11px; color: var(--text-faint); }
+.campo-nav-filter-result { font-size: 11px; color: var(--text-faint); margin: 4px 0 0 2px; display: block; }
 .campo-nav-group-label {
   font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
-  color: var(--text-faint); margin: 8px 0 2px; padding: 0 9px;
+  color: var(--text-faint); margin: 10px 0 2px; padding: 0 9px;
 }
-.campo-nav-group-label:first-of-type { margin-top: 2px; }
+.campo-nav-group-label:first-of-type { margin-top: 8px; }
 .campo-nav-list { display: flex; flex-direction: column; gap: 2px; }
 .campo-nav-item {
   display: flex; align-items: center; gap: 8px; padding: 7px 9px; border-radius: 6px; border: none;
@@ -855,11 +881,9 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .campo-nav-item[hidden] { display: none; }
 .campo-nav-dot { width: 8px; height: 8px; border-radius: 2px; flex: 0 0 8px; }
 .campo-nav-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.campo-content { flex: 1 1 auto; overflow-y: auto; padding: 20px 24px 44px; }
 .campo-panel[hidden] { display: none; }
 .campo-panel-header {
-  max-width: 1180px; margin: 0 auto 16px; display: flex; align-items: center;
+  max-width: 1440px; margin: 0 auto 16px; display: flex; align-items: center;
   justify-content: space-between; flex-wrap: wrap; gap: 8px;
 }
 .campo-panel-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; margin: 0; }
@@ -868,11 +892,25 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   padding: 3px 8px; border-radius: 10px; background: var(--surface); color: var(--text-muted);
   border: 1px solid var(--border);
 }
-.campo-section { max-width: 1180px; margin: 0 auto 16px; }
+.campo-section { max-width: 1440px; margin: 0 auto 16px; }
+/* Dashboard do painel: mapa GRANDE de um lado, roadmap/produção do outro
+   (ver buildProjectPanel em campo.js) — pilha em 1 coluna por padrão
+   (celular e telas estreitas), vira 2 colunas (mapa maior + coluna de
+   gráficos) só a partir de MIN_DASHBOARD_W (ver media query mais abaixo).
+   Isso troca o antigo empilhamento vertical único (roadmap, mapa,
+   produção, RGO, combinado, um embaixo do outro) por mapa+produção lado
+   a lado — o roadmap continua em cima, largura cheia (é uma linha do
+   tempo, precisa de largura, não cabe bem numa coluna estreita). */
+.campo-dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start; }
+.campo-dashboard-charts-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .campo-mapa { height: 340px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: var(--bg); }
 .campo-empty-note {
   font-size: 12px; color: var(--text-faint); padding: 22px; text-align: center;
   border: 1px dashed var(--border-strong); border-radius: var(--radius);
+}
+@media (min-width: 1000px) {
+  .campo-dashboard-grid { grid-template-columns: 1.4fr 1fr; }
+  .campo-mapa { height: 580px; }
 }
 .campo-mapa .leaflet-tooltip {
   background: var(--panel); color: var(--text); border: 1px solid var(--border-strong);
@@ -918,7 +956,7 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
    esticariam até a borda da área de conteúdo, bem mais larga que 1180px em
    telas grandes, ficando desproporcionais aos gráficos de linha (que têm
    largura própria fixa, ver LINE_W em shared.js). */
-.campo-panel-inner { max-width: 1180px; margin: 0 auto; }
+.campo-panel-inner { max-width: 1440px; margin: 0 auto; }
 
 /* Mini-roadmap: recorte do roadmap principal pra um projeto só, ver
    buildRoadmapSection em campo.js — reaproveita as classes .row/
@@ -1014,24 +1052,12 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   .line-chart-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .lc-svg { width: 760px; max-width: none; }
 
-  /* ---------- Campo (campo.html): nav lateral fixa vira uma faixa de
-     pills no topo, rolando a página inteira pra baixo até o conteúdo —
-     mesmo padrão de "muita coisa pra escolher" já usado em pocos.html
-     (.pocos-nav-pill), em vez da coluna fixa de 270px do desktop, que no
-     celular sobrava mal 100px pra tudo o resto (mapa, roadmap, gráficos
-     — tudo espremido e ilegível). ---------- */
-  .campo-wrapper { flex-direction: column; overflow: hidden; }
-  .campo-nav {
-    flex: 0 0 auto; width: 100%; max-height: 46vh; overflow-y: auto;
-    border-right: none; border-bottom: 1px solid var(--border); padding: 10px 12px;
-  }
-  .campo-nav-list { flex-direction: row; flex-wrap: wrap; gap: 6px; }
-  .campo-nav-item {
-    width: auto; flex: 0 0 auto; padding: 5px 10px 5px 8px;
-    border-radius: 12px; border: 1px solid var(--border-strong); background: var(--panel);
-  }
-  .campo-nav-group-label { width: 100%; margin: 6px 0 0; }
-  .campo-nav-group-label:first-of-type { margin-top: 0; }
+  /* ---------- Campo (campo.html): o seletor compacto (ver
+     .campo-selector, já colapsado por padrão em toda largura de tela)
+     não precisa de ajuste específico pra celular — só o painel flutuante
+     de busca já usa min(380px, 90vw), e o dashboard (mapa+produção) já
+     empilha em 1 coluna abaixo de 1000px (ver media query própria),
+     cobrindo celular também. ---------- */
   .campo-content { padding: 14px 12px 32px; }
   .campo-panel-title { font-size: 15px; gap: 8px; }
   .campo-mapa { height: 220px; }

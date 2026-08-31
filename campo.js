@@ -1,13 +1,20 @@
 'use strict';
 
 /* =========================================================================
-   PMO Roadmap — Campo. Uma sub-aba por projeto rastreado (os mesmos 30 de
-   state.projects): contorno do campo + poços num mini-mapa, e os gráficos
-   de produção/RGO mensal do próprio projeto (ANP). Cada painel é montado
-   uma vez, na primeira vez que o projeto é aberto (mapa Leaflet + gráfico
+   PMO Roadmap — Campo. Um painel por jazida rastreada (os mesmos 30
+   contratos de state.projects, mas exibidos pelo nome popular da jazida
+   quando ela difere do nome do contrato — Bacalhau, Sapinhoá, ver
+   projectDisplayName em shared.js — e com a poligonal de QUALQUER outro
+   contrato/campo que compartilhe a mesma jazida desenhada junto no mapa,
+   ver jazidaFeaturesByProject): contorno + poços num mini-mapa GRANDE,
+   central, com o roadmap acima (largura cheia) e os gráficos de
+   produção/RGO mensal ao lado (ver .campo-dashboard-grid no CSS). Troca
+   de jazida por um seletor compacto (botão + painel flutuante, ver
+   buildProjectSelector) em vez de uma coluna de nav inteira sempre
+   visível — deixa a tela toda pro dashboard. Cada painel é montado uma
+   vez, na primeira vez que a jazida é aberta (mapa Leaflet + gráfico
    custam caro pra montar 30 vezes de cara), e fica em cache pra reabrir
-   instantâneo depois — troca de aba de verdade (hidden), não
-   scroll-to-anchor como pocos.html.
+   instantâneo depois.
    Cálculo da série mensal (UNITS, computeRGO, computeFieldRows,
    computeMonthlySeries) e o gráfico de linhas interativo (createLineChart)
    vêm de shared.js — compartilhados com producao.js (visão por campo,
@@ -592,10 +599,17 @@ function buildProjectPanel(project, ctx) {
   inner.className = 'campo-panel-inner';
   panel.appendChild(inner);
 
+  // Nome popular da jazida (ver PROJECT_DISPLAY_NAME_OVERRIDE em
+  // shared.js — "Bacalhau" em vez de "Norte de Carcará", "Sapinhoá" em
+  // vez de "Entorno de Sapinhoá") em toda exibição pro usuário; a busca
+  // no boletim da ANP (extractProjectSeries) continua usando esse mesmo
+  // nome de exibição — é a chave que computeFieldRows usa lá.
+  const displayName = projectDisplayName(project.name);
+
   const header = document.createElement('div');
   header.className = 'campo-panel-header';
   header.innerHTML = `
-    <h2 class="campo-panel-title"><span class="proj-dot" style="background:${project.color}"></span>${escapeHtml(project.name)}</h2>
+    <h2 class="campo-panel-title"><span class="proj-dot" style="background:${project.color}"></span>${escapeHtml(displayName)}</h2>
     <span class="campo-panel-badge">${GROUP_BADGES[project.group] || ''}</span>
   `;
   inner.appendChild(header);
@@ -604,8 +618,22 @@ function buildProjectPanel(project, ctx) {
   roadmapCard.appendChild(buildRoadmapSection(project));
   inner.appendChild(roadmapCard);
 
+  // Dashboard: mapa grande de um lado, roadmap já foi (acima, largura
+  // cheia) e produção/RGO do outro lado — ver .campo-dashboard-grid no
+  // CSS. mapCol/chartsCol viram 2 colunas lado a lado a partir de
+  // MIN_DASHBOARD_W; empilham (mapa em cima) em telas mais estreitas.
+  const dashboardGrid = document.createElement('div');
+  dashboardGrid.className = 'campo-dashboard-grid';
+  inner.appendChild(dashboardGrid);
+  const mapCol = document.createElement('div');
+  mapCol.className = 'campo-dashboard-map-col';
+  dashboardGrid.appendChild(mapCol);
+  const chartsCol = document.createElement('div');
+  chartsCol.className = 'campo-dashboard-charts-col';
+  dashboardGrid.appendChild(chartsCol);
+
   const mapCard = chartCard('Contorno e poços', 'Poligonal do contrato/campo (quando disponível na ANP) e os poços perfurados dentro dela — cor do ponto por categoria (produção, injeção, seco...), mesmo critério de mapa.html. Escala igual em todos os projetos, calculada pelo maior campo — dá pra comparar tamanho de campo a olho entre um painel e outro.');
-  inner.appendChild(mapCard);
+  mapCol.appendChild(mapCard);
 
   const jazidaFeatures = ctx.jazidaFeaturesByProject[project.name];
   const wells = contractOwnWells(ctx.pocosData, project.name);
@@ -631,19 +659,18 @@ function buildProjectPanel(project, ctx) {
     const note = document.createElement('div');
     note.className = 'campo-empty-note';
     note.textContent = 'Sem dados de produção próprios no Boletim da Produção da ANP — campo ainda em exploração, ou produção não individualizada por campo neste contrato.';
-    inner.appendChild(note);
+    chartsCol.appendChild(note);
     panel.dataset.ready = '1';
     return panel;
   }
 
-  const displayName = projectDisplayName(project.name);
   const series = extractProjectSeries(ctx.monthlySeries, displayName);
   const hasAnyData = series.some((m) => m.rows.length);
   if (!hasAnyData) {
     const note = document.createElement('div');
     note.className = 'campo-empty-note';
     note.textContent = 'Campo listado no boletim, mas sem produção registrada em nenhum mês do período coberto.';
-    inner.appendChild(note);
+    chartsCol.appendChild(note);
     panel.dataset.ready = '1';
     return panel;
   }
@@ -662,7 +689,7 @@ function buildProjectPanel(project, ctx) {
   const prodUnitSwitch = buildUnitSwitch((unitKey) => prodChart.setUnit(unitKey), ['oleo', 'gas', 'boe']);
   prodControls.insertBefore(prodUnitSwitch, prodReset);
   prodReset.addEventListener('click', () => prodChart.resetZoom());
-  inner.appendChild(prodCard);
+  chartsCol.appendChild(prodCard);
 
   const rgoCard = chartCard('RGO mensal (Razão Gás-Óleo)', 'm³ de gás por m³ de óleo produzido no mês — calculado aqui a partir do óleo e gás do próprio boletim, não vem pronto da ANP.');
   const rgoControls = document.createElement('div');
@@ -676,24 +703,30 @@ function buildProjectPanel(project, ctx) {
   const rgoChart = createLineChart(rgoCard, series);
   rgoChart.setUnit('rgo');
   rgoReset.addEventListener('click', () => rgoChart.resetZoom());
-  inner.appendChild(rgoCard);
+  chartsCol.appendChild(rgoCard);
 
   const comboCard = chartCard('Produção e RGO juntos', 'As duas curvas na mesma área, cada uma no seu eixo (produção à esquerda, RGO à direita) — pra comparar a forma ao longo do tempo. Sem zoom/arraste, mesmo período completo do boletim.');
   buildComboChart(comboCard, series, project.color);
-  inner.appendChild(comboCard);
+  chartsCol.appendChild(comboCard);
 
   panel.dataset.ready = '1';
   return panel;
 }
 
-/* ---------------------------------- Nav ------------------------------------ */
+/* ------------------------------- Seletor ------------------------------------ */
+// Botão compacto + painel flutuante (ver .campo-selector no CSS) em vez de
+// uma coluna de nav inteira sempre visível — só ocupa uma linha até o
+// usuário clicar, deixando a tela inteira pro dashboard (mapa grande +
+// roadmap/produção ao redor, ver buildProjectPanel). Nome de exibição
+// sempre o popular da jazida (projectDisplayName, shared.js — "Bacalhau"
+// em vez de "Norte de Carcará" etc.), não o nome do contrato.
 
 function buildNavItem(project) {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'campo-nav-item';
   btn.dataset.projectId = project.id;
-  btn.innerHTML = `<span class="campo-nav-dot" style="background:${project.color}"></span><span class="campo-nav-item-name">${escapeHtml(project.name)}</span>`;
+  btn.innerHTML = `<span class="campo-nav-dot" style="background:${project.color}"></span><span class="campo-nav-item-name">${escapeHtml(projectDisplayName(project.name))}</span>`;
   return btn;
 }
 
@@ -713,13 +746,106 @@ function applyNavFilter(query) {
     label.hidden = !anyVisible;
   }
   const resultEl = document.getElementById('campoFilterResult');
-  if (resultEl) resultEl.textContent = q ? `${visible} de ${total} projetos correspondem a "${query.trim()}"` : '';
+  if (resultEl) resultEl.textContent = q ? `${visible} de ${total} jazidas correspondem a "${query.trim()}"` : '';
+}
+
+// byGroup: { producao: [...], exploracao: [...], devolvidos: [...] }
+// (mesmo agrupamento por status de sempre, já ordenado). Devolve o
+// wrapper pronto pra inserir no DOM, um mapa id->botão da lista (pra
+// activate() ligar o clique) e um setActive(project) que atualiza o
+// texto/cor/badge do botão e destaca o item corrente na lista — a busca
+// (applyNavFilter) e o abrir/fechar do painel ficam todos aqui dentro,
+// então quem chama só precisa reagir ao clique de cada item.
+function buildProjectSelector(byGroup) {
+  const wrap = document.createElement('div');
+  wrap.className = 'campo-selector';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'campo-selector-btn';
+  btn.innerHTML = `
+    <span class="campo-selector-dot"></span>
+    <span class="campo-selector-name"></span>
+    <span class="campo-selector-badge"></span>
+    <span class="campo-selector-chevron">▾</span>
+  `;
+  wrap.appendChild(btn);
+
+  const panel = document.createElement('div');
+  panel.className = 'campo-selector-panel';
+  panel.hidden = true;
+  const searchInput = document.createElement('input');
+  searchInput.type = 'text';
+  searchInput.className = 'campo-search';
+  searchInput.id = 'campoSearch';
+  searchInput.placeholder = 'Filtrar jazida...';
+  panel.appendChild(searchInput);
+  const filterResult = document.createElement('span');
+  filterResult.className = 'campo-nav-filter-result';
+  filterResult.id = 'campoFilterResult';
+  panel.appendChild(filterResult);
+
+  const navItemByProjectId = {};
+  let firstProjectId = null;
+  for (const g of GROUP_ORDER) {
+    if (!byGroup[g].length) continue;
+    const label = document.createElement('div');
+    label.className = 'campo-nav-group-label';
+    label.textContent = GROUP_BADGES[g];
+    panel.appendChild(label);
+    const list = document.createElement('div');
+    list.className = 'campo-nav-list';
+    for (const p of byGroup[g]) {
+      const item = buildNavItem(p);
+      navItemByProjectId[p.id] = item;
+      list.appendChild(item);
+      if (!firstProjectId) firstProjectId = p.id;
+    }
+    panel.appendChild(list);
+  }
+  wrap.appendChild(panel);
+
+  function open() {
+    panel.hidden = false;
+    wrap.classList.add('open');
+    searchInput.value = '';
+    applyNavFilter('');
+    searchInput.focus();
+  }
+  function close() {
+    panel.hidden = true;
+    wrap.classList.remove('open');
+  }
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (panel.hidden) open(); else close();
+  });
+  // Fecha ao clicar fora (documento inteiro) ou ao apertar Esc — mesmo
+  // padrão de qualquer combobox/dropdown; clique DENTRO do painel (busca,
+  // item da lista) não deve fechar sozinho por bolhar até o documento.
+  document.addEventListener('click', (e) => {
+    if (!panel.hidden && !wrap.contains(e.target)) close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !panel.hidden) close();
+  });
+  searchInput.addEventListener('input', (e) => applyNavFilter(e.target.value));
+
+  function setActive(project) {
+    btn.querySelector('.campo-selector-dot').style.background = project.color;
+    btn.querySelector('.campo-selector-name').textContent = projectDisplayName(project.name);
+    btn.querySelector('.campo-selector-badge').textContent = GROUP_BADGES[project.group] || '';
+    for (const [id, item] of Object.entries(navItemByProjectId)) {
+      item.classList.toggle('active', id === project.id);
+    }
+  }
+
+  return { wrap, navItemByProjectId, setActive, close, firstProjectId };
 }
 
 /* ---------------------------------- Init ------------------------------------ */
 
 async function init() {
-  const nav = document.getElementById('campoNav');
   const content = document.getElementById('campoContent');
 
   let geojson = null;
@@ -839,30 +965,20 @@ async function init() {
   }
   for (const g of GROUP_ORDER) byGroup[g].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
-  const searchRow = document.createElement('input');
-  searchRow.type = 'text';
-  searchRow.className = 'campo-search';
-  searchRow.id = 'campoSearch';
-  searchRow.placeholder = 'Filtrar projeto...';
-  nav.appendChild(searchRow);
-  const filterResult = document.createElement('span');
-  filterResult.className = 'campo-nav-filter-result';
-  filterResult.id = 'campoFilterResult';
-  nav.appendChild(filterResult);
+  const selector = buildProjectSelector(byGroup);
+  content.appendChild(selector.wrap);
 
   const panelByProjectId = {};
-  const navItemByProjectId = {};
   let activeProjectId = null;
 
   function activate(projectId) {
     if (activeProjectId === projectId) return;
     if (activeProjectId && panelByProjectId[activeProjectId]) panelByProjectId[activeProjectId].hidden = true;
-    if (activeProjectId && navItemByProjectId[activeProjectId]) navItemByProjectId[activeProjectId].classList.remove('active');
     activeProjectId = projectId;
-    navItemByProjectId[projectId].classList.add('active');
+    const project = state.projects.find((p) => p.id === projectId);
+    selector.setActive(project);
     let panel = panelByProjectId[projectId];
     if (!panel) {
-      const project = state.projects.find((p) => p.id === projectId);
       panel = buildProjectPanel(project, ctx);
       panelByProjectId[projectId] = panel;
       content.appendChild(panel);
@@ -871,28 +987,11 @@ async function init() {
     if (panel._miniMap) panel._miniMap.invalidateSize();
   }
 
-  let firstProjectId = null;
-  for (const g of GROUP_ORDER) {
-    if (!byGroup[g].length) continue;
-    const label = document.createElement('div');
-    label.className = 'campo-nav-group-label';
-    label.textContent = GROUP_BADGES[g];
-    nav.appendChild(label);
-    const list = document.createElement('div');
-    list.className = 'campo-nav-list';
-    for (const p of byGroup[g]) {
-      const item = buildNavItem(p);
-      item.addEventListener('click', () => activate(p.id));
-      navItemByProjectId[p.id] = item;
-      list.appendChild(item);
-      if (!firstProjectId) firstProjectId = p.id;
-    }
-    nav.appendChild(list);
+  for (const [projectId, item] of Object.entries(selector.navItemByProjectId)) {
+    item.addEventListener('click', () => { activate(projectId); selector.close(); });
   }
 
-  searchRow.addEventListener('input', (e) => applyNavFilter(e.target.value));
-
-  if (firstProjectId) activate(firstProjectId);
+  if (selector.firstProjectId) activate(selector.firstProjectId);
 }
 
 init();
