@@ -199,7 +199,12 @@ function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) 
   // de cada vez, conforme o zoom; aqui, sem esse zoom, a exclusão é
   // explícita: wellCategory(w) pra esses poços cairia em "indefinido" (sem
   // reclassificação ainda, ainda perfurando) — mostrar os dois ícones no
-  // mesmo ponto seria redundante e confuso).
+  // mesmo ponto seria redundante e confuso). Sonda fica SEMPRE visível
+  // (é um retrato do agora, não faz parte da evolução histórica, ver
+  // filtro de ano abaixo) — só o poço já concluído entra em
+  // wellMarkersByYear, pra poder ser escondido/mostrado por ano.
+  const wellsLayer = L.layerGroup().addTo(map);
+  const wellMarkersByYear = [];
   for (const w of wells) {
     if (!w.c) continue;
     const rigStyle = RIG_STATUS_STYLE[w.sit];
@@ -208,11 +213,27 @@ function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) 
         .bindTooltip(`${escapeHtml(w.n)}<br>${escapeHtml(rigStyle.label)}`, { direction: 'top', offset: [0, -11] })
         .addTo(map);
     } else {
-      L.marker(w.c, { icon: wellDivIcon(project.color, wellCategory(w), !!w.anc, wellInjectionType(w)) })
-        .bindTooltip(w.n, { direction: 'top', offset: [0, -8] })
-        .addTo(map);
+      const marker = L.marker(w.c, { icon: wellDivIcon(project.color, wellCategory(w), !!w.anc, wellInjectionType(w)) })
+        .bindTooltip(w.n, { direction: 'top', offset: [0, -8] });
+      wellMarkersByYear.push({ marker, year: w.d ? Number(w.d.slice(0, 4)) : null });
     }
     bounds.extend(w.c);
+  }
+  // Filtro de ano (ver buildYearFilter abaixo) parte sempre mostrando
+  // todos os poços (ano = null), então adiciona todo mundo na camada de
+  // cara — setYearFilter só entra em ação se o usuário mexer no slider.
+  for (const { marker } of wellMarkersByYear) wellsLayer.addLayer(marker);
+  const wellYears = wellMarkersByYear.filter((x) => x.year != null).map((x) => x.year);
+  const minWellYear = wellYears.length ? Math.min(...wellYears) : null;
+  const maxWellYear = wellYears.length ? Math.max(...wellYears) : null;
+  // Até que ano mostrar (inclusive) — null = todos. Poço sem data
+  // registrada (raro) sempre aparece, não dá pra posicioná-lo na linha do
+  // tempo então não faz sentido escondê-lo condicionalmente.
+  function setYearFilter(year) {
+    wellsLayer.clearLayers();
+    for (const { marker, year: y } of wellMarkersByYear) {
+      if (year == null || y == null || y <= year) wellsLayer.addLayer(marker);
+    }
   }
 
   // buildMiniMap roda ANTES do painel entrar no DOM (activate() só faz
@@ -242,7 +263,7 @@ function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) 
     }
   });
 
-  return { map, hasShape: !!(jazidaFeatures.own || jazidaFeatures.extra.length), hasWells };
+  return { map, hasShape: !!(jazidaFeatures.own || jazidaFeatures.extra.length), hasWells, minWellYear, maxWellYear, setYearFilter };
 }
 
 /* ----------------------- Gráfico combinado (produção + RGO) --------------- */
@@ -588,6 +609,46 @@ function buildRoadmapSection(project) {
   return wrap;
 }
 
+/* ----------------------------- Filtro de ano (poços) ------------------------ */
+// Slider compacto abaixo do mini-mapa: "poços perfurados até o ano X",
+// cumulativo (não "só naquele ano") pra combinar com "ver a evolução da
+// perfuração" — arrastar mostra o campo se preenchendo aos poucos. Sonda
+// ativa fica sempre visível (ver comentário em buildMiniMap), só entra no
+// filtro o poço já concluído com data conhecida.
+
+function buildYearFilterBar(minYear, maxYear, onChange) {
+  // Sem poço datado, ou um único ano só — não tem "evolução" pra mostrar.
+  if (minYear == null || maxYear == null || minYear >= maxYear) return null;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'campo-year-filter';
+  wrap.innerHTML = `
+    <div class="campo-year-filter-row">
+      <span class="campo-year-filter-label">Poços perfurados até <strong class="campo-year-filter-value">${maxYear}</strong></span>
+      <button type="button" class="btn-ghost campo-year-filter-reset">Ver todos</button>
+    </div>
+    <input type="range" class="campo-year-filter-slider" min="${minYear}" max="${maxYear}" step="1" value="${maxYear}" aria-label="Filtrar poços por ano de conclusão" />
+  `;
+  const slider = wrap.querySelector('.campo-year-filter-slider');
+  const valueEl = wrap.querySelector('.campo-year-filter-value');
+  const resetBtn = wrap.querySelector('.campo-year-filter-reset');
+
+  // Nasce sem chamar onChange — slider no máximo já mostra tudo (mesmo
+  // comportamento de antes do filtro existir), só dispara ao usuário mexer.
+  slider.addEventListener('input', () => {
+    const year = Number(slider.value);
+    valueEl.textContent = String(year);
+    onChange(year);
+  });
+  resetBtn.addEventListener('click', () => {
+    slider.value = String(maxYear);
+    valueEl.textContent = String(maxYear);
+    onChange(null);
+  });
+
+  return wrap;
+}
+
 /* -------------------------------- Painel do projeto ------------------------ */
 
 function buildProjectPanel(project, ctx) {
@@ -605,6 +666,14 @@ function buildProjectPanel(project, ctx) {
   // no boletim da ANP (extractProjectSeries) continua usando esse mesmo
   // nome de exibição — é a chave que computeFieldRows usa lá.
   const displayName = projectDisplayName(project.name);
+
+  // Ligados pelo filtro de ano abaixo do mapa (buildYearFilterBar) — `let`
+  // porque projetos sem produção retornam antes de chegar na criação dos
+  // gráficos (ver early returns abaixo); o filtro checa `if (prodChart)`
+  // antes de chamar setHighlightYear, então precisam existir (como null)
+  // desde já.
+  let prodChart = null;
+  let rgoChart = null;
 
   const header = document.createElement('div');
   header.className = 'campo-panel-header';
@@ -639,6 +708,19 @@ function buildProjectPanel(project, ctx) {
   const wells = contractOwnWells(ctx.pocosData, project.name);
   const mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells, ctx.biggestBounds);
   panel._miniMap = mapInfo.map;
+  // Filtro de ano — mostra só os poços perfurados até o ano escolhido
+  // (ver setYearFilter em buildMiniMap) e marca a mesma data nos gráficos
+  // de produção/RGO (setHighlightYear, shared.js), ligando "quantos poços
+  // já tinham entrado" com "onde a produção estava" no mesmo instante.
+  // prodChart/rgoChart ainda não existem neste ponto do código (são
+  // criados mais abaixo, se houver dados de produção) — o `let` no topo
+  // da função e o guard `if (prodChart)` cobrem isso.
+  const yearFilterBar = buildYearFilterBar(mapInfo.minWellYear, mapInfo.maxWellYear, (year) => {
+    mapInfo.setYearFilter(year);
+    if (prodChart) prodChart.setHighlightYear(year);
+    if (rgoChart) rgoChart.setHighlightYear(year);
+  });
+  if (yearFilterBar) mapCard.appendChild(yearFilterBar);
   if (!mapInfo.hasShape) {
     const note = document.createElement('p');
     note.className = 'analytics-table-note';
@@ -685,7 +767,7 @@ function buildProjectPanel(project, ctx) {
   prodReset.textContent = 'Ver tudo';
   prodControls.appendChild(prodReset);
   prodCard.insertBefore(prodControls, prodCard.querySelector('h3').nextSibling);
-  const prodChart = createLineChart(prodCard, series, { fpsos: fpsoMarkers, wells });
+  prodChart = createLineChart(prodCard, series, { fpsos: fpsoMarkers, wells });
   const prodUnitSwitch = buildUnitSwitch((unitKey) => prodChart.setUnit(unitKey), ['oleo', 'gas', 'boe']);
   prodControls.insertBefore(prodUnitSwitch, prodReset);
   prodReset.addEventListener('click', () => prodChart.resetZoom());
@@ -700,7 +782,7 @@ function buildProjectPanel(project, ctx) {
   rgoReset.textContent = 'Ver tudo';
   rgoControls.appendChild(rgoReset);
   rgoCard.insertBefore(rgoControls, rgoCard.querySelector('h3').nextSibling);
-  const rgoChart = createLineChart(rgoCard, series);
+  rgoChart = createLineChart(rgoCard, series);
   rgoChart.setUnit('rgo');
   rgoReset.addEventListener('click', () => rgoChart.resetZoom());
   chartsCol.appendChild(rgoCard);

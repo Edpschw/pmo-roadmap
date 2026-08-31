@@ -918,6 +918,19 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 }
 .campo-mapa .leaflet-tooltip-top::before { border-top-color: var(--border-strong); }
 
+/* Filtro de ano abaixo do mini-mapa (buildYearFilterBar em campo.js) —
+   arrastar o slider esconde poços perfurados depois do ano escolhido no
+   mapa e marca a mesma data nos gráficos de produção/RGO ao lado
+   (setHighlightYear, shared.js). */
+.campo-year-filter { margin-top: 10px; }
+.campo-year-filter-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin-bottom: 6px;
+}
+.campo-year-filter-label { font-size: 11px; color: var(--text-faint); }
+.campo-year-filter-value { color: var(--text); font-variant-numeric: tabular-nums; }
+.campo-year-filter-slider { width: 100%; display: block; accent-color: var(--accent); }
+
 /* Escala (CampoScaleControl) e legenda (CampoLegendControl) do mini-mapa,
    ver buildMiniMap em campo.js — cartão "vidro fosco" próprio, mesmo
    espírito visual de .map-well-legend-fixed em mapa.js, mas com as cores

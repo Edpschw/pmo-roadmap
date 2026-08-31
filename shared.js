@@ -946,6 +946,12 @@ function createLineChart(container, monthlySeries, markers) {
   let viewEnd = n - 1;
   let yMaxOverride = null; // null = auto-ajusta ao máximo visível (ver draw)
   let highlighted = null;
+  // Ano marcado externamente (ver setHighlightYear no retorno, e o filtro
+  // de ano do mini-mapa em campo.js — arrastar o slider ali chama isso
+  // aqui, ligando "até que ano os poços aparecem no mapa" com "onde esse
+  // ano cai no gráfico de produção/RGO"). null = nenhuma marca (padrão,
+  // gráfico sem esse recurso — producao.js nunca chama setHighlightYear).
+  let highlightYear = null;
   // Estado do arraste (pan) precisa sobreviver a um redraw no meio do
   // próprio arraste — draw() troca svgWrap.innerHTML a cada pointermove
   // durante o drag, o que recria #lc-capture do zero e derruba a captura
@@ -1107,7 +1113,26 @@ function createLineChart(container, monthlySeries, markers) {
       fpsoSvg += `<svg x="${x - size / 2}" y="${y - size / 2}" width="${size}" height="${size}" viewBox="0 0 16 16" style="overflow:visible"><title>${escapeHtml(fp.name)} — ${formatBR(fp.date)}</title>${fpsoIconSVG(markerColor)}</svg>`;
     }
 
-    svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${wellSvg}${fpsoSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
+    // Marca de ano externa (ver setHighlightYear no retorno) — linha
+    // vertical sólida (não o crosshair cinza fino de hover) em 31/dez do
+    // ano marcado, com uma bandeirinha do ano no topo, mesmo padrão visual
+    // da linha de "hoje" do roadmap principal (ver .today-line/.today-flag
+    // em style.css, mas aqui dentro do próprio SVG do gráfico). Só
+    // desenha se cair dentro da janela visível atual (zoom/pan).
+    let highlightSvg = '';
+    if (highlightYear != null) {
+      const idx = dateToContinuousIndex(monthlySeries, `${highlightYear}-12-31`);
+      if (idx >= loIdx - 0.5 && idx <= hiIdx + 0.5) {
+        const x = xAt(idx);
+        highlightSvg = `<g>
+          <line x1="${x}" y1="${LINE_MARGIN.top}" x2="${x}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--today)" stroke-width="1.5" stroke-dasharray="4,3" />
+          <rect x="${x - 16}" y="${LINE_MARGIN.top - 14}" width="32" height="14" rx="3" fill="var(--today)" />
+          <text x="${x}" y="${LINE_MARGIN.top - 4}" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">${highlightYear}</text>
+        </g>`;
+      }
+    }
+
+    svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${wellSvg}${fpsoSvg}${highlightSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
     const svgEl = svgWrap.firstElementChild;
     const capture = svgEl.querySelector('#lc-capture');
     const crosshair = svgEl.querySelector('#lc-crosshair');
@@ -1277,6 +1302,11 @@ function createLineChart(container, monthlySeries, markers) {
     setUnit(key) { unitKey = key; draw(); },
     resetZoom() { viewStart = 0; viewEnd = n - 1; yMaxOverride = null; draw(); },
     isZoomed() { return viewStart > 0 || viewEnd < n - 1 || yMaxOverride !== null; },
+    // year: número do ano a marcar (31/dez desse ano), ou null pra tirar a
+    // marca — ver highlightSvg em draw(). Usado por campo.js pra ligar o
+    // filtro de ano do mini-mapa (até que ano os poços aparecem) com os
+    // gráficos de produção/RGO do mesmo painel.
+    setHighlightYear(year) { highlightYear = year; draw(); },
   };
 }
 
