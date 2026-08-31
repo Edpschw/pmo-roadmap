@@ -213,28 +213,39 @@ function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) 
         .bindTooltip(`${escapeHtml(w.n)}<br>${escapeHtml(rigStyle.label)}`, { direction: 'top', offset: [0, -11] })
         .addTo(map);
     } else {
-      const marker = L.marker(w.c, { icon: wellDivIcon(project.color, wellCategory(w), !!w.anc, wellInjectionType(w)) })
+      const category = wellCategory(w);
+      const marker = L.marker(w.c, { icon: wellDivIcon(project.color, category, !!w.anc, wellInjectionType(w)) })
         .bindTooltip(w.n, { direction: 'top', offset: [0, -8] });
-      wellMarkersByYear.push({ marker, year: w.d ? Number(w.d.slice(0, 4)) : null });
+      wellMarkersByYear.push({ marker, year: w.d ? Number(w.d.slice(0, 4)) : null, category });
     }
     bounds.extend(w.c);
   }
-  // Filtro de ano (ver buildYearFilter abaixo) parte sempre mostrando
-  // todos os poços (ano = null), então adiciona todo mundo na camada de
-  // cara — setYearFilter só entra em ação se o usuário mexer no slider.
-  for (const { marker } of wellMarkersByYear) wellsLayer.addLayer(marker);
   const wellYears = wellMarkersByYear.filter((x) => x.year != null).map((x) => x.year);
   const minWellYear = wellYears.length ? Math.min(...wellYears) : null;
   const maxWellYear = wellYears.length ? Math.max(...wellYears) : null;
   // Até que ano mostrar (inclusive) — null = todos. Poço sem data
   // registrada (raro) sempre aparece, não dá pra posicioná-lo na linha do
-  // tempo então não faz sentido escondê-lo condicionalmente.
+  // tempo então não faz sentido escondê-lo condicionalmente. Retorna
+  // quantos produtores/injetores ficaram visíveis (categoria de
+  // wellCategory, shared.js) pra alimentar os contadores do filtro de ano
+  // (ver buildYearFilterBar) — sonda ativa nunca conta aqui, ela nem entra
+  // em wellMarkersByYear (ainda é "indefinido", não virou poço concluído).
   function setYearFilter(year) {
     wellsLayer.clearLayers();
-    for (const { marker, year: y } of wellMarkersByYear) {
-      if (year == null || y == null || y <= year) wellsLayer.addLayer(marker);
+    let producers = 0;
+    let injectors = 0;
+    for (const { marker, year: y, category } of wellMarkersByYear) {
+      if (year == null || y == null || y <= year) {
+        wellsLayer.addLayer(marker);
+        if (category === 'producao') producers++;
+        else if (category === 'injecao') injectors++;
+      }
     }
+    return { producers, injectors };
   }
+  // Estado inicial (sem filtro aplicado) também popula a camada — reusa
+  // setYearFilter(null) em vez de duplicar o loop de addLayer.
+  const initialCounts = setYearFilter(null);
 
   // buildMiniMap roda ANTES do painel entrar no DOM (activate() só faz
   // content.appendChild(panel) depois que esta função retorna) — mapDiv
@@ -263,7 +274,7 @@ function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) 
     }
   });
 
-  return { map, hasShape: !!(jazidaFeatures.own || jazidaFeatures.extra.length), hasWells, minWellYear, maxWellYear, setYearFilter };
+  return { map, hasShape: !!(jazidaFeatures.own || jazidaFeatures.extra.length), hasWells, minWellYear, maxWellYear, setYearFilter, initialCounts };
 }
 
 /* ----------------------- Gráfico combinado (produção + RGO) --------------- */
@@ -616,7 +627,11 @@ function buildRoadmapSection(project) {
 // ativa fica sempre visível (ver comentário em buildMiniMap), só entra no
 // filtro o poço já concluído com data conhecida.
 
-function buildYearFilterBar(minYear, maxYear, onChange) {
+function fmtWellCount(n, singular, plural) {
+  return `${n} ${n === 1 ? singular : plural}`;
+}
+
+function buildYearFilterBar(minYear, maxYear, initialCounts, onChange) {
   // Sem poço datado, ou um único ano só — não tem "evolução" pra mostrar.
   if (minYear == null || maxYear == null || minYear >= maxYear) return null;
 
@@ -628,22 +643,36 @@ function buildYearFilterBar(minYear, maxYear, onChange) {
       <button type="button" class="btn-ghost campo-year-filter-reset">Ver todos</button>
     </div>
     <input type="range" class="campo-year-filter-slider" min="${minYear}" max="${maxYear}" step="1" value="${maxYear}" aria-label="Filtrar poços por ano de conclusão" />
+    <div class="campo-year-filter-counts">
+      <span class="campo-year-filter-count campo-year-filter-count-prod"><span class="campo-year-filter-count-dot"></span><span class="campo-year-filter-count-text">${fmtWellCount(initialCounts.producers, 'produtor', 'produtores')}</span></span>
+      <span class="campo-year-filter-count campo-year-filter-count-inj"><span class="campo-year-filter-count-dot"></span><span class="campo-year-filter-count-text">${fmtWellCount(initialCounts.injectors, 'injetor', 'injetores')}</span></span>
+    </div>
   `;
   const slider = wrap.querySelector('.campo-year-filter-slider');
   const valueEl = wrap.querySelector('.campo-year-filter-value');
   const resetBtn = wrap.querySelector('.campo-year-filter-reset');
+  const prodCountEl = wrap.querySelector('.campo-year-filter-count-prod .campo-year-filter-count-text');
+  const injCountEl = wrap.querySelector('.campo-year-filter-count-inj .campo-year-filter-count-text');
+
+  // onChange devolve { producers, injectors } (ver setYearFilter em
+  // buildMiniMap) pra atualizar os contadores junto com o mapa e os
+  // gráficos, tudo no mesmo arrastar do slider.
+  function applyCounts(counts) {
+    prodCountEl.textContent = fmtWellCount(counts.producers, 'produtor', 'produtores');
+    injCountEl.textContent = fmtWellCount(counts.injectors, 'injetor', 'injetores');
+  }
 
   // Nasce sem chamar onChange — slider no máximo já mostra tudo (mesmo
   // comportamento de antes do filtro existir), só dispara ao usuário mexer.
   slider.addEventListener('input', () => {
     const year = Number(slider.value);
     valueEl.textContent = String(year);
-    onChange(year);
+    applyCounts(onChange(year));
   });
   resetBtn.addEventListener('click', () => {
     slider.value = String(maxYear);
     valueEl.textContent = String(maxYear);
-    onChange(null);
+    applyCounts(onChange(null));
   });
 
   return wrap;
@@ -715,10 +744,11 @@ function buildProjectPanel(project, ctx) {
   // prodChart/rgoChart ainda não existem neste ponto do código (são
   // criados mais abaixo, se houver dados de produção) — o `let` no topo
   // da função e o guard `if (prodChart)` cobrem isso.
-  const yearFilterBar = buildYearFilterBar(mapInfo.minWellYear, mapInfo.maxWellYear, (year) => {
-    mapInfo.setYearFilter(year);
+  const yearFilterBar = buildYearFilterBar(mapInfo.minWellYear, mapInfo.maxWellYear, mapInfo.initialCounts, (year) => {
+    const counts = mapInfo.setYearFilter(year);
     if (prodChart) prodChart.setHighlightYear(year);
     if (rgoChart) rgoChart.setHighlightYear(year);
+    return counts;
   });
   if (yearFilterBar) mapCard.appendChild(yearFilterBar);
   if (!mapInfo.hasShape) {
