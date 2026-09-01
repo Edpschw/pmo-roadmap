@@ -148,7 +148,7 @@ const CampoLegendControl = L.Control.extend({
   },
 });
 
-function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) {
+function buildMiniMap(container, project, jazidaFeatures, wells) {
   const mapDiv = document.createElement('div');
   mapDiv.className = 'campo-mapa';
   container.appendChild(mapDiv);
@@ -199,19 +199,21 @@ function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) 
   // de cada vez, conforme o zoom; aqui, sem esse zoom, a exclusão é
   // explícita: wellCategory(w) pra esses poços cairia em "indefinido" (sem
   // reclassificação ainda, ainda perfurando) — mostrar os dois ícones no
-  // mesmo ponto seria redundante e confuso). Sonda fica SEMPRE visível
-  // (é um retrato do agora, não faz parte da evolução histórica, ver
-  // filtro de ano abaixo) — só o poço já concluído entra em
-  // wellMarkersByYear, pra poder ser escondido/mostrado por ano.
+  // mesmo ponto seria redundante e confuso). Também entra no filtro de ano
+  // (wellMarkersByYear) como qualquer outro poço, usando w.d — pra sonda
+  // ativa isso é a data do último boletim (não uma "conclusão" ainda), mas
+  // é a única data disponível e aproxima bem "desde quando essa
+  // perfuração aparece no boletim da ANP". category null: não é produtor
+  // nem injetor ainda, não entra na contagem de setYearFilter.
   const wellsLayer = L.layerGroup().addTo(map);
   const wellMarkersByYear = [];
   for (const w of wells) {
     if (!w.c) continue;
     const rigStyle = RIG_STATUS_STYLE[w.sit];
     if (rigStyle) {
-      L.marker(w.c, { icon: rigDivIcon(rigStyle.color) })
-        .bindTooltip(`${escapeHtml(w.n)}<br>${escapeHtml(rigStyle.label)}`, { direction: 'top', offset: [0, -11] })
-        .addTo(map);
+      const marker = L.marker(w.c, { icon: rigDivIcon(rigStyle.color) })
+        .bindTooltip(`${escapeHtml(w.n)}<br>${escapeHtml(rigStyle.label)}`, { direction: 'top', offset: [0, -11] });
+      wellMarkersByYear.push({ marker, year: w.d ? Number(w.d.slice(0, 4)) : null, category: null });
     } else {
       const category = wellCategory(w);
       const marker = L.marker(w.c, { icon: wellDivIcon(project.color, category, !!w.anc, wellInjectionType(w)) })
@@ -228,8 +230,8 @@ function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) 
   // tempo então não faz sentido escondê-lo condicionalmente. Retorna
   // quantos produtores/injetores ficaram visíveis (categoria de
   // wellCategory, shared.js) pra alimentar os contadores do filtro de ano
-  // (ver buildYearFilterBar) — sonda ativa nunca conta aqui, ela nem entra
-  // em wellMarkersByYear (ainda é "indefinido", não virou poço concluído).
+  // (ver buildYearFilterBar) — sonda ativa entra no filtro (category null),
+  // mas nunca soma nos contadores: ainda não virou produtor nem injetor.
   function setYearFilter(year) {
     wellsLayer.clearLayers();
     let producers = 0;
@@ -261,15 +263,15 @@ function buildMiniMap(container, project, jazidaFeatures, wells, biggestBounds) 
   requestAnimationFrame(() => {
     map.invalidateSize();
     if (bounds.isValid()) {
-      // Mesma escala (zoom) pra TODOS os projetos — calculada pelo maior
-      // (biggestBounds, ver init()), não pelo contorno deste projeto —
-      // cada mapa só centraliza no seu próprio campo. Sem isso, cada
-      // mini-mapa dava fitBounds no próprio contorno e todo campo parecia
-      // do mesmo tamanho na tela, por menor que fosse de verdade; com o
-      // mesmo zoom em todos, o campo maior ocupa o mini-mapa quase
-      // inteiro e um campo pequeno aparece pequeno, do jeito que é.
-      const fitTarget = biggestBounds.isValid() ? biggestBounds : bounds;
-      const zoom = map.getBoundsZoom(fitTarget, false, L.point(24, 24));
+      // Zoom calculado pelo contorno + poços DESTE projeto (não mais por um
+      // "maior campo entre os 30" compartilhado) — cada mini-mapa preenche
+      // o máximo possível do próprio espaço, em vez de ficar pequeno no
+      // meio de uma tela vazia quando o campo é pequeno perto do maior do
+      // conjunto. Sacrifica a comparação de tamanho a olho entre painéis
+      // (cada um no seu próprio zoom agora) em troca de preencher a tela.
+      // Padding pequeno (8px) — só o suficiente pra não cortar ícone de
+      // poço/sonda na borda.
+      const zoom = map.getBoundsZoom(bounds, false, L.point(8, 8));
       map.setView(bounds.getCenter(), zoom);
     }
   });
@@ -730,12 +732,12 @@ function buildProjectPanel(project, ctx) {
   chartsCol.className = 'campo-dashboard-charts-col';
   dashboardGrid.appendChild(chartsCol);
 
-  const mapCard = chartCard('Contorno e poços', 'Poligonal do contrato/campo (quando disponível na ANP) e os poços perfurados dentro dela — cor do ponto por categoria (produção, injeção, seco...), mesmo critério de mapa.html. Escala igual em todos os projetos, calculada pelo maior campo — dá pra comparar tamanho de campo a olho entre um painel e outro.');
+  const mapCard = chartCard('Contorno e poços', 'Poligonal do contrato/campo (quando disponível na ANP) e os poços perfurados dentro dela — cor do ponto por categoria (produção, injeção, seco...), mesmo critério de mapa.html. Zoom ajustado pra preencher o mapa com o contorno deste campo.');
   mapCol.appendChild(mapCard);
 
   const jazidaFeatures = ctx.jazidaFeaturesByProject[project.name];
   const wells = contractOwnWells(ctx.pocosData, project.name);
-  const mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells, ctx.biggestBounds);
+  const mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells);
   panel._miniMap = mapInfo.map;
   // Filtro de ano — mostra só os poços perfurados até o ano escolhido
   // (ver setYearFilter em buildMiniMap) e marca a mesma data nos gráficos
@@ -1032,41 +1034,8 @@ async function init() {
     jazidaFeaturesByProject[project.name] = { own, extra };
   }
 
-  // Limites de mapa de cada projeto (poligonal própria + jazida
-  // compartilhada + poços) — pra achar o maior campo entre os 30, ver
-  // biggestBounds abaixo. L.geoJSON(...).getBounds() funciona sem
-  // precisar de um mapa Leaflet de verdade (só computa a bounding box da
-  // geometria) — bem mais barato que montar 30 mapas escondidos só pra
-  // medir tamanho.
-  const jazidaBoundsByProject = {};
-  for (const project of state.projects) {
-    const { own, extra } = jazidaFeaturesByProject[project.name];
-    const b = L.latLngBounds([]);
-    if (own) b.extend(L.geoJSON(own).getBounds());
-    for (const feat of extra) b.extend(L.geoJSON(feat).getBounds());
-    for (const w of contractOwnWells(pocosData, project.name)) {
-      if (w.c) b.extend(w.c);
-    }
-    jazidaBoundsByProject[project.name] = b;
-  }
-  // Maior campo entre os 30 (diagonal NE-SW em metros, ver
-  // L.LatLng.distanceTo) — referência de escala pro mini-mapa de TODOS os
-  // projetos (ver buildMiniMap): mesmo zoom pra todos, cada um só
-  // centralizado no próprio campo — dá pra comparar tamanho de campo a
-  // olho entre um painel e outro. Sem isso, cada mini-mapa dava fitBounds
-  // no próprio contorno e todo campo parecia do mesmo tamanho na tela,
-  // por menor que fosse de verdade.
-  let biggestBounds = L.latLngBounds([]);
-  let biggestSpan = -1;
-  for (const project of state.projects) {
-    const b = jazidaBoundsByProject[project.name];
-    if (!b.isValid()) continue;
-    const span = b.getNorthEast().distanceTo(b.getSouthWest());
-    if (span > biggestSpan) { biggestSpan = span; biggestBounds = b; }
-  }
-
   const monthlySeries = computeMonthlySeries(producaoData.meses || [], state.projects);
-  const ctx = { jazidaFeaturesByProject, biggestBounds, pocosData, monthlySeries };
+  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries };
 
   // Ordem: mesmo agrupamento por status de pocos.js/analises.js (Produção,
   // Exploração, Devolvidos), cada grupo alfabético.
