@@ -238,22 +238,25 @@ function buildMiniMap(container, project, jazidaFeatures, wells) {
   // Até que ano mostrar (inclusive) — null = todos. Poço sem data
   // registrada (raro) sempre aparece, não dá pra posicioná-lo na linha do
   // tempo então não faz sentido escondê-lo condicionalmente. Retorna
-  // quantos produtores/injetores ficaram visíveis (categoria de
+  // quantos produtores/injetores/abandonados ficaram visíveis (categoria de
   // wellCategory, shared.js) pra alimentar os contadores do filtro de ano
   // (ver buildYearFilterBar) — sonda ativa entra no filtro (category null),
-  // mas nunca soma nos contadores: ainda não virou produtor nem injetor.
+  // mas nunca soma nos contadores: ainda não virou produtor, injetor nem
+  // abandonado.
   function setYearFilter(year) {
     wellsLayer.clearLayers();
     let producers = 0;
     let injectors = 0;
+    let abandoned = 0;
     for (const { marker, year: y, category } of wellMarkersByYear) {
       if (year == null || y == null || y <= year) {
         wellsLayer.addLayer(marker);
         if (category === 'producao') producers++;
         else if (category === 'injecao') injectors++;
+        else if (category === 'abandonado') abandoned++;
       }
     }
-    return { producers, injectors };
+    return { producers, injectors, abandoned };
   }
   // Estado inicial (sem filtro aplicado) também popula a camada — reusa
   // setYearFilter(null) em vez de duplicar o loop de addLayer.
@@ -736,6 +739,7 @@ function buildYearFilterBar(minYear, maxYear, initialCounts, onChange) {
     <div class="campo-year-filter-counts">
       <span class="campo-year-filter-count campo-year-filter-count-prod"><span class="campo-year-filter-count-dot"></span><span class="campo-year-filter-count-text">${fmtWellCount(initialCounts.producers, 'produtor', 'produtores')}</span></span>
       <span class="campo-year-filter-count campo-year-filter-count-inj"><span class="campo-year-filter-count-dot"></span><span class="campo-year-filter-count-text">${fmtWellCount(initialCounts.injectors, 'injetor', 'injetores')}</span></span>
+      <span class="campo-year-filter-count campo-year-filter-count-aband"><span class="campo-year-filter-count-dot"></span><span class="campo-year-filter-count-text">${fmtWellCount(initialCounts.abandoned, 'abandonado', 'abandonados')}</span></span>
     </div>
   `;
   const slider = wrap.querySelector('.campo-year-filter-slider');
@@ -743,13 +747,15 @@ function buildYearFilterBar(minYear, maxYear, initialCounts, onChange) {
   const resetBtn = wrap.querySelector('.campo-year-filter-reset');
   const prodCountEl = wrap.querySelector('.campo-year-filter-count-prod .campo-year-filter-count-text');
   const injCountEl = wrap.querySelector('.campo-year-filter-count-inj .campo-year-filter-count-text');
+  const abandCountEl = wrap.querySelector('.campo-year-filter-count-aband .campo-year-filter-count-text');
 
-  // onChange devolve { producers, injectors } (ver setYearFilter em
-  // buildMiniMap) pra atualizar os contadores junto com o mapa e os
+  // onChange devolve { producers, injectors, abandoned } (ver setYearFilter
+  // em buildMiniMap) pra atualizar os contadores junto com o mapa e os
   // gráficos, tudo no mesmo arrastar do slider.
   function applyCounts(counts) {
     prodCountEl.textContent = fmtWellCount(counts.producers, 'produtor', 'produtores');
     injCountEl.textContent = fmtWellCount(counts.injectors, 'injetor', 'injetores');
+    abandCountEl.textContent = fmtWellCount(counts.abandoned, 'abandonado', 'abandonados');
   }
 
   // Nasce sem chamar onChange — slider no máximo já mostra tudo (mesmo
