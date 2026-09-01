@@ -306,8 +306,10 @@ function buildComboChart(container, series, projectColor) {
 
   const boeVals = series.map((m) => m.rows[0] && m.rows[0].boedPreSal).filter((v) => v != null);
   const rgoVals = series.map((m) => m.rows[0] && m.rows[0].rgo).filter((v) => v != null);
-  const boeMax = niceMax(Math.max(0, ...boeVals));
-  const rgoMax = niceMax(Math.max(0, ...rgoVals));
+  // Ancorado no último valor, não no pico histórico (ver niceMaxFromLastValue
+  // em shared.js) — mesmo critério do gráfico de produção/RGO acima.
+  const boeMax = niceMaxFromLastValue(boeVals.length ? boeVals[boeVals.length - 1] : 0);
+  const rgoMax = niceMaxFromLastValue(rgoVals.length ? rgoVals[rgoVals.length - 1] : 0);
   const yBoeAt = (v) => COMBO_MARGIN.top + plotH - (v / boeMax) * plotH;
   const yRgoAt = (v) => COMBO_MARGIN.top + plotH - (v / rgoMax) * plotH;
 
@@ -462,6 +464,7 @@ function roadmapRange(project) {
   let rangeEnd = addDays(max, 20);
   const minSpanDays = 180;
   if (diffDays(rangeStart, rangeEnd) < minSpanDays) rangeEnd = addDays(rangeStart, minSpanDays);
+  rangeEnd = completeLastYear(rangeEnd);
   return { rangeStart, rangeEnd };
 }
 

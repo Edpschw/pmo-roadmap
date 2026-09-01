@@ -113,6 +113,18 @@ function todayISO() {
   const now = new Date();
   return toISO(new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())));
 }
+// Garante que o fim do intervalo do roadmap sempre cubra o último ano por
+// inteiro (até 31/dez), em vez de cortar no meio do ano (ex.: timeline
+// terminando em "mar 2029", com 2029 aparecendo incompleto) — usado tanto
+// no roadmap principal (computeRange, app.js) quanto no mini-roadmap por
+// projeto (roadmapRange, campo.js). rangeEnd é fronteira EXCLUSIVA nos
+// dois (iteração/desenho sempre vai até `< rangeEnd`), então "1º de
+// janeiro" já significa "31/dez do ano anterior incluído por inteiro" —
+// só empurra pro 1º de janeiro seguinte quando rangeEnd cai em outro dia.
+function completeLastYear(rangeEnd) {
+  if (rangeEnd.getUTCMonth() === 0 && rangeEnd.getUTCDate() === 1) return rangeEnd;
+  return new Date(Date.UTC(rangeEnd.getUTCFullYear() + 1, 0, 1));
+}
 function formatBR(iso) {
   const [y, m, d] = iso.split('-');
   return `${d}/${m}/${y}`;
@@ -920,12 +932,14 @@ const LINE_H = 460;
 const LINE_MARGIN = { top: 16, right: 16, bottom: 62, left: 64 };
 const MIN_VIEW_SPAN = 2; // menor janela de zoom, em nº de meses - 1
 
-function niceMax(v) {
-  if (v <= 0) return 1;
-  const mag = Math.pow(10, Math.floor(Math.log10(v)));
-  const norm = v / mag;
-  const step = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
-  return step * mag;
+// Escala do eixo Y dos gráficos de produção (createLineChart/buildComboChart)
+// ancorada no ÚLTIMO valor da série, não no pico histórico — produção
+// normalmente sobe com o tempo (ramp-up de FPSO), então ancorar no nível
+// atual evita sobra de espaço vazio por causa de um pico antigo bem maior
+// que a produção de hoje. Arredonda pro múltiplo de 100 seguinte.
+function niceMaxFromLastValue(lastValue) {
+  if (lastValue <= 0) return 100;
+  return Math.ceil(lastValue / 100) * 100;
 }
 
 // Ordem fixa das linhas (mesma cor sempre no mesmo campo entre trocas de
@@ -1070,11 +1084,16 @@ function createLineChart(container, monthlySeries, markers) {
     const loIdx = Math.max(0, Math.floor(viewStart));
     const hiIdx = Math.min(n - 1, Math.ceil(viewEnd));
 
+    // rawMax (pico da janela visível) só alimenta o piso do zoom manual em
+    // y logo abaixo (wheel sobre o eixo) — a escala automática usa o
+    // último valor visível, não o pico (ver niceMaxFromLastValue).
     let rawMax = 0;
     for (let i = loIdx; i <= hiIdx; i++) {
       for (const r of monthlySeries[i].rows) rawMax = Math.max(rawMax, r[unit.key]);
     }
-    const autoMax = niceMax(rawMax);
+    let lastMax = 0;
+    for (const r of monthlySeries[hiIdx].rows) lastMax = Math.max(lastMax, r[unit.key]);
+    const autoMax = niceMaxFromLastValue(lastMax);
     // yMaxOverride persiste entre trocas de unidade/pan/zoom em x até o
     // usuário resetar ("Ver tudo") — dar zoom em x não desfaz um zoom em y
     // já ajustado, e vice-versa (são eixos independentes).

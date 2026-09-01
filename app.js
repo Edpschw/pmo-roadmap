@@ -202,6 +202,7 @@ function computeRange() {
   if (diffDays(rangeStart, rangeEnd) < minSpanDays) {
     rangeEnd = addDays(rangeStart, minSpanDays);
   }
+  rangeEnd = completeLastYear(rangeEnd);
   return { rangeStart, rangeEnd };
 }
 
