@@ -55,14 +55,21 @@
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sumario-executivo-bacalhau.pdf"
   },
   "Búzios": {
+    "tracts": [
+      { "nome": "Búzios (CO)", "pct": 26.1205, "excedenteOleoPct": null },
+      { "nome": "Búzios (PP)", "pct": 73.8795, "excedenteOleoPct": 23.24 }
+    ],
     "excedenteOleoPct": 23.24,
-    "excedenteOleoObs": "Só a fatia do excedente (leilão de 2019/2021, camada de Partilha sobre o contrato original) tem esse mecanismo; a fatia original da Cessão Onerosa (2010) paga royalties + participação especial em vez de excedente em óleo. Leilão do Excedente da Cessão Onerosa, 1ª Rodada (06/11/2019) — Petrobras venceu sozinha, com o percentual mínimo do edital.",
+    "excedenteOleoObs": "Só a fatia do excedente (leilão de 2019, camada de Partilha sobre o contrato original) tem esse mecanismo; a fatia original da Cessão Onerosa (2010) paga royalties + participação especial em vez de excedente em óleo. Leilão do Excedente da Cessão Onerosa, 1ª Rodada (06/11/2019) — consórcio Petrobras/CNOOC/CNODC venceu sozinho, com o percentual mínimo do edital (90%/5%/5%).",
     "titulo": "Búzios 2016",
     "resolucao": "RD 832 de 18/02/2016 — Resolução nº 093/2016",
-    "contrato": "48610.012913/2010-05",
+    "contrato": "Cessão Onerosa 48610.012913/2010-05 + Partilha do Excedente 48610.220924/2019-97",
     "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 85 },
+      { "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 10 },
+      { "empresa": "CNODC Brasil Petróleo e Gás Ltda.", "pct": 5 }
     ],
+    "participacaoObs": "% do contrato de Partilha do Excedente (Búzios-PP) — consórcio vencedor do leilão de 06/11/2019 (Petrobras 90% / CNOOC 5% / CNODC 5%), depois de a Petrobras ceder mais 5% à CNOOC em 30/11/2022 (transação concluída 01/12/2022, US$ 1,9 bi). Na Cessão Onerosa original (Búzios-CO) a Petrobras tem 100%. TP dos dois tratos definido pelo Acordo de Coparticipação de Búzios, aprovado pela ANP em 12/08/2022 (ver tracts acima) — combinando os dois, a fatia na jazida inteira fica ~89% Petrobras / ~7,3% CNOOC / ~3,7% CNODC.",
     "situacao": "Produzindo",
     "descoberta": "2010-03-01",
     "comercialidade": "2013-12-19",
@@ -71,6 +78,7 @@
     "previsaoTermino": "2050 (término do contrato)",
     "laminaDagua": "1.940 m",
     "areaKm2": 852.2,
+    "areaObs": "Jazida compartilhada — 26,12% Búzios (CO) / 73,88% Búzios (PP)",
     "sistemaResumo": "6 FPSOs (P-74, P-75, P-76, P-77 + 2 unidades futuras), 150.000 bbl/d de óleo cada — nenhuma instalada na data do documento (2016)",
     "pocos": { "dataRef": "2016-06", "perfurados": 20, "produtores": 54, "injetores": 54 },
     "geologiaResumo": "Carbonáticos biogênicos da Fm. Barra Velha (Aptiano) e coquinas da Fm. Itapema (Barremiano), 5.000-6.000 m",
