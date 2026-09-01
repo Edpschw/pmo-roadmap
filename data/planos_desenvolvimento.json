@@ -229,10 +229,14 @@
     "excedenteOleoObs": "Só a fatia do excedente (leilão de 2019/2021, camada de Partilha sobre o contrato original) tem esse mecanismo; a fatia original da Cessão Onerosa (2010) paga royalties + participação especial em vez de excedente em óleo. Leilão do Excedente da Cessão Onerosa, 2ª Rodada (17/12/2021) — não arrematado na 1ª Rodada (2019), reofertado com mínimo mais baixo.",
     "titulo": "Sépia 2017",
     "notaNome": "Documento de 2017, anterior ao contrato de partilha atual (leilão do excedente da Cessão Onerosa, 2021/2022) — números de poços e volumes provavelmente desatualizados.",
-    "contrato": "48610.012913/2010-05",
+    "contrato": "Cessão Onerosa 48610.012913/2010-05 + Partilha do Excedente (leilão 17/12/2021)",
     "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 30 },
+      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 28 },
+      { "empresa": "Petronas Petróleo Brasil Ltda.", "pct": 21 },
+      { "empresa": "QatarEnergy Brasil Ltda.", "pct": 21 }
     ],
+    "participacaoObs": "% do contrato de Partilha do Excedente (Sépia-PP) — consórcio vencedor do leilão de 17/12/2021 (2ª Rodada). Na Cessão Onerosa original (Sépia-CO) a Petrobras tem 100%. TP dos dois tratos não confirmado numa fonte confiável até agora — tracts não preenchido (diferente de Búzios/Atapu).",
     "situacao": "Em desenvolvimento",
     "descoberta": "2012-03-08",
     "descobertaObs": "poço 1-BRSA-976-RJS",
