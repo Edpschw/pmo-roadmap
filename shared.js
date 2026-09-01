@@ -936,10 +936,19 @@ const MIN_VIEW_SPAN = 2; // menor janela de zoom, em nº de meses - 1
 // ancorada no ÚLTIMO valor da série, não no pico histórico — produção
 // normalmente sobe com o tempo (ramp-up de FPSO), então ancorar no nível
 // atual evita sobra de espaço vazio por causa de um pico antigo bem maior
-// que a produção de hoje. Arredonda pro múltiplo de 100 seguinte.
+// que a produção de hoje. Arredonda pro próximo múltiplo de uma unidade
+// proporcional à magnitude do valor (1/10 da potência de 10 abaixo dele,
+// nunca menor que 100) — não um múltiplo de 100 fixo, que pra valores na
+// casa do milhão (soma de vários campos) mal se notava, nem a escala
+// 1-2-5-10 "solta" de uma escala genérica, que dobrava o teto e desperdiçava
+// metade do gráfico. Um valor ~1.000.000 vira múltiplo de 100.000 (centena
+// de milhar); ~5.000 vira múltiplo de 100; ~300 (RGO) fica em 100 — sempre
+// perto o bastante do dado real pra ler como "zoom nele", não uma escala
+// genérica qualquer.
 function niceMaxFromLastValue(lastValue) {
   if (lastValue <= 0) return 100;
-  return Math.ceil(lastValue / 100) * 100;
+  const unit = Math.max(100, Math.pow(10, Math.floor(Math.log10(lastValue)) - 1));
+  return Math.ceil(lastValue / unit) * unit;
 }
 
 // Ordem fixa das linhas (mesma cor sempre no mesmo campo entre trocas de
