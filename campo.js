@@ -153,7 +153,17 @@ function buildMiniMap(container, project, jazidaFeatures, wells) {
   mapDiv.className = 'campo-mapa';
   container.appendChild(mapDiv);
 
-  const map = L.map(mapDiv, { zoomControl: true, attributionControl: false, minZoom: 2 }).setView([-25.3, -43], 5);
+  // Zoom interativo desligado (scroll do mouse, botões +/-, duplo clique,
+  // pinça no touch, teclado) — só arrastar (pan) continua livre. O
+  // enquadramento automático no contorno+poços do campo (ver
+  // requestAnimationFrame abaixo) já decide o zoom certo pra cada painel;
+  // deixar o usuário mexer nele aqui só atrapalhava o scroll da página
+  // quando o mouse passava por cima do mini-mapa.
+  const map = L.map(mapDiv, {
+    zoomControl: false, attributionControl: false, minZoom: 2,
+    scrollWheelZoom: false, doubleClickZoom: false, touchZoom: false,
+    boxZoom: false, keyboard: false,
+  }).setView([-25.3, -43], 5);
   // Mesmo basemap escuro do mapa completo (Esri Canvas Dark Gray, ver nota
   // em mapa.js) — sem chave, funciona igual num container bem menor.
   L.tileLayer('https://server.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
@@ -736,7 +746,24 @@ function buildProjectPanel(project, ctx) {
   mapCol.appendChild(mapCard);
 
   const jazidaFeatures = ctx.jazidaFeaturesByProject[project.name];
-  const wells = contractOwnWells(ctx.pocosData, project.name);
+  // Poços do contrato PRÓPRIO + dos outros contratos/campos que
+  // compartilham a mesma jazida (jazidaFeatures.extra — poligonal
+  // tracejada, ver init()) — sem isso só os poços cadastrados sob o nome
+  // do contrato rastreado apareciam, mesmo com a poligonal combinada
+  // desenhando a jazida inteira: os poços do(s) outro(s) lado(s) ficavam
+  // sem marcador nenhum. Dedup por nome do poço (w.n) — mesmo critério de
+  // identidade que CONTRACT_WELL_OVERLAP usa (shared.js), pro caso raro de
+  // um poço listado sob mais de um dos nomes.
+  const extraContractNames = jazidaFeatures.extra.map((f) => f.properties.projeto || f.properties.nome);
+  const wells = [];
+  const seenWellNames = new Set();
+  for (const name of [project.name, ...extraContractNames]) {
+    for (const w of contractOwnWells(ctx.pocosData, name)) {
+      if (seenWellNames.has(w.n)) continue;
+      seenWellNames.add(w.n);
+      wells.push(w);
+    }
+  }
   const mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells);
   panel._miniMap = mapInfo.map;
   // Filtro de ano — mostra só os poços perfurados até o ano escolhido
