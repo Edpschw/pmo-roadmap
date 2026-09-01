@@ -19,14 +19,8 @@ const WEEKDAYS_PT = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 const MIN_PX_PER_DAY = 0.02;
 const MAX_PX_PER_DAY = 32;
 
-const FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif';
-
-const _measureCanvas = document.createElement('canvas');
-const _measureCtx = _measureCanvas.getContext('2d');
-function measureTextWidth(text, font) {
-  _measureCtx.font = font;
-  return _measureCtx.measureText(text).width;
-}
+// FONT_STACK e measureTextWidth agora vêm de shared.js (compartilhadas com
+// campo.js, ver dynamicSidebarWidth lá).
 
 // Deslocamento fracionário (em dias) do instante atual em relação a rangeStart,
 // combinando a data local com a hora local — usado para posicionar a linha de
@@ -225,31 +219,9 @@ function milestoneLabelBoxWidth(name) {
   return Math.ceil(measureTextWidth(name, MILESTONE_LABEL_FONT) * 1.1) + 12;
 }
 
-// Rótulo sempre visível no gráfico fica só com o essencial. Marco de poço
-// (icon 'well') tem regra própria — ver wellMilestoneLabel logo abaixo,
-// que usa o código do poço e o operador direto da base da ANP; esta
-// função aqui cobre os demais tipos (contrato, FPSO, genérico): corta o
-// parêntese final e a cláusula final com travessão do nome ("Petrobras
-// compra 50% (Equinor)" vira "Petrobras compra 50%") — o texto completo
-// não se perde, continua aparecendo por inteiro no hover (ver
-// showMilestoneTooltip). Só corta em cima de travessão "—", nunca hífen
-// comum, porque nome de marco pode ter hífen no meio (datas, códigos).
-function simplifyMilestoneLabel(name) {
-  let s = String(name);
-  let changed = true;
-  while (changed) {
-    changed = false;
-    let m = s.match(/^(.*?)\s*\([^()]*\)\s*$/);
-    if (m && m[1]) { s = m[1]; changed = true; continue; }
-    m = s.match(/^(.*)\s+—\s+.+$/);
-    if (m && m[1]) { s = m[1]; changed = true; continue; }
-  }
-  s = s.trim();
-  return s || String(name).trim();
-}
-
-// Base de poços da ANP/BDEP (data/pocos.json) — wellCategory e wellCodeOf
-// agora vêm de shared.js (compartilhadas com mapa.js e analises.js).
+// Base de poços da ANP/BDEP (data/pocos.json) — wellCategory, wellCodeOf,
+// simplifyMilestoneLabel, wellMilestoneLabel e milestoneLabelOf agora vêm
+// de shared.js (compartilhadas com mapa.js, analises.js e campo.js).
 const POCOS_URL = 'data/pocos.json';
 let pocosDataApp = {};
 
@@ -264,12 +236,6 @@ const PD_URL = 'data/planos_desenvolvimento.json';
 const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
 let featureByProjectApp = {};
 let pdDataApp = {};
-
-// Marco agregado ("17 poços perfurados em 2024", workstream "Poços
-// Perfurados" dos campos em produção) — casa só o número no início do
-// nome, sem exigir o resto do texto, pra não depender do plural/singular
-// ("1 poço perfurado" vs "17 poços perfurados").
-const WELL_COUNT_MILESTONE_RE = /^(\d+)\s+poços?\s+perfurados?\s+em\s+\d{4}/i;
 
 // Ordem/rótulo de exibição da quebra por tipo no tooltip — mesma
 // categorização do mapa (ver wellCategory), do resultado mais positivo
@@ -299,34 +265,6 @@ function wellCountBreakdown(project, year) {
   return counts;
 }
 
-// Rótulo sempre visível de um marco de poço: só o essencial, direto da
-// base da ANP em vez do texto curado (que tinha prefixo de tipo, apelido
-// entre aspas e o resultado detalhado — tudo isso continua no hover, ver
-// showMilestoneTooltip). Agregado de ano vira só o número; poço
-// individual vira "código (operador)"; sem correspondência na base (ex.:
-// "Poço exploratório (previsto)", que ainda não tem poço real perfurado)
-// cai no corte genérico de simplifyMilestoneLabel.
-function wellMilestoneLabel(project, item) {
-  const countMatch = item.name.match(WELL_COUNT_MILESTONE_RE);
-  if (countMatch) return countMatch[1];
-  const code = wellCodeOf(item.name);
-  if (code) {
-    const wells = pocosDataApp[project.name] || [];
-    const found = wells.find((w) => w.n === code);
-    if (found && found.op) return `${code} (${found.op})`;
-    return code;
-  }
-  return simplifyMilestoneLabel(item.name);
-}
-
-// Ponto único de decisão entre as duas regras de simplificação (poço vs.
-// os demais tipos) — usado tanto no cálculo de colisão
-// (resolveMilestoneLabelLayout) quanto no desenho (renderMilestone), pra
-// nunca divergir entre a largura calculada e o texto realmente exibido.
-function milestoneLabelOf(project, item) {
-  return item.icon === 'well' ? wellMilestoneLabel(project, item) : simplifyMilestoneLabel(item.name);
-}
-
 // O rótulo do marco fica sempre centralizado exatamente sobre o losango —
 // nunca desloca horizontalmente, nem para desviar de barras de tarefa (isso
 // já causou o rótulo "teleportando" para longe do marco). A única
@@ -346,7 +284,7 @@ function resolveMilestoneLabelLayout(project, placements, rangeStart) {
   for (const laneItems of byLane.values()) {
     const withPos = laneItems.map((item) => {
       const diamondX = diffDays(rangeStart, parseDate(item.date)) * currentPxPerDay;
-      const labelBoxWidth = milestoneLabelBoxWidth(milestoneLabelOf(project, item));
+      const labelBoxWidth = milestoneLabelBoxWidth(milestoneLabelOf(pocosDataApp, project, item));
       return { item, left: diamondX - labelBoxWidth / 2, right: diamondX + labelBoxWidth / 2 };
     }).sort((a, b) => a.left - b.left);
 
@@ -371,6 +309,14 @@ const MOBILE_BREAKPOINT = 640;
 // bolinha 9 + gap 6 = 75; a folga extra é margem pra imprecisão de medição).
 const PROJECT_LABEL_CHROME_DESKTOP = 80;
 const PROJECT_NAME_FONT_DESKTOP = '600 13px ' + FONT_STACK; // mesma fonte de .label-text
+// Mesma ideia, pro nome de workstream ("Marcos do Contrato", "Poços
+// Perfurados"...): padding-left 50 + padding-right 8 (ver .row.workstream-row
+// .label-cell no CSS) = 58, com folga. Sem chevron/bolinha (só o texto), por
+// isso bem menor que o chrome de projeto acima. Sem isso a sidebar cabia o
+// nome de projeto mais longo mas ainda cortava com reticências um nome de
+// workstream mais largo que ele.
+const WORKSTREAM_LABEL_CHROME_DESKTOP = 64;
+const WORKSTREAM_NAME_FONT_DESKTOP = '500 12.5px ' + FONT_STACK; // mesma fonte de .row.workstream-row .label-text
 // Espaço reservado na label-cell além do texto do nome do projeto: padding +
 // chevron + bolinha de cor + ícone "+" + gaps (ver .label-cell no CSS mobile).
 const PROJECT_LABEL_CHROME_MOBILE = 95;
@@ -390,12 +336,16 @@ function isMobileLayout() {
 // como piso e um teto que garante espaço útil pra timeline ao lado mesmo com
 // um nome bem comprido.
 function computeDesktopSidebarWidth() {
-  let widestName = 0;
+  let desired = 0;
   for (const project of state.projects) {
-    const w = measureTextWidth(projectDisplayName(project.name), PROJECT_NAME_FONT_DESKTOP);
-    if (w > widestName) widestName = w;
+    const nameW = measureTextWidth(projectDisplayName(project.name), PROJECT_NAME_FONT_DESKTOP) + PROJECT_LABEL_CHROME_DESKTOP;
+    if (nameW > desired) desired = nameW;
+    for (const ws of project.workstreams) {
+      const wsW = measureTextWidth(ws.name, WORKSTREAM_NAME_FONT_DESKTOP) + WORKSTREAM_LABEL_CHROME_DESKTOP;
+      if (wsW > desired) desired = wsW;
+    }
   }
-  const desired = Math.ceil(widestName + PROJECT_LABEL_CHROME_DESKTOP);
+  desired = Math.ceil(desired);
   const max = Math.max(SIDEBAR_WIDTH_DESKTOP_MIN, window.innerWidth - 500);
   return Math.min(max, Math.max(SIDEBAR_WIDTH_DESKTOP_MIN, desired));
 }
@@ -1182,7 +1132,7 @@ function renderMilestone(project, item, lane, rangeStart, labelLayoutOverride, t
   // horizontal nunca muda, continua centralizada na data real.
   const labelEl = document.createElement('span');
   labelEl.className = 'milestone-label';
-  const simplifiedName = milestoneLabelOf(project, item);
+  const simplifiedName = milestoneLabelOf(pocosDataApp, project, item);
   labelEl.textContent = simplifiedName;
   if (isPast) labelEl.style.color = item.done ? MILESTONE_PAST_LABEL_COLOR : MILESTONE_OVERDUE_LABEL_COLOR;
 

@@ -983,6 +983,12 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
    fixo) pra acompanhar a largura do cartão. */
 .campo-roadmap { position: relative; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .campo-roadmap .row:last-child { border-bottom: none; }
+/* Rótulo do marco (ver buildRoadmapMilestone em campo.js): posicionado em
+   % igual ao losango (não em pixel como o roadmap principal, que calcula a
+   caixa via measureTextWidth) — translateX(-50%) extra aqui centraliza o
+   texto sobre esse mesmo ponto percentual. */
+.campo-roadmap .milestone-label { transform: translateX(-50%) translateY(-100%); }
+.campo-roadmap .milestone-label.below { transform: translateX(-50%) translateY(0); }
 
 /* ---------- Telas estreitas (celular), incluindo paisagem: usa a
    condição de altura curta + orientação para pegar o celular deitado, que

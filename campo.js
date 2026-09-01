@@ -424,6 +424,29 @@ const ROADMAP_LANE_H = 32;
 const ROADMAP_LANE_PAD = 14;
 const ROADMAP_BAR_H = 18;
 
+// Largura da 1ª coluna (nome da workstream) dinâmica em vez de fixa — cabe
+// o nome mais longo entre as workstreams DESTE projeto ("Marcos do
+// Contrato", "Poços Perfurados"...), que antes cortava com reticências
+// numa sidebar de 150px fixos. Fonte/chrome = mesma medida de
+// .row.workstream-row .label-cell/.label-text no CSS (padding-left 50 +
+// padding-right 8 = 58, com folga — mesmo cálculo do roadmap principal,
+// ver WORKSTREAM_LABEL_CHROME_DESKTOP em app.js). Só afeta desktop: no
+// mobile o CSS troca pra --sidebar-w fixo (84px !important) porque o nome
+// quebra em várias linhas em vez de truncar (ver .label-text na media
+// query), então não precisa desse cálculo lá.
+const CAMPO_WORKSTREAM_LABEL_FONT = '500 12.5px ' + FONT_STACK;
+const CAMPO_WORKSTREAM_LABEL_CHROME = 64;
+const CAMPO_SIDEBAR_MIN = 100;
+const CAMPO_SIDEBAR_MAX = 200;
+function campoSidebarWidth(project) {
+  let widest = 0;
+  for (const ws of project.workstreams) {
+    const w = measureTextWidth(ws.name, CAMPO_WORKSTREAM_LABEL_FONT) + CAMPO_WORKSTREAM_LABEL_CHROME;
+    if (w > widest) widest = w;
+  }
+  return Math.min(CAMPO_SIDEBAR_MAX, Math.max(CAMPO_SIDEBAR_MIN, Math.ceil(widest)));
+}
+
 function roadmapRange(project) {
   const allItems = project.workstreams.flatMap((w) => w.items);
   const today = parseDate(todayISO());
@@ -509,7 +532,7 @@ function buildRoadmapTaskBar(project, item, lane, rangeStart, totalDays) {
   return wrapper;
 }
 
-function buildRoadmapMilestone(project, item, lane, rangeStart, totalDays) {
+function buildRoadmapMilestone(project, item, lane, rangeStart, totalDays, pocosData, below) {
   const date = parseDate(item.date);
   const isPast = date < parseDate(todayISO());
   const leftPct = roadmapPctLeft(rangeStart, totalDays, date);
@@ -539,12 +562,29 @@ function buildRoadmapMilestone(project, item, lane, rangeStart, totalDays) {
     + (item.approx ? '\n(data aproximada — só o mês era conhecido)' : '');
 
   wrapper.appendChild(dia);
+
+  // Rótulo sempre visível (não só no hover) — mesmo texto simplificado do
+  // roadmap principal (milestoneLabelOf, shared.js), centralizado sobre o
+  // losango via CSS (.campo-roadmap .milestone-label, transform:
+  // translateX(-50%)) já que aqui a posição é em porcentagem, não pixel
+  // (ver comentário no topo do arquivo) — sem a colisão em pixel do
+  // roadmap principal, "below" já veio decidido por data
+  // (resolveCampoMilestoneLabelLayout).
+  const labelEl = document.createElement('span');
+  labelEl.className = 'milestone-label' + (below ? ' below' : '');
+  labelEl.style.left = leftPct + '%';
+  labelEl.style.top = top + 'px';
+  labelEl.textContent = milestoneLabelOf(pocosData, project, item);
+  if (isPast) labelEl.style.color = item.done ? MILESTONE_PAST_LABEL_COLOR : MILESTONE_OVERDUE_LABEL_COLOR;
+  wrapper.appendChild(labelEl);
+
   return wrapper;
 }
 
-function buildRoadmapRow(labelText, items, rangeStart, totalDays, project) {
+function buildRoadmapRow(labelText, items, rangeStart, totalDays, project, pocosData) {
   const { placements, laneCount } = packLanes(items);
   const rowHeight = Math.max(ROADMAP_ROW_MIN_H, laneCount * ROADMAP_LANE_H + ROADMAP_LANE_PAD);
+  const belowByItem = resolveCampoMilestoneLabelLayout(placements, totalDays);
 
   const row = document.createElement('div');
   row.className = 'row workstream-row';
@@ -565,17 +605,52 @@ function buildRoadmapRow(labelText, items, rangeStart, totalDays, project) {
     timelineCell.appendChild(
       item.type === 'task'
         ? buildRoadmapTaskBar(project, item, lane, rangeStart, totalDays)
-        : buildRoadmapMilestone(project, item, lane, rangeStart, totalDays),
+        : buildRoadmapMilestone(project, item, lane, rangeStart, totalDays, pocosData, belowByItem.get(item)),
     );
   }
   row.appendChild(timelineCell);
   return row;
 }
 
-function buildRoadmapSection(project) {
+// Mesma ideia de resolveMilestoneLabelLayout (app.js), mas sem o cálculo em
+// pixel: o mini-roadmap posiciona tudo em porcentagem (ver comentário no
+// topo do arquivo), e o container só ganha tamanho real depois de montado
+// no DOM (mesmo problema do zoom do mini-mapa, ver buildMiniMap) — medir
+// largura de rótulo em pixel aqui daria conta errada. Em vez disso, um
+// marco que cai muito perto do anterior NA MESMA RAIA (em fração do
+// período total do roadmap, não em pixel) alterna pra baixo do losango —
+// aproximação suficiente pra rótulo curto (ver milestoneLabelOf) num
+// recorte de um projeto só.
+const CAMPO_MILESTONE_LABEL_MIN_GAP_FRACTION = 0.05;
+function resolveCampoMilestoneLabelLayout(placements, totalDays) {
+  const byLane = new Map();
+  for (const { item, lane } of placements) {
+    if (item.type !== 'milestone') continue;
+    if (!byLane.has(lane)) byLane.set(lane, []);
+    byLane.get(lane).push(item);
+  }
+  const minGapDays = totalDays * CAMPO_MILESTONE_LABEL_MIN_GAP_FRACTION;
+  const below = new Map();
+  for (const laneItems of byLane.values()) {
+    const sorted = laneItems.slice().sort((a, b) => parseDate(a.date) - parseDate(b.date));
+    let prevDate = null;
+    let prevBelow = false;
+    for (const item of sorted) {
+      const date = parseDate(item.date);
+      const tooClose = prevDate !== null && diffDays(prevDate, date) < minGapDays;
+      const isBelow = tooClose ? !prevBelow : false;
+      below.set(item, isBelow);
+      prevDate = date;
+      prevBelow = isBelow;
+    }
+  }
+  return below;
+}
+
+function buildRoadmapSection(project, pocosData) {
   const wrap = document.createElement('div');
   wrap.className = 'campo-roadmap';
-  wrap.style.setProperty('--sidebar-w', '150px');
+  wrap.style.setProperty('--sidebar-w', campoSidebarWidth(project) + 'px');
   wrap.style.setProperty('--header-h', ROADMAP_HEADER_H + 'px');
 
   const allItems = project.workstreams.flatMap((w) => w.items);
@@ -612,7 +687,7 @@ function buildRoadmapSection(project) {
 
   for (const ws of project.workstreams) {
     if (!ws.items.length) continue;
-    wrap.appendChild(buildRoadmapRow(ws.name, ws.items, rangeStart, totalDays, project));
+    wrap.appendChild(buildRoadmapRow(ws.name, ws.items, rangeStart, totalDays, project, pocosData));
   }
 
   const today = parseDate(todayISO());
@@ -725,7 +800,7 @@ function buildProjectPanel(project, ctx) {
   inner.appendChild(header);
 
   const roadmapCard = chartCard('Roadmap do projeto', 'Marcos e tarefas de cada workstream — mesmos dados do Roadmap principal (index.html), num recorte só deste projeto. Passe o mouse sobre uma barra ou marco para ver os detalhes.');
-  roadmapCard.appendChild(buildRoadmapSection(project));
+  roadmapCard.appendChild(buildRoadmapSection(project, ctx.pocosData));
   inner.appendChild(roadmapCard);
 
   // Dashboard: mapa grande de um lado, roadmap já foi (acima, largura

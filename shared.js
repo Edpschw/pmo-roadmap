@@ -8,6 +8,19 @@
 
 const STORAGE_KEY = 'pmo-roadmap-state-v1';
 
+const FONT_STACK = '-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif';
+
+// Medição de largura de texto via canvas (sem inserir/remover elemento
+// DOM) — compartilhada entre app.js (largura da sidebar do roadmap
+// principal, rótulo de marco) e campo.js (largura da sidebar do
+// mini-roadmap por projeto).
+const _measureCanvas = document.createElement('canvas');
+const _measureCtx = _measureCanvas.getContext('2d');
+function measureTextWidth(text, font) {
+  _measureCtx.font = font;
+  return _measureCtx.measureText(text).width;
+}
+
 const PALETTE = [
   '#3457d5', '#1c9e6b', '#e0762f', '#a24bd6', '#d64545',
   '#0aa3a3', '#c9a227', '#5b6ee1', '#2f9ed6', '#c14f8a'
@@ -201,6 +214,71 @@ const WELL_CODE_RE = /\b\d+-[A-Z]{2,6}-\d+[A-Za-z]*-[A-Z]{3}\b/;
 function wellCodeOf(name) {
   const m = String(name).match(WELL_CODE_RE);
   return m ? m[0] : null;
+}
+
+/* -------------------------- Rótulo visível do marco ----------------------- */
+// Compartilhado entre app.js (roadmap principal, rótulo sempre visível
+// acima/abaixo do losango — ver renderMilestone) e campo.js (mini-roadmap
+// por projeto, mesmo rótulo, ver buildRoadmapMilestone). O texto completo
+// continua disponível no hover (tooltip rico em app.js, title nativo em
+// campo.js) — aqui é só a versão curta que cabe no gráfico.
+
+// Rótulo sempre visível no gráfico fica só com o essencial. Marco de poço
+// (icon 'well') tem regra própria — ver wellMilestoneLabel logo abaixo, que
+// usa o código do poço e o operador direto da base da ANP; esta função aqui
+// cobre os demais tipos (contrato, FPSO, genérico): corta o parêntese final
+// e a cláusula final com travessão do nome ("Petrobras compra 50%
+// (Equinor)" vira "Petrobras compra 50%") — o texto completo não se perde,
+// continua aparecendo por inteiro no hover. Só corta em cima de travessão
+// "—", nunca hífen comum, porque nome de marco pode ter hífen no meio
+// (datas, códigos).
+function simplifyMilestoneLabel(name) {
+  let s = String(name);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    let m = s.match(/^(.*?)\s*\([^()]*\)\s*$/);
+    if (m && m[1]) { s = m[1]; changed = true; continue; }
+    m = s.match(/^(.*)\s+—\s+.+$/);
+    if (m && m[1]) { s = m[1]; changed = true; continue; }
+  }
+  s = s.trim();
+  return s || String(name).trim();
+}
+
+// Marco agregado ("17 poços perfurados em 2024", workstream "Poços
+// Perfurados" dos campos em produção) — casa só o número no início do
+// nome, sem exigir o resto do texto, pra não depender do plural/singular
+// ("1 poço perfurado" vs "17 poços perfurados").
+const WELL_COUNT_MILESTONE_RE = /^(\d+)\s+poços?\s+perfurados?\s+em\s+\d{4}/i;
+
+// Rótulo sempre visível de um marco de poço: só o essencial, direto da base
+// da ANP em vez do texto curado (que tinha prefixo de tipo, apelido entre
+// aspas e o resultado detalhado — tudo isso continua no hover). Agregado de
+// ano vira só o número; poço individual vira "código (operador)"; sem
+// correspondência na base (ex.: "Poço exploratório (previsto)", que ainda
+// não tem poço real perfurado) cai no corte genérico de
+// simplifyMilestoneLabel. pocosData: data/pocos.json já carregado (chave =
+// nome do projeto).
+function wellMilestoneLabel(pocosData, project, item) {
+  const countMatch = item.name.match(WELL_COUNT_MILESTONE_RE);
+  if (countMatch) return countMatch[1];
+  const code = wellCodeOf(item.name);
+  if (code) {
+    const wells = pocosData[project.name] || [];
+    const found = wells.find((w) => w.n === code);
+    if (found && found.op) return `${code} (${found.op})`;
+    return code;
+  }
+  return simplifyMilestoneLabel(item.name);
+}
+
+// Ponto único de decisão entre as duas regras de simplificação (poço vs. os
+// demais tipos) — usado tanto no cálculo de colisão/layout do rótulo quanto
+// no desenho, pra nunca divergir entre o que foi medido/decidido e o texto
+// realmente exibido.
+function milestoneLabelOf(pocosData, project, item) {
+  return item.icon === 'well' ? wellMilestoneLabel(pocosData, project, item) : simplifyMilestoneLabel(item.name);
 }
 
 // Categoria de um poço a partir do registro da ANP/BDEP (info = um item de
