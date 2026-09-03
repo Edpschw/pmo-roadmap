@@ -207,14 +207,20 @@
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sapinhoa.pdf"
   },
   "Itapu": {
+    "tracts": [
+      { "nome": "Itapu (CO)", "pct": 51.7080, "excedenteOleoPct": null },
+      { "nome": "Itapu (PP)", "pct": 48.2920, "excedenteOleoPct": 18.15 }
+    ],
     "excedenteOleoPct": 18.15,
     "excedenteOleoObs": "Só a fatia do excedente (leilão de 2019/2021, camada de Partilha sobre o contrato original) tem esse mecanismo; a fatia original da Cessão Onerosa (2010) paga royalties + participação especial em vez de excedente em óleo. Leilão do Excedente da Cessão Onerosa, 1ª Rodada (06/11/2019) — Petrobras venceu sozinha, com o percentual mínimo do edital.",
     "titulo": "Itapu 2017",
     "resolucao": "RD 885 de 17/05/2017 — Resolução nº 301/2017",
-    "contrato": "Bloco 1 do Contrato da Cessão Onerosa (Florim)",
+    "contrato": "Bloco 1 do Contrato da Cessão Onerosa (Florim) + Partilha do Excedente (leilão 06/11/2019)",
     "participacao": [
       { "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }
     ],
+    "areaObs": "Jazida compartilhada — 51,71% Itapu (CO) / 48,29% Itapu (PP)",
+    "participacaoObs": "TP dos dois tratos (ver tracts acima) derivado da proporção real de produção ITAPU vs ITAPU_ECO no boletim de poços da ANP (jan–jul/2026) — mesmo método bateu exato com o TP oficial já publicado de Búzios (26,1205%/73,8795%, Acordo de Coparticipação), Bacalhau (48%/52%) e Mero (96,5%/3,5%), então a ANP claramente já aplica esse TP pra separar produção por trato no próprio boletim.",
     "descoberta": "2012-12-01",
     "descobertaObs": "poço 1-BRSA-1116-RJS",
     "laminaDagua": "2.000 m",
@@ -225,6 +231,10 @@
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/itapu.pdf"
   },
   "Sépia": {
+    "tracts": [
+      { "nome": "Sépia (CO)", "pct": 31.2991, "excedenteOleoPct": null },
+      { "nome": "Sépia (PP)", "pct": 68.7009, "excedenteOleoPct": 37.43 }
+    ],
     "excedenteOleoPct": 37.43,
     "excedenteOleoObs": "Só a fatia do excedente (leilão de 2019/2021, camada de Partilha sobre o contrato original) tem esse mecanismo; a fatia original da Cessão Onerosa (2010) paga royalties + participação especial em vez de excedente em óleo. Leilão do Excedente da Cessão Onerosa, 2ª Rodada (17/12/2021) — não arrematado na 1ª Rodada (2019), reofertado com mínimo mais baixo.",
     "titulo": "Sépia 2017",
@@ -236,7 +246,8 @@
       { "empresa": "Petronas Petróleo Brasil Ltda.", "pct": 21 },
       { "empresa": "QatarEnergy Brasil Ltda.", "pct": 21 }
     ],
-    "participacaoObs": "% do contrato de Partilha do Excedente (Sépia-PP) — consórcio vencedor do leilão de 17/12/2021 (2ª Rodada). Na Cessão Onerosa original (Sépia-CO) a Petrobras tem 100%. TP dos dois tratos não confirmado numa fonte confiável até agora — tracts não preenchido (diferente de Búzios/Atapu).",
+    "participacaoObs": "% do contrato de Partilha do Excedente (Sépia-PP) — consórcio vencedor do leilão de 17/12/2021 (2ª Rodada). Na Cessão Onerosa original (Sépia-CO) a Petrobras tem 100%. TP dos dois tratos (ver tracts acima) derivado da proporção real de produção SÉPIA vs SÉPIA_ECO no boletim de poços da ANP (jan–jul/2026) — bate com o percentual de 68,7% já citado pela imprensa especializada pro acordo de coparticipação de Sépia/Atapu; mesmo método validado contra o TP oficial já publicado de Búzios, Bacalhau e Mero.",
+    "areaObs": "Jazida compartilhada — 31,30% Sépia (CO) / 68,70% Sépia (PP)",
     "situacao": "Em desenvolvimento",
     "descoberta": "2012-03-08",
     "descobertaObs": "poço 1-BRSA-976-RJS",
