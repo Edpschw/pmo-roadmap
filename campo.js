@@ -28,6 +28,7 @@ const GEOJSON_URL = 'data/contratos.geojson';
 const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
 const POCOS_URL = 'data/pocos.json';
 const PRODUCAO_URL = 'data/producao.json';
+const PRODUCAO_POCOS_URL = 'data/producao_pocos.json';
 const PD_URL = 'data/planos_desenvolvimento.json';
 
 const GROUP_BADGES = {
@@ -411,6 +412,44 @@ function buildComboChart(container, series, projectColor) {
     <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;height:2px;background:${RGO_LINE_COLOR};display:inline-block"></span>RGO (m³/m³, eixo direito)</span>
   `;
   container.appendChild(legend);
+}
+
+/* ------------------------- Produção por poço (jazida) ---------------------- */
+// Só faz sentido pra jazida COMPARTILHADA — "quais poços produzem mais"
+// só é uma pergunta interessante quando são poços de contratos/operadores
+// diferentes disputando o mesmo reservatório; um campo de contrato único
+// já mostra seus poços no mini-mapa/roadmap sem precisar de outro gráfico.
+// Fonte diferente de tudo mais nesta tela: data/producao_pocos.json (ver
+// scripts/build_producao_pocos.py), o boletim de POÇOS da ANP — granularidade
+// mais fina que data/producao.json (por campo), então cobre só o último mês
+// disponível ali, não uma série histórica.
+function buildWellProductionChart(container, wells, producaoPocos, mesRef) {
+  const rows = [];
+  for (const w of wells) {
+    const p = producaoPocos[w.n];
+    if (p && p.oleoBbld > 0) rows.push({ name: w.n, oleoBbld: p.oleoBbld, campo: p.campo });
+  }
+  if (!rows.length) return;
+  rows.sort((a, b) => b.oleoBbld - a.oleoBbld);
+  const max = rows[0].oleoBbld;
+
+  const [ano, mes] = mesRef.split('-').map(Number);
+  const card = chartCard(
+    'Produção por poço',
+    `Óleo por poço produtor (bbl/d), ${MESES_PT[mes]}/${ano} — boletim de poços da ANP, todos os poços da jazida compartilhada (mesmo critério do mini-mapa acima: contrato próprio + os outros contratos/campos da mesma jazida). Só poços com produção de óleo no mês; injetor/seco/abandonado fica de fora.`,
+  );
+  const list = document.createElement('div');
+  list.className = 'hbar-list';
+  for (const r of rows) {
+    list.appendChild(barRow(
+      r.name, (r.oleoBbld / max) * 100, fmtNum(r.oleoBbld) + ' bbl/d', WELL_LEGEND_COLOR,
+      () => `<strong>${escapeHtml(r.name)}</strong>`
+        + tooltipRowHTML('Campo/trato (boletim ANP)', r.campo)
+        + tooltipRowHTML('Óleo', fmtNum(r.oleoBbld) + ' bbl/d'),
+    ));
+  }
+  card.appendChild(list);
+  container.appendChild(card);
 }
 
 /* -------------------------------- Mini-roadmap ------------------------------ */
@@ -830,6 +869,17 @@ function buildProjectPanel(project, ctx) {
   mapCol.appendChild(mapCard);
 
   const jazidaFeatures = ctx.jazidaFeaturesByProject[project.name];
+  // Jazida compartilhada de dois jeitos possíveis nesta base: (a) entre
+  // ENTRADAS diferentes de planos_desenvolvimento.json, cada uma com sua
+  // própria poligonal (Atapu/Oeste de Atapu) — isso é jazidaFeatures.extra;
+  // (b) dentro de UMA SÓ entrada, via tracts (TP) — Búzios (CO+PP), Sépia
+  // (CO+PP), Itapu (CO+PP), Mero (Mero+ANC), Bacalhau (Bacalhau+Bacalhau
+  // Norte) — não aparece em jazidaFeatures.extra porque não é uma poligonal
+  // à parte, é o MESMO campo/contrato dividido por trato. Sem checar os
+  // dois, "Produção por poço" (abaixo) nunca aparecia pros casos do tipo
+  // (b), que são a maioria dos exemplos reais dessa base.
+  const pd = byNameOrUpper(ctx.pdData, project.name);
+  const isSharedJazida = jazidaFeatures.extra.length > 0 || !!(pd && pd.tracts && pd.tracts.length > 1);
   // Poços do contrato PRÓPRIO + dos outros contratos/campos que
   // compartilham a mesma jazida (jazidaFeatures.extra — poligonal
   // tracejada, ver init()) — sem isso só os poços cadastrados sob o nome
@@ -877,6 +927,27 @@ function buildProjectPanel(project, ctx) {
     note.className = 'analytics-table-note';
     note.textContent = `Jazida compartilhada (mesmo Plano de Desenvolvimento) — poligonal tracejada combinada com: ${names}.`;
     mapCard.appendChild(note);
+  } else if (pd && pd.tracts && pd.tracts.length > 1) {
+    // Compartilhada por TRATO (TP) dentro da mesma entrada/poligonal — ver
+    // isSharedJazida acima — sem poligonal à parte pra desenhar tracejada,
+    // mas ainda vale avisar (jazidaComposicao lê pd.areaObs, shared.js).
+    const composicao = jazidaComposicao(pd);
+    const note = document.createElement('p');
+    note.className = 'analytics-table-note';
+    note.textContent = composicao
+      ? `Jazida compartilhada entre tratos do mesmo contrato — ${composicao}.`
+      : 'Jazida compartilhada entre tratos do mesmo contrato (Cessão Onerosa + Partilha do Excedente, ou similar).';
+    mapCard.appendChild(note);
+  }
+
+  // Produção por poço — só faz sentido pra jazida compartilhada (ver
+  // buildWellProductionChart e isSharedJazida acima); fica antes dos
+  // gráficos de produção/RGO por campo (que dependem de PROJECT_FIELD_BASE,
+  // abaixo) porque a fonte aqui é outra (boletim de poços, não boletim por
+  // campo) — funciona mesmo pra projeto sem produção individualizada no
+  // boletim por campo.
+  if (isSharedJazida) {
+    buildWellProductionChart(chartsCol, wells, ctx.producaoPocos, ctx.producaoPocosMesRef);
   }
 
   const base = PROJECT_FIELD_BASE[project.name];
@@ -1078,8 +1149,9 @@ async function init() {
   let pocosJson = null;
   let producaoData = null;
   let pdData = null;
+  let producaoPocosJson = null;
   try {
-    [geojson, presalGeojson, pocosJson, producaoData, pdData] = await Promise.all([
+    [geojson, presalGeojson, pocosJson, producaoData, pdData, producaoPocosJson] = await Promise.all([
       fetch(GEOJSON_URL).then((r) => r.json()),
       fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
       fetch(POCOS_URL).then((r) => r.json()),
@@ -1088,6 +1160,12 @@ async function init() {
       // saber que precisa buscar de novo só pela URL.
       fetch(PRODUCAO_URL, { cache: 'no-store' }).then((r) => r.json()),
       fetch(PD_URL).then((r) => r.json()),
+      // Produção por poço (boletim de poços da ANP, ver
+      // scripts/build_producao_pocos.py) — granularidade mais fina que
+      // data/producao.json (por campo), usada só pro gráfico "Produção por
+      // poço" de jazida compartilhada (ver buildWellProductionChart). Mesmo
+      // no-store: reprocessado sem deploy de código junto.
+      fetch(PRODUCAO_POCOS_URL, { cache: 'no-store' }).then((r) => r.json()),
     ]);
   } catch (err) {
     console.error('Falha ao carregar dados de campo', err);
@@ -1146,7 +1224,8 @@ async function init() {
   }
 
   const monthlySeries = computeMonthlySeries(producaoData.meses || [], state.projects);
-  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries };
+  const producaoPocos = producaoPocosJson.pocos || {};
+  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocos, producaoPocosMesRef: producaoPocosJson.mesRef, pdData };
 
   // Ordem: mesmo agrupamento por status de pocos.js/analises.js (Produção,
   // Exploração, Devolvidos), cada grupo alfabético.
