@@ -414,44 +414,53 @@ function buildComboChart(container, series, projectColor) {
   container.appendChild(legend);
 }
 
-/* ------------------------- Produção por poço (jazida) ---------------------- */
-// Só faz sentido pra jazida COMPARTILHADA — "quais poços produzem mais"
-// só é uma pergunta interessante quando são poços de contratos/operadores
-// diferentes disputando o mesmo reservatório; um campo de contrato único
-// já mostra seus poços no mini-mapa/roadmap sem precisar de outro gráfico.
-// Fonte diferente de tudo mais nesta tela: data/producao_pocos.json (ver
-// scripts/build_producao_pocos.py), o boletim de POÇOS da ANP — granularidade
-// mais fina que data/producao.json (por campo), então cobre só o último mês
-// disponível ali, não uma série histórica.
-function buildWellProductionChart(container, wells, producaoPocos, mesRef) {
+/* ---------------------- Poço por poço, por FPSO (jazida) ------------------- */
+// Só faz sentido pra jazida COMPARTILHADA — "quais poços produzem/injetam
+// mais" só é uma pergunta interessante quando são poços de contratos/
+// operadores diferentes disputando o mesmo reservatório; um campo de
+// contrato único já mostra seus poços no mini-mapa/roadmap sem precisar de
+// outro gráfico. Fonte diferente de tudo mais nesta tela: data/
+// producao_pocos.json (ver scripts/build_producao_pocos.py), o boletim de
+// POÇOS da ANP — granularidade mais fina que data/producao.json (por
+// campo), então cobre só o último mês disponível ali, não uma série
+// histórica. Mesmo desenho pras três variações (produção de óleo, injeção
+// de água, injeção de gás — ver buildWellBarChart abaixo): poço nunca é
+// produtor E injetor no mesmo mês nesta base, então os três gráficos nunca
+// competem pelo mesmo poço.
+
+// Gráfico de barra horizontal por poço, agrupado e colorido por FPSO/
+// instalação — genérico o bastante pra servir produção de óleo e as duas
+// injeções (só troca a métrica/unidade/título). dataMap: poço -> { campo,
+// fpso, [opts.valueKey]: número (já na unidade de exibição, por dia) }.
+function buildWellBarChart(container, wells, dataMap, mesRef, opts) {
   const rows = [];
   for (const w of wells) {
-    const p = producaoPocos[w.n];
-    if (p && p.oleoBbld > 0) rows.push({ name: w.n, oleoBbld: p.oleoBbld, campo: p.campo, fpso: p.fpso });
+    const p = dataMap[w.n];
+    if (p && p[opts.valueKey] > 0) rows.push({ name: w.n, value: p[opts.valueKey], campo: p.campo, fpso: p.fpso });
   }
   if (!rows.length) return;
-  const max = Math.max(...rows.map((r) => r.oleoBbld));
+  const max = Math.max(...rows.map((r) => r.value));
 
   // Cor por FPSO/instalação (não por poço) — mesma ideia de rodadaColorMap
-  // em mapa.js: um índice fixo na paleta por ordem de produção TOTAL do FPSO
-  // (o que mais produz pega a primeira cor), pra legenda e barras baterem
+  // em mapa.js: um índice fixo na paleta por ordem do TOTAL do FPSO (o que
+  // mais produz/injeta pega a primeira cor), pra legenda e barras baterem
   // e a ordem fazer sentido visualmente.
   const totalByFpso = new Map();
-  for (const r of rows) totalByFpso.set(r.fpso, (totalByFpso.get(r.fpso) || 0) + r.oleoBbld);
+  for (const r of rows) totalByFpso.set(r.fpso, (totalByFpso.get(r.fpso) || 0) + r.value);
   const fpsoOrder = [...totalByFpso.keys()].sort((a, b) => totalByFpso.get(b) - totalByFpso.get(a));
   const colorByFpso = new Map(fpsoOrder.map((f, i) => [f, PALETTE[i % PALETTE.length]]));
 
   // Agrupado por FPSO (mesma ordem da legenda/cor acima), poço mais
-  // produtivo primeiro DENTRO de cada FPSO — em vez de misturar todo mundo
-  // só pela produção, o que espalhava poços do mesmo FPSO pela lista
-  // inteira em vez de deixá-los juntos.
+  // produtivo/injetor primeiro DENTRO de cada FPSO — em vez de misturar
+  // todo mundo só pelo valor, o que espalhava poços do mesmo FPSO pela
+  // lista inteira em vez de deixá-los juntos.
   const fpsoIndex = new Map(fpsoOrder.map((f, i) => [f, i]));
-  rows.sort((a, b) => fpsoIndex.get(a.fpso) - fpsoIndex.get(b.fpso) || b.oleoBbld - a.oleoBbld);
+  rows.sort((a, b) => fpsoIndex.get(a.fpso) - fpsoIndex.get(b.fpso) || b.value - a.value);
 
   const [ano, mes] = mesRef.split('-').map(Number);
   const card = chartCard(
-    'Produção por poço',
-    `Óleo por poço produtor (bbl/d), ${MESES_PT[mes]}/${ano} — boletim de poços da ANP, todos os poços da jazida compartilhada (mesmo critério do mini-mapa acima: contrato próprio + os outros contratos/campos da mesma jazida). Cor da barra = FPSO/instalação. Só poços com produção de óleo no mês; injetor/seco/abandonado fica de fora.`,
+    opts.title,
+    `${opts.subtitle} (${opts.unit}), ${MESES_PT[mes]}/${ano} — boletim de poços da ANP, todos os poços da jazida compartilhada (mesmo critério do mini-mapa acima: contrato próprio + os outros contratos/campos da mesma jazida). Cor da barra = FPSO/instalação.`,
   );
 
   // Legenda de FPSO — mesmo padrão visual da legenda "Partilha da Produção"
@@ -470,15 +479,45 @@ function buildWellProductionChart(container, wells, producaoPocos, mesRef) {
   list.className = 'hbar-list';
   for (const r of rows) {
     list.appendChild(barRow(
-      r.name, (r.oleoBbld / max) * 100, fmtNum(r.oleoBbld) + ' bbl/d', colorByFpso.get(r.fpso),
+      r.name, (r.value / max) * 100, fmtNum(r.value) + ' ' + opts.unit, colorByFpso.get(r.fpso),
       () => `<strong>${escapeHtml(r.name)}</strong>`
         + tooltipRowHTML('FPSO/instalação', r.fpso)
         + tooltipRowHTML('Campo/trato (boletim ANP)', r.campo)
-        + tooltipRowHTML('Óleo', fmtNum(r.oleoBbld) + ' bbl/d'),
+        + tooltipRowHTML(opts.tooltipLabel, fmtNum(r.value) + ' ' + opts.unit),
     ));
   }
   card.appendChild(list);
   container.appendChild(card);
+}
+
+function buildWellProductionChart(container, wells, producaoPocosData) {
+  buildWellBarChart(container, wells, producaoPocosData.pocos, producaoPocosData.mesRef, {
+    title: 'Produção por poço',
+    subtitle: 'Óleo por poço produtor',
+    unit: 'bbl/d',
+    tooltipLabel: 'Óleo',
+    valueKey: 'oleoBbld',
+  });
+}
+
+function buildWellWaterInjectionChart(container, wells, producaoPocosData) {
+  buildWellBarChart(container, wells, producaoPocosData.injetoresAgua, producaoPocosData.mesRef, {
+    title: 'Injeção de água por poço',
+    subtitle: 'Água injetada por poço (recuperação secundária + descarte)',
+    unit: 'm³/d',
+    tooltipLabel: 'Água injetada',
+    valueKey: 'aguaM3d',
+  });
+}
+
+function buildWellGasInjectionChart(container, wells, producaoPocosData) {
+  buildWellBarChart(container, wells, producaoPocosData.injetoresGas, producaoPocosData.mesRef, {
+    title: 'Injeção de gás por poço',
+    subtitle: 'Gás injetado por poço (natural + CO₂ + nitrogênio)',
+    unit: 'Mm³/d',
+    tooltipLabel: 'Gás injetado',
+    valueKey: 'gasMm3d',
+  });
 }
 
 /* -------------------------------- Mini-roadmap ------------------------------ */
@@ -969,14 +1008,16 @@ function buildProjectPanel(project, ctx) {
     mapCard.appendChild(note);
   }
 
-  // Produção por poço — só faz sentido pra jazida compartilhada (ver
-  // buildWellProductionChart e isSharedJazida acima); fica antes dos
-  // gráficos de produção/RGO por campo (que dependem de PROJECT_FIELD_BASE,
-  // abaixo) porque a fonte aqui é outra (boletim de poços, não boletim por
-  // campo) — funciona mesmo pra projeto sem produção individualizada no
-  // boletim por campo.
+  // Produção/injeção por poço — só faz sentido pra jazida compartilhada
+  // (ver buildWellBarChart e isSharedJazida acima); fica antes dos gráficos
+  // de produção/RGO por campo (que dependem de PROJECT_FIELD_BASE, abaixo)
+  // porque a fonte aqui é outra (boletim de poços, não boletim por campo)
+  // — funciona mesmo pra projeto sem produção individualizada no boletim
+  // por campo.
   if (isSharedJazida) {
-    buildWellProductionChart(chartsCol, wells, ctx.producaoPocos, ctx.producaoPocosMesRef);
+    buildWellProductionChart(chartsCol, wells, ctx.producaoPocos);
+    buildWellWaterInjectionChart(chartsCol, wells, ctx.producaoPocos);
+    buildWellGasInjectionChart(chartsCol, wells, ctx.producaoPocos);
   }
 
   const base = PROJECT_FIELD_BASE[project.name];
@@ -1253,8 +1294,16 @@ async function init() {
   }
 
   const monthlySeries = computeMonthlySeries(producaoData.meses || [], state.projects);
-  const producaoPocos = producaoPocosJson.pocos || {};
-  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocos, producaoPocosMesRef: producaoPocosJson.mesRef, pdData };
+  // producaoPocos: objeto INTEIRO (não só .pocos) — pocos/injetoresAgua/
+  // injetoresGas/mesRef, ver buildWellProductionChart/buildWellWaterInjectionChart/
+  // buildWellGasInjectionChart, cada um lê o mapa certo dentro dele.
+  const producaoPocos = {
+    pocos: producaoPocosJson.pocos || {},
+    injetoresAgua: producaoPocosJson.injetoresAgua || {},
+    injetoresGas: producaoPocosJson.injetoresGas || {},
+    mesRef: producaoPocosJson.mesRef,
+  };
+  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocos, pdData };
 
   // Ordem: mesmo agrupamento por status de pocos.js/analises.js (Produção,
   // Exploração, Devolvidos), cada grupo alfabético.
