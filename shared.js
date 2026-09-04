@@ -1160,7 +1160,12 @@ function dateToContinuousIndex(monthlySeries, isoDate) {
 //     bem pequeno.
 // Sem markers (chamada de producao.js, ou de campo.js pro gráfico de
 // RGO), tudo aqui cai pra array vazio e nada muda no desenho.
-function createLineChart(container, monthlySeries, markers) {
+//   - refLine: {value, label} opcional — linha horizontal tracejada
+//     constante (ex.: pico histórico de produção de um FPSO, ver
+//     buildWellProductionChart em campo.js), sempre incluída no cálculo do
+//     teto automático (ver autoMax abaixo) pra já nascer visível na visão
+//     "Ver tudo", sem exigir zoom manual em y.
+function createLineChart(container, monthlySeries, markers, initialUnitKey, refLine) {
   const n = monthlySeries.length;
   const order = seriesOrder(monthlySeries);
   const meta = new Map(order.map((name) => {
@@ -1177,7 +1182,7 @@ function createLineChart(container, monthlySeries, markers) {
   // cor dele.
   const markerColor = order.length ? meta.get(order[0]).color : '#e8eaed';
 
-  let unitKey = 'oleo';
+  let unitKey = initialUnitKey || 'oleo';
   let viewStart = 0;
   let viewEnd = n - 1;
   let yMaxOverride = null; // null = auto-ajusta ao máximo visível (ver draw)
@@ -1245,7 +1250,8 @@ function createLineChart(container, monthlySeries, markers) {
     }
     let lastMax = 0;
     for (const r of monthlySeries[hiIdx].rows) lastMax = Math.max(lastMax, r[unit.key]);
-    const autoMax = niceMaxFromLastValue(Math.max(lastMax, rawMax));
+    const refLineValue = refLine ? refLine.value : null;
+    const autoMax = niceMaxFromLastValue(Math.max(lastMax, rawMax, refLineValue || 0));
     // yMaxOverride persiste entre trocas de unidade/pan/zoom em x até o
     // usuário resetar ("Ver tudo") — dar zoom em x não desfaz um zoom em y
     // já ajustado, e vice-versa (são eixos independentes).
@@ -1381,7 +1387,23 @@ function createLineChart(container, monthlySeries, markers) {
       }
     }
 
-    svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}${wellSvg}${fpsoSvg}${highlightSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
+    // Linha horizontal constante (ver refLine no topo da função) — pico
+    // histórico do valor plotado, sempre dentro do teto automático (ver
+    // autoMax acima), mas pode sair da área visível com um zoom manual em
+    // y (yMaxOverride) só pra baixo desse valor: nesse caso não desenha,
+    // em vez de vazar pra fora da área de plotagem.
+    let refLineSvg = '';
+    if (refLineValue != null) {
+      const y = yAt(refLineValue);
+      if (y >= LINE_MARGIN.top - 0.5 && y <= LINE_MARGIN.top + plotH + 0.5) {
+        refLineSvg = `<g>
+          <line x1="${LINE_MARGIN.left}" y1="${y}" x2="${LINE_W - LINE_MARGIN.right}" y2="${y}" stroke="var(--text-faint)" stroke-width="1.5" stroke-dasharray="5,4" />
+          <text x="${LINE_W - LINE_MARGIN.right}" y="${y - 5}" text-anchor="end" font-size="11" style="fill:var(--text-faint)">${escapeHtml(refLine.label)}</text>
+        </g>`;
+      }
+    }
+
+    svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${refLineSvg}${linesSvg}${wellSvg}${fpsoSvg}${highlightSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
     const svgEl = svgWrap.firstElementChild;
     const capture = svgEl.querySelector('#lc-capture');
     const crosshair = svgEl.querySelector('#lc-crosshair');

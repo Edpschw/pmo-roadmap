@@ -462,40 +462,38 @@ function buildComboChart(container, series, projectColor) {
 
 // Um gráfico de linha POR FPSO (não um só com todos os poços da jazida
 // juntos) — pedido explícito: FPSOs diferentes competindo pelo mesmo
-// reservatório é o caso que esse gráfico existe pra mostrar, e misturar
-// os poços de todas elas numa legenda só (às vezes 30+ linhas) escondia
-// isso em vez de destacar. Cor por ordem de produção histórica TOTAL do
-// poço DENTRO do próprio FPSO (reaproveita a paleta a cada grupo — cores
-// podem se repetir entre gráficos de FPSO diferentes, sem problema já
-// que são cartões/legendas separados). Poço sem FPSO conhecido no
-// snapshot mais recente (ex.: já abandonado antes do mesRef ali) cai
-// num grupo à parte "Outros poços". Ordem dos cartões: FPSO que mais
-// produziu no total primeiro (mesmo critério de ordenação por total já
-// usado no resto do app), "Outros poços" sempre por último.
-function extractWellSeries(pocosSerieData, wellNames) {
-  const totalByWell = new Map();
-  for (const m of pocosSerieData.meses) {
-    for (const [nome, d] of Object.entries(m.pocos)) {
-      if (!wellNames.has(nome)) continue;
-      totalByWell.set(nome, (totalByWell.get(nome) || 0) + d.oleoBbld);
-    }
-  }
-  if (!totalByWell.size) return null;
-  const order = [...totalByWell.keys()].sort((a, b) => totalByWell.get(b) - totalByWell.get(a));
-  const colorByWell = new Map(order.map((nome, i) => [nome, PALETTE[i % PALETTE.length]]));
-
-  return pocosSerieData.meses.map((m) => {
-    const rows = [];
-    for (const nome of order) {
+// reservatório é o caso que esse gráfico existe pra mostrar. Dentro de
+// cada FPSO, uma linha SÓ com o total agregado (soma de todos os poços
+// produtores da instalação, ver extractFpsoAggregateSeries) — poço por
+// poço nessa mesma linha virava 10+ séries disputando a mesma legenda,
+// difícil de ler; quem quer o poço individual clica nele na lista abaixo
+// do gráfico (ver wellList), que destaca o poço no mini-mapa (setSelectedWell,
+// ver buildMiniMap) em vez de isolar uma linha aqui. Linha tracejada
+// constante no pico histórico agregado da instalação (refLine, ver
+// createLineChart em shared.js) dá a régua de "quão perto do topo já
+// alcançado" a produção atual está. Poço sem FPSO conhecido no snapshot
+// mais recente (ex.: já abandonado antes do mesRef ali) cai num grupo à
+// parte "Outros poços". Ordem dos cartões: FPSO que mais produziu no
+// total primeiro (mesmo critério de ordenação por total já usado no
+// resto do app), "Outros poços" sempre por último.
+function extractFpsoAggregateSeries(pocosSerieData, wellNames, name, color) {
+  let maxValue = 0;
+  const series = pocosSerieData.meses.map((m) => {
+    let total = 0;
+    let any = false;
+    for (const nome of wellNames) {
       const d = m.pocos[nome];
       if (!d) continue;
-      rows.push({ name: nome, color: colorByWell.get(nome), isContract: true, oleoPreSalBbld: d.oleoBbld });
+      any = true;
+      total += d.oleoBbld;
     }
-    return { ano: m.ano, mes: m.mes, rows };
+    if (any) maxValue = Math.max(maxValue, total);
+    return { ano: m.ano, mes: m.mes, rows: any ? [{ name, color, isContract: true, oleoPreSalBbld: total }] : [] };
   });
+  return { series, maxValue };
 }
 
-function buildWellProductionChart(container, wells, pocosSerieData, wellFpso) {
+function buildWellProductionChart(container, wells, pocosSerieData, wellFpso, projectColor, selectWell) {
   const byFpso = new Map();
   for (const w of wells) {
     const fpso = wellFpso.get(w.n) || 'Outros poços';
@@ -503,8 +501,7 @@ function buildWellProductionChart(container, wells, pocosSerieData, wellFpso) {
     byFpso.get(fpso).add(w.n);
   }
 
-  // Ordem dos grupos por óleo total histórico (mesma ideia de order em
-  // extractWellSeries, um nível acima) — "Outros poços" (fpso
+  // Ordem dos grupos por óleo total histórico — "Outros poços" (fpso
   // desconhecido) sempre por último, não entra na ordenação por total.
   const totalByFpso = new Map();
   for (const [fpso, names] of byFpso) {
@@ -518,14 +515,22 @@ function buildWellProductionChart(container, wells, pocosSerieData, wellFpso) {
   const fpsoOrder = [...byFpso.keys()].filter((f) => f !== 'Outros poços').sort((a, b) => totalByFpso.get(b) - totalByFpso.get(a));
   if (byFpso.has('Outros poços')) fpsoOrder.push('Outros poços');
 
+  // Botões de poço por baixo de cada gráfico (ver wellList abaixo) — mapa
+  // único pra TODOS os FPSOs do painel, não um por cartão: setSelectedWell
+  // (retornado no fim) precisa achar/atualizar o botão certo não importa
+  // em qual cartão ele está, já que o poço selecionado pode vir de um
+  // clique no mini-mapa (ver selectWell em buildProjectPanel), não só de
+  // um clique aqui.
+  const wellButtonsByName = new Map();
   let any = false;
   for (const fpso of fpsoOrder) {
-    const series = extractWellSeries(pocosSerieData, byFpso.get(fpso));
-    if (!series) continue;
+    const names = byFpso.get(fpso);
+    const { series, maxValue } = extractFpsoAggregateSeries(pocosSerieData, names, fpso, projectColor);
+    if (!series.some((m) => m.rows.length)) continue;
     any = true;
     const card = chartCard(
       `Produção por poço — ${fpso}`,
-      'Óleo por poço produtor (bbl/d), um ponto por mês — dado aberto "Produção por Zona" da ANP, out/2014 a jun/2025 (a partir daí esse dado não separa mais pré-sal por poço, ver nota do gráfico "Produção mensal" abaixo); FPSO/instalação de cada poço vem do boletim de poços da ANP (mês mais recente só, ver mapa acima). Clique num poço na legenda pra isolar só ele; role o mouse pra zoom, arraste pra mover a janela.',
+      'Óleo agregado (bbl/d, soma de todos os poços produtores da instalação), um ponto por mês — dado aberto "Produção por Zona" da ANP, out/2014 a jun/2025 (a partir daí esse dado não separa mais pré-sal por poço, ver nota do gráfico "Produção mensal" abaixo); FPSO/instalação de cada poço vem do boletim de poços da ANP (mês mais recente só, ver mapa acima). A linha tracejada marca o pico histórico agregado da instalação. Clique num poço na lista abaixo pra destacá-lo no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.',
     );
     const controls = document.createElement('div');
     controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
@@ -535,11 +540,39 @@ function buildWellProductionChart(container, wells, pocosSerieData, wellFpso) {
     reset.textContent = 'Ver tudo';
     controls.appendChild(reset);
     card.insertBefore(controls, card.querySelector('h3').nextSibling);
-    const chart = createLineChart(card, series);
+    const chart = createLineChart(card, series, null, null, { value: maxValue, label: `Pico: ${fmtNum(maxValue)} bbl/d` });
     reset.addEventListener('click', () => chart.resetZoom());
+
+    const wellList = document.createElement('div');
+    wellList.className = 'kpi-row';
+    wellList.style.cssText = 'row-gap:6px;margin-top:10px';
+    for (const nome of [...names].sort()) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.style.cssText = 'font-size:12px;background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;color:var(--text-muted)';
+      btn.textContent = nome;
+      btn.addEventListener('click', () => selectWell(nome));
+      wellList.appendChild(btn);
+      wellButtonsByName.set(nome, btn);
+    }
+    card.appendChild(wellList);
+
     container.appendChild(card);
   }
-  return any;
+  if (!any) return null;
+  return {
+    // Chamado pelo selectWell de buildProjectPanel (clique no mini-mapa OU
+    // num botão daqui) — sincroniza o destaque visual dos botões com o
+    // poço selecionado atual, não importa a origem do clique.
+    setSelectedWell(name) {
+      for (const [nome, btn] of wellButtonsByName) {
+        const active = nome === name;
+        btn.style.borderColor = active ? projectColor : 'var(--border)';
+        btn.style.color = active ? projectColor : 'var(--text-muted)';
+        btn.style.fontWeight = active ? '600' : '400';
+      }
+    },
+  };
 }
 
 /* --------------------- Injeção no campo, ao longo do tempo ----------------- */
@@ -582,10 +615,9 @@ function buildFieldInjectionChart(container, injecaoData, base, color) {
   reset.textContent = 'Ver tudo';
   controls.appendChild(reset);
   card.insertBefore(controls, card.querySelector('h3').nextSibling);
-  const chart = createLineChart(card, series);
+  const chart = createLineChart(card, series, null, 'agua');
   const unitSwitch = buildUnitSwitch((unitKey) => chart.setUnit(unitKey), ['agua', 'gasInj']);
   controls.insertBefore(unitSwitch, reset);
-  chart.setUnit('agua');
   reset.addEventListener('click', () => chart.resetZoom());
   container.appendChild(card);
 }
@@ -1036,20 +1068,21 @@ function buildProjectPanel(project, ctx) {
       wells.push(w);
     }
   }
-  // Seleção de poço no mini-mapa — clicar num poço destaca ele (apaga os
-  // demais, opacidade baixa) até clicar de novo no mesmo (toggle) ou num
-  // poço diferente. mapInfo só é atribuído depois do buildMiniMap logo
-  // abaixo, mas selectWell só roda a partir de um clique (depois de tudo
-  // montado), então o closure sobre a variável (não o valor) resolve
-  // certo. O gráfico "Produção por poço" (ver buildWellProductionChart,
-  // mais abaixo) tem sua própria legenda com clique-pra-isolar
-  // (createLineChart, shared.js) — não está ligado a esse destaque do
-  // mapa.
+  // Seleção de poço — clicar num poço (no mini-mapa OU na lista abaixo do
+  // gráfico "Produção por poço", ver buildWellProductionChart mais abaixo)
+  // destaca ele nos dois lugares (apaga os demais, opacidade baixa no
+  // mapa / cor apagada na lista) até clicar de novo no mesmo (toggle) ou
+  // num poço diferente. mapInfo/wellChartInfo só são atribuídos depois de
+  // buildMiniMap/buildWellProductionChart logo abaixo, mas selectWell só
+  // roda a partir de um clique (depois de tudo montado), então o closure
+  // sobre a variável (não o valor) resolve certo.
   let mapInfo = null;
+  let wellChartInfo = null;
   let selectedWell = null;
   function selectWell(name) {
     selectedWell = selectedWell === name ? null : name;
     if (mapInfo) mapInfo.setSelectedWell(selectedWell);
+    if (wellChartInfo) wellChartInfo.setSelectedWell(selectedWell);
   }
   mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells, selectWell);
   panel._miniMap = mapInfo.map;
@@ -1099,7 +1132,7 @@ function buildProjectPanel(project, ctx) {
   // porque a fonte aqui é outra granularidade (por poço, não por campo) —
   // funciona mesmo pra projeto sem produção individualizada no boletim por
   // campo.
-  if (isSharedJazida) buildWellProductionChart(chartsCol, wells, ctx.producaoPocosSerie, ctx.wellFpso);
+  if (isSharedJazida) wellChartInfo = buildWellProductionChart(chartsCol, wells, ctx.producaoPocosSerie, ctx.wellFpso, project.color, selectWell);
 
   const base = PROJECT_FIELD_BASE[project.name];
   if (!base) {
