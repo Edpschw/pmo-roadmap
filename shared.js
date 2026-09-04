@@ -1177,7 +1177,16 @@ function dateToContinuousIndex(monthlySeries, isoDate) {
 //     Mês sem produção de uma série conta como 0 na pilha (não quebra a
 //     linha em segmentos como o modo normal — buildSegments só é usado
 //     fora do modo empilhado).
-function createLineChart(container, monthlySeries, markers, initialUnitKey, refLines, stacked) {
+//   - onSeriesClick: callback(name) opcional — quando presente, um clique
+//     na legenda NÃO faz o isolamento interno sozinho (ver legendGroup
+//     abaixo): só chama onSeriesClick(name) e espera quem chamou decidir
+//     e devolver o estado resolvido via setHighlight (retornado no fim),
+//     em vez do toggle "highlighted === name ? null : name" de sempre.
+//     Existe pra ligar a legenda a um estado externo compartilhado (ex.:
+//     seleção de poço também usada pelo mini-mapa em campo.js) sem
+//     duplicar/dessincronizar o toggle em dois lugares. Sem esse
+//     callback, a legenda continua se isolando sozinha, como sempre.
+function createLineChart(container, monthlySeries, markers, initialUnitKey, refLines, stacked, onSeriesClick) {
   const n = monthlySeries.length;
   const order = seriesOrder(monthlySeries);
   const meta = new Map(order.map((name) => {
@@ -1277,7 +1286,15 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
       for (const r of monthlySeries[hiIdx].rows) lastMax = Math.max(lastMax, r[unit.key]);
     }
     const refLineValues = (refLines || []).map((r) => r.value).filter((v) => v != null);
-    const autoMax = niceMaxFromLastValue(Math.max(lastMax, rawMax, ...refLineValues, 0));
+    // Com refLines (pico/potencial máximo, ver buildWellProductionChart em
+    // campo.js): o teto do eixo y é só o maior desses dois valores, não o
+    // pico/último valor da janela VISÍVEL — fixo relativo à capacidade da
+    // instalação, não reencolhe/expande sozinho quando o usuário dá zoom
+    // em x pra um período de produção mais baixa (diferente do gráfico sem
+    // refLines, que continua ancorando no que está visível agora).
+    const autoMax = refLineValues.length
+      ? niceMaxFromLastValue(Math.max(...refLineValues))
+      : niceMaxFromLastValue(Math.max(lastMax, rawMax));
     // yMaxOverride persiste entre trocas de unidade/pan/zoom em x até o
     // usuário resetar ("Ver tudo") — dar zoom em x não desfaz um zoom em y
     // já ajustado, e vice-versa (são eixos independentes).
@@ -1608,6 +1625,7 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
       item.style.opacity = highlighted && highlighted !== name ? '0.5' : '1';
       item.innerHTML = `<span style="width:16px;height:2px;background:${color};flex:0 0 auto"></span>${escapeHtml(name)}`;
       item.addEventListener('click', () => {
+        if (onSeriesClick) { onSeriesClick(name); return; }
         highlighted = highlighted === name ? null : name;
         drawLegend();
         draw();
@@ -1640,6 +1658,16 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
     // filtro de ano do mini-mapa (até que ano os poços aparecem) com os
     // gráficos de produção/RGO do mesmo painel.
     setHighlightYear(year) { highlightYear = year; draw(); },
+    // Estado ABSOLUTO (não toggle) do isolamento da legenda — pra sincronizar
+    // com uma seleção externa (ver onSeriesClick acima e selectWell em
+    // campo.js): name fora de `order` (ex.: poço de outro cartão/FPSO) cai
+    // pra null, então só o gráfico que realmente tem essa série destaca
+    // alguma coisa, os demais voltam ao normal.
+    setHighlight(name) {
+      highlighted = order.includes(name) ? name : null;
+      drawLegend();
+      draw();
+    },
   };
 }
 
