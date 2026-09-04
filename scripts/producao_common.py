@@ -132,5 +132,5 @@ def upsert_month(existing, ano, mes, campos, url):
 
 def save(existing):
     existing.setdefault('fonte', {})
-    existing['fonte']['nome'] = 'ANP — Boletim da Produção de Petróleo e Gás Natural (pré-sal)'
+    existing['fonte']['nome'] = 'ANP — Produção por Zona (dados abertos), conferida contra o Boletim da Produção de Petróleo e Gás Natural'
     DATA_PATH.write_text(json.dumps(existing, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

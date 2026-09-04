@@ -2,12 +2,16 @@
 
 /* =========================================================================
    PMO Roadmap — Produção. Produção mensal de petróleo e gás natural dos
-   campos do pré-sal, direto do Boletim da Produção de Petróleo e Gás
-   Natural (BMP) da ANP (data/producao.json, gerado por
-   scripts/parse_producao.py a partir do PDF oficial — ver esse script para
-   atualizar com um mês novo). Diferente da aba Análises (que é STOIIP/
-   volume in-place, do Plano de Desenvolvimento — um número fixo por
-   jazida, não muda mês a mês): aqui é vazão de produção real, por mês.
+   campos do pré-sal (data/producao.json) — de out/2014 a jun/2025, do
+   dado aberto "Produção por Zona" da ANP (scripts/parse_producao_zona.py,
+   poço/zona geológica com pré-sal marcado linha a linha, conferido contra
+   o boletim); de jul/2025 em diante, direto do boletim (PDF/Excel —
+   scripts/parse_producao.py e parse_producao_xlsm.py, único disponível
+   nesses meses). Ver o topo de parse_producao_zona.py pra atualizar com
+   um mês novo, ou pra entender por que os dois formatos convivem.
+   Diferente da aba Análises (que é STOIIP/volume in-place, do Plano de
+   Desenvolvimento — um número fixo por jazida, não muda mês a mês): aqui
+   é vazão de produção real, por mês.
    Cálculo da série mensal (UNITS, computeRGO, computeFieldRows,
    computeMonthlySeries) e o gráfico de linhas interativo (createLineChart)
    vêm de shared.js — compartilhados com campo.js (visão por projeto, um
@@ -159,7 +163,7 @@ function buildEvolutionSection(producaoData) {
 
   const note = document.createElement('p');
   note.className = 'analytics-table-note';
-  note.textContent = `Fonte: ${producaoData.fonte.nome}. De out/2017 a jun/2025, vem da planilha Excel oficial que acompanha o boletim (número de célula exato, sem risco de extração de texto); de jul/2025 em diante, do PDF (a ANP ainda não publicou o Excel desses meses). Antes de out/2017 a ANP não publicava essa tabela por campo. Meses faltando no meio do período são edições sem o arquivo correspondente disponível no site da ANP.`;
+  note.textContent = `Fonte: ${producaoData.fonte.nome}. De out/2014 a jun/2025, vem do dado aberto "Produção por Zona" da ANP (registro bruto por poço/zona geológica, com pré-sal já marcado linha a linha — soma por campo feita aqui, não pela ANP); cada mês só entra se bater com o boletim oficial dentro de 5% nos 7 contratos rastreados, senão fica com o boletim mesmo (aconteceu em 2 dos ~130 meses conferidos). De jul/2025 em diante, direto do boletim (PDF/Excel) — a ANP tirou a marcação de pré-sal desse dado aberto a partir desse mês, então não dá mais pra confiar nele sozinho.`;
   section.appendChild(note);
 
   return section;
