@@ -41,10 +41,19 @@ function fmtCoord(c) {
   return `${c[0].toFixed(4)}, ${c[1].toFixed(4)}`;
 }
 
+// w.di/w.dur (data de início e duração da perfuração em dias, ver
+// scripts/build_pocos.py) só existem quando o cadastro da ANP traz início E
+// término com datas diferentes — poço com só uma das duas datas preenchida
+// mostra "Início" e "Duração" em branco mesmo tendo "Conclusão" preenchida
+// (o valor de w.d ali pode ser o término real ou, na falta dele, o próprio
+// início usado como fallback — não dá pra saber qual dos dois sem o outro
+// lado, então não adianta reaproveitar w.d na coluna de início).
 function wellRowHTML(w) {
   return `<tr>
     <td>${escapeHtml(w.n)}${w.anc ? ' <span class="pocos-anc">(AnC)</span>' : ''}</td>
+    <td class="${w.di ? '' : 'muted'}">${w.di ? formatBR(w.di) : '—'}</td>
     <td class="${w.d ? '' : 'muted'}">${w.d ? formatBR(w.d) : '—'}</td>
+    <td class="num ${w.dur != null ? '' : 'muted'}">${w.dur != null ? `${w.dur.toLocaleString('pt-BR')} dias` : '—'}</td>
     <td class="${w.op ? '' : 'muted'}">${escapeHtml(w.op || '—')}</td>
     <td class="${w.cat ? '' : 'muted'}">${escapeHtml(w.cat || '—')}</td>
     <td class="${w.rec ? '' : 'muted'}">${escapeHtml(w.rec || '—')}</td>
@@ -90,7 +99,9 @@ function buildFieldSection(id, name, color, badge, wells) {
   table.innerHTML = `
     <thead><tr>
       <th>Poço</th>
+      <th>Início</th>
       <th>Conclusão</th>
+      <th class="num">Duração</th>
       <th>Operador</th>
       <th>Categoria</th>
       <th>Resultado (reclassificação)</th>

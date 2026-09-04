@@ -145,9 +145,22 @@ def build_well(r):
     if lat is None or lng is None:
         return None
     w = {'n': r['POCO'].strip(), 'c': [lat, lng]}
-    d = iso(r['TÉRMINO']) or iso(r['INÍCIO'])
+    inicio = iso(r['INÍCIO'])
+    termino = iso(r['TÉRMINO'])
+    d = termino or inicio
     if d:
         w['d'] = d
+    # Início só é guardado à parte (chave 'di') quando dá informação nova
+    # além de 'd' — ou seja, quando o poço já tem término registrado e o
+    # início é uma data diferente (senão w['d'] já É o início, ver acima).
+    # 'dur': dias corridos de perfuração (término - início) — só nesses
+    # mesmos casos, óbvio que não dá pra calcular duração sem as duas
+    # pontas.
+    if inicio and termino and inicio != termino:
+        w['di'] = inicio
+        dur = (date.fromisoformat(termino) - date.fromisoformat(inicio)).days
+        if dur > 0:
+            w['dur'] = dur
     for key, col in (('op', 'OPERADOR'), ('sit', 'SITUACAO'), ('cat', 'CATEGORIA'),
                      ('rec', 'RECLASSIFICACAO'), ('sonda', 'NOM_SONDA')):
         v = (r[col] or '').strip()
