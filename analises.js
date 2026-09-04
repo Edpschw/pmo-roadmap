@@ -16,7 +16,6 @@
 
 const PD_URL = 'data/planos_desenvolvimento.json';
 const POCOS_URL = 'data/pocos.json';
-const PRODUCAO_POCOS_URL = 'data/producao_pocos.json';
 // Campos de contexto do pré-sal (ver mapa.js) — regime de Concessão ou
 // Cessão Onerosa, bem anterior à Lei da Partilha (2010); nenhum dos 30
 // projetos rastreados (Mero, o único campo de contexto em Partilha, virou
@@ -424,55 +423,10 @@ function renderStoiipWeightedChart(container, jazidaRows) {
   container.appendChild(card);
 }
 
-// 10 poços com maior produção de óleo (bbl/d) no último boletim de poços da
-// ANP (data/producao_pocos.json, ver scripts/build_producao_pocos.py) —
-// granularidade de poço, não de campo/jazida (diferente dos gráficos de
-// STOIIP acima, e cobre TODO o pré-sal do boletim, não só os 30 contratos
-// rastreados). Cor da barra: cor do projeto rastreado quando o nome do
-// campo no boletim bate com um (ex. "BÚZIOS_ECO" -> Búzios, tirando o
-// prefixo AnC_/sufixo _ECO); senão cinza de contexto (mesmo CONTEXT_FIELD_COLOR
-// dos campos fora dos 30, ver computeFieldRow acima).
-function renderTopProducersChart(container, producaoPocosJson) {
-  if (!producaoPocosJson || !producaoPocosJson.pocos) return;
-  const projectColorByDisplayName = new Map(
-    state.projects.map((p) => [projectDisplayName(p.name).toUpperCase(), p.color]),
-  );
-  function colorForCampo(campo) {
-    const key = campo.toUpperCase().replace(/^ANC_/, '').replace(/_ECO$/, '').replace(/_/g, ' ').trim();
-    return projectColorByDisplayName.get(key) || CONTEXT_FIELD_COLOR;
-  }
-
-  const rows = Object.entries(producaoPocosJson.pocos)
-    .map(([nome, p]) => ({ nome, oleoBbld: p.oleoBbld, campo: p.campo, color: colorForCampo(p.campo) }))
-    .sort((a, b) => b.oleoBbld - a.oleoBbld)
-    .slice(0, 10);
-  if (!rows.length) return;
-
-  const [ano, mes] = producaoPocosJson.mesRef.split('-').map(Number);
-  const card = chartCard(
-    '10 maiores produtores (poço)',
-    `Óleo por poço (bbl/d), ${MESES_PT[mes]}/${ano} — boletim de poços da ANP, todo o pré-sal (não só os 30 contratos rastreados). Cor do projeto rastreado quando o campo do boletim bate com um; cinza pros demais.`,
-  );
-  const list = document.createElement('div');
-  list.className = 'hbar-list';
-  const max = rows[0].oleoBbld;
-  for (const r of rows) {
-    list.appendChild(barRow(
-      r.nome, (r.oleoBbld / max) * 100, fmtNum(r.oleoBbld) + ' bbl/d', r.color,
-      () => `<strong>${escapeHtml(r.nome)}</strong>`
-        + tooltipRowHTML('Campo/trato (boletim ANP)', r.campo)
-        + tooltipRowHTML('Óleo', fmtNum(r.oleoBbld) + ' bbl/d'),
-    ));
-  }
-  card.appendChild(list);
-  container.appendChild(card);
-}
-
-function renderPortfolioPage(container, jazidaRows, producaoPocosJson) {
+function renderPortfolioPage(container, jazidaRows) {
   renderStoiipByJazidaChart(container, jazidaRows);
   renderStoiipByContractChart(container, jazidaRows);
   renderStoiipWeightedChart(container, jazidaRows);
-  renderTopProducersChart(container, producaoPocosJson);
 }
 
 /* ------------------------------- Seletor de página -------------------------- */
@@ -502,21 +456,15 @@ async function init() {
   const wrapper = document.getElementById('analyticsWrapper');
   let presalGeojson = null;
   let pocosJson = null;
-  let producaoPocosJson = null;
   try {
-    const [pd, presal, pocos, producaoPocos] = await Promise.all([
+    const [pd, presal, pocos] = await Promise.all([
       fetch(PD_URL).then((r) => r.json()),
       fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
       fetch(POCOS_URL).then((r) => r.json()),
-      // no-store: mesmo motivo de producao.js — reprocessado sem deploy de
-      // código junto, o navegador não tem como saber que precisa buscar de
-      // novo só pela URL.
-      fetch(PRODUCAO_POCOS_URL, { cache: 'no-store' }).then((r) => r.json()),
     ]);
     pdData = pd;
     presalGeojson = presal;
     pocosJson = pocos;
-    producaoPocosJson = producaoPocos;
   } catch (err) {
     console.error('Falha ao carregar dados de análise', err);
   }
@@ -556,7 +504,7 @@ async function init() {
   wrapper.appendChild(portSection);
 
   renderExecutivePage(execSection, contractRows, agg, wellAgg);
-  renderPortfolioPage(portSection, jazidaRows, producaoPocosJson);
+  renderPortfolioPage(portSection, jazidaRows);
 }
 
 init();
