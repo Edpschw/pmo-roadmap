@@ -430,8 +430,7 @@ function buildWellProductionChart(container, wells, producaoPocos, mesRef) {
     if (p && p.oleoBbld > 0) rows.push({ name: w.n, oleoBbld: p.oleoBbld, campo: p.campo, fpso: p.fpso });
   }
   if (!rows.length) return;
-  rows.sort((a, b) => b.oleoBbld - a.oleoBbld);
-  const max = rows[0].oleoBbld;
+  const max = Math.max(...rows.map((r) => r.oleoBbld));
 
   // Cor por FPSO/instalação (não por poço) — mesma ideia de rodadaColorMap
   // em mapa.js: um índice fixo na paleta por ordem de produção TOTAL do FPSO
@@ -441,6 +440,13 @@ function buildWellProductionChart(container, wells, producaoPocos, mesRef) {
   for (const r of rows) totalByFpso.set(r.fpso, (totalByFpso.get(r.fpso) || 0) + r.oleoBbld);
   const fpsoOrder = [...totalByFpso.keys()].sort((a, b) => totalByFpso.get(b) - totalByFpso.get(a));
   const colorByFpso = new Map(fpsoOrder.map((f, i) => [f, PALETTE[i % PALETTE.length]]));
+
+  // Agrupado por FPSO (mesma ordem da legenda/cor acima), poço mais
+  // produtivo primeiro DENTRO de cada FPSO — em vez de misturar todo mundo
+  // só pela produção, o que espalhava poços do mesmo FPSO pela lista
+  // inteira em vez de deixá-los juntos.
+  const fpsoIndex = new Map(fpsoOrder.map((f, i) => [f, i]));
+  rows.sort((a, b) => fpsoIndex.get(a.fpso) - fpsoIndex.get(b.fpso) || b.oleoBbld - a.oleoBbld);
 
   const [ano, mes] = mesRef.split('-').map(Number);
   const card = chartCard(
