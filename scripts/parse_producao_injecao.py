@@ -2,23 +2,32 @@
 """Extrai injeção mensal (água + gás) por campo a partir dos mesmos CSVs
 de "Produção por Zona" já usados em parse_producao_zona.py, e grava
 data/producao_injecao.json — arquivo À PARTE de data/producao.json
-(reaproveita normaliza_nome_campo/fator de correção de lá via import, mas
-não entra no pipeline de METRIC_KEYS/upsert_month: injeção não existe no
-boletim pra conferir contra, nem nos meses de jul/2025 em diante que só
-têm boletim, então misturar no mesmo arquivo criaria um esquema
-inconsistente — mês sem injeção e mês com injeção lado a lado na mesma
-lista de chaves).
+(reaproveita normaliza_nome_campo/to_num de lá via import, mas não entra
+no pipeline de METRIC_KEYS/upsert_month: injeção não existe no boletim
+pra conferir contra, nem nos meses de jul/2025 em diante que só têm
+boletim, então misturar no mesmo arquivo criaria um esquema inconsistente
+— mês sem injeção e mês com injeção lado a lado na mesma lista de
+chaves).
 
 Duas colunas de água injetada (rec. secundária + descarte) somadas num
 "aguaInjM3d" só; três de gás (natural + CO2 + N2) somadas num
 "gasInjMm3d" só — o app mostra "quanto foi injetado no campo", não
 distingue motivo/composição (isso fica no CSV bruto, não no gráfico).
 
+NÃO aplica o fator de correção (dias do mês − 1) de parse_producao_zona.py
+— aquele fator é específico da coluna "Petróleo (m³/d)" (confirmado
+comparando contra o boletim; ver nota 3 lá), as colunas de injeção são
+outras colunas do mesmo CSV e não têm esse problema. Achado ao investigar
+"água injetada" com valor implausível: toda a série antes de jun/2025
+tinha um salto de ~25-30× bem no mês de corte do fator (ex.: Búzios
+mai/2025 2.022.409 m³/d caindo pra 84.852 m³/d em jun/2025 — sem
+justificativa física pra uma queda dessas), o mesmo padrão do bug do gás
+de produção — aplicar `fator` aqui era a causa.
+
 Uso (lote, o normal):
     python3 scripts/parse_producao_injecao.py --dir pasta/ [--url-map arquivo.json]
 """
 import argparse
-import calendar
 import csv
 import json
 import re
@@ -26,7 +35,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from parse_producao_zona import DATA_SEM_CORRECAO, normaliza_nome_campo, to_num  # noqa: E402
+from parse_producao_zona import normaliza_nome_campo, to_num  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_PATH = REPO_ROOT / 'data' / 'producao_injecao.json'
@@ -70,13 +79,10 @@ def parse_injecao_csv(path):
 
     by_month = {}
     for (ano, mes, campo), v in sums.items():
-        # Mesmo fator empírico de parse_zona_csv (mesma fonte, mesma
-        # edição, mesma correção — ver nota grande lá).
-        fator = 1.0
-        if (ano, mes) < DATA_SEM_CORRECAO:
-            fator = calendar.monthrange(ano, mes)[1] - 1
-        agua_m3d = v['agua'] * fator
-        gas_mm3d = v['gas'] * fator
+        # SEM fator de correção — ver nota grande no topo do arquivo (o
+        # fator de dias-1 de parse_zona_csv é só da coluna de óleo).
+        agua_m3d = v['agua']
+        gas_mm3d = v['gas']
         if agua_m3d > 1e-9 or gas_mm3d > 1e-9:
             by_month.setdefault((ano, mes), {})[campo] = {'aguaInjM3d': agua_m3d, 'gasInjMm3d': gas_mm3d}
     return by_month

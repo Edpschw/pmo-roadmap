@@ -103,11 +103,15 @@ function buildMonthlySection(producaoData) {
     'Produção por campo — pré-sal',
     'Os contratos rastreados (cor do projeto) e os demais campos do pré-sal em produção fora desta lista (cinza, contexto). Só a fração pré-sal de cada campo — a fração pós-sal (quando existe) fica de fora. RGO (Razão Gás-Óleo, m³ de gás por m³ de óleo) é calculado aqui, não vem pronto do boletim.',
   );
+  // keys explícito: sem isso, buildUnitSwitch mostra TODA UNITS
+  // (shared.js) — inclui 'agua'/'gasInj', que esta seção não popula (são
+  // só do gráfico de injeção por campo de campo.js), o que dava aba
+  // clicável sem gráfico nenhum atrás.
   const unitSwitch = buildUnitSwitch((unitKey) => {
     const list = card.querySelector('.hbar-list');
     if (list) list.remove();
     renderProductionChart(card, rows, unitKey);
-  });
+  }, ['oleo', 'gas', 'boe', 'rgo']);
   card.insertBefore(unitSwitch, card.querySelector('h3').nextSibling);
   renderProductionChart(card, rows, 'oleo');
   section.appendChild(card);
@@ -156,7 +160,9 @@ function buildEvolutionSection(producaoData) {
   card.insertBefore(controlsRow, card.querySelector('h3').nextSibling);
 
   const chart = createLineChart(card, monthlySeries);
-  const unitSwitch = buildUnitSwitch((unitKey) => chart.setUnit(unitKey));
+  // Mesmo motivo do keys em buildMonthlySection acima — sem restringir,
+  // mostrava aba de água/gás injetado sem dado nenhum atrás aqui.
+  const unitSwitch = buildUnitSwitch((unitKey) => chart.setUnit(unitKey), ['oleo', 'gas', 'boe', 'rgo']);
   controlsRow.insertBefore(unitSwitch, resetBtn);
   resetBtn.addEventListener('click', () => chart.resetZoom());
   section.appendChild(card);

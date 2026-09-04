@@ -30,6 +30,7 @@ const POCOS_URL = 'data/pocos.json';
 const PRODUCAO_URL = 'data/producao.json';
 const PRODUCAO_POCOS_SERIE_URL = 'data/producao_pocos_serie.json';
 const PRODUCAO_INJECAO_URL = 'data/producao_injecao.json';
+const PRODUCAO_POCOS_URL = 'data/producao_pocos.json';
 const PD_URL = 'data/planos_desenvolvimento.json';
 
 const GROUP_BADGES = {
@@ -444,7 +445,7 @@ function buildComboChart(container, series, projectColor) {
 // uma pergunta interessante quando são poços de contratos/operadores
 // diferentes disputando o mesmo reservatório; um campo de contrato único
 // já mostra seus poços no mini-mapa/roadmap sem precisar de outro
-// gráfico. Fonte: data/producao_pocos_serie.json (ver
+// gráfico. Valores: data/producao_pocos_serie.json (ver
 // scripts/parse_producao_pocos_serie.py) — o mesmo dado aberto "Produção
 // por Zona" da ANP usado no resto da página (ver producao.js), cortado
 // por poço em vez de por campo, só óleo pré-sal (esse dado aberto não tem
@@ -453,16 +454,25 @@ function buildComboChart(container, series, projectColor) {
 // pré-sal desse dado aberto, mesmo corte documentado em
 // parse_producao_zona.py — o gráfico "Produção mensal" por campo, abaixo,
 // já volta pro boletim nesse período, mas não dá pra saber por poço lá).
+// FPSO/instalação de cada poço: NÃO vem desse dado aberto (ele não tem
+// essa coluna) — vem de data/producao_pocos.json (boletim de poços da
+// ANP, ver scripts/build_producao_pocos.py, já usado por analises.js),
+// só como consulta poço->FPSO (wellFpso abaixo); os VALORES de produção
+// continuam vindo da série histórica, não desse snapshot de um mês.
 
-// Recorta a série de poços pros da jazida (mesma lista `wells` do
-// mini-mapa/roadmap), no formato {ano, mes, rows} que createLineChart
-// espera (ver extractProjectSeries acima) — cor fixa por ordem de
-// produção histórica TOTAL do poço no período (o que mais produziu no
-// total pega a primeira cor da paleta), não por FPSO: esse dado aberto
-// não traz FPSO/instalação, diferente do boletim de poços usado em
-// data/producao_pocos.json (analises.js).
-function extractWellSeries(pocosSerieData, wells) {
-  const wellNames = new Set(wells.map((w) => w.n));
+// Um gráfico de linha POR FPSO (não um só com todos os poços da jazida
+// juntos) — pedido explícito: FPSOs diferentes competindo pelo mesmo
+// reservatório é o caso que esse gráfico existe pra mostrar, e misturar
+// os poços de todas elas numa legenda só (às vezes 30+ linhas) escondia
+// isso em vez de destacar. Cor por ordem de produção histórica TOTAL do
+// poço DENTRO do próprio FPSO (reaproveita a paleta a cada grupo — cores
+// podem se repetir entre gráficos de FPSO diferentes, sem problema já
+// que são cartões/legendas separados). Poço sem FPSO conhecido no
+// snapshot mais recente (ex.: já abandonado antes do mesRef ali) cai
+// num grupo à parte "Outros poços". Ordem dos cartões: FPSO que mais
+// produziu no total primeiro (mesmo critério de ordenação por total já
+// usado no resto do app), "Outros poços" sempre por último.
+function extractWellSeries(pocosSerieData, wellNames) {
   const totalByWell = new Map();
   for (const m of pocosSerieData.meses) {
     for (const [nome, d] of Object.entries(m.pocos)) {
@@ -485,24 +495,51 @@ function extractWellSeries(pocosSerieData, wells) {
   });
 }
 
-function buildWellProductionChart(container, wells, pocosSerieData) {
-  const series = extractWellSeries(pocosSerieData, wells);
-  if (!series) return;
-  const card = chartCard(
-    'Produção por poço',
-    'Óleo por poço produtor (bbl/d), um ponto por mês — dado aberto "Produção por Zona" da ANP, out/2014 a jun/2025 (a partir daí esse dado não separa mais pré-sal por poço, ver nota do gráfico "Produção mensal" abaixo). Clique num poço na legenda pra isolar só ele; role o mouse pra zoom, arraste pra mover a janela.',
-  );
-  const controls = document.createElement('div');
-  controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
-  const reset = document.createElement('button');
-  reset.type = 'button';
-  reset.className = 'btn-ghost';
-  reset.textContent = 'Ver tudo';
-  controls.appendChild(reset);
-  card.insertBefore(controls, card.querySelector('h3').nextSibling);
-  const chart = createLineChart(card, series);
-  reset.addEventListener('click', () => chart.resetZoom());
-  container.appendChild(card);
+function buildWellProductionChart(container, wells, pocosSerieData, wellFpso) {
+  const byFpso = new Map();
+  for (const w of wells) {
+    const fpso = wellFpso.get(w.n) || 'Outros poços';
+    if (!byFpso.has(fpso)) byFpso.set(fpso, new Set());
+    byFpso.get(fpso).add(w.n);
+  }
+
+  // Ordem dos grupos por óleo total histórico (mesma ideia de order em
+  // extractWellSeries, um nível acima) — "Outros poços" (fpso
+  // desconhecido) sempre por último, não entra na ordenação por total.
+  const totalByFpso = new Map();
+  for (const [fpso, names] of byFpso) {
+    if (fpso === 'Outros poços') continue;
+    let total = 0;
+    for (const m of pocosSerieData.meses) {
+      for (const nome of names) total += (m.pocos[nome] && m.pocos[nome].oleoBbld) || 0;
+    }
+    totalByFpso.set(fpso, total);
+  }
+  const fpsoOrder = [...byFpso.keys()].filter((f) => f !== 'Outros poços').sort((a, b) => totalByFpso.get(b) - totalByFpso.get(a));
+  if (byFpso.has('Outros poços')) fpsoOrder.push('Outros poços');
+
+  let any = false;
+  for (const fpso of fpsoOrder) {
+    const series = extractWellSeries(pocosSerieData, byFpso.get(fpso));
+    if (!series) continue;
+    any = true;
+    const card = chartCard(
+      `Produção por poço — ${fpso}`,
+      'Óleo por poço produtor (bbl/d), um ponto por mês — dado aberto "Produção por Zona" da ANP, out/2014 a jun/2025 (a partir daí esse dado não separa mais pré-sal por poço, ver nota do gráfico "Produção mensal" abaixo); FPSO/instalação de cada poço vem do boletim de poços da ANP (mês mais recente só, ver mapa acima). Clique num poço na legenda pra isolar só ele; role o mouse pra zoom, arraste pra mover a janela.',
+    );
+    const controls = document.createElement('div');
+    controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+    const reset = document.createElement('button');
+    reset.type = 'button';
+    reset.className = 'btn-ghost';
+    reset.textContent = 'Ver tudo';
+    controls.appendChild(reset);
+    card.insertBefore(controls, card.querySelector('h3').nextSibling);
+    const chart = createLineChart(card, series);
+    reset.addEventListener('click', () => chart.resetZoom());
+    container.appendChild(card);
+  }
+  return any;
 }
 
 /* --------------------- Injeção no campo, ao longo do tempo ----------------- */
@@ -1062,7 +1099,7 @@ function buildProjectPanel(project, ctx) {
   // porque a fonte aqui é outra granularidade (por poço, não por campo) —
   // funciona mesmo pra projeto sem produção individualizada no boletim por
   // campo.
-  if (isSharedJazida) buildWellProductionChart(chartsCol, wells, ctx.producaoPocosSerie);
+  if (isSharedJazida) buildWellProductionChart(chartsCol, wells, ctx.producaoPocosSerie, ctx.wellFpso);
 
   const base = PROJECT_FIELD_BASE[project.name];
   if (!base) {
@@ -1267,8 +1304,9 @@ async function init() {
   let pdData = null;
   let producaoPocosSerieJson = null;
   let producaoInjecaoJson = null;
+  let producaoPocosJson = null;
   try {
-    [geojson, presalGeojson, pocosJson, producaoData, pdData, producaoPocosSerieJson, producaoInjecaoJson] = await Promise.all([
+    [geojson, presalGeojson, pocosJson, producaoData, pdData, producaoPocosSerieJson, producaoInjecaoJson, producaoPocosJson] = await Promise.all([
       fetch(GEOJSON_URL).then((r) => r.json()),
       fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
       fetch(POCOS_URL).then((r) => r.json()),
@@ -1285,6 +1323,12 @@ async function init() {
       // no-store: reprocessados sem deploy de código junto.
       fetch(PRODUCAO_POCOS_SERIE_URL, { cache: 'no-store' }).then((r) => r.json()),
       fetch(PRODUCAO_INJECAO_URL, { cache: 'no-store' }).then((r) => r.json()),
+      // Boletim de poços da ANP (ver scripts/build_producao_pocos.py) —
+      // usado só como consulta poço->FPSO/instalação (wellFpso, mais
+      // abaixo), pra separar "Produção por poço" por FPSO; os valores de
+      // produção em si continuam vindo de PRODUCAO_POCOS_SERIE_URL, não
+      // deste snapshot de um mês só.
+      fetch(PRODUCAO_POCOS_URL, { cache: 'no-store' }).then((r) => r.json()),
     ]);
   } catch (err) {
     console.error('Falha ao carregar dados de campo', err);
@@ -1345,7 +1389,10 @@ async function init() {
   const monthlySeries = computeMonthlySeries(producaoData.meses || [], state.projects);
   const producaoPocosSerie = { meses: producaoPocosSerieJson.meses || [] };
   const producaoInjecao = { meses: producaoInjecaoJson.meses || [] };
-  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, pdData };
+  // wellFpso: poço -> FPSO/instalação, só do mês mais recente do boletim
+  // de poços (producaoPocosJson.pocos) — ver nota em buildWellProductionChart.
+  const wellFpso = new Map(Object.entries(producaoPocosJson.pocos || {}).map(([nome, d]) => [nome, d.fpso]));
+  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, wellFpso, pdData };
 
   // Ordem: mesmo agrupamento por status de pocos.js/analises.js (Produção,
   // Exploração, Devolvidos), cada grupo alfabético.

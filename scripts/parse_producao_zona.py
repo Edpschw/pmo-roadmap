@@ -20,7 +20,7 @@ com PROJECT_FIELD_BASE/contextJazidaBase em shared.js sem mudar nada lá
 (a mesma fragmentação por sub-área/economicidade existe nos dois — "
 _ECO", "AnC_X", "<Direção> DE X" — só a caixa dos nomes muda).
 
-DUAS PEGADINHAS reais nesta fonte, achadas comparando contra o boletim
+TRÊS PEGADINHAS reais nesta fonte, achadas comparando contra o boletim
 já validado (data/producao.json antes desta troca) mês a mês, campo a
 campo — exatamente o motivo de manter o boletim como conferência, não
 só como reserva:
@@ -44,6 +44,17 @@ só como reserva:
    de trazer a coluna "Pré-sal" — sem ela não dá pra separar pré-sal de
    pós-sal, então esses meses são rejeitados aqui (RuntimeError), caem
    de volta pro boletim (ver DATA_INICIO_SEM_CORRECAO/parse_zona_csv).
+3. O fator acima é ESPECÍFICO da coluna "Petróleo (m³/d)" — "Gás total
+   (Mil m³/d)" no MESMO arquivo já vem certo, sem precisar de fator
+   nenhum (bug encontrado depois da troca inicial: RGO calculado ficava
+   na casa de milhares de m³/m³ pra praticamente todo campo, quando o
+   valor típico do pré-sal é ~150-400; comparando contra o boletim
+   arquivado — mesmo método do item 1 — Búzios jan/2022: gás cru do CSV
+   × 30 batia EXATAMENTE 30× o valor do boletim, não 1×; oléo no mesmo
+   mês batia 1:1 depois do fator, confirmando que só a coluna de óleo
+   tem esse problema no CSV). Por isso `fator` só multiplica óleo abaixo
+   — gás (pré-sal e pós-sal) usa o valor cru do CSV em todo o período,
+   sem exceção de mês.
 
 Uso (um arquivo):
     python3 scripts/parse_producao_zona.py caminho/producao_zona_MM-AAAA.csv --url URL
@@ -160,17 +171,20 @@ def parse_zona_csv(path):
 
     by_month = {}
     for (ano, mes, campo), v in sums.items():
-        # Fator empírico de correção — ver nota grande no topo do arquivo.
-        # (ano, mes) < DATA_SEM_CORRECAO cobre toda a faixa hoje conhecida
-        # como afetada (out/2014-mai/2025); comparação por tupla funciona
-        # porque (ano, mes) já ordena cronologicamente.
+        # Fator empírico de correção, SÓ pra óleo — ver nota 1 e nota 3 no
+        # topo do arquivo. (ano, mes) < DATA_SEM_CORRECAO cobre toda a
+        # faixa hoje conhecida como afetada (out/2014-mai/2025);
+        # comparação por tupla funciona porque (ano, mes) já ordena
+        # cronologicamente.
         fator = 1.0
         if (ano, mes) < DATA_SEM_CORRECAO:
             fator = calendar.monthrange(ano, mes)[1] - 1
         oleo_pre_bbld = v['oleoPreSal'] * M3_TO_BBL * fator
         oleo_pos_bbld = v['oleoPosSal'] * M3_TO_BBL * fator
-        gas_pre = v['gasPreSal'] * fator
-        gas_pos = v['gasPosSal'] * fator
+        # Gás não leva `fator` (nota 3): a coluna "Gás total (Mil m³/d)"
+        # já vem certa em toda a faixa, diferente de "Petróleo (m³/d)".
+        gas_pre = v['gasPreSal']
+        gas_pos = v['gasPosSal']
         entry = {
             'oleoPreSalBbld': oleo_pre_bbld,
             'oleoPosSalBbld': oleo_pos_bbld,
