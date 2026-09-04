@@ -930,6 +930,15 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 @media (min-width: 1000px) {
   .campo-dashboard-grid { grid-template-columns: 1.4fr 1fr; }
   .campo-mapa { height: 580px; }
+  /* Mapa acompanha a rolagem da coluna de gráficos (que é bem mais alta —
+     "Produção por poço" pode ter 5+ cartões de FPSO) — sem isso o mapa
+     saía de vista assim que a rolagem passava da altura dele, mesmo tendo
+     largura de sobra do lado. .campo-content (não a janela) é quem rola
+     aqui (overflow-y: auto), então sticky ancora nele; só faz sentido no
+     layout de 2 colunas — em 1 coluna (abaixo de 1000px) mapa e gráficos
+     já empilham na ordem normal de leitura, sticky ali brigaria com o
+     roadmap logo acima. */
+  .campo-dashboard-map-col { position: sticky; top: 12px; align-self: start; }
 }
 .campo-mapa .leaflet-tooltip {
   background: var(--panel); color: var(--text); border: 1px solid var(--border-strong);
