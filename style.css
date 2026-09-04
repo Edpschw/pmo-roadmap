@@ -698,6 +698,19 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
    fora da toolbar mas com o mesmo visual de par de botões. */
 .analytics-tab-switch { margin: 0 auto 20px; max-width: 1180px; }
 
+/* Histogramas + contagem por FPSO da aba Poços (renderPocosPage em
+   analises.js) — 1 coluna empilhada até 1000px (mesmo ponto de corte de
+   .campo-dashboard-grid), 2 colunas lado a lado dali pra cima. margin-top
+   de .chart-card+.chart-card (regra geral, pra cartões empilhados soltos
+   no fluxo normal) é zerado aqui: dentro de um grid ele desalinhava as
+   linhas, empurrando só o 2º card de cada par pra baixo do 1º em vez de
+   alinhar os dois pelo topo — o espaçamento entre linhas já vem do gap. */
+.analytics-histograms-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 24px; }
+.analytics-histograms-grid .chart-card { margin-top: 0; }
+@media (min-width: 1000px) {
+  .analytics-histograms-grid { grid-template-columns: 1fr 1fr; }
+}
+
 /* ---- KPI: linha de "stat tiles" ---- */
 .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
 .stat-tile {
@@ -811,19 +824,6 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .pocos-nav-pill:hover { background: var(--surface); color: var(--text); }
 .pocos-nav-pill[hidden] { display: none; }
 .pocos-nav-dot { width: 7px; height: 7px; border-radius: 2px; flex: 0 0 7px; }
-/* Histogramas + contagem por FPSO (buildDistribuicoesSection em pocos.js) —
-   1 coluna empilhada até 1000px (mesmo ponto de corte de
-   .campo-dashboard-grid), 2 colunas lado a lado dali pra cima. margin-top
-   de .chart-card+.chart-card (regra geral, pra cartões empilhados soltos
-   no fluxo normal) é zerado aqui: dentro de um grid ele desalinhava as
-   linhas, empurrando só o 2º card de cada par pra baixo do 1º em vez de
-   alinhar os dois pelo topo — o espaçamento entre linhas já vem do gap. */
-.pocos-distribuicoes { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 24px; }
-.pocos-distribuicoes .chart-card { margin-top: 0; }
-@media (min-width: 1000px) {
-  .pocos-distribuicoes { grid-template-columns: 1fr 1fr; }
-}
-
 .pocos-field-card { scroll-margin-top: 132px; }
 .pocos-field-card[hidden] { display: none; }
 .pocos-field-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
