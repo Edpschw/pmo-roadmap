@@ -31,6 +31,7 @@ const PRODUCAO_URL = 'data/producao.json';
 const PRODUCAO_POCOS_SERIE_URL = 'data/producao_pocos_serie.json';
 const PRODUCAO_INJECAO_URL = 'data/producao_injecao.json';
 const PRODUCAO_POCOS_URL = 'data/producao_pocos.json';
+const FPSO_CAPACIDADE_URL = 'data/fpso_capacidade.json';
 const PD_URL = 'data/planos_desenvolvimento.json';
 
 const GROUP_BADGES = {
@@ -463,37 +464,56 @@ function buildComboChart(container, series, projectColor) {
 // Um gráfico de linha POR FPSO (não um só com todos os poços da jazida
 // juntos) — pedido explícito: FPSOs diferentes competindo pelo mesmo
 // reservatório é o caso que esse gráfico existe pra mostrar. Dentro de
-// cada FPSO, uma linha SÓ com o total agregado (soma de todos os poços
-// produtores da instalação, ver extractFpsoAggregateSeries) — poço por
-// poço nessa mesma linha virava 10+ séries disputando a mesma legenda,
-// difícil de ler; quem quer o poço individual clica nele na lista abaixo
-// do gráfico (ver wellList), que destaca o poço no mini-mapa (setSelectedWell,
-// ver buildMiniMap) em vez de isolar uma linha aqui. Linha tracejada
-// constante no pico histórico agregado da instalação (refLine, ver
-// createLineChart em shared.js) dá a régua de "quão perto do topo já
-// alcançado" a produção atual está. Poço sem FPSO conhecido no snapshot
-// mais recente (ex.: já abandonado antes do mesRef ali) cai num grupo à
-// parte "Outros poços". Ordem dos cartões: FPSO que mais produziu no
-// total primeiro (mesmo critério de ordenação por total já usado no
-// resto do app), "Outros poços" sempre por último.
-function extractFpsoAggregateSeries(pocosSerieData, wellNames, name, color) {
-  let maxValue = 0;
+// cada FPSO, EMPILHADO (stacked, ver createLineChart em shared.js): uma
+// cor/linha por poço, mas a altura de cada uma já soma a das anteriores
+// — a linha mais alta (topo da pilha) é o agregado da instalação, e a
+// faixa colorida entre uma linha e a anterior é a contribuição daquele
+// poço sozinho. Poço individual também vira um botão na lista abaixo do
+// gráfico (ver wellList), que destaca o poço no mini-mapa (setSelectedWell,
+// ver buildMiniMap) — link nos dois sentidos com o clique no próprio
+// mapa. Duas linhas tracejadas constantes: "Pico" (maior soma agregada já
+// alcançada, calculado aqui) e "Potencial máximo" (capacidade nominal do
+// FPSO segundo o sumário executivo de PD, data/fpso_capacidade.json —
+// só desenhada quando esse arquivo tem entrada pra essa instalação
+// específica; várias não têm número publicado com clareza e ficam sem
+// essa segunda linha em vez de arriscar um valor não confiável). Poço
+// sem FPSO conhecido no snapshot mais recente (ex.: já abandonado antes
+// do mesRef ali) cai num grupo à parte "Outros poços". Ordem dos
+// cartões: FPSO que mais produziu no total primeiro (mesmo critério de
+// ordenação por total já usado no resto do app), "Outros poços" sempre
+// por último.
+function extractWellSeries(pocosSerieData, wellNames) {
+  const totalByWell = new Map();
+  for (const m of pocosSerieData.meses) {
+    for (const [nome, d] of Object.entries(m.pocos)) {
+      if (!wellNames.has(nome)) continue;
+      totalByWell.set(nome, (totalByWell.get(nome) || 0) + d.oleoBbld);
+    }
+  }
+  if (!totalByWell.size) return null;
+  // Ordem por total histórico (poço que mais produziu primeiro) — vira a
+  // ordem de empilhamento (base da pilha) e a ordem da legenda; estável
+  // entre redraws (não depende do mês/zoom atual).
+  const order = [...totalByWell.keys()].sort((a, b) => totalByWell.get(b) - totalByWell.get(a));
+  const colorByWell = new Map(order.map((nome, i) => [nome, PALETTE[i % PALETTE.length]]));
+
+  let peakTotal = 0;
   const series = pocosSerieData.meses.map((m) => {
+    const rows = [];
     let total = 0;
-    let any = false;
-    for (const nome of wellNames) {
+    for (const nome of order) {
       const d = m.pocos[nome];
       if (!d) continue;
-      any = true;
+      rows.push({ name: nome, color: colorByWell.get(nome), isContract: true, oleoPreSalBbld: d.oleoBbld });
       total += d.oleoBbld;
     }
-    if (any) maxValue = Math.max(maxValue, total);
-    return { ano: m.ano, mes: m.mes, rows: any ? [{ name, color, isContract: true, oleoPreSalBbld: total }] : [] };
+    peakTotal = Math.max(peakTotal, total);
+    return { ano: m.ano, mes: m.mes, rows };
   });
-  return { series, maxValue };
+  return { series, peakTotal };
 }
 
-function buildWellProductionChart(container, wells, pocosSerieData, wellFpso, projectColor, selectWell) {
+function buildWellProductionChart(container, wells, pocosSerieData, wellFpso, fpsoCapacidade, projectColor, selectWell) {
   const byFpso = new Map();
   for (const w of wells) {
     const fpso = wellFpso.get(w.n) || 'Outros poços';
@@ -525,12 +545,19 @@ function buildWellProductionChart(container, wells, pocosSerieData, wellFpso, pr
   let any = false;
   for (const fpso of fpsoOrder) {
     const names = byFpso.get(fpso);
-    const { series, maxValue } = extractFpsoAggregateSeries(pocosSerieData, names, fpso, projectColor);
-    if (!series.some((m) => m.rows.length)) continue;
+    const extracted = extractWellSeries(pocosSerieData, names);
+    if (!extracted) continue;
+    const { series, peakTotal } = extracted;
     any = true;
+    const capacidade = fpsoCapacidade[fpso];
+    const refLines = [{ value: peakTotal, label: `Pico: ${fmtNum(peakTotal)} bbl/d` }];
+    if (capacidade) refLines.push({ value: capacidade.bblD, label: `Potencial máximo: ${fmtNum(capacidade.bblD)} bbl/d` });
+    const note = capacidade
+      ? ' Linhas tracejadas: pico histórico da instalação (soma de todos os poços) e potencial máximo (capacidade nominal do FPSO segundo o sumário executivo de PD).'
+      : ' Linha tracejada: pico histórico da instalação (soma de todos os poços) — capacidade nominal desse FPSO não tem número claro no PD disponível.';
     const card = chartCard(
       `Produção por poço — ${fpso}`,
-      'Óleo agregado (bbl/d, soma de todos os poços produtores da instalação), um ponto por mês — dado aberto "Produção por Zona" da ANP, out/2014 a jun/2025 (a partir daí esse dado não separa mais pré-sal por poço, ver nota do gráfico "Produção mensal" abaixo); FPSO/instalação de cada poço vem do boletim de poços da ANP (mês mais recente só, ver mapa acima). A linha tracejada marca o pico histórico agregado da instalação. Clique num poço na lista abaixo pra destacá-lo no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.',
+      `Óleo por poço produtor (bbl/d), empilhado — a linha mais alta é o agregado da instalação, a faixa colorida entre uma linha e a anterior é a contribuição de cada poço. Um ponto por mês — dado aberto "Produção por Zona" da ANP, out/2014 a jun/2025 (a partir daí esse dado não separa mais pré-sal por poço, ver nota do gráfico "Produção mensal" abaixo); FPSO/instalação de cada poço vem do boletim de poços da ANP (mês mais recente só, ver mapa acima).${note} Clique num poço na lista abaixo pra destacá-lo no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.`,
     );
     const controls = document.createElement('div');
     controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
@@ -540,7 +567,7 @@ function buildWellProductionChart(container, wells, pocosSerieData, wellFpso, pr
     reset.textContent = 'Ver tudo';
     controls.appendChild(reset);
     card.insertBefore(controls, card.querySelector('h3').nextSibling);
-    const chart = createLineChart(card, series, null, null, { value: maxValue, label: `Pico: ${fmtNum(maxValue)} bbl/d` });
+    const chart = createLineChart(card, series, null, null, refLines, true);
     reset.addEventListener('click', () => chart.resetZoom());
 
     const wellList = document.createElement('div');
@@ -1132,7 +1159,7 @@ function buildProjectPanel(project, ctx) {
   // porque a fonte aqui é outra granularidade (por poço, não por campo) —
   // funciona mesmo pra projeto sem produção individualizada no boletim por
   // campo.
-  if (isSharedJazida) wellChartInfo = buildWellProductionChart(chartsCol, wells, ctx.producaoPocosSerie, ctx.wellFpso, project.color, selectWell);
+  if (isSharedJazida) wellChartInfo = buildWellProductionChart(chartsCol, wells, ctx.producaoPocosSerie, ctx.wellFpso, ctx.fpsoCapacidade, project.color, selectWell);
 
   const base = PROJECT_FIELD_BASE[project.name];
   if (!base) {
@@ -1338,8 +1365,9 @@ async function init() {
   let producaoPocosSerieJson = null;
   let producaoInjecaoJson = null;
   let producaoPocosJson = null;
+  let fpsoCapacidadeJson = null;
   try {
-    [geojson, presalGeojson, pocosJson, producaoData, pdData, producaoPocosSerieJson, producaoInjecaoJson, producaoPocosJson] = await Promise.all([
+    [geojson, presalGeojson, pocosJson, producaoData, pdData, producaoPocosSerieJson, producaoInjecaoJson, producaoPocosJson, fpsoCapacidadeJson] = await Promise.all([
       fetch(GEOJSON_URL).then((r) => r.json()),
       fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
       fetch(POCOS_URL).then((r) => r.json()),
@@ -1362,6 +1390,10 @@ async function init() {
       // produção em si continuam vindo de PRODUCAO_POCOS_SERIE_URL, não
       // deste snapshot de um mês só.
       fetch(PRODUCAO_POCOS_URL, { cache: 'no-store' }).then((r) => r.json()),
+      // Capacidade nominal (potencial máximo) por FPSO — curado à mão a
+      // partir do sumário executivo de PD (ver fonte no próprio arquivo),
+      // não muda sem edição manual, sem no-store.
+      fetch(FPSO_CAPACIDADE_URL).then((r) => r.json()),
     ]);
   } catch (err) {
     console.error('Falha ao carregar dados de campo', err);
@@ -1425,7 +1457,8 @@ async function init() {
   // wellFpso: poço -> FPSO/instalação, só do mês mais recente do boletim
   // de poços (producaoPocosJson.pocos) — ver nota em buildWellProductionChart.
   const wellFpso = new Map(Object.entries(producaoPocosJson.pocos || {}).map(([nome, d]) => [nome, d.fpso]));
-  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, wellFpso, pdData };
+  const fpsoCapacidade = fpsoCapacidadeJson.capacidades || {};
+  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, wellFpso, fpsoCapacidade, pdData };
 
   // Ordem: mesmo agrupamento por status de pocos.js/analises.js (Produção,
   // Exploração, Devolvidos), cada grupo alfabético.

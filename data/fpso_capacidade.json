@@ -1,0 +1,15 @@
+{
+  "fonte": "Capacidade nominal (potencial máximo) de processamento de óleo por FPSO, extraída manualmente do campo sistemaResumo dos sumários executivos de PD (data/planos_desenvolvimento.json) — só as unidades com número explícito e sem ambiguidade nesse texto para aquele FPSO específico. Chave = nome do FPSO exatamente como aparece em data/producao_pocos.json (campo 'fpso'), pra casar direto com o agrupamento por FPSO de campo.js. FPSOs sem entrada aqui (ex.: Almirante Barroso/Tamandaré, P-70, P-71, Carioca, Cidade de São Paulo/Ilhabela) não têm um número de capacidade citado com clareza no PD disponível — não foram estimados.",
+  "capacidades": {
+    "P-74": { "bblD": 150000, "obs": "Búzios — sistemaResumo: \"6 FPSOs (P-74, P-75, P-76, P-77 + 2 unidades futuras), 150.000 bbl/d de óleo cada\" (PD de 2016)" },
+    "P-75": { "bblD": 150000, "obs": "Búzios — mesma fonte de P-74" },
+    "P-76": { "bblD": 150000, "obs": "Búzios — mesma fonte de P-74" },
+    "P-77": { "bblD": 150000, "obs": "Búzios — mesma fonte de P-74" },
+    "FPSO Pioneiro de Libra": { "bblD": 50000, "obs": "Mero — sistemaResumo: \"FPSO Pioneiro Libra (SPA, até 2029, 50.000 bbl/d)\" — sistema de produção antecipada, não definitivo" },
+    "FPSO Guanabara": { "bblD": 180000, "obs": "Mero — sistemaResumo: \"4 FPSOs definitivos (Guanabara, Sepetiba, Marechal Duque de Caxias, Mero 4), 180.000 bbl/d cada\"" },
+    "FPSO Sepetiba": { "bblD": 180000, "obs": "Mero — mesma fonte de FPSO Guanabara" },
+    "FPSO Marechal Duque de Caxias": { "bblD": 180000, "obs": "Mero — mesma fonte de FPSO Guanabara" },
+    "FPSO Alexandre de Gusmão": { "bblD": 180000, "obs": "Mero — mesma fonte de FPSO Guanabara (\"Mero 4\" no texto = Alexandre de Gusmão, apelido \"Mero-4\" no roadmap)" },
+    "FPSO Bacalhau": { "bblD": 220000, "obs": "Norte de Carcará/Bacalhau — sistemaResumo: \"FPSO (em projeto), 220.000 bbl/d líquido\" — líquido (óleo + água), não só óleo" }
+  }
+}

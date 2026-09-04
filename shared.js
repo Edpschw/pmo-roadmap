@@ -1160,12 +1160,24 @@ function dateToContinuousIndex(monthlySeries, isoDate) {
 //     bem pequeno.
 // Sem markers (chamada de producao.js, ou de campo.js pro gráfico de
 // RGO), tudo aqui cai pra array vazio e nada muda no desenho.
-//   - refLine: {value, label} opcional — linha horizontal tracejada
-//     constante (ex.: pico histórico de produção de um FPSO, ver
-//     buildWellProductionChart em campo.js), sempre incluída no cálculo do
-//     teto automático (ver autoMax abaixo) pra já nascer visível na visão
-//     "Ver tudo", sem exigir zoom manual em y.
-function createLineChart(container, monthlySeries, markers, initialUnitKey, refLine) {
+//   - refLines: [{value, label}] opcional — 0+ linhas horizontais
+//     tracejadas constantes (ex.: pico histórico e potencial máximo/
+//     capacidade nominal de um FPSO, ver buildWellProductionChart em
+//     campo.js), sempre incluídas no cálculo do teto automático (ver
+//     autoMax abaixo) pra já nascerem visíveis na visão "Ver tudo", sem
+//     exigir zoom manual em y.
+//   - stacked: true opcional — em vez de uma linha por série no MESMO
+//     valor (padrão), empilha: cada série desenha no topo da soma de
+//     todas as anteriores (mesma ordem de `order`/legenda), com a área
+//     entre a própria linha e a da série anterior preenchida com a cor
+//     dela — a linha mais alta é sempre o total agregado. Usado só pro
+//     gráfico de poço-por-FPSO (campo.js): mantém uma cor/linha por poço,
+//     mas a leitura principal é "quanto no total, e quanto cada poço
+//     contribui" em vez de comparar poços lado a lado na mesma escala.
+//     Mês sem produção de uma série conta como 0 na pilha (não quebra a
+//     linha em segmentos como o modo normal — buildSegments só é usado
+//     fora do modo empilhado).
+function createLineChart(container, monthlySeries, markers, initialUnitKey, refLines, stacked) {
   const n = monthlySeries.length;
   const order = seriesOrder(monthlySeries);
   const meta = new Map(order.map((name) => {
@@ -1244,14 +1256,28 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
     // garante que o pico realmente visível nunca fica maior que o teto,
     // sem abrir mão de ancorar no último valor no caso comum (produção
     // subindo com o tempo, onde o último valor já É o maior da janela).
+    // stacked: o "pico da janela" e o "último valor" são da PILHA inteira
+    // (soma de todas as séries naquele mês), não do maior valor individual
+    // — é a altura total (linha mais alta) que precisa caber no teto, não
+    // a série isolada mais alta.
     let rawMax = 0;
     for (let i = loIdx; i <= hiIdx; i++) {
-      for (const r of monthlySeries[i].rows) rawMax = Math.max(rawMax, r[unit.key]);
+      if (stacked) {
+        let sum = 0;
+        for (const r of monthlySeries[i].rows) sum += r[unit.key] || 0;
+        rawMax = Math.max(rawMax, sum);
+      } else {
+        for (const r of monthlySeries[i].rows) rawMax = Math.max(rawMax, r[unit.key]);
+      }
     }
     let lastMax = 0;
-    for (const r of monthlySeries[hiIdx].rows) lastMax = Math.max(lastMax, r[unit.key]);
-    const refLineValue = refLine ? refLine.value : null;
-    const autoMax = niceMaxFromLastValue(Math.max(lastMax, rawMax, refLineValue || 0));
+    if (stacked) {
+      for (const r of monthlySeries[hiIdx].rows) lastMax += r[unit.key] || 0;
+    } else {
+      for (const r of monthlySeries[hiIdx].rows) lastMax = Math.max(lastMax, r[unit.key]);
+    }
+    const refLineValues = (refLines || []).map((r) => r.value).filter((v) => v != null);
+    const autoMax = niceMaxFromLastValue(Math.max(lastMax, rawMax, ...refLineValues, 0));
     // yMaxOverride persiste entre trocas de unidade/pan/zoom em x até o
     // usuário resetar ("Ver tudo") — dar zoom em x não desfaz um zoom em y
     // já ajustado, e vice-versa (são eixos independentes).
@@ -1287,21 +1313,52 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
     }
 
     let linesSvg = '';
+    let areaSvg = '';
     const dotR = span > 40 ? 1.6 : span > 15 ? 2.2 : 3;
-    for (const name of order) {
-      const { color, isContract } = meta.get(name);
-      const dimmed = highlighted && highlighted !== name;
-      const opacity = dimmed ? 0.12 : 1;
-      const width = highlighted === name ? 3 : 2;
-      const segments = buildSegments(monthlySeries, loIdx, hiIdx, name, xAt, yAt, unit.key);
-      for (const seg of segments) {
-        linesSvg += `<polyline points="${seg.join(' ')}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round" opacity="${opacity}" data-series="${escapeHtml(name)}" />`;
-        if (seg.length === 1) {
-          const [px, py] = seg[0].split(',');
-          linesSvg += `<circle cx="${px}" cy="${py}" r="${dotR}" fill="${color}" opacity="${opacity}" />`;
-        }
+    if (stacked) {
+      // cumBefore[k] = altura acumulada das séries ANTERIORES no índice
+      // visível k (0 na primeira série) — cresce a cada volta do loop;
+      // cumAfter[k] = cumBefore[k] + valor da série atual = topo da banda
+      // dela, e também a base da PRÓXIMA série. Índice por posição na
+      // janela visível (loIdx..hiIdx), não por mês do ano inteiro.
+      const idxs = [];
+      for (let i = loIdx; i <= hiIdx; i++) idxs.push(i);
+      const rowsByIdx = idxs.map((i) => {
+        const map = new Map();
+        for (const r of monthlySeries[i].rows) map.set(r.name, r[unit.key] || 0);
+        return map;
+      });
+      let cumBefore = idxs.map(() => 0);
+      for (const name of order) {
+        const { color } = meta.get(name);
+        const dimmed = highlighted && highlighted !== name;
+        const lineOpacity = dimmed ? 0.12 : 1;
+        const areaOpacity = dimmed ? 0.05 : 0.5;
+        const width = highlighted === name ? 2.5 : 1.5;
+        const basePts = idxs.map((i, k) => `${xAt(i)},${yAt(cumBefore[k])}`);
+        const cumAfter = idxs.map((i, k) => cumBefore[k] + (rowsByIdx[k].get(name) || 0));
+        const topPts = idxs.map((i, k) => `${xAt(i)},${yAt(cumAfter[k])}`);
+        const polygonPts = [...topPts, ...[...basePts].reverse()].join(' ');
+        areaSvg += `<polygon points="${polygonPts}" fill="${color}" opacity="${areaOpacity}" data-series="${escapeHtml(name)}" />`;
+        linesSvg += `<polyline points="${topPts.join(' ')}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round" opacity="${lineOpacity}" data-series="${escapeHtml(name)}" />`;
+        cumBefore = cumAfter;
       }
-      void isContract;
+    } else {
+      for (const name of order) {
+        const { color, isContract } = meta.get(name);
+        const dimmed = highlighted && highlighted !== name;
+        const opacity = dimmed ? 0.12 : 1;
+        const width = highlighted === name ? 3 : 2;
+        const segments = buildSegments(monthlySeries, loIdx, hiIdx, name, xAt, yAt, unit.key);
+        for (const seg of segments) {
+          linesSvg += `<polyline points="${seg.join(' ')}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round" opacity="${opacity}" data-series="${escapeHtml(name)}" />`;
+          if (seg.length === 1) {
+            const [px, py] = seg[0].split(',');
+            linesSvg += `<circle cx="${px}" cy="${py}" r="${dotR}" fill="${color}" opacity="${opacity}" />`;
+          }
+        }
+        void isContract;
+      }
     }
 
     const axisSvg = `<line x1="${LINE_MARGIN.left}" y1="${LINE_MARGIN.top + plotH}" x2="${LINE_W - LINE_MARGIN.right}" y2="${LINE_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
@@ -1387,23 +1444,28 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
       }
     }
 
-    // Linha horizontal constante (ver refLine no topo da função) — pico
-    // histórico do valor plotado, sempre dentro do teto automático (ver
-    // autoMax acima), mas pode sair da área visível com um zoom manual em
-    // y (yMaxOverride) só pra baixo desse valor: nesse caso não desenha,
-    // em vez de vazar pra fora da área de plotagem.
+    // Linhas horizontais constantes (ver refLines no topo da função) —
+    // ex.: pico histórico + potencial máximo/capacidade nominal de um
+    // FPSO, sempre dentro do teto automático (ver autoMax acima), mas
+    // pode sair da área visível com um zoom manual em y (yMaxOverride) só
+    // pra baixo desse valor: nesse caso não desenha essa linha, em vez de
+    // vazar pra fora da área de plotagem. Rótulo de cada uma alternando
+    // acima/abaixo do traço (índice par/ímpar) pra não empilhar texto em
+    // cima de texto quando duas linhas ficam próximas (ex.: pico bem perto
+    // do potencial máximo, plataforma quase no limite).
     let refLineSvg = '';
-    if (refLineValue != null) {
-      const y = yAt(refLineValue);
-      if (y >= LINE_MARGIN.top - 0.5 && y <= LINE_MARGIN.top + plotH + 0.5) {
-        refLineSvg = `<g>
-          <line x1="${LINE_MARGIN.left}" y1="${y}" x2="${LINE_W - LINE_MARGIN.right}" y2="${y}" stroke="var(--text-faint)" stroke-width="1.5" stroke-dasharray="5,4" />
-          <text x="${LINE_W - LINE_MARGIN.right}" y="${y - 5}" text-anchor="end" font-size="11" style="fill:var(--text-faint)">${escapeHtml(refLine.label)}</text>
-        </g>`;
-      }
-    }
+    (refLines || []).forEach((rl, idx) => {
+      if (rl.value == null) return;
+      const y = yAt(rl.value);
+      if (y < LINE_MARGIN.top - 0.5 || y > LINE_MARGIN.top + plotH + 0.5) return;
+      const labelY = idx % 2 === 0 ? y - 5 : y + 13;
+      refLineSvg += `<g>
+        <line x1="${LINE_MARGIN.left}" y1="${y}" x2="${LINE_W - LINE_MARGIN.right}" y2="${y}" stroke="var(--text-faint)" stroke-width="1.5" stroke-dasharray="5,4" />
+        <text x="${LINE_W - LINE_MARGIN.right}" y="${labelY}" text-anchor="end" font-size="11" style="fill:var(--text-faint)">${escapeHtml(rl.label)}</text>
+      </g>`;
+    });
 
-    svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${refLineSvg}${linesSvg}${wellSvg}${fpsoSvg}${highlightSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
+    svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${refLineSvg}${areaSvg}${linesSvg}${wellSvg}${fpsoSvg}${highlightSvg}${crosshairSvg}${captureSvg}${yAxisHintSvg}</svg>`;
     const svgEl = svgWrap.firstElementChild;
     const capture = svgEl.querySelector('#lc-capture');
     const crosshair = svgEl.querySelector('#lc-crosshair');
