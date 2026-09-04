@@ -10,6 +10,7 @@
 
 const POCOS_URL = 'data/pocos.json';
 const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
+const PRODUCAO_POCOS_URL = 'data/producao_pocos.json';
 
 // CONTEXT_FIELD_COLOR (cinza neutro pra campo sem contrato próprio) vem de
 // shared.js — compartilhada com analises.js e producao.js.
@@ -65,6 +66,105 @@ function wellRowHTML(w) {
     <td class="${w.sonda ? '' : 'muted'}">${escapeHtml(w.sonda || '—')}</td>
     <td class="muted">${fmtCoord(w.c)}</td>
   </tr>`;
+}
+
+/* ---------------------------- Distribuições -------------------------------- */
+// Visão agregada NACIONAL (não por campo — isso já é o resto da página),
+// logo abaixo da busca: 4 histogramas (buildHistogram, shared.js) + 3
+// contagens de poço por FPSO. Duração vem do próprio cadastro de poços
+// (data/pocos.json, só contratos/campos do pré-sal — é a base desta
+// página); produção/injeção vêm de data/producao_pocos.json, o boletim de
+// POÇOS da ANP, que cobre todo poço offshore do país (não só pré-sal) —
+// por isso os dois grupos de gráfico citam fontes diferentes na legenda.
+
+function fpsoCounts(dataMap) {
+  const counts = new Map();
+  for (const key in dataMap) {
+    const fpso = dataMap[key].fpso;
+    counts.set(fpso, (counts.get(fpso) || 0) + 1);
+  }
+  return counts;
+}
+
+function buildFpsoCountChart(container, dataMap, opts) {
+  const counts = fpsoCounts(dataMap);
+  if (!counts.size) return;
+  const entries = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  const max = entries[0][1];
+  const card = chartCard(opts.title, opts.subtitle);
+  const list = document.createElement('div');
+  list.className = 'hbar-list';
+  for (const [fpso, count] of entries) {
+    const valueText = `${count} poço${count === 1 ? '' : 's'}`;
+    list.appendChild(barRow(
+      fpso, (count / max) * 100, valueText, opts.color,
+      () => `<strong>${escapeHtml(fpso)}</strong>` + tooltipRowHTML(opts.tooltipLabel, valueText),
+    ));
+  }
+  card.appendChild(list);
+  container.appendChild(card);
+}
+
+function buildDistribuicoesSection(pocosData, outrosPocos, producaoPocosJson) {
+  const section = document.createElement('div');
+  section.className = 'pocos-distribuicoes';
+
+  const allWells = [];
+  for (const wells of Object.values(pocosData)) allWells.push(...wells);
+  allWells.push(...outrosPocos);
+  const durations = allWells.filter((w) => w.dur != null).map((w) => w.dur);
+  buildHistogram(section, durations, {
+    title: 'Duração da perfuração por poço',
+    subtitle: 'Dias corridos entre início e término (cadastro ANP/BDEP, só poços do pré-sal com as duas datas registradas)',
+    unit: 'dias',
+    color: '#5b8def',
+  });
+
+  const [ano, mes] = (producaoPocosJson.mesRef || '').split('-').map(Number);
+  const mesLabel = ano && mes ? `${MESES_PT[mes]}/${ano}` : '';
+  const pocosMap = producaoPocosJson.pocos || {};
+  const aguaMap = producaoPocosJson.injetoresAgua || {};
+  const gasMap = producaoPocosJson.injetoresGas || {};
+
+  buildHistogram(section, Object.values(pocosMap).map((p) => p.oleoBbld), {
+    title: 'Produção por poço',
+    subtitle: `Óleo por poço produtor — boletim de poços da ANP, todo o litoral (não só pré-sal), ${mesLabel}`,
+    unit: 'bbl/d',
+    color: '#e0762f',
+  });
+  buildHistogram(section, Object.values(aguaMap).map((p) => p.aguaM3d), {
+    title: 'Injeção de água por poço',
+    subtitle: `Água injetada por poço — boletim de poços da ANP, todo o litoral, ${mesLabel}`,
+    unit: 'm³/d',
+    color: '#3fa7d6',
+  });
+  buildHistogram(section, Object.values(gasMap).map((p) => p.gasMm3d), {
+    title: 'Injeção de gás por poço',
+    subtitle: `Gás injetado por poço — boletim de poços da ANP, todo o litoral, ${mesLabel}`,
+    unit: 'Mm³/d',
+    color: '#e0a83f',
+  });
+
+  buildFpsoCountChart(section, pocosMap, {
+    title: 'Poços produtores por FPSO',
+    subtitle: `Nº de poços produzindo óleo em cada FPSO/instalação — boletim de poços da ANP, ${mesLabel}`,
+    tooltipLabel: 'Poços produtores',
+    color: '#e0762f',
+  });
+  buildFpsoCountChart(section, aguaMap, {
+    title: 'Injetores de água por FPSO',
+    subtitle: `Nº de poços injetando água em cada FPSO/instalação — boletim de poços da ANP, ${mesLabel}`,
+    tooltipLabel: 'Poços injetores',
+    color: '#3fa7d6',
+  });
+  buildFpsoCountChart(section, gasMap, {
+    title: 'Injetores de gás por FPSO',
+    subtitle: `Nº de poços injetando gás em cada FPSO/instalação — boletim de poços da ANP, ${mesLabel}`,
+    tooltipLabel: 'Poços injetores',
+    color: '#e0a83f',
+  });
+
+  return section;
 }
 
 function buildFieldSection(id, name, color, badge, wells) {
@@ -164,10 +264,12 @@ async function init() {
   const wrapper = document.getElementById('pocosWrapper');
   let pocosJson = null;
   let presalGeojson = null;
+  let producaoPocosJson = null;
   try {
-    [pocosJson, presalGeojson] = await Promise.all([
+    [pocosJson, presalGeojson, producaoPocosJson] = await Promise.all([
       fetch(POCOS_URL).then((r) => r.json()),
       fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
+      fetch(PRODUCAO_POCOS_URL).then((r) => r.json()),
     ]);
   } catch (err) {
     console.error('Falha ao carregar dados de poços', err);
@@ -203,6 +305,8 @@ async function init() {
   toolbar.appendChild(searchRow);
   toolbar.appendChild(nav);
   content.appendChild(toolbar);
+
+  content.appendChild(buildDistribuicoesSection(pocosData, outrosPocos, producaoPocosJson));
 
   // Ordem: contratos rastreados (produção primeiro, depois exploração,
   // depois devolvidos — mesmo agrupamento de status usado em analises.js),

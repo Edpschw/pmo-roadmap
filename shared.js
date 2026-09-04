@@ -658,6 +658,134 @@ function barRow(label, widthPct, valueText, color, tooltipHtmlFn) {
   return row;
 }
 
+/* -------------------------------- Histograma ------------------------------ */
+// Distribuição de uma métrica contínua (dias de perfuração, produção por
+// poço, injeção por poço...) em faixas de largura igual — usada na aba
+// Poços (ver pocos.js) pra mostrar a FORMA da distribuição, algo que nem a
+// tabela crua nem um valor médio sozinho mostram (ex.: poucos poços muito
+// produtivos puxando a média bem acima da mediana). SVG próprio no mesmo
+// viewBox/escala de createLineChart (reusa .lc-svg/.line-chart-wrap), mas
+// bem mais simples: sem pan/zoom/crosshair, só barras + eixo.
+const HIST_W = 760;
+const HIST_H = 300;
+const HIST_MARGIN = { top: 18, right: 14, bottom: 46, left: 54 };
+
+// Menor número da sequência "1-2-5-10 × 10^k" que é >= v — mesma régua por
+// trás de eixo "redondo" em qualquer lib de gráfico; serve tanto pra
+// arredondar a largura da faixa (nº de dias, bbl/d...) quanto o teto do
+// eixo Y (contagem de poços).
+function niceRoundUp(v) {
+  if (v <= 0) return 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  const norm = v / mag;
+  const nice = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+  return nice * mag;
+}
+
+function median(sortedVals) {
+  const n = sortedVals.length;
+  const mid = Math.floor(n / 2);
+  return n % 2 ? sortedVals[mid] : (sortedVals[mid - 1] + sortedVals[mid]) / 2;
+}
+
+// values: array de números já na unidade de exibição (dias, bbl/d...).
+// opts: { title, subtitle, unit, color, formatValue(v) -> string (default
+// fmtNum) }. Sem poço nenhum com o dado, não desenha nada (mesmo padrão de
+// buildWellBarChart em campo.js) — deixa o chamador decidir se isso é
+// esperado (campo sem produção individualizada, por exemplo).
+function buildHistogram(container, values, opts) {
+  const vals = values.filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+  if (!vals.length) return;
+  const fmt = opts.formatValue || ((v) => fmtNum(v));
+  const unitSuffix = opts.unit ? ' ' + opts.unit : '';
+  const min = vals[0];
+  const max = vals[vals.length - 1];
+  const range = Math.max(max - min, 1e-9);
+
+  // Nº de faixas cresce devagar com o tamanho da amostra (regra prática, não
+  // Sturges/Scott formal) — poucos poços não travam num punhado de faixas
+  // minúsculas, muitos poços não viram 200 barrinhas ilegíveis.
+  const targetBins = Math.max(6, Math.min(16, Math.round(Math.sqrt(vals.length))));
+  const step = niceRoundUp(range / targetBins) || 1;
+  const binStart = Math.floor(min / step) * step;
+  const binCount = Math.max(1, Math.floor((max - binStart) / step) + 1);
+  const bins = new Array(binCount).fill(0);
+  for (const v of vals) {
+    let idx = Math.floor((v - binStart) / step);
+    if (idx < 0) idx = 0;
+    if (idx >= binCount) idx = binCount - 1;
+    bins[idx]++;
+  }
+  const maxCount = Math.max(...bins);
+  const yMax = niceRoundUp(maxCount);
+
+  const plotW = HIST_W - HIST_MARGIN.left - HIST_MARGIN.right;
+  const plotH = HIST_H - HIST_MARGIN.top - HIST_MARGIN.bottom;
+  const barW = plotW / binCount;
+  const xAt = (i) => HIST_MARGIN.left + barW * i;
+  const yAt = (count) => HIST_MARGIN.top + plotH - (count / yMax) * plotH;
+
+  const med = median(vals);
+  const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const card = chartCard(
+    opts.title,
+    `${opts.subtitle} — ${vals.length.toLocaleString('pt-BR')} poços, mediana ${fmt(med)}${unitSuffix}, média ${fmt(mean)}${unitSuffix}.`,
+  );
+
+  let gridSvg = '';
+  let yLabelsSvg = '';
+  const ySteps = 4;
+  for (let i = 0; i <= ySteps; i++) {
+    const count = (yMax * i) / ySteps;
+    const y = yAt(count);
+    gridSvg += `<line x1="${HIST_MARGIN.left}" y1="${y}" x2="${HIST_W - HIST_MARGIN.right}" y2="${y}" stroke="var(--border)" stroke-width="1" />`;
+    yLabelsSvg += `<text x="${HIST_MARGIN.left - 8}" y="${y + 3}" text-anchor="end" font-size="10.5" style="fill:var(--text-muted)">${Math.round(count).toLocaleString('pt-BR')}</text>`;
+  }
+
+  const maxLabels = 10;
+  const labelStep = Math.max(1, Math.ceil(binCount / maxLabels));
+  let barsSvg = '';
+  let xLabelsSvg = '';
+  for (let i = 0; i < binCount; i++) {
+    const x = xAt(i);
+    const count = bins[i];
+    const y = yAt(count);
+    const h = HIST_MARGIN.top + plotH - y;
+    const lo = binStart + i * step;
+    const hi = lo + step;
+    barsSvg += `<rect class="hist-bar" x="${x + 1}" y="${y}" width="${Math.max(0, barW - 2)}" height="${Math.max(0, h)}" fill="${opts.color || '#4d8bf5'}" rx="2" tabindex="0" data-lo="${lo}" data-hi="${hi}" data-count="${count}" />`;
+    if (i % labelStep === 0) {
+      const lx = x + barW / 2;
+      xLabelsSvg += `<text x="0" y="0" transform="translate(${lx} ${HIST_MARGIN.top + plotH + 14}) rotate(-40)" text-anchor="end" font-size="10" style="fill:var(--text-muted)">${fmt(lo)}</text>`;
+    }
+  }
+
+  const medX = HIST_MARGIN.left + ((med - binStart) / step) * barW;
+  const medianSvg = (med >= binStart && med <= binStart + binCount * step)
+    ? `<line x1="${medX}" y1="${HIST_MARGIN.top}" x2="${medX}" y2="${HIST_MARGIN.top + plotH}" stroke="var(--text-faint)" stroke-width="1.2" stroke-dasharray="3 3" />
+       <text x="${medX}" y="${HIST_MARGIN.top - 6}" text-anchor="middle" font-size="10" style="fill:var(--text-muted)">mediana</text>`
+    : '';
+
+  const axisSvg = `<line x1="${HIST_MARGIN.left}" y1="${HIST_MARGIN.top + plotH}" x2="${HIST_W - HIST_MARGIN.right}" y2="${HIST_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
+
+  const svgWrap = document.createElement('div');
+  svgWrap.className = 'line-chart-wrap';
+  svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${HIST_W} ${HIST_H}">${gridSvg}${axisSvg}${yLabelsSvg}${xLabelsSvg}${medianSvg}${barsSvg}</svg>`;
+  card.appendChild(svgWrap);
+
+  for (const rect of svgWrap.querySelectorAll('.hist-bar')) {
+    const lo = Number(rect.dataset.lo);
+    const hi = Number(rect.dataset.hi);
+    const count = Number(rect.dataset.count);
+    attachTooltip(rect, () => tooltipRowHTML(
+      `${fmt(lo)}–${fmt(hi)}${unitSuffix}`,
+      `${count.toLocaleString('pt-BR')} poço${count === 1 ? '' : 's'}`,
+    ));
+  }
+
+  container.appendChild(card);
+}
+
 /* ------------------------- Produção mensal (ANP) -------------------------- */
 // Compartilhada entre producao.js (visão por campo) e campo.js (visão por
 // projeto) — os dois calculam a mesma série mensal a partir de data/

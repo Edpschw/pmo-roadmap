@@ -730,6 +730,12 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
    desktop, sem precisar de min-width nenhum. */
 .lc-svg { width: 100%; height: auto; display: block; touch-action: none; }
 
+/* Histograma (buildHistogram em shared.js) — reusa .lc-svg/.line-chart-wrap
+   acima (mesmo viewBox escalável, mesmo scroll horizontal em tela
+   estreita), só troca o conteúdo por barras verticais. */
+.hist-bar { cursor: default; outline: none; }
+.hist-bar.is-hovered { filter: brightness(1.25); }
+
 /* ---- Barra horizontal (STOIIP, poços por categoria) ---- */
 .hbar-list { display: flex; flex-direction: column; gap: 9px; }
 .hbar-row { display: grid; grid-template-columns: 152px 1fr; align-items: center; gap: 10px; }
@@ -805,6 +811,19 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .pocos-nav-pill:hover { background: var(--surface); color: var(--text); }
 .pocos-nav-pill[hidden] { display: none; }
 .pocos-nav-dot { width: 7px; height: 7px; border-radius: 2px; flex: 0 0 7px; }
+/* Histogramas + contagem por FPSO (buildDistribuicoesSection em pocos.js) —
+   1 coluna empilhada até 1000px (mesmo ponto de corte de
+   .campo-dashboard-grid), 2 colunas lado a lado dali pra cima. margin-top
+   de .chart-card+.chart-card (regra geral, pra cartões empilhados soltos
+   no fluxo normal) é zerado aqui: dentro de um grid ele desalinhava as
+   linhas, empurrando só o 2º card de cada par pra baixo do 1º em vez de
+   alinhar os dois pelo topo — o espaçamento entre linhas já vem do gap. */
+.pocos-distribuicoes { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 24px; }
+.pocos-distribuicoes .chart-card { margin-top: 0; }
+@media (min-width: 1000px) {
+  .pocos-distribuicoes { grid-template-columns: 1fr 1fr; }
+}
+
 .pocos-field-card { scroll-margin-top: 132px; }
 .pocos-field-card[hidden] { display: none; }
 .pocos-field-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
