@@ -427,23 +427,46 @@ function buildWellProductionChart(container, wells, producaoPocos, mesRef) {
   const rows = [];
   for (const w of wells) {
     const p = producaoPocos[w.n];
-    if (p && p.oleoBbld > 0) rows.push({ name: w.n, oleoBbld: p.oleoBbld, campo: p.campo });
+    if (p && p.oleoBbld > 0) rows.push({ name: w.n, oleoBbld: p.oleoBbld, campo: p.campo, fpso: p.fpso });
   }
   if (!rows.length) return;
   rows.sort((a, b) => b.oleoBbld - a.oleoBbld);
   const max = rows[0].oleoBbld;
 
+  // Cor por FPSO/instalação (não por poço) — mesma ideia de rodadaColorMap
+  // em mapa.js: um índice fixo na paleta por ordem de produção TOTAL do FPSO
+  // (o que mais produz pega a primeira cor), pra legenda e barras baterem
+  // e a ordem fazer sentido visualmente.
+  const totalByFpso = new Map();
+  for (const r of rows) totalByFpso.set(r.fpso, (totalByFpso.get(r.fpso) || 0) + r.oleoBbld);
+  const fpsoOrder = [...totalByFpso.keys()].sort((a, b) => totalByFpso.get(b) - totalByFpso.get(a));
+  const colorByFpso = new Map(fpsoOrder.map((f, i) => [f, PALETTE[i % PALETTE.length]]));
+
   const [ano, mes] = mesRef.split('-').map(Number);
   const card = chartCard(
     'Produção por poço',
-    `Óleo por poço produtor (bbl/d), ${MESES_PT[mes]}/${ano} — boletim de poços da ANP, todos os poços da jazida compartilhada (mesmo critério do mini-mapa acima: contrato próprio + os outros contratos/campos da mesma jazida). Só poços com produção de óleo no mês; injetor/seco/abandonado fica de fora.`,
+    `Óleo por poço produtor (bbl/d), ${MESES_PT[mes]}/${ano} — boletim de poços da ANP, todos os poços da jazida compartilhada (mesmo critério do mini-mapa acima: contrato próprio + os outros contratos/campos da mesma jazida). Cor da barra = FPSO/instalação. Só poços com produção de óleo no mês; injetor/seco/abandonado fica de fora.`,
   );
+
+  // Legenda de FPSO — mesmo padrão visual da legenda "Partilha da Produção"
+  // dos gráficos de linha (ver createLineChart, shared.js).
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:10px;font-size:12px;color:var(--text-muted)';
+  for (const fpso of fpsoOrder) {
+    const item = document.createElement('span');
+    item.style.cssText = 'display:inline-flex;align-items:center;gap:6px';
+    item.innerHTML = `<span style="width:9px;height:9px;border-radius:2px;background:${colorByFpso.get(fpso)};display:inline-block;flex:none"></span>${escapeHtml(fpso)}`;
+    legend.appendChild(item);
+  }
+  card.appendChild(legend);
+
   const list = document.createElement('div');
   list.className = 'hbar-list';
   for (const r of rows) {
     list.appendChild(barRow(
-      r.name, (r.oleoBbld / max) * 100, fmtNum(r.oleoBbld) + ' bbl/d', WELL_LEGEND_COLOR,
+      r.name, (r.oleoBbld / max) * 100, fmtNum(r.oleoBbld) + ' bbl/d', colorByFpso.get(r.fpso),
       () => `<strong>${escapeHtml(r.name)}</strong>`
+        + tooltipRowHTML('FPSO/instalação', r.fpso)
         + tooltipRowHTML('Campo/trato (boletim ANP)', r.campo)
         + tooltipRowHTML('Óleo', fmtNum(r.oleoBbld) + ' bbl/d'),
     ));
