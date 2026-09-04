@@ -333,36 +333,19 @@ function renderStoiipByJazidaChart(container, jazidaRows) {
   container.appendChild(card);
 }
 
-// STOIIP por CONTRATO já ponderado pela Tract Participation (TP) — a % de
-// cada fatia/contrato dentro da jazida (ver "tracts" em data/planos_
-// desenvolvimento.json). Jazida com um contrato só sai idêntica ao
-// gráfico "por jazida" (fatia única, 100%); jazida compartilhada
-// (Bacalhau/Norte de Carcará, Mero, Atapu/Oeste de Atapu) quebra em uma
-// barra por contrato, cada uma já com o volume atribuído.
-function renderStoiipByContractChart(container, jazidaRows) {
-  const items = [];
-  for (const r of jazidaRows) {
-    if (r.stoiip == null) continue;
-    const tracts = tractsOf(r);
-    const multi = tracts.length > 1;
-    for (const t of tracts) {
-      items.push({
-        label: tractLabel(r, t, multi),
-        value: r.stoiip * (t.pct / 100),
-        color: r.color,
-        jazidaNome: r.name,
-        jazidaStoiip: r.stoiip,
-        pct: t.pct,
-      });
-    }
-  }
-  items.sort((a, b) => b.value - a.value);
-  if (!items.length) return;
+// Nome de fatia usado pela ANP pra "dentro da jazida, mas fora de
+// qualquer contrato" (ver anel laranja de AnC no mapa/mini-mapa, shared.js
+// WELL_LEGEND) — string exata, conferida contra as 13 fatias hoje
+// publicadas em data/planos_desenvolvimento.json (nenhuma variação de
+// grafia/acento encontrada).
+const TRACT_NAO_CONTRATADA = 'Área Não Contratada';
 
-  const card = chartCard(
-    'STOIIP por contrato (já com TP)',
-    'STOIIP da jazida × Tract Participation (TP) — a % de cada contrato/fatia dentro da jazida, quando ela é compartilhada por mais de um. Volume atribuído a cada contrato, não o volume total da jazida.',
-  );
+// Lista de barras genérica pra um grupo de fatias (contratadas OU AnC) —
+// mesmo corpo que renderStoiipByContractChart usava antes de virar dois
+// gráficos separados (ver logo abaixo); título/nota variam por grupo.
+function renderStoiipItemsChart(container, title, note, items) {
+  if (!items.length) return;
+  const card = chartCard(title, note);
   const list = document.createElement('div');
   list.className = 'hbar-list';
   const max = Math.max(...items.map((i) => i.value));
@@ -377,6 +360,53 @@ function renderStoiipByContractChart(container, jazidaRows) {
   }
   card.appendChild(list);
   container.appendChild(card);
+}
+
+// STOIIP por CONTRATO já ponderado pela Tract Participation (TP) — a % de
+// cada fatia dentro da jazida (ver "tracts" em data/planos_
+// desenvolvimento.json). Jazida com um contrato só sai idêntica ao
+// gráfico "por jazida" (fatia única, 100%, cai no grupo "campos de
+// partilha" abaixo); jazida compartilhada (Bacalhau/Norte de Carcará,
+// Mero, Atapu/Oeste de Atapu) quebra em uma barra por fatia, cada uma já
+// com o volume atribuído. Dois gráficos, não um só: fatia "Área Não
+// Contratada" (AnC — dentro da jazida, mas sem contrato formal, mesmo
+// anel laranja do mapa) mistura MMbbl que ninguém detém com MMbbl de
+// contrato de verdade se ficasse na mesma lista/escala — separar deixa
+// claro que "campos de partilha" é só a parte já concedida.
+function renderStoiipByContractChart(container, jazidaRows) {
+  const partilha = [];
+  const naoContratada = [];
+  for (const r of jazidaRows) {
+    if (r.stoiip == null) continue;
+    const tracts = tractsOf(r);
+    const multi = tracts.length > 1;
+    for (const t of tracts) {
+      const item = {
+        label: tractLabel(r, t, multi),
+        value: r.stoiip * (t.pct / 100),
+        color: r.color,
+        jazidaNome: r.name,
+        jazidaStoiip: r.stoiip,
+        pct: t.pct,
+      };
+      (t.nome === TRACT_NAO_CONTRATADA ? naoContratada : partilha).push(item);
+    }
+  }
+  partilha.sort((a, b) => b.value - a.value);
+  naoContratada.sort((a, b) => b.value - a.value);
+
+  renderStoiipItemsChart(
+    container,
+    'STOIIP por contrato — campos de partilha (já com TP)',
+    'STOIIP da jazida × Tract Participation (TP), só as fatias já concedidas (Partilha da Produção, Cessão Onerosa, excedente da CO) — a Área Não Contratada de cada jazida fica no gráfico seguinte. Volume atribuído a cada contrato, não o volume total da jazida.',
+    partilha,
+  );
+  renderStoiipItemsChart(
+    container,
+    'STOIIP — áreas não contratadas (AnC)',
+    'STOIIP × TP só da fatia "Área Não Contratada" de cada jazida — parte do reservatório ainda sem contrato formal (mesmo anel laranja de AnC do mapa/mini-mapa), quando o Plano de Desenvolvimento publica essa fatia separada.',
+    naoContratada,
+  );
 }
 
 // STOIIP ponderado por TP × profit oil — só pras fatias/contratos com
