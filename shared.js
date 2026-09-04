@@ -831,6 +831,13 @@ const UNITS = {
   gas: { label: 'Gás natural (Mm³/d)', key: 'gasPreSalMm3d', fmt: (n) => fmtNum(n, { maximumFractionDigits: 1 }) + ' Mm³/d' },
   boe: { label: 'Produção (boe/d)', key: 'boedPreSal', fmt: (n) => fmtNum(n) + ' boe/d' },
   rgo: { label: 'RGO (m³/m³)', key: 'rgo', fmt: (n) => fmtNum(n) + ' m³/m³' },
+  // Água/gás injetado por campo (data/producao_injecao.json, ver
+  // scripts/parse_producao_injecao.py) — mesmo createLineChart dos
+  // gráficos de produção/RGO, só troca a chave/rótulo; usado só em
+  // campo.js (buildUnitSwitch(..., ['agua','gasInj'])), não aparece nos
+  // outros gráficos porque eles passam sua própria lista de chaves.
+  agua: { label: 'Água injetada (m³/d)', key: 'aguaInjM3d', fmt: (n) => fmtNum(n) + ' m³/d' },
+  gasInj: { label: 'Gás injetado (Mil m³/d)', key: 'gasInjMm3d', fmt: (n) => fmtNum(n, { maximumFractionDigits: 1 }) + ' Mil m³/d' },
 };
 
 function emptyMetrics() {
