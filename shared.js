@@ -1221,16 +1221,24 @@ function createLineChart(container, monthlySeries, markers) {
     const loIdx = Math.max(0, Math.floor(viewStart));
     const hiIdx = Math.min(n - 1, Math.ceil(viewEnd));
 
-    // rawMax (pico da janela visível) só alimenta o piso do zoom manual em
-    // y logo abaixo (wheel sobre o eixo) — a escala automática usa o
-    // último valor visível, não o pico (ver niceMaxFromLastValue).
+    // rawMax (pico da janela visível) alimenta o piso do zoom manual em y
+    // logo abaixo (wheel sobre o eixo) E funciona de segurança da escala
+    // automática, que normalmente ancora no último valor visível, não no
+    // pico (ver niceMaxFromLastValue) — usar só o último valor deixava
+    // clipada uma série com um pico ANTIGO maior que o nível atual dentro
+    // da própria janela visível (ex.: Tupi bem mais alto em dez/2019 do
+    // que hoje — o teto calculado só pelo último mês ficava abaixo desse
+    // pico, cortando a linha no topo do gráfico). Math.max com rawMax
+    // garante que o pico realmente visível nunca fica maior que o teto,
+    // sem abrir mão de ancorar no último valor no caso comum (produção
+    // subindo com o tempo, onde o último valor já É o maior da janela).
     let rawMax = 0;
     for (let i = loIdx; i <= hiIdx; i++) {
       for (const r of monthlySeries[i].rows) rawMax = Math.max(rawMax, r[unit.key]);
     }
     let lastMax = 0;
     for (const r of monthlySeries[hiIdx].rows) lastMax = Math.max(lastMax, r[unit.key]);
-    const autoMax = niceMaxFromLastValue(lastMax);
+    const autoMax = niceMaxFromLastValue(Math.max(lastMax, rawMax));
     // yMaxOverride persiste entre trocas de unidade/pan/zoom em x até o
     // usuário resetar ("Ver tudo") — dar zoom em x não desfaz um zoom em y
     // já ajustado, e vice-versa (são eixos independentes).
