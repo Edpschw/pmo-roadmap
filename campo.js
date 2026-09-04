@@ -149,7 +149,7 @@ const CampoLegendControl = L.Control.extend({
   },
 });
 
-function buildMiniMap(container, project, jazidaFeatures, wells) {
+function buildMiniMap(container, project, jazidaFeatures, wells, onWellClick) {
   const mapDiv = document.createElement('div');
   mapDiv.className = 'campo-mapa';
   container.appendChild(mapDiv);
@@ -221,15 +221,19 @@ function buildMiniMap(container, project, jazidaFeatures, wells) {
   for (const w of wells) {
     if (!w.c) continue;
     const rigStyle = RIG_STATUS_STYLE[w.sit];
+    let marker;
     if (rigStyle) {
-      const marker = L.marker(w.c, { icon: rigDivIcon(rigStyle.color) })
+      marker = L.marker(w.c, { icon: rigDivIcon(rigStyle.color) })
         .bindTooltip(`${escapeHtml(w.n)}<br>${escapeHtml(rigStyle.label)}`, { direction: 'top', offset: [0, -11] });
-      wellMarkersByYear.push({ marker, year: w.d ? Number(w.d.slice(0, 4)) : null, category: null });
+      wellMarkersByYear.push({ marker, name: w.n, year: w.d ? Number(w.d.slice(0, 4)) : null, category: null });
     } else {
       const category = wellCategory(w);
-      const marker = L.marker(w.c, { icon: wellDivIcon(project.color, category, !!w.anc, wellInjectionType(w)) })
+      marker = L.marker(w.c, { icon: wellDivIcon(project.color, category, !!w.anc, wellInjectionType(w)) })
         .bindTooltip(w.n, { direction: 'top', offset: [0, -8] });
-      wellMarkersByYear.push({ marker, year: w.d ? Number(w.d.slice(0, 4)) : null, category });
+      wellMarkersByYear.push({ marker, name: w.n, year: w.d ? Number(w.d.slice(0, 4)) : null, category });
+    }
+    if (onWellClick) {
+      marker.on('click', () => onWellClick(w.n));
     }
     bounds.extend(w.c);
   }
@@ -244,6 +248,22 @@ function buildMiniMap(container, project, jazidaFeatures, wells) {
   // (ver buildYearFilterBar) — sonda ativa entra no filtro (category null),
   // mas nunca soma nos contadores: ainda não virou produtor, injetor nem
   // abandonado.
+  // Poço selecionado (clicado aqui ou numa barra de um dos gráficos por
+  // poço abaixo, ver buildProjectPanel) — o marcador dele fica em opacidade
+  // cheia, os demais somem visualmente (opacidade baixa, "cinza" no mapa
+  // escuro) até ser desmarcado (clicar de novo no mesmo poço, tanto aqui
+  // quanto no gráfico). setOpacity funciona em cima de divIcon normalmente
+  // (Leaflet aplica no elemento do ícone), sem precisar recolorir SVG.
+  let selectedWell = null;
+  function applySelectionOpacity() {
+    for (const { marker, name } of wellMarkersByYear) {
+      marker.setOpacity(!selectedWell || name === selectedWell ? 1 : 0.18);
+    }
+  }
+  function setSelectedWell(name) {
+    selectedWell = name;
+    applySelectionOpacity();
+  }
   function setYearFilter(year) {
     wellsLayer.clearLayers();
     let producers = 0;
@@ -257,6 +277,10 @@ function buildMiniMap(container, project, jazidaFeatures, wells) {
         else if (category === 'abandonado') abandoned++;
       }
     }
+    // Camada foi recriada do zero (clearLayers) — reaplica a opacidade da
+    // seleção atual, senão um poço selecionado "perderia" o destaque toda
+    // vez que a barra de tempo mudasse de ano.
+    applySelectionOpacity();
     return { producers, injectors, abandoned };
   }
   // Estado inicial (sem filtro aplicado) também popula a camada — reusa
@@ -290,7 +314,7 @@ function buildMiniMap(container, project, jazidaFeatures, wells) {
     }
   });
 
-  return { map, hasShape: !!(jazidaFeatures.own || jazidaFeatures.extra.length), hasWells, minWellYear, maxWellYear, setYearFilter, initialCounts };
+  return { map, hasShape: !!(jazidaFeatures.own || jazidaFeatures.extra.length), hasWells, minWellYear, maxWellYear, setYearFilter, initialCounts, setSelectedWell };
 }
 
 /* ----------------------- Gráfico combinado (produção + RGO) --------------- */
@@ -432,13 +456,13 @@ function buildComboChart(container, series, projectColor) {
 // instalação — genérico o bastante pra servir produção de óleo e as duas
 // injeções (só troca a métrica/unidade/título). dataMap: poço -> { campo,
 // fpso, [opts.valueKey]: número (já na unidade de exibição, por dia) }.
-function buildWellBarChart(container, wells, dataMap, mesRef, opts) {
+function buildWellBarChart(container, wells, dataMap, mesRef, opts, onWellClick) {
   const rows = [];
   for (const w of wells) {
     const p = dataMap[w.n];
     if (p && p[opts.valueKey] > 0) rows.push({ name: w.n, value: p[opts.valueKey], campo: p.campo, fpso: p.fpso });
   }
-  if (!rows.length) return;
+  if (!rows.length) return null;
   const max = Math.max(...rows.map((r) => r.value));
 
   // Cor por FPSO/instalação (não por poço) — mesma ideia de rodadaColorMap
@@ -477,41 +501,61 @@ function buildWellBarChart(container, wells, dataMap, mesRef, opts) {
 
   const list = document.createElement('div');
   list.className = 'hbar-list';
+  // Guarda a linha + o elemento colorido (fill) por poço pra setHighlight
+  // poder isolar/apagar sem precisar refazer o gráfico inteiro — mesma
+  // ideia de "highlighted" do createLineChart (shared.js), mas recolorindo
+  // a barra pra cinza de verdade (var(--border-strong)) em vez de só baixar
+  // a opacidade, já que aqui a cor por FPSO é o próprio dado visual.
+  const rowsByName = new Map();
   for (const r of rows) {
-    list.appendChild(barRow(
+    const row = barRow(
       r.name, (r.value / max) * 100, fmtNum(r.value) + ' ' + opts.unit, colorByFpso.get(r.fpso),
       () => `<strong>${escapeHtml(r.name)}</strong>`
         + tooltipRowHTML('FPSO/instalação', r.fpso)
         + tooltipRowHTML('Campo/trato (boletim ANP)', r.campo)
         + tooltipRowHTML(opts.tooltipLabel, fmtNum(r.value) + ' ' + opts.unit),
-    ));
+    );
+    row.style.cursor = 'pointer';
+    if (onWellClick) row.addEventListener('click', () => onWellClick(r.name));
+    rowsByName.set(r.name, { row, fill: row.querySelector('.hbar-fill'), name: row.querySelector('.hbar-name'), color: colorByFpso.get(r.fpso) });
+    list.appendChild(row);
   }
   card.appendChild(list);
   container.appendChild(card);
+
+  function setHighlight(selected) {
+    for (const [name, { row, fill, name: nameEl, color }] of rowsByName) {
+      const dimmed = selected && name !== selected;
+      fill.style.background = dimmed ? 'var(--border-strong)' : color;
+      nameEl.style.color = dimmed ? 'var(--text-faint)' : '';
+      row.style.opacity = dimmed ? '0.55' : '1';
+    }
+  }
+  return { setHighlight };
 }
 
-function buildWellProductionChart(container, wells, producaoPocosData) {
-  buildWellBarChart(container, wells, producaoPocosData.pocos, producaoPocosData.mesRef, {
+function buildWellProductionChart(container, wells, producaoPocosData, onWellClick) {
+  return buildWellBarChart(container, wells, producaoPocosData.pocos, producaoPocosData.mesRef, {
     title: 'Produção por poço',
     subtitle: 'Óleo por poço produtor',
     unit: 'bbl/d',
     tooltipLabel: 'Óleo',
     valueKey: 'oleoBbld',
-  });
+  }, onWellClick);
 }
 
-function buildWellWaterInjectionChart(container, wells, producaoPocosData) {
-  buildWellBarChart(container, wells, producaoPocosData.injetoresAgua, producaoPocosData.mesRef, {
+function buildWellWaterInjectionChart(container, wells, producaoPocosData, onWellClick) {
+  return buildWellBarChart(container, wells, producaoPocosData.injetoresAgua, producaoPocosData.mesRef, {
     title: 'Injeção de água por poço',
     subtitle: 'Água injetada por poço (recuperação secundária + descarte)',
     unit: 'm³/d',
     tooltipLabel: 'Água injetada',
     valueKey: 'aguaM3d',
-  });
+  }, onWellClick);
 }
 
-function buildWellGasInjectionChart(container, wells, producaoPocosData) {
-  buildWellBarChart(container, wells, producaoPocosData.injetoresGas, producaoPocosData.mesRef, {
+function buildWellGasInjectionChart(container, wells, producaoPocosData, onWellClick) {
+  return buildWellBarChart(container, wells, producaoPocosData.injetoresGas, producaoPocosData.mesRef, {
     title: 'Injeção de gás por poço',
     subtitle: 'Gás injetado por poço (natural + CO₂ + nitrogênio)',
     unit: 'Mm³/d',
@@ -966,7 +1010,24 @@ function buildProjectPanel(project, ctx) {
       wells.push(w);
     }
   }
-  const mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells);
+  // Seleção de poço compartilhada entre o mini-mapa e os três gráficos por
+  // poço (produção, injeção de água, injeção de gás) abaixo — clicar num
+  // poço em qualquer um deles destaca ele nos outros dois e apaga
+  // (opacidade baixa no mapa, cinza nas barras) o resto, até clicar de novo
+  // no mesmo poço (toggle, mesmo padrão de "highlighted" do createLineChart
+  // em shared.js) ou clicar num poço diferente. mapInfo só é atribuído
+  // depois do buildMiniMap logo abaixo, mas selectWell só roda a partir de
+  // um clique (depois de tudo montado), então o closure sobre a variável
+  // (não o valor) resolve certo.
+  let mapInfo = null;
+  let selectedWell = null;
+  const wellChartControllers = [];
+  function selectWell(name) {
+    selectedWell = selectedWell === name ? null : name;
+    if (mapInfo) mapInfo.setSelectedWell(selectedWell);
+    for (const c of wellChartControllers) c.setHighlight(selectedWell);
+  }
+  mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells, selectWell);
   panel._miniMap = mapInfo.map;
   // Filtro de ano — mostra só os poços perfurados até o ano escolhido
   // (ver setYearFilter em buildMiniMap) e marca a mesma data nos gráficos
@@ -1015,9 +1076,13 @@ function buildProjectPanel(project, ctx) {
   // — funciona mesmo pra projeto sem produção individualizada no boletim
   // por campo.
   if (isSharedJazida) {
-    buildWellProductionChart(chartsCol, wells, ctx.producaoPocos);
-    buildWellWaterInjectionChart(chartsCol, wells, ctx.producaoPocos);
-    buildWellGasInjectionChart(chartsCol, wells, ctx.producaoPocos);
+    for (const controller of [
+      buildWellProductionChart(chartsCol, wells, ctx.producaoPocos, selectWell),
+      buildWellWaterInjectionChart(chartsCol, wells, ctx.producaoPocos, selectWell),
+      buildWellGasInjectionChart(chartsCol, wells, ctx.producaoPocos, selectWell),
+    ]) {
+      if (controller) wellChartControllers.push(controller);
+    }
   }
 
   const base = PROJECT_FIELD_BASE[project.name];
