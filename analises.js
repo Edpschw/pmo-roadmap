@@ -639,7 +639,12 @@ function buildStackedFill(track, segments, max, color, fpso, jazidaLabel) {
       const fill = document.createElement('div');
       fill.className = 'hbar-fill' + (seg.hatched ? ' hbar-fill-hatched' : '');
       const isLast = i === present.length - 1;
-      fill.style.cssText = `width:${(seg.count / total) * 100}%;background:${color};border-radius:0;flex:none${!isLast ? ';border-right:1px solid var(--bg)' : ''}`;
+      // background-color (não o atalho "background") — "background: cor"
+      // reseta background-image pro valor inicial (none) JUNTO, e por ser
+      // inline sempre vence a regra de .hbar-fill-hatched no style.css
+      // (background-image: repeating-linear-gradient), apagando a listra
+      // do segmento de gás mesmo com a classe certa aplicada.
+      fill.style.cssText = `width:${(seg.count / total) * 100}%;background-color:${color};border-radius:0;flex:none${!isLast ? ';border-right:1px solid var(--bg)' : ''}`;
       fill.tabIndex = 0;
       attachTooltip(fill, () => `<strong>${escapeHtml(fpso)}</strong>` + tooltipRowHTML('Jazida', jazidaLabel) + tooltipRowHTML(seg.tooltipLabel, `${seg.count} poço${seg.count === 1 ? '' : 's'}`));
       fillWrap.appendChild(fill);
