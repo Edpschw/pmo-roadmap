@@ -477,6 +477,20 @@ function rigDivIcon(color) {
   });
 }
 
+// Ícone de FPSO no mini-mapa de campo.js (buildMiniMap) — mesmo desenho
+// de fpsoIconSVG (marco de FPSO no roadmap e nos gráficos de produção),
+// bem maior que o ícone de poço (20px vs 13px, ver wellDivIcon) pra
+// destacar que é a instalação, não um poço — sombra igual, mesmo
+// critério visual do resto do mini-mapa.
+function fpsoDivIcon(color) {
+  return L.divIcon({
+    className: 'map-fpso-icon',
+    html: `<svg viewBox="0 0 16 16" width="20" height="20" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8))">${fpsoIconSVG(color)}</svg>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+}
+
 // Ordem de exibição na legenda — do resultado mais positivo (achou e
 // produz) ao mais neutro (sem registro), agrupando injeção/abandonado
 // (intervenção/descontinuado) no meio.

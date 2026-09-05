@@ -152,7 +152,7 @@ const CampoLegendControl = L.Control.extend({
   },
 });
 
-function buildMiniMap(container, project, jazidaFeatures, wells, onWellClick) {
+function buildMiniMap(container, project, jazidaFeatures, wells, wellFpso, onWellClick) {
   const mapDiv = document.createElement('div');
   mapDiv.className = 'campo-mapa';
   container.appendChild(mapDiv);
@@ -185,7 +185,12 @@ function buildMiniMap(container, project, jazidaFeatures, wells, onWellClick) {
   // sonda), mesmo critério condicional que o mapa completo já usa.
   const hasWells = wells.some((w) => w.c);
   const hasRigs = wells.some((w) => w.c && RIG_STATUS_STYLE[w.sit]);
-  if (hasWells) new CampoLegendControl(buildWellShapeLegend()).addTo(map);
+  // wellLegendEl guardado (não só adicionado ao mapa) — o ícone de FPSO só
+  // entra nele mais abaixo, depois de calcular fpsoCoordSum; appendChild
+  // depois de addTo(map) funciona igual (Control só embrulha o elemento
+  // vivo, não tira uma cópia dele).
+  const wellLegendEl = hasWells ? buildWellShapeLegend() : null;
+  if (wellLegendEl) new CampoLegendControl(wellLegendEl).addTo(map);
   if (hasRigs) new CampoLegendControl(buildRigLegend()).addTo(map);
 
   const bounds = L.latLngBounds([]);
@@ -240,6 +245,46 @@ function buildMiniMap(container, project, jazidaFeatures, wells, onWellClick) {
     }
     bounds.extend(w.c);
   }
+
+  // Marcador de FPSO — a ANP não publica a posição do casco, então usa o
+  // centroide dos poços DESTA jazida que pertencem a cada instalação
+  // (wellFpso, mesma consulta poço->FPSO do gráfico "Produção por poço" —
+  // ver init()) como aproximação: mais confiável que estimar/lembrar uma
+  // coordenada de fora do cadastro do app. Sempre visível (não entra no
+  // filtro de ano do slider abaixo — não há data de instalação por poço
+  // pra decidir "até que ano" mostrar o próprio FPSO).
+  const fpsoCoordSum = new Map();
+  for (const w of wells) {
+    if (!w.c) continue;
+    const fpso = wellFpso.get(w.n);
+    if (!fpso) continue;
+    if (!fpsoCoordSum.has(fpso)) fpsoCoordSum.set(fpso, { sumLat: 0, sumLng: 0, n: 0 });
+    const acc = fpsoCoordSum.get(fpso);
+    acc.sumLat += w.c[0];
+    acc.sumLng += w.c[1];
+    acc.n += 1;
+  }
+  const fpsoLayer = L.layerGroup().addTo(map);
+  for (const [fpso, acc] of fpsoCoordSum) {
+    const center = [acc.sumLat / acc.n, acc.sumLng / acc.n];
+    L.marker(center, { icon: fpsoDivIcon(project.color), zIndexOffset: 500 })
+      .bindTooltip(
+        `${escapeHtml(fpso)}<br><span style="opacity:.7">Posição aproximada — centro dos ${acc.n} poço${acc.n === 1 ? '' : 's'} dela aqui</span>`,
+        { direction: 'top', offset: [0, -13] },
+      )
+      .addTo(fpsoLayer);
+  }
+  if (fpsoCoordSum.size && wellLegendEl) {
+    const row = document.createElement('div');
+    row.className = 'map-legend-row';
+    const icon = document.createElement('span');
+    icon.className = 'map-legend-well-icon';
+    icon.innerHTML = `<svg viewBox="0 0 16 16" width="15" height="15">${fpsoIconSVG(WELL_LEGEND_COLOR)}</svg>`;
+    row.appendChild(icon);
+    row.appendChild(document.createTextNode('FPSO/instalação (posição aproximada — ver dica ao passar o mouse)'));
+    wellLegendEl.appendChild(row);
+  }
+
   const wellYears = wellMarkersByYear.filter((x) => x.year != null).map((x) => x.year);
   const minWellYear = wellYears.length ? Math.min(...wellYears) : null;
   const maxWellYear = wellYears.length ? Math.max(...wellYears) : null;
@@ -1052,7 +1097,7 @@ function buildProjectPanel(project, ctx) {
   chartsCol.className = 'campo-dashboard-charts-col';
   dashboardGrid.appendChild(chartsCol);
 
-  const mapCard = chartCard('Contorno e poços', 'Poligonal do contrato/campo (quando disponível na ANP) e os poços perfurados dentro dela — cor do ponto por categoria (produção, injeção, seco...), mesmo critério de mapa.html. Zoom ajustado pra preencher o mapa com o contorno deste campo.');
+  const mapCard = chartCard('Contorno e poços', 'Poligonal do contrato/campo (quando disponível na ANP) e os poços perfurados dentro dela — cor do ponto por categoria (produção, injeção, seco...), mesmo critério de mapa.html. Ícone de FPSO (quando há jazida compartilhada com FPSO conhecido) marca a posição aproximada de cada instalação — centro dos próprios poços dela, a ANP não publica a posição do casco. Zoom ajustado pra preencher o mapa com o contorno deste campo.');
   mapCol.appendChild(mapCard);
 
   const jazidaFeatures = ctx.jazidaFeaturesByProject[project.name];
@@ -1101,7 +1146,7 @@ function buildProjectPanel(project, ctx) {
     if (mapInfo) mapInfo.setSelectedWell(selectedWell);
     if (wellChartInfo) wellChartInfo.setSelectedWell(selectedWell);
   }
-  mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells, selectWell);
+  mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells, ctx.wellFpso, selectWell);
   panel._miniMap = mapInfo.map;
   // Filtro de ano — mostra só os poços perfurados até o ano escolhido
   // (ver setYearFilter em buildMiniMap) e marca a mesma data nos gráficos

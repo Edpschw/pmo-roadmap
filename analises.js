@@ -501,6 +501,40 @@ function buildFpsoCountChart(container, dataMap, opts) {
   container.appendChild(card);
 }
 
+// data/producao_pocos.json (boletim de poços da ANP/BDEP) não separa
+// pré-sal de pós-sal por POÇO — só data/producao.json (por campo, ver
+// parse_producao_zona.py) tem essa marcação linha a linha. Pra filtrar os
+// 3 gráficos "por poço"/"por FPSO" desta aba pro pré-sal, usa o mesmo
+// universo de campo já validado lá: os 20 nomes (7 contratos rastreados +
+// 13 de contexto) que já aparecem com produção pré-sal em data/
+// producao.json — busca aqui é só por SUBSTRING do nome em CAIXA ALTA
+// (campo dessa base vem sempre em maiúsculo, às vezes com prefixo
+// "AnC_"/"NORTE DE"/"SUL DE"/etc. — mesma ideia de PROJECT_FIELD_BASE em
+// shared.js, sem precisar importar de lá por causa da caixa diferente).
+// EXCLUI de propósito um punhado de campos históricos do pós-sal (Campos
+// Basin, anos 80-90) que tiveram uma fração PONTUAL de produção pré-sal
+// em algum mês do boletim por campo (poço mais fundo alcançando um
+// reservatório mais raso categorizado como pré-sal) — incluir esses aqui
+// misturaria poço majoritariamente pós-sal com o pré-sal de verdade, já
+// que este boletim não diz QUAL poço específico é a fração pré-sal.
+const PRESAL_FIELD_BASES = ['BÚZIOS', 'TUPI', 'MERO', 'ITAPU', 'SÉPIA', 'ATAPU', 'BERBIGÃO', 'JUBARTE', 'SAPINHOÁ', 'BACALHAU', 'LAPA', 'WAHOO', 'TAMBUATÁ', 'VOADOR', 'ARGONAUTA'];
+const PRESAL_EXCLUDE_LEGACY = ['MARLIM', 'BARRACUDA', 'CARATINGA', 'ALBACORA', 'PAMPO'];
+function isPresalCampo(campo) {
+  const up = (campo || '').toUpperCase();
+  if (PRESAL_EXCLUDE_LEGACY.some((n) => up.includes(n))) return false;
+  return PRESAL_FIELD_BASES.some((base) => up.includes(base));
+}
+// Recorta um mapa poço->{campo,...} (pocos/injetoresAgua/injetoresGas de
+// data/producao_pocos.json) só pros poços de campo pré-sal (ver
+// isPresalCampo acima).
+function filterPresal(dataMap) {
+  const out = {};
+  for (const [nome, dados] of Object.entries(dataMap)) {
+    if (isPresalCampo(dados.campo)) out[nome] = dados;
+  }
+  return out;
+}
+
 function renderPocosPage(container, pocosJson, producaoPocosJson) {
   const grid = document.createElement('div');
   grid.className = 'analytics-histograms-grid';
@@ -522,44 +556,48 @@ function renderPocosPage(container, pocosJson, producaoPocosJson) {
   if (!producaoPocosJson) return;
   const [ano, mes] = (producaoPocosJson.mesRef || '').split('-').map(Number);
   const mesLabel = ano && mes ? `${MESES_PT[mes]}/${ano}` : '';
-  const pocosMap = producaoPocosJson.pocos || {};
-  const aguaMap = producaoPocosJson.injetoresAgua || {};
-  const gasMap = producaoPocosJson.injetoresGas || {};
+  // Filtrado pro pré-sal (ver isPresalCampo/filterPresal acima) — o
+  // boletim de poços da ANP cobre todo o litoral (Campos, Santos,
+  // Espírito Santo, Sergipe-Alagoas...), mas esta aba é sobre o pré-sal
+  // rastreado no resto do app, não o play offshore inteiro.
+  const pocosMap = filterPresal(producaoPocosJson.pocos || {});
+  const aguaMap = filterPresal(producaoPocosJson.injetoresAgua || {});
+  const gasMap = filterPresal(producaoPocosJson.injetoresGas || {});
 
   buildHistogram(grid, Object.values(pocosMap).map((p) => p.oleoBbld), {
     title: 'Produção por poço',
-    subtitle: `Óleo por poço produtor — boletim de poços da ANP, todo o litoral (não só pré-sal), ${mesLabel}`,
+    subtitle: `Óleo por poço produtor, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
     unit: 'bbl/d',
     color: '#e0762f',
   });
   buildHistogram(grid, Object.values(aguaMap).map((p) => p.aguaM3d), {
     title: 'Injeção de água por poço',
-    subtitle: `Água injetada por poço — boletim de poços da ANP, todo o litoral, ${mesLabel}`,
+    subtitle: `Água injetada por poço, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
     unit: 'm³/d',
     color: '#3fa7d6',
   });
   buildHistogram(grid, Object.values(gasMap).map((p) => p.gasMm3d), {
     title: 'Injeção de gás por poço',
-    subtitle: `Gás injetado por poço — boletim de poços da ANP, todo o litoral, ${mesLabel}`,
+    subtitle: `Gás injetado por poço, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
     unit: 'Mm³/d',
     color: '#e0a83f',
   });
 
   buildFpsoCountChart(grid, pocosMap, {
     title: 'Poços produtores por FPSO',
-    subtitle: `Nº de poços produzindo óleo em cada FPSO/instalação — boletim de poços da ANP, ${mesLabel}`,
+    subtitle: `Nº de poços produzindo óleo em cada FPSO/instalação, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
     tooltipLabel: 'Poços produtores',
     color: '#e0762f',
   });
   buildFpsoCountChart(grid, aguaMap, {
     title: 'Injetores de água por FPSO',
-    subtitle: `Nº de poços injetando água em cada FPSO/instalação — boletim de poços da ANP, ${mesLabel}`,
+    subtitle: `Nº de poços injetando água em cada FPSO/instalação, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
     tooltipLabel: 'Poços injetores',
     color: '#3fa7d6',
   });
   buildFpsoCountChart(grid, gasMap, {
     title: 'Injetores de gás por FPSO',
-    subtitle: `Nº de poços injetando gás em cada FPSO/instalação — boletim de poços da ANP, ${mesLabel}`,
+    subtitle: `Nº de poços injetando gás em cada FPSO/instalação, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
     tooltipLabel: 'Poços injetores',
     color: '#e0a83f',
   });
