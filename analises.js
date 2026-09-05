@@ -473,28 +473,75 @@ function renderPortfolioPage(container, jazidaRows) {
 // poço offshore do país (não só pré-sal) — por isso os dois grupos de
 // gráfico citam fontes diferentes na legenda.
 
+// Por FPSO: contagem de poço + a jazida mais comum entre eles (ver
+// presalJazidaBase mais abaixo) — o mesmo FPSO pode ter poço de mais de
+// uma jazida em tese (ex.: FPSO Frade citado no comentário de
+// isPresalCampo, água/gás injetado; aqui só entram poços já pré-sal, ver
+// filterPresal, então na prática quase sempre é uma jazida só), usa a
+// maioria pra decidir o grupo/cor do FPSO no gráfico.
 function fpsoCounts(dataMap) {
   const counts = new Map();
+  const jazidaVotes = new Map(); // fpso -> Map(jazida -> nº de poços)
   for (const key in dataMap) {
-    const fpso = dataMap[key].fpso;
+    const { fpso, campo } = dataMap[key];
     counts.set(fpso, (counts.get(fpso) || 0) + 1);
+    const jazida = presalJazidaBase(campo) || '?';
+    if (!jazidaVotes.has(fpso)) jazidaVotes.set(fpso, new Map());
+    const votes = jazidaVotes.get(fpso);
+    votes.set(jazida, (votes.get(jazida) || 0) + 1);
   }
-  return counts;
+  const jazidaByFpso = new Map();
+  for (const [fpso, votes] of jazidaVotes) {
+    const [topJazida] = [...votes.entries()].sort((a, b) => b[1] - a[1])[0];
+    jazidaByFpso.set(fpso, topJazida);
+  }
+  return { counts, jazidaByFpso };
 }
 
-function buildFpsoCountChart(container, dataMap, opts) {
-  const counts = fpsoCounts(dataMap);
+// Agrupado por jazida (cor consistente com o resto do app pros 7
+// contratos rastreados — ver jazidaColorMap — e uma cor estável por hash
+// pras demais, mesmo critério de colorForCompany) — jazida com mais poço
+// no total primeiro, FPSO mais poço primeiro dentro da própria jazida
+// (mesmo critério de ordenação de buildWellProductionChart em campo.js).
+function buildFpsoCountChart(container, dataMap, opts, jazidaColors) {
+  const { counts, jazidaByFpso } = fpsoCounts(dataMap);
   if (!counts.size) return;
-  const entries = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-  const max = entries[0][1];
+  const max = Math.max(...counts.values());
+
+  const totalByJazida = new Map();
+  for (const [fpso, count] of counts) {
+    const jazida = jazidaByFpso.get(fpso);
+    totalByJazida.set(jazida, (totalByJazida.get(jazida) || 0) + count);
+  }
+  const jazidaOrder = [...totalByJazida.keys()].sort((a, b) => totalByJazida.get(b) - totalByJazida.get(a));
+  const colorByJazida = new Map(jazidaOrder.map((j) => [j, jazidaColors(j)]));
+
+  const entries = [...counts.entries()].sort((a, b) => {
+    const jazidaCmp = jazidaOrder.indexOf(jazidaByFpso.get(a[0])) - jazidaOrder.indexOf(jazidaByFpso.get(b[0]));
+    return jazidaCmp || b[1] - a[1];
+  });
+
   const card = chartCard(opts.title, opts.subtitle);
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:10px;font-size:12px;color:var(--text-muted)';
+  for (const jazida of jazidaOrder) {
+    const item = document.createElement('span');
+    item.style.cssText = 'display:inline-flex;align-items:center;gap:6px';
+    item.innerHTML = `<span style="width:9px;height:9px;border-radius:2px;background:${colorByJazida.get(jazida)};display:inline-block;flex:none"></span>${escapeHtml(jazida === '?' ? 'Jazida não identificada' : jazida)}`;
+    legend.appendChild(item);
+  }
+  card.appendChild(legend);
+
   const list = document.createElement('div');
   list.className = 'hbar-list';
   for (const [fpso, count] of entries) {
     const valueText = `${count} poço${count === 1 ? '' : 's'}`;
+    const jazida = jazidaByFpso.get(fpso);
     list.appendChild(barRow(
-      fpso, (count / max) * 100, valueText, opts.color,
-      () => `<strong>${escapeHtml(fpso)}</strong>` + tooltipRowHTML(opts.tooltipLabel, valueText),
+      fpso, (count / max) * 100, valueText, colorByJazida.get(jazida),
+      () => `<strong>${escapeHtml(fpso)}</strong>`
+        + tooltipRowHTML('Jazida', jazida === '?' ? 'Não identificada' : jazida)
+        + tooltipRowHTML(opts.tooltipLabel, valueText),
     ));
   }
   card.appendChild(list);
@@ -519,10 +566,34 @@ function buildFpsoCountChart(container, dataMap, opts) {
 // que este boletim não diz QUAL poço específico é a fração pré-sal.
 const PRESAL_FIELD_BASES = ['BÚZIOS', 'TUPI', 'MERO', 'ITAPU', 'SÉPIA', 'ATAPU', 'BERBIGÃO', 'JUBARTE', 'SAPINHOÁ', 'BACALHAU', 'LAPA', 'WAHOO', 'TAMBUATÁ', 'VOADOR', 'ARGONAUTA'];
 const PRESAL_EXCLUDE_LEGACY = ['MARLIM', 'BARRACUDA', 'CARATINGA', 'ALBACORA', 'PAMPO'];
-function isPresalCampo(campo) {
+// Base (jazida) que bateu por substring em PRESAL_FIELD_BASES, ou null se
+// não é pré-sal (ver PRESAL_EXCLUDE_LEGACY) ou não bate em nenhuma base
+// conhecida — usada tanto pro filtro (isPresalCampo, abaixo) quanto pro
+// agrupamento por jazida do gráfico "por FPSO" (ver buildFpsoCountChart).
+function presalJazidaBase(campo) {
   const up = (campo || '').toUpperCase();
-  if (PRESAL_EXCLUDE_LEGACY.some((n) => up.includes(n))) return false;
-  return PRESAL_FIELD_BASES.some((base) => up.includes(base));
+  if (PRESAL_EXCLUDE_LEGACY.some((n) => up.includes(n))) return null;
+  return PRESAL_FIELD_BASES.find((base) => up.includes(base)) || null;
+}
+function isPresalCampo(campo) {
+  return presalJazidaBase(campo) != null;
+}
+// Cor por jazida pro gráfico "por FPSO" (buildFpsoCountChart) — os 7
+// contratos rastreados usam a MESMA cor do projeto (PROJECT_FIELD_BASE,
+// shared.js), pra bater com o resto do app (mapa, campo, roadmap); as ~8
+// jazidas de contexto (Tupi, Berbigão, Jubarte...) não têm uma cor de
+// projeto própria — usa colorForCompany (hash estável por nome, mesmo
+// critério já usado pra empresa/selo) em vez de inventar uma paleta nova
+// só pra isso, ou de deixar todas cinzas (o resto do app já faz isso pra
+// campo de contexto — mas aqui o objetivo é justamente diferenciar jazida
+// de jazida, cinza uniforme não ajudaria).
+function jazidaColorLookup() {
+  const trackedColor = new Map();
+  for (const project of state.projects) {
+    const base = PROJECT_FIELD_BASE[project.name];
+    if (base) trackedColor.set(base.toUpperCase(), project.color);
+  }
+  return (jazida) => trackedColor.get(jazida) || colorForCompany(jazida);
 }
 // Recorta um mapa poço->{campo,...} (pocos/injetoresAgua/injetoresGas de
 // data/producao_pocos.json) só pros poços de campo pré-sal (ver
@@ -583,24 +654,22 @@ function renderPocosPage(container, pocosJson, producaoPocosJson) {
     color: '#e0a83f',
   });
 
+  const jazidaColors = jazidaColorLookup();
   buildFpsoCountChart(grid, pocosMap, {
     title: 'Poços produtores por FPSO',
-    subtitle: `Nº de poços produzindo óleo em cada FPSO/instalação, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
+    subtitle: `Nº de poços produzindo óleo em cada FPSO/instalação, agrupado por jazida, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
     tooltipLabel: 'Poços produtores',
-    color: '#e0762f',
-  });
+  }, jazidaColors);
   buildFpsoCountChart(grid, aguaMap, {
     title: 'Injetores de água por FPSO',
-    subtitle: `Nº de poços injetando água em cada FPSO/instalação, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
+    subtitle: `Nº de poços injetando água em cada FPSO/instalação, agrupado por jazida, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
     tooltipLabel: 'Poços injetores',
-    color: '#3fa7d6',
-  });
+  }, jazidaColors);
   buildFpsoCountChart(grid, gasMap, {
     title: 'Injetores de gás por FPSO',
-    subtitle: `Nº de poços injetando gás em cada FPSO/instalação, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
+    subtitle: `Nº de poços injetando gás em cada FPSO/instalação, agrupado por jazida, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
     tooltipLabel: 'Poços injetores',
-    color: '#e0a83f',
-  });
+  }, jazidaColors);
 }
 
 /* ------------------------------- Seletor de página -------------------------- */
