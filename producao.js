@@ -159,7 +159,12 @@ function buildEvolutionSection(producaoData) {
   controlsRow.appendChild(resetBtn);
   card.insertBefore(controlsRow, card.querySelector('h3').nextSibling);
 
-  const chart = createLineChart(card, monthlySeries);
+  const chart = createLineChart(card, monthlySeries, {
+    onZoomChange: (zoomed) => {
+      resetBtn.classList.toggle('is-zoomed', zoomed);
+      resetBtn.textContent = zoomed ? 'Ver tudo — zoom ativo' : 'Ver tudo';
+    },
+  });
   // Mesmo motivo do keys em buildMonthlySection acima — sem restringir,
   // mostrava aba de água/gás injetado sem dado nenhum atrás aqui.
   const unitSwitch = buildUnitSwitch((unitKey) => chart.setUnit(unitKey), ['oleo', 'gas', 'boe', 'rgo']);

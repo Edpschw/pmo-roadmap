@@ -87,6 +87,14 @@ body { display: flex; flex-direction: column; height: 100vh; }
   background: var(--panel); color: var(--text); border-color: var(--border-strong);
 }
 .btn-ghost:hover { background: var(--surface); }
+/* "Ver tudo" (createLineChart, shared.js) fica destacado só enquanto o
+   gráfico está com algum zoom ativo (eixo x ou y) — sem isso um zoom em Y
+   preso (ex.: roda do mouse sobre o rótulo do eixo por engano) não dava
+   nenhuma pista visual de que o teto do gráfico não é mais automático; a
+   linha do campo maior (Búzios, Mero...) simplesmente sumia pro alto,
+   parecendo produção baixa. */
+.btn-ghost.is-zoomed { background: var(--accent-soft); border-color: var(--accent); color: #6f8bff; }
+.btn-ghost.is-zoomed:hover { background: var(--accent-soft); }
 
 /* ---------- Layout ---------- */
 /* flex column: group-tab-bar (altura própria) + roadmap-scroll (resto do

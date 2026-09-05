@@ -1227,7 +1227,14 @@ function buildProjectPanel(project, ctx) {
   prodReset.textContent = 'Ver tudo';
   prodControls.appendChild(prodReset);
   prodCard.insertBefore(prodControls, prodCard.querySelector('h3').nextSibling);
-  prodChart = createLineChart(prodCard, series, { fpsos: fpsoMarkers, wells });
+  prodChart = createLineChart(prodCard, series, {
+    fpsos: fpsoMarkers,
+    wells,
+    onZoomChange: (zoomed) => {
+      prodReset.classList.toggle('is-zoomed', zoomed);
+      prodReset.textContent = zoomed ? 'Ver tudo — zoom ativo' : 'Ver tudo';
+    },
+  });
   const prodUnitSwitch = buildUnitSwitch((unitKey) => prodChart.setUnit(unitKey), ['oleo', 'gas', 'boe']);
   prodControls.insertBefore(prodUnitSwitch, prodReset);
   prodReset.addEventListener('click', () => prodChart.resetZoom());
@@ -1242,7 +1249,12 @@ function buildProjectPanel(project, ctx) {
   rgoReset.textContent = 'Ver tudo';
   rgoControls.appendChild(rgoReset);
   rgoCard.insertBefore(rgoControls, rgoCard.querySelector('h3').nextSibling);
-  rgoChart = createLineChart(rgoCard, series);
+  rgoChart = createLineChart(rgoCard, series, {
+    onZoomChange: (zoomed) => {
+      rgoReset.classList.toggle('is-zoomed', zoomed);
+      rgoReset.textContent = zoomed ? 'Ver tudo — zoom ativo' : 'Ver tudo';
+    },
+  });
   rgoChart.setUnit('rgo');
   rgoReset.addEventListener('click', () => rgoChart.resetZoom());
   chartsCol.appendChild(rgoCard);
