@@ -776,6 +776,13 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 }
 .hbar-fill:first-child { border-radius: 4px; }
 .hbar-fill.is-hovered { filter: brightness(1.25); }
+/* Segmento de gás dentro de uma barra água+gás somada (ver
+   buildFpsoInjectionChart, analises.js) — mesma cor do segmento de água
+   ao lado, só com listra diagonal clara por cima, pra distinguir os dois
+   sem precisar de uma segunda cor (a cor já é a da jazida, não do fluido). */
+.hbar-fill-hatched {
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.4) 0, rgba(255,255,255,0.4) 3px, transparent 3px, transparent 8px);
+}
 .hbar-value {
   font-size: 11px; color: var(--text); font-weight: 600; white-space: nowrap;
   margin-left: 8px; font-variant-numeric: tabular-nums;

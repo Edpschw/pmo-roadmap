@@ -503,22 +503,28 @@ function fpsoCounts(dataMap) {
 // pras demais, mesmo critério de colorForCompany) — jazida com mais poço
 // no total primeiro, FPSO mais poço primeiro dentro da própria jazida
 // (mesmo critério de ordenação de buildWellProductionChart em campo.js).
-function buildFpsoCountChart(container, dataMap, opts, jazidaColors) {
-  const { counts, jazidaByFpso } = fpsoCounts(dataMap);
-  if (!counts.size) return;
-  const max = Math.max(...counts.values());
+// Cartão genérico "agrupado por jazida, com legenda + filtro dinâmico +
+// cabeçalho de seção entre as linhas" — extraído de buildFpsoCountChart
+// original pra reaproveitar em buildFpsoInjectionChart (água+gás somados
+// numa linha só) sem duplicar toda essa montagem (legenda/filtro/cabeçalho
+// são idênticos nos dois, só a linha em si — barRow simples vs. duas
+// barras somadas — muda). keys: lista de FPSO; jazidaByKey/totalByKey:
+// Map(fpso -> jazida) e Map(fpso -> total pra ordenar/agrupar); buildRow(
+// fpso, color, jazidaLabel) devolve o elemento .hbar-row já pronto.
+function buildGroupedFpsoChart(container, opts, keys, jazidaByKey, totalByKey, jazidaColors, buildRow) {
+  if (!keys.length) return;
 
   const totalByJazida = new Map();
-  for (const [fpso, count] of counts) {
-    const jazida = jazidaByFpso.get(fpso);
-    totalByJazida.set(jazida, (totalByJazida.get(jazida) || 0) + count);
+  for (const key of keys) {
+    const jazida = jazidaByKey.get(key);
+    totalByJazida.set(jazida, (totalByJazida.get(jazida) || 0) + totalByKey.get(key));
   }
   const jazidaOrder = [...totalByJazida.keys()].sort((a, b) => totalByJazida.get(b) - totalByJazida.get(a));
   const colorByJazida = new Map(jazidaOrder.map((j) => [j, jazidaColors(j)]));
 
-  const entries = [...counts.entries()].sort((a, b) => {
-    const jazidaCmp = jazidaOrder.indexOf(jazidaByFpso.get(a[0])) - jazidaOrder.indexOf(jazidaByFpso.get(b[0]));
-    return jazidaCmp || b[1] - a[1];
+  const entries = [...keys].sort((a, b) => {
+    const jazidaCmp = jazidaOrder.indexOf(jazidaByKey.get(a)) - jazidaOrder.indexOf(jazidaByKey.get(b));
+    return jazidaCmp || totalByKey.get(b) - totalByKey.get(a);
   });
 
   const card = chartCard(opts.title, opts.subtitle);
@@ -558,8 +564,8 @@ function buildFpsoCountChart(container, dataMap, opts, jazidaColors) {
   let lastJazida = null;
   const groupHeaderByJazida = new Map();
   const rowsByJazida = new Map();
-  for (const [fpso, count] of entries) {
-    const jazida = jazidaByFpso.get(fpso);
+  for (const key of entries) {
+    const jazida = jazidaByKey.get(key);
     const jazidaLabel = jazida === '?' ? 'Jazida não identificada' : jazida;
     if (jazida !== lastJazida) {
       const header = document.createElement('div');
@@ -569,14 +575,8 @@ function buildFpsoCountChart(container, dataMap, opts, jazidaColors) {
       groupHeaderByJazida.set(jazida, header);
       lastJazida = jazida;
     }
-    const valueText = `${count} poço${count === 1 ? '' : 's'}`;
-    const row = barRow(
-      fpso, (count / max) * 100, valueText, colorByJazida.get(jazida),
-      () => `<strong>${escapeHtml(fpso)}</strong>`
-        + tooltipRowHTML('Jazida', jazidaLabel)
-        + tooltipRowHTML(opts.tooltipLabel, valueText),
-    );
-    row.dataset.fpso = fpso.toLowerCase();
+    const row = buildRow(key, colorByJazida.get(jazida), jazidaLabel);
+    row.dataset.fpso = key.toLowerCase();
     row.dataset.jazida = jazidaLabel.toLowerCase();
     list.appendChild(row);
     if (!rowsByJazida.has(jazida)) rowsByJazida.set(jazida, []);
@@ -603,6 +603,86 @@ function buildFpsoCountChart(container, dataMap, opts, jazidaColors) {
   filterInput.addEventListener('input', (e) => applyFilter(e.target.value));
 
   container.appendChild(card);
+}
+
+function buildFpsoCountChart(container, dataMap, opts, jazidaColors) {
+  const { counts, jazidaByFpso } = fpsoCounts(dataMap);
+  if (!counts.size) return;
+  const max = Math.max(...counts.values());
+  buildGroupedFpsoChart(container, opts, [...counts.keys()], jazidaByFpso, counts, jazidaColors, (fpso, color, jazidaLabel) => {
+    const count = counts.get(fpso);
+    const valueText = `${count} poço${count === 1 ? '' : 's'}`;
+    return barRow(
+      fpso, (count / max) * 100, valueText, color,
+      () => `<strong>${escapeHtml(fpso)}</strong>`
+        + tooltipRowHTML('Jazida', jazidaLabel)
+        + tooltipRowHTML(opts.tooltipLabel, valueText),
+    );
+  });
+}
+
+// Uma linha por FPSO com DUAS barras somadas (água + gás, ver pedido do
+// usuário) — o total da barra é água+gás, mas o segmento de água fica
+// sólido e o de gás com listra diagonal (mesma cor, ver .hbar-fill-hatched
+// em style.css) — sem precisar de uma segunda cor pra "gás", que já
+// competiria com a cor da jazida. jazida do FPSO decidida por qualquer um
+// dos dois mapas que tiver ele (na prática os dois quase sempre
+// concordam, já que ambos vêm do mesmo poço/instalação pré-sal).
+function injectionBarRow(fpso, aguaCount, gasCount, max, color, jazidaLabel) {
+  const row = document.createElement('div');
+  row.className = 'hbar-row';
+  const name = document.createElement('div');
+  name.className = 'hbar-name';
+  name.textContent = fpso;
+  name.title = fpso;
+  const track = document.createElement('div');
+  track.className = 'hbar-track';
+  const total = aguaCount + gasCount;
+  const fillWrap = document.createElement('div');
+  fillWrap.style.cssText = `display:flex;height:100%;width:${Math.max(3, (total / max) * 100)}%;border-radius:4px;overflow:hidden`;
+  if (aguaCount > 0) {
+    const aguaFill = document.createElement('div');
+    aguaFill.className = 'hbar-fill';
+    aguaFill.style.cssText = `width:${(aguaCount / total) * 100}%;background:${color};border-radius:0;flex:none${gasCount > 0 ? ';border-right:1px solid var(--bg)' : ''}`;
+    aguaFill.tabIndex = 0;
+    attachTooltip(aguaFill, () => `<strong>${escapeHtml(fpso)}</strong>` + tooltipRowHTML('Jazida', jazidaLabel) + tooltipRowHTML('Injetores de água', `${aguaCount} poço${aguaCount === 1 ? '' : 's'}`));
+    fillWrap.appendChild(aguaFill);
+  }
+  if (gasCount > 0) {
+    const gasFill = document.createElement('div');
+    gasFill.className = 'hbar-fill hbar-fill-hatched';
+    gasFill.style.cssText = `width:${(gasCount / total) * 100}%;background:${color};border-radius:0;flex:none`;
+    gasFill.tabIndex = 0;
+    attachTooltip(gasFill, () => `<strong>${escapeHtml(fpso)}</strong>` + tooltipRowHTML('Jazida', jazidaLabel) + tooltipRowHTML('Injetores de gás', `${gasCount} poço${gasCount === 1 ? '' : 's'}`));
+    fillWrap.appendChild(gasFill);
+  }
+  track.appendChild(fillWrap);
+  const value = document.createElement('div');
+  value.className = 'hbar-value';
+  value.textContent = aguaCount > 0 && gasCount > 0
+    ? `${total} poços (${aguaCount} água + ${gasCount} gás)`
+    : `${total} poço${total === 1 ? '' : 's'}`;
+  track.appendChild(value);
+  row.appendChild(name);
+  row.appendChild(track);
+  return row;
+}
+
+function buildFpsoInjectionChart(container, aguaMap, gasMap, opts, jazidaColors) {
+  const { counts: aguaCounts, jazidaByFpso: aguaJazida } = fpsoCounts(aguaMap);
+  const { counts: gasCounts, jazidaByFpso: gasJazida } = fpsoCounts(gasMap);
+  const allFpsos = new Set([...aguaCounts.keys(), ...gasCounts.keys()]);
+  if (!allFpsos.size) return;
+  const jazidaByFpso = new Map();
+  const totalByFpso = new Map();
+  for (const fpso of allFpsos) {
+    jazidaByFpso.set(fpso, aguaJazida.get(fpso) || gasJazida.get(fpso));
+    totalByFpso.set(fpso, (aguaCounts.get(fpso) || 0) + (gasCounts.get(fpso) || 0));
+  }
+  const max = Math.max(...totalByFpso.values());
+  buildGroupedFpsoChart(container, opts, [...allFpsos], jazidaByFpso, totalByFpso, jazidaColors, (fpso, color, jazidaLabel) => {
+    return injectionBarRow(fpso, aguaCounts.get(fpso) || 0, gasCounts.get(fpso) || 0, max, color, jazidaLabel);
+  });
 }
 
 // data/producao_pocos.json (boletim de poços da ANP/BDEP) não separa
@@ -717,15 +797,9 @@ function renderPocosPage(container, pocosJson, producaoPocosJson) {
     subtitle: `Nº de poços produzindo óleo em cada FPSO/instalação, agrupado por jazida, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
     tooltipLabel: 'Poços produtores',
   }, jazidaColors);
-  buildFpsoCountChart(grid, aguaMap, {
-    title: 'Injetores de água por FPSO',
-    subtitle: `Nº de poços injetando água em cada FPSO/instalação, agrupado por jazida, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
-    tooltipLabel: 'Poços injetores',
-  }, jazidaColors);
-  buildFpsoCountChart(grid, gasMap, {
-    title: 'Injetores de gás por FPSO',
-    subtitle: `Nº de poços injetando gás em cada FPSO/instalação, agrupado por jazida, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
-    tooltipLabel: 'Poços injetores',
+  buildFpsoInjectionChart(grid, aguaMap, gasMap, {
+    title: 'Injetores de água e gás por FPSO',
+    subtitle: `Nº de poços injetando em cada FPSO/instalação, agrupado por jazida, só pré-sal — boletim de poços da ANP, ${mesLabel}. Uma barra só por FPSO, água + gás somados; sólido = água, listrado = gás.`,
   }, jazidaColors);
 }
 
