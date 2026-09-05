@@ -504,14 +504,15 @@ function fpsoCounts(dataMap) {
 // no total primeiro, FPSO mais poço primeiro dentro da própria jazida
 // (mesmo critério de ordenação de buildWellProductionChart em campo.js).
 // Cartão genérico "agrupado por jazida, com legenda + filtro dinâmico +
-// cabeçalho de seção entre as linhas" — extraído de buildFpsoCountChart
-// original pra reaproveitar em buildFpsoInjectionChart (água+gás somados
-// numa linha só) sem duplicar toda essa montagem (legenda/filtro/cabeçalho
-// são idênticos nos dois, só a linha em si — barRow simples vs. duas
-// barras somadas — muda). keys: lista de FPSO; jazidaByKey/totalByKey:
-// Map(fpso -> jazida) e Map(fpso -> total pra ordenar/agrupar); buildRow(
-// fpso, color, jazidaLabel) devolve o elemento .hbar-row já pronto.
-function buildGroupedFpsoChart(container, opts, keys, jazidaByKey, totalByKey, jazidaColors, buildRow) {
+// cabeçalho de seção entre as linhas" — separado de buildFpsoProducaoInjecaoChart
+// (único chamador hoje) só pra isolar essa montagem (legenda/filtro/
+// cabeçalho de grupo) de "como desenhar uma linha", que fica a cargo de
+// buildRow. keys: lista de FPSO; jazidaByKey/totalByKey: Map(fpso ->
+// jazida) e Map(fpso -> total pra ordenar/agrupar); buildRow(fpso, color,
+// jazidaLabel) devolve o elemento .hbar-row já pronto.
+// columnHeaders: [label1, label2] opcional — rotula as 2 colunas da linha
+// (ver hbar-row-2col/twoColumnFpsoRow) acima da lista.
+function buildGroupedFpsoChart(container, opts, keys, jazidaByKey, totalByKey, jazidaColors, buildRow, columnHeaders) {
   if (!keys.length) return;
 
   const totalByJazida = new Map();
@@ -553,6 +554,19 @@ function buildGroupedFpsoChart(container, opts, keys, jazidaByKey, totalByKey, j
   const filterResult = document.createElement('span');
   filterResult.className = 'campo-nav-filter-result';
   card.appendChild(filterResult);
+
+  if (columnHeaders) {
+    const colHeaderRow = document.createElement('div');
+    colHeaderRow.className = 'hbar-row hbar-row-2col hbar-col-headers';
+    colHeaderRow.appendChild(document.createElement('div'));
+    for (const label of columnHeaders) {
+      const col = document.createElement('div');
+      col.className = 'hbar-col-label';
+      col.textContent = label;
+      colHeaderRow.appendChild(col);
+    }
+    card.appendChild(colHeaderRow);
+  }
 
   const list = document.createElement('div');
   list.className = 'hbar-list';
@@ -605,84 +619,103 @@ function buildGroupedFpsoChart(container, opts, keys, jazidaByKey, totalByKey, j
   container.appendChild(card);
 }
 
-function buildFpsoCountChart(container, dataMap, opts, jazidaColors) {
-  const { counts, jazidaByFpso } = fpsoCounts(dataMap);
-  if (!counts.size) return;
-  const max = Math.max(...counts.values());
-  buildGroupedFpsoChart(container, opts, [...counts.keys()], jazidaByFpso, counts, jazidaColors, (fpso, color, jazidaLabel) => {
-    const count = counts.get(fpso);
-    const valueText = `${count} poço${count === 1 ? '' : 's'}`;
-    return barRow(
-      fpso, (count / max) * 100, valueText, color,
-      () => `<strong>${escapeHtml(fpso)}</strong>`
-        + tooltipRowHTML('Jazida', jazidaLabel)
-        + tooltipRowHTML(opts.tooltipLabel, valueText),
-    );
-  });
+// Preenche UM track (barra) com 1+ segmentos somados, cada um com sua
+// própria cor de fundo (a mesma da jazida em todos — só a listra de
+// .hbar-fill-hatched diferencia "gás" de "água"/"produção") e tooltip —
+// usado tanto pra coluna de 1 métrica só (produtores, 1 segmento) quanto
+// pra de 2 (injetores água+gás, ver twoColumnFpsoRow/buildFpsoProducaoInjecaoChart
+// abaixo). segments: [{count, tooltipLabel, shortLabel, hatched?}].
+// Track fica vazio (só o "—", sem barra) quando a soma é 0 — mais claro
+// que uma barra de 3% mínimo que pareceria ter algum valor.
+function buildStackedFill(track, segments, max, color, fpso, jazidaLabel) {
+  const total = segments.reduce((sum, seg) => sum + seg.count, 0);
+  const value = document.createElement('div');
+  value.className = 'hbar-value';
+  if (total > 0) {
+    const present = segments.filter((seg) => seg.count > 0);
+    const fillWrap = document.createElement('div');
+    fillWrap.style.cssText = `display:flex;height:100%;width:${Math.max(3, (total / max) * 100)}%;border-radius:4px;overflow:hidden`;
+    present.forEach((seg, i) => {
+      const fill = document.createElement('div');
+      fill.className = 'hbar-fill' + (seg.hatched ? ' hbar-fill-hatched' : '');
+      const isLast = i === present.length - 1;
+      fill.style.cssText = `width:${(seg.count / total) * 100}%;background:${color};border-radius:0;flex:none${!isLast ? ';border-right:1px solid var(--bg)' : ''}`;
+      fill.tabIndex = 0;
+      attachTooltip(fill, () => `<strong>${escapeHtml(fpso)}</strong>` + tooltipRowHTML('Jazida', jazidaLabel) + tooltipRowHTML(seg.tooltipLabel, `${seg.count} poço${seg.count === 1 ? '' : 's'}`));
+      fillWrap.appendChild(fill);
+    });
+    track.appendChild(fillWrap);
+    value.textContent = present.length > 1
+      ? `${total} (${present.map((seg) => `${seg.count} ${seg.shortLabel}`).join(' + ')})`
+      : `${total} poço${total === 1 ? '' : 's'}`;
+  } else {
+    value.textContent = '—';
+  }
+  track.appendChild(value);
 }
 
-// Uma linha por FPSO com DUAS barras somadas (água + gás, ver pedido do
-// usuário) — o total da barra é água+gás, mas o segmento de água fica
-// sólido e o de gás com listra diagonal (mesma cor, ver .hbar-fill-hatched
-// em style.css) — sem precisar de uma segunda cor pra "gás", que já
-// competiria com a cor da jazida. jazida do FPSO decidida por qualquer um
-// dos dois mapas que tiver ele (na prática os dois quase sempre
-// concordam, já que ambos vêm do mesmo poço/instalação pré-sal).
-function injectionBarRow(fpso, aguaCount, gasCount, max, color, jazidaLabel) {
+// Uma linha por FPSO, duas colunas lado a lado (grid, ver .hbar-row-2col
+// em style.css): produtores (óleo, 1 segmento) e injetores (água + gás
+// somados, água sólido + gás listrado — mesma ideia de antes, agora numa
+// coluna ao lado da de produção em vez de gráfico à parte). FPSO sem
+// nenhum poço numa das duas colunas mostra só "—" ali (ver
+// buildStackedFill), não uma barra vazia de tamanho mínimo.
+function twoColumnFpsoRow(fpso, prodCount, maxProd, aguaCount, gasCount, maxInj, color, jazidaLabel) {
   const row = document.createElement('div');
-  row.className = 'hbar-row';
+  row.className = 'hbar-row hbar-row-2col';
   const name = document.createElement('div');
   name.className = 'hbar-name';
   name.textContent = fpso;
   name.title = fpso;
-  const track = document.createElement('div');
-  track.className = 'hbar-track';
-  const total = aguaCount + gasCount;
-  const fillWrap = document.createElement('div');
-  fillWrap.style.cssText = `display:flex;height:100%;width:${Math.max(3, (total / max) * 100)}%;border-radius:4px;overflow:hidden`;
-  if (aguaCount > 0) {
-    const aguaFill = document.createElement('div');
-    aguaFill.className = 'hbar-fill';
-    aguaFill.style.cssText = `width:${(aguaCount / total) * 100}%;background:${color};border-radius:0;flex:none${gasCount > 0 ? ';border-right:1px solid var(--bg)' : ''}`;
-    aguaFill.tabIndex = 0;
-    attachTooltip(aguaFill, () => `<strong>${escapeHtml(fpso)}</strong>` + tooltipRowHTML('Jazida', jazidaLabel) + tooltipRowHTML('Injetores de água', `${aguaCount} poço${aguaCount === 1 ? '' : 's'}`));
-    fillWrap.appendChild(aguaFill);
-  }
-  if (gasCount > 0) {
-    const gasFill = document.createElement('div');
-    gasFill.className = 'hbar-fill hbar-fill-hatched';
-    gasFill.style.cssText = `width:${(gasCount / total) * 100}%;background:${color};border-radius:0;flex:none`;
-    gasFill.tabIndex = 0;
-    attachTooltip(gasFill, () => `<strong>${escapeHtml(fpso)}</strong>` + tooltipRowHTML('Jazida', jazidaLabel) + tooltipRowHTML('Injetores de gás', `${gasCount} poço${gasCount === 1 ? '' : 's'}`));
-    fillWrap.appendChild(gasFill);
-  }
-  track.appendChild(fillWrap);
-  const value = document.createElement('div');
-  value.className = 'hbar-value';
-  value.textContent = aguaCount > 0 && gasCount > 0
-    ? `${total} poços (${aguaCount} água + ${gasCount} gás)`
-    : `${total} poço${total === 1 ? '' : 's'}`;
-  track.appendChild(value);
   row.appendChild(name);
-  row.appendChild(track);
+
+  const prodTrack = document.createElement('div');
+  prodTrack.className = 'hbar-track';
+  buildStackedFill(prodTrack, [{ count: prodCount, tooltipLabel: 'Poços produtores' }], maxProd, color, fpso, jazidaLabel);
+  row.appendChild(prodTrack);
+
+  const injTrack = document.createElement('div');
+  injTrack.className = 'hbar-track';
+  buildStackedFill(injTrack, [
+    { count: aguaCount, tooltipLabel: 'Injetores de água', shortLabel: 'água' },
+    { count: gasCount, tooltipLabel: 'Injetores de gás', shortLabel: 'gás', hatched: true },
+  ], maxInj, color, fpso, jazidaLabel);
+  row.appendChild(injTrack);
+
   return row;
 }
 
-function buildFpsoInjectionChart(container, aguaMap, gasMap, opts, jazidaColors) {
+// Substitui os dois gráficos separados (produtores / injetores) por um só
+// — uma linha por FPSO com as duas colunas lado a lado (pedido explícito:
+// mais fácil comparar produção e injeção da MESMA instalação numa linha
+// só do que rolar dois gráficos). União dos 3 mapas (produção + água +
+// gás) pro universo de FPSO — uma instalação só injetora (sem produtor
+// nenhum) ou só produtora continua aparecendo, com "—" na coluna que não
+// se aplica. maxProd/maxInj SEPARADOS (cada coluna com sua própria escala
+// de 100%) — produção e injeção não são comparáveis na mesma régua.
+function buildFpsoProducaoInjecaoChart(container, pocosMap, aguaMap, gasMap, opts, jazidaColors) {
+  const { counts: prodCounts, jazidaByFpso: prodJazida } = fpsoCounts(pocosMap);
   const { counts: aguaCounts, jazidaByFpso: aguaJazida } = fpsoCounts(aguaMap);
   const { counts: gasCounts, jazidaByFpso: gasJazida } = fpsoCounts(gasMap);
-  const allFpsos = new Set([...aguaCounts.keys(), ...gasCounts.keys()]);
+  const allFpsos = new Set([...prodCounts.keys(), ...aguaCounts.keys(), ...gasCounts.keys()]);
   if (!allFpsos.size) return;
   const jazidaByFpso = new Map();
   const totalByFpso = new Map();
   for (const fpso of allFpsos) {
-    jazidaByFpso.set(fpso, aguaJazida.get(fpso) || gasJazida.get(fpso));
-    totalByFpso.set(fpso, (aguaCounts.get(fpso) || 0) + (gasCounts.get(fpso) || 0));
+    jazidaByFpso.set(fpso, prodJazida.get(fpso) || aguaJazida.get(fpso) || gasJazida.get(fpso));
+    totalByFpso.set(fpso, (prodCounts.get(fpso) || 0) + (aguaCounts.get(fpso) || 0) + (gasCounts.get(fpso) || 0));
   }
-  const max = Math.max(...totalByFpso.values());
+  const maxProd = Math.max(1, ...prodCounts.values());
+  const maxInj = Math.max(1, ...[...allFpsos].map((f) => (aguaCounts.get(f) || 0) + (gasCounts.get(f) || 0)));
+
   buildGroupedFpsoChart(container, opts, [...allFpsos], jazidaByFpso, totalByFpso, jazidaColors, (fpso, color, jazidaLabel) => {
-    return injectionBarRow(fpso, aguaCounts.get(fpso) || 0, gasCounts.get(fpso) || 0, max, color, jazidaLabel);
-  });
+    return twoColumnFpsoRow(
+      fpso,
+      prodCounts.get(fpso) || 0, maxProd,
+      aguaCounts.get(fpso) || 0, gasCounts.get(fpso) || 0, maxInj,
+      color, jazidaLabel,
+    );
+  }, ['Produtores (óleo)', 'Injetores (água + gás)']);
 }
 
 // data/producao_pocos.json (boletim de poços da ANP/BDEP) não separa
@@ -706,7 +739,7 @@ const PRESAL_EXCLUDE_LEGACY = ['MARLIM', 'BARRACUDA', 'CARATINGA', 'ALBACORA', '
 // Base (jazida) que bateu por substring em PRESAL_FIELD_BASES, ou null se
 // não é pré-sal (ver PRESAL_EXCLUDE_LEGACY) ou não bate em nenhuma base
 // conhecida — usada tanto pro filtro (isPresalCampo, abaixo) quanto pro
-// agrupamento por jazida do gráfico "por FPSO" (ver buildFpsoCountChart).
+// agrupamento por jazida do gráfico "por FPSO" (ver buildFpsoProducaoInjecaoChart).
 function presalJazidaBase(campo) {
   const up = (campo || '').toUpperCase();
   if (PRESAL_EXCLUDE_LEGACY.some((n) => up.includes(n))) return null;
@@ -715,7 +748,7 @@ function presalJazidaBase(campo) {
 function isPresalCampo(campo) {
   return presalJazidaBase(campo) != null;
 }
-// Cor por jazida pro gráfico "por FPSO" (buildFpsoCountChart) — os 7
+// Cor por jazida pro gráfico "por FPSO" (buildFpsoProducaoInjecaoChart) — os 7
 // contratos rastreados usam a MESMA cor do projeto (PROJECT_FIELD_BASE,
 // shared.js), pra bater com o resto do app (mapa, campo, roadmap); as ~8
 // jazidas de contexto (Tupi, Berbigão, Jubarte...) não têm uma cor de
@@ -792,14 +825,9 @@ function renderPocosPage(container, pocosJson, producaoPocosJson) {
   });
 
   const jazidaColors = jazidaColorLookup();
-  buildFpsoCountChart(grid, pocosMap, {
-    title: 'Poços produtores por FPSO',
-    subtitle: `Nº de poços produzindo óleo em cada FPSO/instalação, agrupado por jazida, só pré-sal — boletim de poços da ANP, ${mesLabel}`,
-    tooltipLabel: 'Poços produtores',
-  }, jazidaColors);
-  buildFpsoInjectionChart(grid, aguaMap, gasMap, {
-    title: 'Injetores de água e gás por FPSO',
-    subtitle: `Nº de poços injetando em cada FPSO/instalação, agrupado por jazida, só pré-sal — boletim de poços da ANP, ${mesLabel}. Uma barra só por FPSO, água + gás somados; sólido = água, listrado = gás.`,
+  buildFpsoProducaoInjecaoChart(grid, pocosMap, aguaMap, gasMap, {
+    title: 'Produção e injeção por FPSO',
+    subtitle: `Nº de poços em cada FPSO/instalação, agrupado por jazida, só pré-sal — boletim de poços da ANP, ${mesLabel}. Duas colunas por linha: produtores (óleo) e injetores (água sólido + gás listrado, somados); "—" quando a instalação não tem poço naquela coluna.`,
   }, jazidaColors);
 }
 

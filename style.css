@@ -777,9 +777,10 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .hbar-fill:first-child { border-radius: 4px; }
 .hbar-fill.is-hovered { filter: brightness(1.25); }
 /* Segmento de gás dentro de uma barra água+gás somada (ver
-   buildFpsoInjectionChart, analises.js) — mesma cor do segmento de água
-   ao lado, só com listra diagonal clara por cima, pra distinguir os dois
-   sem precisar de uma segunda cor (a cor já é a da jazida, não do fluido). */
+   buildFpsoProducaoInjecaoChart, analises.js) — mesma cor do segmento de
+   água ao lado, só com listra diagonal clara por cima, pra distinguir os
+   dois sem precisar de uma segunda cor (a cor já é a da jazida, não do
+   fluido). */
 .hbar-fill-hatched {
   background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.4) 0, rgba(255,255,255,0.4) 3px, transparent 3px, transparent 8px);
 }
@@ -788,6 +789,15 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   margin-left: 8px; font-variant-numeric: tabular-nums;
 }
 .hbar-row-total { display: flex; align-items: center; }
+
+/* Linha com 2 colunas de barra lado a lado (ver twoColumnFpsoRow,
+   analises.js — produtores/injetores por FPSO numa linha só) — mesma
+   1ª coluna (nome) de .hbar-row, mais uma 2ª faixa de track. Cabeçalho
+   das colunas (hbar-col-headers) usa a MESMA grade, só com rótulo em vez
+   de barra, pra alinhar exatamente com as linhas de dado abaixo. */
+.hbar-row-2col { grid-template-columns: 152px 1fr 1fr; }
+.hbar-col-label { font-size: 11px; color: var(--text-faint); font-weight: 600; }
+.hbar-col-headers { margin-bottom: 2px; }
 
 /* Cabeçalho de jazida ENTRE as linhas de um .hbar-list agrupado (ver
    buildFpsoCountChart, analises.js) — separa visualmente cada grupo sem
@@ -1124,6 +1134,7 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   /* Análises: nome do projeto some da barra horizontal (cabe só a barra +
      valor); KPIs empilham em colunas mais estreitas. */
   .hbar-row { grid-template-columns: 74px 1fr; }
+  .hbar-row-2col { grid-template-columns: 74px 1fr 1fr; }
   .hbar-name { font-size: 10.5px; }
   .kpi-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 
