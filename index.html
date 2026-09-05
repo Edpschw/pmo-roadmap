@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Roadmap PMO</title>
-<link rel="stylesheet" href="style.css?v=153" />
+<link rel="stylesheet" href="style.css?v=155" />
 </head>
 <body>
 
@@ -35,6 +35,13 @@
 </header>
 
 <main class="roadmap-wrapper">
+  <div class="group-tab-bar">
+    <div class="scale-switch" id="groupTabSwitch">
+      <button data-group="exploracao" class="scale-btn">Exploração</button>
+      <button data-group="producao" class="scale-btn">Produção</button>
+      <button data-group="devolvidos" class="scale-btn">Devolvidos</button>
+    </div>
+  </div>
   <div class="roadmap-scroll" id="scrollContainer">
     <div class="roadmap-grid" id="grid"></div>
   </div>
@@ -47,7 +54,7 @@
 
 <div class="toast" id="toast" hidden></div>
 
-<script src="shared.js?v=67"></script>
-<script src="app.js?v=44"></script>
+<script src="shared.js?v=68"></script>
+<script src="app.js?v=45"></script>
 </body>
 </html>

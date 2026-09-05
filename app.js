@@ -441,8 +441,36 @@ function minPxPerDayToFillScreen(totalDays) {
 }
 
 function syncScaleButtons() {
-  document.querySelectorAll('.scale-btn').forEach((b) => {
+  // Escopado a #scaleSwitch (não .scale-btn solto) — #groupTabSwitch
+  // reaproveita a mesma classe visual pras sub-abas de grupo (ver
+  // syncGroupTabButtons abaixo), mas com dataset.group, não dataset.scale;
+  // sem o escopo, os botões de grupo cairiam aqui também (dataset.scale
+  // undefined nunca bate com state.scale, sempre virariam "active: false"
+  // toda vez que esta função rodasse, brigando com syncGroupTabButtons).
+  document.querySelectorAll('#scaleSwitch .scale-btn').forEach((b) => {
     b.classList.toggle('active', b.dataset.scale === state.scale);
+  });
+}
+
+// Sub-abas Exploração/Produção/Devolvidos — sincroniza qual botão está
+// marcado ativo e o texto (nome + contagem de projetos, mesma informação
+// que o antigo cabeçalho de grupo colapsável mostrava) a cada render();
+// esconde o botão de um grupo sem projeto nenhum (mesmo critério do código
+// antigo, que pulava o cabeçalho inteiro nesse caso) — e se o grupo
+// ativo no momento ficou vazio (ex.: último projeto dele foi apagado ou
+// mudou de grupo), cai pro primeiro grupo com projeto em vez de mostrar
+// uma timeline vazia sem nenhuma aba marcada.
+function syncGroupTabButtons() {
+  const counts = new Map(GROUP_DEFS.map((g) => [g.id, state.projects.filter((p) => (p.group || GROUP_FALLBACK) === g.id).length]));
+  if (!counts.get(state.groupTab)) {
+    const fallback = GROUP_DEFS.find((g) => counts.get(g.id));
+    if (fallback) state.groupTab = fallback.id;
+  }
+  document.querySelectorAll('#groupTabSwitch .scale-btn').forEach((b) => {
+    const count = counts.get(b.dataset.group) || 0;
+    b.hidden = count === 0;
+    b.textContent = `${GROUP_DEFS.find((g) => g.id === b.dataset.group).label} (${count})`;
+    b.classList.toggle('active', b.dataset.group === state.groupTab);
   });
 }
 
@@ -451,6 +479,12 @@ function render() {
   emptyStateEl.hidden = hasProjects;
   gridEl.style.display = hasProjects ? '' : 'none';
   if (!hasProjects) return;
+
+  // Antes de filtrar por grupo mais abaixo (activeGroupProjects) — corrige
+  // state.groupTab se o grupo ativo ficou sem projeto nenhum (ver
+  // syncGroupTabButtons), senão a timeline renderizaria vazia mesmo
+  // havendo projeto nos outros grupos.
+  syncGroupTabButtons();
 
   const { rangeStart, rangeEnd } = computeRange();
   currentRangeStart = rangeStart;
@@ -501,21 +535,19 @@ function render() {
   headerRow.appendChild(headerTimelineCell);
   gridEl.appendChild(headerRow);
 
-  // ---- Linhas de grupo / projeto / workstream ----
+  // ---- Linhas de projeto / workstream — só do grupo ativo na sub-aba
+  // (Exploração/Produção/Devolvidos, ver renderGroupTabSwitch/state.groupTab
+  // mais abaixo) — trocou o antigo grupo colapsável (os 3 empilhados, cada
+  // um com seu próprio recolher/expandir) por só um de cada vez, igual às
+  // sub-abas já usadas em analises.js/producao.js.
   let contentHeight = HEADER_H;
 
-  for (const groupDef of GROUP_DEFS) {
-    const groupProjects = state.projects.filter((p) => (p.group || GROUP_FALLBACK) === groupDef.id);
-    if (!groupProjects.length) continue;
-    const isCollapsed = !!state.groupCollapsed[groupDef.id];
-    contentHeight += renderGroupRow(groupDef, groupProjects, isCollapsed);
-    if (isCollapsed) continue;
-    for (const project of groupProjects) {
-      contentHeight += renderProjectRow(project, rangeStart);
-      if (!project.collapsed) {
-        for (const w of project.workstreams) {
-          contentHeight += renderWorkstreamRow(project, w, rangeStart);
-        }
+  const activeGroupProjects = state.projects.filter((p) => (p.group || GROUP_FALLBACK) === state.groupTab);
+  for (const project of activeGroupProjects) {
+    contentHeight += renderProjectRow(project, rangeStart);
+    if (!project.collapsed) {
+      for (const w of project.workstreams) {
+        contentHeight += renderWorkstreamRow(project, w, rangeStart);
       }
     }
   }
@@ -674,44 +706,6 @@ function measureLabelCellHeight(labelCellEl) {
   const height = labelCellEl.scrollHeight;
   _labelMeasureContainer.removeChild(labelCellEl);
   return height;
-}
-
-// Linha de grupo (Exploração / Produção / Devolvidos): nível colapsável
-// acima dos projetos. Recolher esconde todos os projetos (e workstreams)
-// daquele grupo; não tem barra-resumo própria, só o cabeçalho.
-function renderGroupRow(groupDef, groupProjects, isCollapsed) {
-  const row = document.createElement('div');
-  row.className = 'row group-row';
-  row.style.height = PROJECT_ROW_H + 'px';
-
-  const labelCell = document.createElement('div');
-  labelCell.className = 'label-cell';
-
-  const chevron = document.createElement('span');
-  chevron.className = 'chevron' + (isCollapsed ? ' collapsed' : '');
-  chevron.textContent = '▾';
-  chevron.title = isCollapsed ? 'Expandir grupo' : 'Recolher grupo';
-  chevron.addEventListener('click', (e) => {
-    e.stopPropagation();
-    state.groupCollapsed[groupDef.id] = !isCollapsed;
-    saveState();
-    render();
-  });
-  labelCell.appendChild(chevron);
-
-  const label = document.createElement('span');
-  label.className = 'label-text';
-  label.textContent = `${groupDef.label} (${groupProjects.length})`;
-  labelCell.appendChild(label);
-
-  row.appendChild(labelCell);
-
-  const timelineCell = document.createElement('div');
-  timelineCell.className = 'timeline-cell';
-  row.appendChild(timelineCell);
-
-  gridEl.appendChild(row);
-  return PROJECT_ROW_H;
 }
 
 // Operador mais frequente entre os poços do próprio contrato (data/
@@ -1165,6 +1159,18 @@ document.getElementById('scaleSwitch').addEventListener('click', (e) => {
   scrollContainer.scrollLeft = 0;
 });
 
+// Sub-abas Exploração/Produção/Devolvidos (substituem o grupo colapsável de
+// antes, ver GROUP_DEFS/state.groupTab em shared.js) — só troca de grupo
+// ativo, sem mexer em escala/zoom (por isso sem scrollLeft = 0 aqui: trocar
+// de grupo não devia perder a posição horizontal da timeline).
+document.getElementById('groupTabSwitch').addEventListener('click', (e) => {
+  const btn = e.target.closest('.scale-btn');
+  if (!btn || btn.disabled) return;
+  state.groupTab = btn.dataset.group;
+  saveState();
+  render();
+});
+
 // Escala "Tudo": calcula o zoom mínimo necessário para que o intervalo
 // inteiro de dados (mesmo cálculo de computeRange usado no render) caiba na
 // largura de timeline realmente visível (descontando a sidebar), sem
@@ -1259,17 +1265,17 @@ document.getElementById('todayBtn').addEventListener('click', () => {
 
 // Dois botões explícitos (em vez de um só alternando "Recolher"/"Expandir"
 // conforme o estado) — mais claro quando o estado já está misto (alguns
-// grupos/projetos recolhidos, outros não), caso em que um toggle único não
-// deixa óbvio pra qual lado ele vai.
+// projetos recolhidos, outros não), caso em que um toggle único não deixa
+// óbvio pra qual lado ele vai. Só projeto tem "recolhido" agora — grupo
+// (Exploração/Produção/Devolvidos) virou sub-aba (renderGroupTabSwitch),
+// só um por vez já visível, não tem mais o próprio collapsed.
 document.getElementById('collapseAllBtn').addEventListener('click', () => {
   for (const project of state.projects) project.collapsed = true;
-  for (const groupDef of GROUP_DEFS) state.groupCollapsed[groupDef.id] = true;
   saveState();
   render();
 });
 document.getElementById('expandAllBtn').addEventListener('click', () => {
   for (const project of state.projects) project.collapsed = false;
-  for (const groupDef of GROUP_DEFS) state.groupCollapsed[groupDef.id] = false;
   saveState();
   render();
 });

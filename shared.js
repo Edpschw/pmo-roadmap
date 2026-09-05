@@ -2004,7 +2004,13 @@ function seedState() {
   return {
     scale: 'all',
     pxPerDay: SCALE_PX_PER_DAY.year,
-    groupCollapsed: {},
+    // Qual dos GROUP_DEFS (Exploração/Produção/Devolvidos) o roadmap
+    // mostra — substituiu o antigo groupCollapsed (grupo colapsável,
+    // todos empilhados) por sub-abas (só um grupo por vez, ver
+    // renderGroupTabSwitch em app.js): mais rápido pra trocar de contexto
+    // do que abrir/fechar cada grupo, e a timeline não precisa mais
+    // acomodar 3 grupos empilhados ao mesmo tempo.
+    groupTab: 'exploracao',
     projects: [
       // Os 29 contratos de Partilha de Produção (CPP) em vigor no pré-sal,
       // conforme presalpetroleo.gov.br/contratos-de-partilha-e-producao/
@@ -2792,7 +2798,12 @@ function loadState() {
       const parsed = JSON.parse(raw);
       if (parsed && Array.isArray(parsed.projects)) {
         if (!parsed.pxPerDay) parsed.pxPerDay = SCALE_PX_PER_DAY[parsed.scale] || SCALE_PX_PER_DAY.month;
-        if (!parsed.groupCollapsed) parsed.groupCollapsed = {};
+        // groupTab substitui o antigo groupCollapsed (ver seedState) — estado
+        // salvo de antes dessa troca não tem groupTab (nem group definido em
+        // nenhum grupo específico pra "lembrar"), cai no mesmo padrão de
+        // seedState.
+        if (!parsed.groupTab) parsed.groupTab = 'exploracao';
+        delete parsed.groupCollapsed;
         // Compatibilidade: projetos salvos antes do agrupamento por
         // fase/situação (Exploração/Produção/Devolvidos) não têm "group".
         // Se o nome bater com um dos 29 contratos oficiais, usa o grupo

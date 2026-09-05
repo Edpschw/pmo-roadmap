@@ -89,8 +89,16 @@ body { display: flex; flex-direction: column; height: 100vh; }
 .btn-ghost:hover { background: var(--surface); }
 
 /* ---------- Layout ---------- */
-.roadmap-wrapper { flex: 1 1 auto; position: relative; overflow: hidden; }
-.roadmap-scroll { width: 100%; height: 100%; overflow: auto; cursor: grab; }
+/* flex column: group-tab-bar (altura própria) + roadmap-scroll (resto do
+   espaço) — antes só a segunda existia (height:100%, sem coluna flex),
+   ver group-tab-bar logo abaixo (sub-abas Exploração/Produção/Devolvidos,
+   substituem o antigo grupo colapsável dentro da própria timeline). */
+.roadmap-wrapper { flex: 1 1 auto; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+.group-tab-bar {
+  flex: 0 0 auto; padding: 8px 16px; border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+.roadmap-scroll { flex: 1 1 auto; width: 100%; overflow: auto; cursor: grab; }
 .roadmap-scroll.panning { cursor: grabbing; user-select: none; }
 .roadmap-scroll.panning * { cursor: grabbing !important; user-select: none; }
 .roadmap-grid { position: relative; display: block; }
@@ -113,8 +121,6 @@ body { display: flex; flex-direction: column; height: 100vh; }
   border-bottom: 1px solid var(--border-strong);
   height: var(--header-h, 46px);
 }
-.row.group-row { background: var(--surface); }
-.row.group-row:hover { background: #20242c; }
 .row.project-row { background: #101317; }
 .row.project-row:hover { background: var(--surface); }
 .row.workstream-row:hover .label-cell { background: var(--surface); }
@@ -131,7 +137,8 @@ body { display: flex; flex-direction: column; height: 100vh; }
   overflow: hidden;
 }
 .row.header-row .label-cell { background: var(--panel); z-index: 40; height: var(--header-h, 46px); }
-/* Indentação em cascata: grupo (nível 0) < projeto < workstream. */
+/* Indentação em cascata: projeto < workstream (grupo Exploração/Produção/
+   Devolvidos virou sub-aba do toolbar, não é mais um nível na timeline). */
 .row.project-row .label-cell { padding-left: 30px; }
 .row.workstream-row .label-cell { background: var(--panel); padding-left: 50px; }
 
@@ -171,11 +178,6 @@ body { display: flex; flex-direction: column; height: 100vh; }
 .company-logo-chip-operador img { height: 8px; max-width: 30px; }
 .company-logo-chip-parceiro { height: 9px; padding: 1px 2px; opacity: 0.9; }
 .company-logo-chip-parceiro img { height: 6px; max-width: 22px; }
-.row.group-row .label-text {
-  font-weight: 700; font-size: 11.5px; color: var(--text-faint);
-  text-transform: uppercase; letter-spacing: .04em;
-}
-
 .corner-title { font-size: 11px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: .04em; }
 
 .chevron {
