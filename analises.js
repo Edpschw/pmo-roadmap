@@ -516,9 +516,11 @@ function buildGroupedFpsoChart(container, opts, keys, jazidaByKey, totalByKey, j
   if (!keys.length) return;
 
   const totalByJazida = new Map();
+  const fpsoCountByJazida = new Map();
   for (const key of keys) {
     const jazida = jazidaByKey.get(key);
     totalByJazida.set(jazida, (totalByJazida.get(jazida) || 0) + totalByKey.get(key));
+    fpsoCountByJazida.set(jazida, (fpsoCountByJazida.get(jazida) || 0) + 1);
   }
   const jazidaOrder = [...totalByJazida.keys()].sort((a, b) => totalByJazida.get(b) - totalByJazida.get(a));
   const colorByJazida = new Map(jazidaOrder.map((j) => [j, jazidaColors(j)]));
@@ -584,7 +586,7 @@ function buildGroupedFpsoChart(container, opts, keys, jazidaByKey, totalByKey, j
     if (jazida !== lastJazida) {
       const header = document.createElement('div');
       header.className = 'hbar-group-header';
-      header.innerHTML = `<span style="width:9px;height:9px;border-radius:2px;background:${colorByJazida.get(jazida)};display:inline-block;flex:none"></span><span class="stat-tile-label">${escapeHtml(jazidaLabel)}</span>`;
+      header.innerHTML = `<span style="width:9px;height:9px;border-radius:2px;background:${colorByJazida.get(jazida)};display:inline-block;flex:none"></span><span class="stat-tile-label">${escapeHtml(jazidaLabel)} (${fpsoCountByJazida.get(jazida)})</span>`;
       list.appendChild(header);
       groupHeaderByJazida.set(jazida, header);
       lastJazida = jazida;
@@ -670,8 +672,16 @@ function twoColumnFpsoRow(fpso, prodCount, maxProd, aguaCount, gasCount, maxInj,
   row.className = 'hbar-row hbar-row-2col';
   const name = document.createElement('div');
   name.className = 'hbar-name';
-  name.textContent = fpso;
-  name.title = fpso;
+  // Total de poços da instalação (produtores + injetores de água + de
+  // gás somados) entre parênteses — mesma ideia da contagem de FPSO por
+  // jazida no cabeçalho de grupo, aqui um nível abaixo. title com o MESMO
+  // texto (nome + contagem), não só o nome — nome de FPSO longo já corta
+  // com "..." (text-overflow:ellipsis) antes mesmo de chegar no "(N)", e
+  // o tooltip existe justamente pra mostrar o texto inteiro nesse caso.
+  const totalPocos = prodCount + aguaCount + gasCount;
+  const fullLabel = `${fpso} (${totalPocos})`;
+  name.textContent = fullLabel;
+  name.title = fullLabel;
   row.appendChild(name);
 
   const prodTrack = document.createElement('div');
