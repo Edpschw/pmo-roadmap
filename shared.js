@@ -1259,6 +1259,17 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
   }
 
   function draw() {
+    // Avisa quem criou o gráfico se o zoom (x, y, ou os dois) está ativo —
+    // só usado hoje pra destacar o botão "Ver tudo" (ver producao.js/
+    // campo.js), que sem isso ficava um botão qualquer, sem indicar que
+    // HÁ um zoom ativo escondendo parte do dado. Um zoom no eixo Y deixado
+    // "preso" (ex.: roda do mouse sobre o rótulo do eixo por engano, ao
+    // rolar a página) é sorrateiro: a linha do campo maior simplesmente
+    // some pro alto do gráfico, sem erro nenhum, parecendo produção baixa
+    // quando na verdade é só o teto do eixo que ficou baixo demais.
+    if (markers && markers.onZoomChange) {
+      markers.onZoomChange(viewStart > 0 || viewEnd < n - 1 || yMaxOverride !== null);
+    }
     const unit = UNITS[unitKey];
     const plotW = LINE_W - LINE_MARGIN.left - LINE_MARGIN.right;
     const plotH = LINE_H - LINE_MARGIN.top - LINE_MARGIN.bottom;
@@ -1664,7 +1675,13 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
   container.appendChild(legendWrap);
 
   return {
-    setUnit(key) { unitKey = key; draw(); },
+    // yMaxOverride reseta junto — cada unidade tem sua própria escala
+    // natural (bbl/d, Mm³/d, boe/d, m³/m³ de RGO não são comparáveis), um
+    // teto ajustado à mão numa unidade não faz sentido nenhum herdado por
+    // outra: na prática cortava o topo da linha de quem tem o maior valor
+    // (Búzios, Mero) assim que trocava de unidade depois de um zoom em y,
+    // sem nenhum aviso de que o gráfico estava "preso" numa escala velha.
+    setUnit(key) { unitKey = key; yMaxOverride = null; draw(); },
     resetZoom() { viewStart = 0; viewEnd = n - 1; yMaxOverride = null; draw(); },
     isZoomed() { return viewStart > 0 || viewEnd < n - 1 || yMaxOverride !== null; },
     // year: número do ano a marcar (31/dez desse ano), ou null pra tirar a
