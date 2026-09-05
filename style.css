@@ -782,6 +782,18 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 }
 .hbar-row-total { display: flex; align-items: center; }
 
+/* Cabeçalho de jazida ENTRE as linhas de um .hbar-list agrupado (ver
+   buildFpsoCountChart, analises.js) — separa visualmente cada grupo sem
+   precisar de um cartão à parte por jazida. Primeiro cabeçalho da lista
+   sem margin-top (:first-child), senão sobra um respiro estranho logo
+   depois da legenda/filtro que já vem antes da lista. */
+.hbar-group-header {
+  display: flex; align-items: center; gap: 6px;
+  margin: 14px 0 2px; padding-top: 8px; border-top: 1px solid var(--border);
+}
+.hbar-group-header:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+.hbar-group-header[hidden] { display: none; }
+
 /* Bolinha da cor da entidade — usada tanto em título de cartão (poços por
    contrato) quanto em cabeçalho de grupo (jazida-combo-header). */
 .proj-dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 9px; display: inline-block; }

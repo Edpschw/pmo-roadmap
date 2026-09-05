@@ -532,19 +532,76 @@ function buildFpsoCountChart(container, dataMap, opts, jazidaColors) {
   }
   card.appendChild(legend);
 
+  // Filtro dinâmico — por nome de FPSO OU de jazida, ao vivo (mesmo
+  // padrão de applyNavFilter em campo.js: busca sem precisar apertar
+  // Enter, contagem "X de Y" logo abaixo do campo). Esconde a linha que
+  // não bate E o cabeçalho de grupo (abaixo) de uma jazida cujas linhas
+  // sumiram todas — sem isso um cabeçalho "órfão" (sem nenhuma linha
+  // visível embaixo) ficaria sozinho no meio da lista filtrada.
+  const filterInput = document.createElement('input');
+  filterInput.type = 'text';
+  filterInput.className = 'campo-search';
+  filterInput.placeholder = 'Filtrar por FPSO ou jazida...';
+  filterInput.style.marginBottom = '2px';
+  card.appendChild(filterInput);
+  const filterResult = document.createElement('span');
+  filterResult.className = 'campo-nav-filter-result';
+  card.appendChild(filterResult);
+
   const list = document.createElement('div');
   list.className = 'hbar-list';
+  // Nome da jazida como cabeçalho de seção ENTRE as linhas (não só na
+  // legenda do topo) — um por grupo, na primeira linha dele (entries já
+  // vem ordenado por jazida, ver jazidaOrder acima); rowsByJazida guarda
+  // as próprias linhas pra applyFilter decidir se o cabeçalho fica visível
+  // sem precisar reconsultar o DOM.
+  let lastJazida = null;
+  const groupHeaderByJazida = new Map();
+  const rowsByJazida = new Map();
   for (const [fpso, count] of entries) {
-    const valueText = `${count} poço${count === 1 ? '' : 's'}`;
     const jazida = jazidaByFpso.get(fpso);
-    list.appendChild(barRow(
+    const jazidaLabel = jazida === '?' ? 'Jazida não identificada' : jazida;
+    if (jazida !== lastJazida) {
+      const header = document.createElement('div');
+      header.className = 'hbar-group-header';
+      header.innerHTML = `<span style="width:9px;height:9px;border-radius:2px;background:${colorByJazida.get(jazida)};display:inline-block;flex:none"></span><span class="stat-tile-label">${escapeHtml(jazidaLabel)}</span>`;
+      list.appendChild(header);
+      groupHeaderByJazida.set(jazida, header);
+      lastJazida = jazida;
+    }
+    const valueText = `${count} poço${count === 1 ? '' : 's'}`;
+    const row = barRow(
       fpso, (count / max) * 100, valueText, colorByJazida.get(jazida),
       () => `<strong>${escapeHtml(fpso)}</strong>`
-        + tooltipRowHTML('Jazida', jazida === '?' ? 'Não identificada' : jazida)
+        + tooltipRowHTML('Jazida', jazidaLabel)
         + tooltipRowHTML(opts.tooltipLabel, valueText),
-    ));
+    );
+    row.dataset.fpso = fpso.toLowerCase();
+    row.dataset.jazida = jazidaLabel.toLowerCase();
+    list.appendChild(row);
+    if (!rowsByJazida.has(jazida)) rowsByJazida.set(jazida, []);
+    rowsByJazida.get(jazida).push(row);
   }
   card.appendChild(list);
+
+  const totalFpsos = entries.length;
+  function applyFilter(query) {
+    const q = query.trim().toLowerCase();
+    let visible = 0;
+    for (const rows of rowsByJazida.values()) {
+      for (const row of rows) {
+        const match = !q || row.dataset.fpso.includes(q) || row.dataset.jazida.includes(q);
+        row.hidden = !match;
+        if (match) visible++;
+      }
+    }
+    for (const [jazida, header] of groupHeaderByJazida) {
+      header.hidden = !rowsByJazida.get(jazida).some((r) => !r.hidden);
+    }
+    filterResult.textContent = q ? `${visible} de ${totalFpsos} instalações correspondem a "${query.trim()}"` : '';
+  }
+  filterInput.addEventListener('input', (e) => applyFilter(e.target.value));
+
   container.appendChild(card);
 }
 
