@@ -169,6 +169,12 @@ function buildEvolutionSection(producaoData) {
   // mostrava aba de água/gás injetado sem dado nenhum atrás aqui.
   const unitSwitch = buildUnitSwitch((unitKey) => chart.setUnit(unitKey), ['oleo', 'gas', 'boe', 'rgo']);
   controlsRow.insertBefore(unitSwitch, resetBtn);
+  // Linhas individuais (padrão) ou somadas e preenchidas (empilhado, ver
+  // setStacked/buildStackToggle em shared.js) — nasce em "individuais"
+  // (2º arg false), igual ao createLineChart acima (initialStacked
+  // omitido = false).
+  const stackToggle = buildStackToggle((stacked) => chart.setStacked(stacked), false);
+  controlsRow.insertBefore(stackToggle, resetBtn);
   resetBtn.addEventListener('click', () => chart.resetZoom());
   section.appendChild(card);
 

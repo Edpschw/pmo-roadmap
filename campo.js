@@ -621,6 +621,11 @@ function buildWellProductionChart(container, wells, pocosSerieData, wellFpso, fp
     // devolve o estado resolvido pra TODOS os cartões via setSelectedWell
     // abaixo, o que já inclui este.
     const chart = createLineChart(card, series, null, null, refLines, true, selectWell);
+    // Nasce empilhado (true acima, igual sempre foi) — toggle deixa
+    // trocar pra poço por poço lado a lado (mesma escala fixa de
+    // pico/potencial máximo continua valendo nos dois modos).
+    const stackToggle = buildStackToggle((stacked) => chart.setStacked(stacked), true);
+    controls.insertBefore(stackToggle, reset);
     reset.addEventListener('click', () => chart.resetZoom());
     chartControllers.push(chart);
 

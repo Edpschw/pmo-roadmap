@@ -1260,7 +1260,7 @@ function dateToContinuousIndex(monthlySeries, isoDate) {
 //     seleção de poço também usada pelo mini-mapa em campo.js) sem
 //     duplicar/dessincronizar o toggle em dois lugares. Sem esse
 //     callback, a legenda continua se isolando sozinha, como sempre.
-function createLineChart(container, monthlySeries, markers, initialUnitKey, refLines, stacked, onSeriesClick) {
+function createLineChart(container, monthlySeries, markers, initialUnitKey, refLines, initialStacked, onSeriesClick) {
   const n = monthlySeries.length;
   const order = seriesOrder(monthlySeries);
   const meta = new Map(order.map((name) => {
@@ -1278,6 +1278,11 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
   const markerColor = order.length ? meta.get(order[0]).color : '#e8eaed';
 
   let unitKey = initialUnitKey || 'oleo';
+  // Empilhado (ver nota grande acima) alternável em tempo real — setStacked
+  // no retorno, usado pelo toggle "Linhas individuais/Somadas e
+  // preenchidas" (ver buildStackToggle) — não fixo na criação do gráfico
+  // como antes.
+  let isStacked = !!initialStacked;
   let viewStart = 0;
   let viewEnd = n - 1;
   let yMaxOverride = null; // null = auto-ajusta ao máximo visível (ver draw)
@@ -1356,7 +1361,7 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
     // a série isolada mais alta.
     let rawMax = 0;
     for (let i = loIdx; i <= hiIdx; i++) {
-      if (stacked) {
+      if (isStacked) {
         let sum = 0;
         for (const r of monthlySeries[i].rows) sum += r[unit.key] || 0;
         rawMax = Math.max(rawMax, sum);
@@ -1365,7 +1370,7 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
       }
     }
     let lastMax = 0;
-    if (stacked) {
+    if (isStacked) {
       for (const r of monthlySeries[hiIdx].rows) lastMax += r[unit.key] || 0;
     } else {
       for (const r of monthlySeries[hiIdx].rows) lastMax = Math.max(lastMax, r[unit.key]);
@@ -1417,7 +1422,7 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
     let linesSvg = '';
     let areaSvg = '';
     const dotR = span > 40 ? 1.6 : span > 15 ? 2.2 : 3;
-    if (stacked) {
+    if (isStacked) {
       // cumBefore[k] = altura acumulada das séries ANTERIORES no índice
       // visível k (0 na primeira série) — cresce a cada volta do loop;
       // cumAfter[k] = cumBefore[k] + valor da série atual = topo da banda
@@ -1742,6 +1747,11 @@ function createLineChart(container, monthlySeries, markers, initialUnitKey, refL
     // (Búzios, Mero) assim que trocava de unidade depois de um zoom em y,
     // sem nenhum aviso de que o gráfico estava "preso" numa escala velha.
     setUnit(key) { unitKey = key; yMaxOverride = null; draw(); },
+    // Alterna empilhado (somado, área preenchida) / linhas individuais em
+    // tempo real — ver buildStackToggle logo abaixo. yMaxOverride zerado
+    // pelo mesmo motivo de setUnit: o teto de uma escala (soma de todas as
+    // séries) não faz sentido herdado pela outra (série isolada mais alta).
+    setStacked(value) { isStacked = value; yMaxOverride = null; draw(); },
     resetZoom() { viewStart = 0; viewEnd = n - 1; yMaxOverride = null; draw(); },
     isZoomed() { return viewStart > 0 || viewEnd < n - 1 || yMaxOverride !== null; },
     // year: número do ano a marcar (31/dez desse ano), ou null pra tirar a
@@ -1782,6 +1792,37 @@ function buildUnitSwitch(onChange, keys) {
     if (!btn) return;
     wrap.querySelectorAll('.scale-btn').forEach((b) => b.classList.toggle('active', b === btn));
     onChange(btn.dataset.unit);
+  });
+  return wrap;
+}
+
+// Alterna "linhas individuais" (padrão, uma cor/linha por série) e
+// "somadas e preenchidas" (empilhado — ver stacked/setStacked em
+// createLineChart: topo da pilha = total, faixa entre uma linha e a
+// anterior = contribuição daquela série) — mesmo padrão visual de
+// buildUnitSwitch, só que com 2 opções fixas em vez de uma por chave.
+// initialStacked precisa bater com o valor que o próprio createLineChart
+// recebeu na criação (ver chamador), senão o botão nasceria marcado
+// errado (chart e toggle desincronizados até o primeiro clique).
+function buildStackToggle(onChange, initialStacked) {
+  const wrap = document.createElement('div');
+  wrap.className = 'scale-switch analytics-tab-switch';
+  const options = [
+    { value: false, label: 'Linhas individuais' },
+    { value: true, label: 'Somadas e preenchidas' },
+  ];
+  for (const opt of options) {
+    const btn = document.createElement('button');
+    btn.className = 'scale-btn' + (opt.value === !!initialStacked ? ' active' : '');
+    btn.textContent = opt.label;
+    btn.dataset.stacked = String(opt.value);
+    wrap.appendChild(btn);
+  }
+  wrap.addEventListener('click', (e) => {
+    const btn = e.target.closest('.scale-btn');
+    if (!btn) return;
+    wrap.querySelectorAll('.scale-btn').forEach((b) => b.classList.toggle('active', b === btn));
+    onChange(btn.dataset.stacked === 'true');
   });
   return wrap;
 }
