@@ -671,6 +671,30 @@ function enterChartCardFullscreen(card, btn) {
   _fullscreenBtn = btn;
 }
 
+// "Stat tile" (label + valor grande + sub opcional) — compartilhada entre
+// analises.js (KPIs do Executivo), producao.js (KPIs do mês atual/período)
+// e dados.js (KPIs de inventário); antes duplicada como statTile/statTileP
+// em cada arquivo, mesmo corpo.
+function statTile(label, value, sub) {
+  const div = document.createElement('div');
+  div.className = 'stat-tile';
+  const l = document.createElement('div');
+  l.className = 'stat-tile-label';
+  l.textContent = label;
+  const v = document.createElement('div');
+  v.className = 'stat-tile-value';
+  v.textContent = value;
+  div.appendChild(l);
+  div.appendChild(v);
+  if (sub) {
+    const s = document.createElement('div');
+    s.className = 'stat-tile-sub';
+    s.textContent = sub;
+    div.appendChild(s);
+  }
+  return div;
+}
+
 function chartCard(title, subtitle) {
   const card = document.createElement('div');
   card.className = 'chart-card';

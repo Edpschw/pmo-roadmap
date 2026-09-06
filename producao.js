@@ -16,8 +16,8 @@
    computeMonthlySeries) e o gráfico de linhas interativo (createLineChart)
    vêm de shared.js — compartilhados com campo.js (visão por projeto, um
    campo só). Infra de gráfico (tooltip, fmtNum, chartCard, barRow,
-   CONTEXT_FIELD_COLOR) também vem de shared.js — compartilhada com
-   analises.js.
+   statTile, CONTEXT_FIELD_COLOR) também vem de shared.js — compartilhada
+   com analises.js e dados.js.
    ========================================================================= */
 
 const PRODUCAO_URL = 'data/producao.json';
@@ -32,31 +32,11 @@ function renderProducaoKpis(container, rows, mesRef) {
 
   const row = document.createElement('div');
   row.className = 'kpi-row';
-  row.appendChild(statTileP('Mês de referência', `${MESES_PT[mesRef.mes]}/${mesRef.ano}`, 'ANP — Boletim da Produção (pré-sal)'));
-  row.appendChild(statTileP('Produção pré-sal total', fmtNum(totalBoed) + ' boe/d', `${fmtNum(totalOleo)} bbl/d óleo · ${fmtNum(totalGas, { maximumFractionDigits: 1 })} Mm³/d gás`));
-  row.appendChild(statTileP('Nos contratos rastreados', fmtNum(contratosBoed) + ' boe/d', `${((contratosBoed / totalBoed) * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% do pré-sal`));
-  row.appendChild(statTileP('Campos no boletim', String(rows.length), `${rows.filter((r) => r.isContract).length} contratos rastreados · ${rows.filter((r) => !r.isContract).length} de contexto`));
+  row.appendChild(statTile('Mês de referência', `${MESES_PT[mesRef.mes]}/${mesRef.ano}`, 'ANP — Boletim da Produção (pré-sal)'));
+  row.appendChild(statTile('Produção pré-sal total', fmtNum(totalBoed) + ' boe/d', `${fmtNum(totalOleo)} bbl/d óleo · ${fmtNum(totalGas, { maximumFractionDigits: 1 })} Mm³/d gás`));
+  row.appendChild(statTile('Nos contratos rastreados', fmtNum(contratosBoed) + ' boe/d', `${((contratosBoed / totalBoed) * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% do pré-sal`));
+  row.appendChild(statTile('Campos no boletim', String(rows.length), `${rows.filter((r) => r.isContract).length} contratos rastreados · ${rows.filter((r) => !r.isContract).length} de contexto`));
   container.appendChild(row);
-}
-
-function statTileP(label, value, sub) {
-  const div = document.createElement('div');
-  div.className = 'stat-tile';
-  const l = document.createElement('div');
-  l.className = 'stat-tile-label';
-  l.textContent = label;
-  const v = document.createElement('div');
-  v.className = 'stat-tile-value';
-  v.textContent = value;
-  div.appendChild(l);
-  div.appendChild(v);
-  if (sub) {
-    const s = document.createElement('div');
-    s.className = 'stat-tile-sub';
-    s.textContent = sub;
-    div.appendChild(s);
-  }
-  return div;
 }
 
 /* ------------------------------- Gráfico de barras ------------------------- */
@@ -140,7 +120,7 @@ function buildEvolutionSection(producaoData) {
   }
   const row = document.createElement('div');
   row.className = 'kpi-row';
-  row.appendChild(statTileP('Período coberto', `${MESES_PT[first.mes]}/${first.ano} – ${MESES_PT[last.mes]}/${last.ano}`, `${producaoData.meses.length} boletins mensais${gaps ? ` · ${gaps} mês(es) sem boletim compatível no meio do período` : ''}`));
+  row.appendChild(statTile('Período coberto', `${MESES_PT[first.mes]}/${first.ano} – ${MESES_PT[last.mes]}/${last.ano}`, `${producaoData.meses.length} boletins mensais${gaps ? ` · ${gaps} mês(es) sem boletim compatível no meio do período` : ''}`));
   section.appendChild(row);
 
   const card = chartCard(

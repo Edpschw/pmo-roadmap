@@ -14,8 +14,8 @@
    + data/producao_pocos.json (boletim de poços da ANP, produção/injeção,
    todo o litoral). Sem servidor: tudo é derivado desses arquivos estáticos
    a cada carga. Infra de gráfico (tooltip, fmtNum, chartCard, barRow,
-   buildHistogram, CONTEXT_FIELD_COLOR) vem de shared.js — compartilhada
-   com producao.js.
+   statTile, buildHistogram, CONTEXT_FIELD_COLOR) vem de shared.js —
+   compartilhada com producao.js e dados.js.
    ========================================================================= */
 
 const PD_URL = 'data/planos_desenvolvimento.json';
@@ -203,26 +203,6 @@ function computeWellAggregates(pocosData, outrosPocos) {
 }
 
 /* ------------------------------ Página Executivo ---------------------------- */
-
-function statTile(label, value, sub) {
-  const div = document.createElement('div');
-  div.className = 'stat-tile';
-  const l = document.createElement('div');
-  l.className = 'stat-tile-label';
-  l.textContent = label;
-  const v = document.createElement('div');
-  v.className = 'stat-tile-value';
-  v.textContent = value;
-  div.appendChild(l);
-  div.appendChild(v);
-  if (sub) {
-    const s = document.createElement('div');
-    s.className = 'stat-tile-sub';
-    s.textContent = sub;
-    div.appendChild(s);
-  }
-  return div;
-}
 
 function renderExecutiveKpis(container, agg, wellAgg) {
   const row = document.createElement('div');
