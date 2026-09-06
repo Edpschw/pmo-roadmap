@@ -310,19 +310,32 @@ function buildMiniMap(container, project, jazidaFeatures, wells, wellFpso, onWel
   }
   // Zoom automático junto da seleção — sem isso, um campo com muitos poços
   // espalhados deixava o poço selecionado minúsculo/perdido no zoom do
-  // conjunto inteiro (só a opacidade mudava, ver applySelectionOpacity). 15
-  // é zoom de rua/instalação individual (maxNativeZoom do tile é 16, ver
-  // topo da função) — dá pra distinguir um poço do vizinho mais próximo sem
-  // ficar tão perto que perde o contexto do campo. Desmarcar (name null)
-  // volta pro enquadramento do campo inteiro (mesmo cálculo do fit inicial,
-  // ver requestAnimationFrame abaixo) — flyTo (não setView) nos dois casos
-  // pra dar a sensação de "ir até" o poço, não um corte seco.
-  const WELL_SELECT_ZOOM = 15;
+  // conjunto inteiro (só a opacidade mudava, ver applySelectionOpacity).
+  // Alvo é uma janela de ~1,5km de lado ao redor do poço — perto o
+  // suficiente pra distinguir do vizinho mais próximo sem perder todo o
+  // contexto do campo. Em vez de um nível de zoom fixo (não dá o mesmo
+  // enquadramento em telas/containers de tamanho diferente — .campo-mapa
+  // muda de 220px a 580px de altura conforme a tela, ver style.css),
+  // calcula o zoom com getBoundsZoom sobre uma caixa de ~1,5km centrada no
+  // poço, mesma técnica já usada pro fit do campo inteiro (ver
+  // requestAnimationFrame abaixo) — assim o resultado em km é sempre igual
+  // não importa o tamanho do mini-mapa. Desmarcar (name null) volta pro
+  // enquadramento do campo inteiro — flyTo (não setView) nos dois casos
+  // pra dar a sensação de "ir até" o alvo, não um corte seco.
+  const WELL_SELECT_RADIUS_KM = 0.75;
+  const KM_PER_DEG_LAT = 111.32;
   function zoomToSelection() {
     if (selectedWell) {
       const match = wellMarkersByYear.find((x) => x.name === selectedWell);
       if (match) {
-        map.flyTo(match.marker.getLatLng(), Math.max(map.getZoom(), WELL_SELECT_ZOOM), { duration: 0.6 });
+        const center = match.marker.getLatLng();
+        const dLat = WELL_SELECT_RADIUS_KM / KM_PER_DEG_LAT;
+        const dLng = WELL_SELECT_RADIUS_KM / (KM_PER_DEG_LAT * Math.cos(center.lat * Math.PI / 180));
+        const wellBounds = L.latLngBounds(
+          [center.lat - dLat, center.lng - dLng],
+          [center.lat + dLat, center.lng + dLng],
+        );
+        map.flyTo(center, map.getBoundsZoom(wellBounds, false), { duration: 0.6 });
         return;
       }
     }
