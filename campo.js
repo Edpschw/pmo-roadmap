@@ -303,9 +303,34 @@ function buildMiniMap(container, project, jazidaFeatures, wells, wellFpso, onWel
   // quanto no gráfico). setOpacity funciona em cima de divIcon normalmente
   // (Leaflet aplica no elemento do ícone), sem precisar recolorir SVG.
   let selectedWell = null;
+  // Injetores mais próximos do poço selecionado também ficam em opacidade
+  // cheia — não tem no cadastro qual injetor de fato sustenta a pressão de
+  // qual produtor (isso é modelo de reservatório, não dado público da
+  // ANP), então proximidade é a única aproximação disponível aqui.
+  // Distância em graus com a MESMA correção de latitude usada no cálculo
+  // da caixa de zoom acima (Math.cos, não Haversine — erro desprezível
+  // nessa escala de poucos km) só pra RANKING relativo entre injetores, não
+  // precisa de metros exatos. NEAREST_INJECTORS_COUNT=3: perto o bastante
+  // de virar ruído (a maioria dos campos tem poucos injetores por
+  // produtor); poço sem nenhum injetor no contrato (ou o próprio poço
+  // selecionado sendo um injetor) só deixa o Set vazio, sem erro.
+  const NEAREST_INJECTORS_COUNT = 3;
+  let highlightedInjectors = new Set();
+  function computeNearestInjectors(centerName, centerLatLng) {
+    const withDist = wellMarkersByYear
+      .filter((x) => x.category === 'injecao' && x.name !== centerName)
+      .map((x) => {
+        const p = x.marker.getLatLng();
+        const dLat = p.lat - centerLatLng.lat;
+        const dLng = (p.lng - centerLatLng.lng) * Math.cos(centerLatLng.lat * Math.PI / 180);
+        return { name: x.name, distSq: dLat * dLat + dLng * dLng };
+      });
+    withDist.sort((a, b) => a.distSq - b.distSq);
+    return new Set(withDist.slice(0, NEAREST_INJECTORS_COUNT).map((x) => x.name));
+  }
   function applySelectionOpacity() {
     for (const { marker, name } of wellMarkersByYear) {
-      marker.setOpacity(!selectedWell || name === selectedWell ? 1 : 0.18);
+      marker.setOpacity(!selectedWell || name === selectedWell || highlightedInjectors.has(name) ? 1 : 0.18);
     }
   }
   // Zoom automático junto da seleção — sem isso, um campo com muitos poços
@@ -350,6 +375,8 @@ function buildMiniMap(container, project, jazidaFeatures, wells, wellFpso, onWel
   }
   function setSelectedWell(name) {
     selectedWell = name;
+    const match = name && wellMarkersByYear.find((x) => x.name === name);
+    highlightedInjectors = match ? computeNearestInjectors(name, match.marker.getLatLng()) : new Set();
     applySelectionOpacity();
     zoomToSelection();
   }
@@ -647,7 +674,7 @@ function buildWellProductionChart(container, wells, pocosSerieData, wellFpso, fp
       : ' Linha tracejada: pico histórico da instalação (soma de todos os poços) — capacidade nominal desse FPSO não tem número claro no PD disponível.';
     const card = chartCard(
       `Produção por poço — ${fpso}`,
-      `Óleo por poço produtor (bbl/d), empilhado — a linha mais alta é o agregado da instalação, a faixa colorida entre uma linha e a anterior é a contribuição de cada poço. Um ponto por mês — dado aberto "Produção por Zona" da ANP, out/2014 a jun/2025 (a partir daí esse dado não separa mais pré-sal por poço, ver nota do gráfico "Produção mensal" abaixo); FPSO/instalação de cada poço vem do boletim de poços da ANP (mês mais recente só, ver mapa acima).${note} Clique num poço na legenda pra destacá-lo aqui e dar zoom nele no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.`,
+      `Óleo por poço produtor (bbl/d), empilhado — a linha mais alta é o agregado da instalação, a faixa colorida entre uma linha e a anterior é a contribuição de cada poço. Um ponto por mês — dado aberto "Produção por Zona" da ANP, out/2014 a jun/2025 (a partir daí esse dado não separa mais pré-sal por poço, ver nota do gráfico "Produção mensal" abaixo); FPSO/instalação de cada poço vem do boletim de poços da ANP (mês mais recente só, ver mapa acima).${note} Clique num poço na legenda pra destacá-lo aqui, dar zoom nele e realçar os 3 injetores mais próximos no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.`,
     );
     const controls = document.createElement('div');
     controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
@@ -759,7 +786,7 @@ function buildWellRgoChart(container, wells, pocosMensal, wellFpso, selectWell) 
     any = true;
     const card = chartCard(
       `RGO por poço — ${fpso}`,
-      `Razão Gás-Óleo (m³ de gás por m³ de óleo produzido no mês) por poço produtor, uma linha por poço (não empilha — RGO não é aditivo entre poços, diferente de óleo). ${periodo} — só poços com óleo e gás produzidos no mês; out/2014 a jun/2025 vem do dado aberto "Produção por Zona" da ANP, jan/2026 em diante do boletim de poços (janela rolante recente, não o histórico completo); sem cobertura no meio (jul-dez/2025 hoje) por nenhuma das duas fontes. Clique num poço na legenda pra destacá-lo aqui e dar zoom nele no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.`,
+      `Razão Gás-Óleo (m³ de gás por m³ de óleo produzido no mês) por poço produtor, uma linha por poço (não empilha — RGO não é aditivo entre poços, diferente de óleo). ${periodo} — só poços com óleo e gás produzidos no mês; out/2014 a jun/2025 vem do dado aberto "Produção por Zona" da ANP, jan/2026 em diante do boletim de poços (janela rolante recente, não o histórico completo); sem cobertura no meio (jul-dez/2025 hoje) por nenhuma das duas fontes. Clique num poço na legenda pra destacá-lo aqui, dar zoom nele e realçar os 3 injetores mais próximos no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.`,
     );
     const controls = document.createElement('div');
     controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
