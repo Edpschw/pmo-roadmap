@@ -311,21 +311,23 @@ function buildMiniMap(container, project, jazidaFeatures, wells, wellFpso, onWel
   // Zoom automático junto da seleção — sem isso, um campo com muitos poços
   // espalhados deixava o poço selecionado minúsculo/perdido no zoom do
   // conjunto inteiro (só a opacidade mudava, ver applySelectionOpacity).
-  // Alvo é uma janela de ~3km de lado ao redor do poço (achado zoom
-  // grande demais com 1,5km — getBoundsZoom arredonda pro nível de zoom
-  // inteiro mais próximo que ainda cabe a caixa, e zoomSnap:1 não permite
-  // zoom fracionário pra afinar mais que isso) — perto o suficiente pra
-  // distinguir do vizinho mais próximo sem perder todo o contexto do
-  // campo. Em vez de um nível de zoom fixo (não dá o mesmo enquadramento
-  // em telas/containers de tamanho diferente — .campo-mapa muda de 220px
-  // a 580px de altura conforme a tela, ver style.css), calcula o zoom com
-  // getBoundsZoom sobre uma caixa de ~3km centrada no poço, mesma técnica
-  // já usada pro fit do campo inteiro (ver requestAnimationFrame abaixo)
-  // — assim o resultado em km é sempre igual não importa o tamanho do
-  // mini-mapa. Desmarcar (name null) volta pro enquadramento do campo
-  // inteiro — flyTo (não setView) nos dois casos pra dar a sensação de
-  // "ir até" o alvo, não um corte seco.
-  const WELL_SELECT_RADIUS_KM = 1.5;
+  // Alvo é uma janela de ~9km de lado ao redor do poço — calibrado pela
+  // barra de escala (CampoScaleControl acima): 1,5km e 3km de caixa
+  // deixavam a barra em ~300-500m, zoom alto demais; a barra de escala
+  // mostra a distância coberta por só SCALE_MAX_WIDTH (90px) do
+  // container, não o container inteiro — bem menor que o lado da caixa
+  // pedida, então o alvo de caixa precisa ser bem maior que a leitura de
+  // escala desejada (~3x, pela proporção observada). Em vez de um nível
+  // de zoom fixo (não dá o mesmo enquadramento em telas/containers de
+  // tamanho diferente — .campo-mapa muda de 220px a 580px de altura
+  // conforme a tela, ver style.css), calcula o zoom com getBoundsZoom
+  // sobre essa caixa centrada no poço, mesma técnica já usada pro fit do
+  // campo inteiro (ver requestAnimationFrame abaixo) — assim o resultado
+  // é sempre igual não importa o tamanho do mini-mapa. Desmarcar (name
+  // null) volta pro enquadramento do campo inteiro — flyTo (não setView)
+  // nos dois casos pra dar a sensação de "ir até" o alvo, não um corte
+  // seco.
+  const WELL_SELECT_RADIUS_KM = 4.5;
   const KM_PER_DEG_LAT = 111.32;
   function zoomToSelection() {
     if (selectedWell) {
