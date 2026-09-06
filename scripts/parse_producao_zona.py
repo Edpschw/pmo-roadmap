@@ -55,6 +55,19 @@ só como reserva:
    tem esse problema no CSV). Por isso `fator` só multiplica óleo abaixo
    — gás (pré-sal e pós-sal) usa o valor cru do CSV em todo o período,
    sem exceção de mês.
+4. O CSV cobre o litoral brasileiro inteiro (pré-sal + pós-sal do MESMO
+   campo, por poço/zona) — mas nenhum consumidor do app usa a fração
+   pós-sal (oleoPosSalBbld/gasPosSalMm3d/boedPosSal só entram em somas
+   internas de METRIC_KEYS em shared.js, nunca em gráfico/tabela
+   exibido; achado construindo a aba Dados/QC). Guardar campo que NUNCA
+   teve pré-sal > 0 em nenhum mês (ex.: Alto do Rodrigues, Enchova — uns
+   380 campos assim, "de passagem" no mesmo dado aberto) só inflava
+   data/producao.json (~9MB, a maior parte nunca lida por nenhuma
+   página) — ver strip_pos_sal_only_fields() abaixo, chamada em toda
+   execução (arquivo único ou lote) antes de save(), sobre o `existing`
+   INTEIRO, não só os meses processados agora (senão um campo que só
+   nunca-teve-pré-sal nos meses JÁ salvos, mas está sendo reprocessado
+   agora, escaparia da limpeza).
 
 Uso (um arquivo):
     python3 scripts/parse_producao_zona.py caminho/producao_zona_MM-AAAA.csv --url URL
@@ -236,6 +249,24 @@ def qc_check(campos_novo, campos_antigo):
     return avisos or None
 
 
+def strip_pos_sal_only_fields(existing):
+    """Remove de TODO o `existing` (não só dos meses tocados nesta
+    execução) qualquer campo que nunca teve oleoPreSalBbld/gasPreSalMm3d
+    > 0 em nenhum mês do arquivo inteiro — ver nota 4 no topo do arquivo.
+    Devolve quantas entradas campo×mês foram removidas."""
+    com_presal = set()
+    for m in existing.get('meses', []):
+        for nome, v in m['campos'].items():
+            if v['oleoPreSalBbld'] > 1e-9 or v['gasPreSalMm3d'] > 1e-9:
+                com_presal.add(nome)
+    removidos = 0
+    for m in existing.get('meses', []):
+        antes = len(m['campos'])
+        m['campos'] = {k: v for k, v in m['campos'].items() if k in com_presal}
+        removidos += antes - len(m['campos'])
+    return removidos
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('csv', nargs='?', help='Caminho de um único CSV de produção por zona')
@@ -272,8 +303,11 @@ def main():
                 ok += 1
             except Exception as e:
                 failed.append((path.name, str(e)))
+        removidos = strip_pos_sal_only_fields(existing)
         save(existing)
         print(f'OK: {ok}/{len(files)} arquivos processados')
+        if removidos:
+            print(f'  Limpeza: {removidos} campo×mês só-pós-sal removidos (ver nota 4 no topo do arquivo)')
         for name, reason in failed:
             print(f'  FALHOU {name}: {reason}')
         for name, ano, mes, avisos in qc_rejeitados:
@@ -295,6 +329,9 @@ def main():
             continue
         upsert_month(existing, ano, mes, campos, args.url)
         print(f'OK: {mes:02d}/{ano} — {len(campos)} campos')
+    removidos = strip_pos_sal_only_fields(existing)
+    if removidos:
+        print(f'Limpeza: {removidos} campo×mês só-pós-sal removidos (ver nota 4 no topo do arquivo)')
     save(existing)
 
 

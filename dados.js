@@ -17,22 +17,18 @@ const DATASETS = [
   {
     path: 'data/producao.json', label: 'Produção mensal por campo', noStore: true,
     parse(d) {
-      // campos: TODO nome visto (inclui fração pós-sal de campo fora do
-      // pré-sal, ver nota grande em renderCamposQcTable); comPresal: só
-      // quem teve oleoPreSalBbld/gasPreSalMm3d > 0 em algum mês — a
-      // diferença entre os dois é o quanto do arquivo é fração pós-sal
-      // "de passagem" (não usada em nenhum outro lugar do app).
+      // Só campo pré-sal fica no arquivo desde a limpeza feita em scripts/
+      // parse_producao_zona.py (strip_pos_sal_only_fields, ver nota 4 no
+      // topo do script) — antes disso o arquivo trazia ~380 campos 100%
+      // pós-sal "de passagem" do mesmo dado aberto (9,2MB -> 960KB depois
+      // de limpo). Ainda existem entradas campo×mês com oleoPosSalBbld/
+      // gasPosSalMm3d > 0 (a fração pós-sal do MESMO campo pré-sal, num mês
+      // específico) — só não existe mais campo que NUNCA teve pré-sal.
       const campos = new Set();
-      const comPresal = new Set();
-      for (const m of d.meses) {
-        for (const [nome, v] of Object.entries(m.campos)) {
-          campos.add(nome);
-          if (v.oleoPreSalBbld > 0 || v.gasPreSalMm3d > 0) comPresal.add(nome);
-        }
-      }
+      for (const m of d.meses) for (const nome of Object.keys(m.campos)) campos.add(nome);
       return {
         fonte: (d.fonte && d.fonte.nome) || '—',
-        registros: `${d.meses.length} meses, ${campos.size} campos distintos (${comPresal.size} com produção pré-sal > 0 em algum mês — o resto é fração pós-sal "de passagem" do mesmo dado aberto, ver nota na tabela de campos abaixo)`,
+        registros: `${d.meses.length} meses, ${campos.size} campos distintos`,
         periodo: periodoDe(d.meses),
         gaps: findGaps(d.meses),
       };
@@ -266,14 +262,11 @@ function renderGapsSection(container, rows) {
 // achar grafia divergente entre arquivos, então uma junção "esperta"
 // escondia exatamente o que se quer ver aqui.
 function renderCamposQcTable(container, { producaoData, pdData, presalGeojson, contratosGeojson }) {
-  // Só campo com produção PRÉ-SAL > 0 em algum mês — data/producao.json
-  // também traz a fração PÓS-SAL de qualquer campo do litoral brasileiro
-  // que cruza com uma zona pré-sal em algum poço (ver parse_zona_csv,
-  // scripts/parse_producao_zona.py: sim = pré-sal e não = pós-sal do
-  // MESMO campo entram na mesma entrada), o que incluiria ~380 campos
-  // 100% pós-sal (Alto do Rodrigues, Enchova...) sem relação nenhuma com
-  // o pré-sal — comparar esses contra fontes só-pré-sal (PD, polígono)
-  // não seria uma comparação de igual pra igual, só ruído.
+  // Só campo com produção PRÉ-SAL > 0 em algum mês (defensivo — desde a
+  // limpeza em scripts/parse_producao_zona.py/strip_pos_sal_only_fields,
+  // data/producao.json já só traz campo pré-sal, mas o filtro aqui não
+  // custa nada e protege contra o arquivo voltar a trazer campo pós-sal
+  // solto no futuro).
   const nomesProducao = new Set();
   for (const m of producaoData.meses) {
     for (const [nome, v] of Object.entries(m.campos)) {
@@ -285,19 +278,46 @@ function renderCamposQcTable(container, { producaoData, pdData, presalGeojson, c
   const nomesContratos = new Set(contratosGeojson.features.map((f) => f.properties.projeto || f.properties.nome));
   const trackedNames = new Set(state.projects.map((p) => p.name));
 
-  const todos = new Set([...nomesProducao, ...nomesPd, ...nomesPresal, ...nomesContratos, ...trackedNames]);
-  const rows = [...todos].sort((a, b) => a.localeCompare(b, 'pt-BR')).map((nome) => ({
-    nome,
-    producao: nomesProducao.has(nome),
-    pd: nomesPd.has(nome),
-    presal: nomesPresal.has(nome),
-    contrato: nomesContratos.has(nome) || trackedNames.has(nome),
+  // Casa por nome em CAIXA ALTA, não por igualdade exata de string —
+  // data/campos_presal.geojson vem tudo maiúsculo direto do shapefile da
+  // ANP (convenção documentada em titleCasePt, mapa.js: "certo pra
+  // distinguir de contrato rastreado nas tabelas/listas... mas errado no
+  // rótulo do mapa"), então "BERBIGÃO" (polígono) e "Berbigão" (produção/
+  // PD) são o MESMO campo — mesmo critério de cross-referência já usado
+  // em toda parte do app (trackedByUpperName em app.js/mapa.js/campo.js/
+  // pocos.js). Comparar bruto (só toLowerCase/toUpperCase, sem tirar
+  // acento) inflava "só 1 fonte" com esse par pra CADA campo de contexto
+  // — mascarava as divergências de nome de verdade (typo, apelido
+  // diferente, sub-área só numa fonte) no meio desse ruído.
+  const upper = (s) => s.toUpperCase();
+  const bySet = {
+    producao: new Set([...nomesProducao].map(upper)),
+    pd: new Set([...nomesPd].map(upper)),
+    presal: new Set([...nomesPresal].map(upper)),
+    contrato: new Set([...nomesContratos, ...trackedNames].map(upper)),
+  };
+  // Nome canônico por chave maiúscula: prefere a grafia em Título Case
+  // (produção/PD/contrato) sobre o polígono (sempre CAIXA ALTA) só pra
+  // exibição — ordem de inserção no Map decide quem "ganha", último
+  // sobrescreve.
+  const displayName = new Map();
+  for (const nome of [...nomesPresal, ...nomesContratos, ...trackedNames, ...nomesPd, ...nomesProducao]) {
+    displayName.set(upper(nome), nome);
+  }
+
+  const todos = new Set([...bySet.producao, ...bySet.pd, ...bySet.presal, ...bySet.contrato]);
+  const rows = [...todos].sort((a, b) => displayName.get(a).localeCompare(displayName.get(b), 'pt-BR')).map((chave) => ({
+    nome: displayName.get(chave),
+    producao: bySet.producao.has(chave),
+    pd: bySet.pd.has(chave),
+    presal: bySet.presal.has(chave),
+    contrato: bySet.contrato.has(chave),
   }));
   const semNenhuma = rows.filter((r) => [r.producao, r.pd, r.presal, r.contrato].filter(Boolean).length <= 1);
 
   const card = chartCard(
     'Campos/jazidas — em quais fontes o nome aparece',
-    `${rows.length} nomes distintos vistos em pelo menos uma fonte (produção mensal, PD, polígono de campo de contexto, ou contrato/projeto rastreado) — comparação por igualdade exata de string, de propósito: o objetivo é achar nome que só existe numa fonte (typo, apelido diferente, campo que uma fonte ainda não cobre), então uma junção "inteligente" por substring escondia isso. ${semNenhuma.length} aparecem em só 1 fonte — provável ponto de atenção, listados primeiro.`,
+    `${rows.length} nomes distintos vistos em pelo menos uma fonte (produção mensal, PD, polígono de campo de contexto, ou contrato/projeto rastreado) — comparação por igualdade de string em CAIXA ALTA (mesmo critério do resto do app pra casar o polígono, sempre maiúsculo na fonte ANP, contra as outras fontes em Título Case), então só sobra divergência de nome de verdade (typo, apelido diferente, campo que uma fonte ainda não cobre), não a caixa da letra. ${semNenhuma.length} aparecem em só 1 fonte — provável ponto de atenção, listados primeiro.`,
   );
   const wrap = document.createElement('div');
   wrap.className = 'pocos-table-wrapper';
