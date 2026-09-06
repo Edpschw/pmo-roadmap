@@ -733,12 +733,42 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 
 /* ---- Cartão de gráfico ---- */
 .chart-card {
+  position: relative;
   background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 16px 18px 14px;
 }
 .chart-card + .chart-card { margin-top: 14px; }
-.chart-card-title { font-size: 13px; font-weight: 700; margin: 0 0 2px; }
+.chart-card-title { font-size: 13px; font-weight: 700; margin: 0 0 2px; padding-right: 26px; }
 .chart-card-subtitle { font-size: 11px; color: var(--text-faint); margin: 0 0 14px; }
+
+/* Botão de tela cheia (canto superior direito, ver chartCard/
+   enterChartCardFullscreen em shared.js) — position:absolute pra não
+   interferir na ordem dos filhos do cartão (código espalhado insere
+   controles logo depois do <h3>, ver nota em chartCard). padding-right
+   no título acima só evita o texto ficar embaixo do botão em título
+   comprido perto da largura da coluna. */
+.chart-card-expand-btn {
+  position: absolute; top: 12px; right: 12px; z-index: 1;
+  width: 22px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 5px; background: var(--bg);
+  color: var(--text-faint); font-size: 12px; line-height: 1; cursor: pointer;
+}
+.chart-card-expand-btn:hover { background: var(--surface); color: var(--text); }
+
+.chart-card-backdrop {
+  position: fixed; inset: 0; z-index: 999; background: rgba(0, 0, 0, 0.65);
+}
+.chart-card-backdrop[hidden] { display: none; }
+
+/* Cartão expandido: fixed cobrindo quase a tela toda, por cima do
+   backdrop — sai do grid/coluna onde estava (position:fixed não depende
+   do pai) sem precisar mover o elemento no DOM. overflow:auto pro
+   conteúdo (às vezes mais alto que a tela, ex. lista de FPSO) rolar
+   dentro do próprio cartão, não a página atrás dele. */
+.chart-card.chart-card-fullscreen {
+  position: fixed; inset: 28px; z-index: 1000; overflow: auto;
+  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.7);
+}
 
 /* Gráfico de linhas (createLineChart em shared.js, buildComboChart em
    campo.js) — viewBox fixo (LINE_W×LINE_H) escalado por CSS, não por JS:

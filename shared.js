@@ -631,6 +631,46 @@ function attachTooltip(el, htmlFn) {
   el.addEventListener('blur', hide);
 }
 
+// Tela cheia de UM chart-card por vez — backdrop único reaproveitado
+// entre cartões (criado só na primeira vez que algum é expandido), Esc ou
+// clique no backdrop fecha. exitChartCardFullscreen só mexe no cartão
+// atualmente expandido (_fullscreenCard), sem precisar varrer o DOM.
+let _fullscreenBackdrop = null;
+let _fullscreenCard = null;
+let _fullscreenBtn = null;
+function exitChartCardFullscreen() {
+  if (!_fullscreenCard) return;
+  _fullscreenCard.classList.remove('chart-card-fullscreen');
+  if (_fullscreenBtn) {
+    _fullscreenBtn.textContent = '⛶';
+    _fullscreenBtn.title = 'Tela cheia';
+    _fullscreenBtn.setAttribute('aria-label', 'Expandir pra tela cheia');
+  }
+  if (_fullscreenBackdrop) _fullscreenBackdrop.hidden = true;
+  _fullscreenCard = null;
+  _fullscreenBtn = null;
+}
+function enterChartCardFullscreen(card, btn) {
+  if (_fullscreenCard) exitChartCardFullscreen();
+  if (!_fullscreenBackdrop) {
+    _fullscreenBackdrop = document.createElement('div');
+    _fullscreenBackdrop.className = 'chart-card-backdrop';
+    _fullscreenBackdrop.hidden = true;
+    _fullscreenBackdrop.addEventListener('click', exitChartCardFullscreen);
+    document.body.appendChild(_fullscreenBackdrop);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') exitChartCardFullscreen();
+    });
+  }
+  _fullscreenBackdrop.hidden = false;
+  card.classList.add('chart-card-fullscreen');
+  btn.textContent = '✕';
+  btn.title = 'Fechar tela cheia (Esc)';
+  btn.setAttribute('aria-label', 'Fechar tela cheia');
+  _fullscreenCard = card;
+  _fullscreenBtn = btn;
+}
+
 function chartCard(title, subtitle) {
   const card = document.createElement('div');
   card.className = 'chart-card';
@@ -644,6 +684,26 @@ function chartCard(title, subtitle) {
     sub.textContent = subtitle;
     card.appendChild(sub);
   }
+  // Botão de tela cheia SEMPRE por último (depois do título/subtítulo,
+  // nunca entre os dois) — várias telas fazem
+  // card.insertBefore(controls, card.querySelector('h3').nextSibling)
+  // pra inserir controles (unit switch, "Ver tudo"...) logo depois do
+  // título; se o botão ficasse entre h3 e o subtítulo, esse nextSibling
+  // mudaria de alvo e quebraria a posição (ou, sem subtítulo, o próprio
+  // insertBefore). Posição visual (canto superior direito) vem de CSS
+  // (position:absolute), não da ordem no DOM, então ficar por último não
+  // muda nada pra quem só olha a tela.
+  const expandBtn = document.createElement('button');
+  expandBtn.type = 'button';
+  expandBtn.className = 'chart-card-expand-btn';
+  expandBtn.textContent = '⛶';
+  expandBtn.title = 'Tela cheia';
+  expandBtn.setAttribute('aria-label', 'Expandir pra tela cheia');
+  expandBtn.addEventListener('click', () => {
+    if (card.classList.contains('chart-card-fullscreen')) exitChartCardFullscreen();
+    else enterChartCardFullscreen(card, expandBtn);
+  });
+  card.appendChild(expandBtn);
   return card;
 }
 
