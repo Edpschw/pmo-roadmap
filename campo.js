@@ -308,9 +308,32 @@ function buildMiniMap(container, project, jazidaFeatures, wells, wellFpso, onWel
       marker.setOpacity(!selectedWell || name === selectedWell ? 1 : 0.18);
     }
   }
+  // Zoom automático junto da seleção — sem isso, um campo com muitos poços
+  // espalhados deixava o poço selecionado minúsculo/perdido no zoom do
+  // conjunto inteiro (só a opacidade mudava, ver applySelectionOpacity). 15
+  // é zoom de rua/instalação individual (maxNativeZoom do tile é 16, ver
+  // topo da função) — dá pra distinguir um poço do vizinho mais próximo sem
+  // ficar tão perto que perde o contexto do campo. Desmarcar (name null)
+  // volta pro enquadramento do campo inteiro (mesmo cálculo do fit inicial,
+  // ver requestAnimationFrame abaixo) — flyTo (não setView) nos dois casos
+  // pra dar a sensação de "ir até" o poço, não um corte seco.
+  const WELL_SELECT_ZOOM = 15;
+  function zoomToSelection() {
+    if (selectedWell) {
+      const match = wellMarkersByYear.find((x) => x.name === selectedWell);
+      if (match) {
+        map.flyTo(match.marker.getLatLng(), Math.max(map.getZoom(), WELL_SELECT_ZOOM), { duration: 0.6 });
+        return;
+      }
+    }
+    if (bounds.isValid()) {
+      map.flyTo(bounds.getCenter(), map.getBoundsZoom(bounds, false, L.point(8, 8)), { duration: 0.6 });
+    }
+  }
   function setSelectedWell(name) {
     selectedWell = name;
     applySelectionOpacity();
+    zoomToSelection();
   }
   function setYearFilter(year) {
     wellsLayer.clearLayers();
@@ -606,7 +629,7 @@ function buildWellProductionChart(container, wells, pocosSerieData, wellFpso, fp
       : ' Linha tracejada: pico histórico da instalação (soma de todos os poços) — capacidade nominal desse FPSO não tem número claro no PD disponível.';
     const card = chartCard(
       `Produção por poço — ${fpso}`,
-      `Óleo por poço produtor (bbl/d), empilhado — a linha mais alta é o agregado da instalação, a faixa colorida entre uma linha e a anterior é a contribuição de cada poço. Um ponto por mês — dado aberto "Produção por Zona" da ANP, out/2014 a jun/2025 (a partir daí esse dado não separa mais pré-sal por poço, ver nota do gráfico "Produção mensal" abaixo); FPSO/instalação de cada poço vem do boletim de poços da ANP (mês mais recente só, ver mapa acima).${note} Clique num poço na legenda pra destacá-lo aqui e no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.`,
+      `Óleo por poço produtor (bbl/d), empilhado — a linha mais alta é o agregado da instalação, a faixa colorida entre uma linha e a anterior é a contribuição de cada poço. Um ponto por mês — dado aberto "Produção por Zona" da ANP, out/2014 a jun/2025 (a partir daí esse dado não separa mais pré-sal por poço, ver nota do gráfico "Produção mensal" abaixo); FPSO/instalação de cada poço vem do boletim de poços da ANP (mês mais recente só, ver mapa acima).${note} Clique num poço na legenda pra destacá-lo aqui e dar zoom nele no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.`,
     );
     const controls = document.createElement('div');
     controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
@@ -718,7 +741,7 @@ function buildWellRgoChart(container, wells, pocosMensal, wellFpso, selectWell) 
     any = true;
     const card = chartCard(
       `RGO por poço — ${fpso}`,
-      `Razão Gás-Óleo (m³ de gás por m³ de óleo produzido no mês) por poço produtor, uma linha por poço (não empilha — RGO não é aditivo entre poços, diferente de óleo). ${periodo} — só poços com óleo e gás produzidos no mês; out/2014 a jun/2025 vem do dado aberto "Produção por Zona" da ANP, jan/2026 em diante do boletim de poços (janela rolante recente, não o histórico completo); sem cobertura no meio (jul-dez/2025 hoje) por nenhuma das duas fontes. Clique num poço na legenda pra destacá-lo aqui e no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.`,
+      `Razão Gás-Óleo (m³ de gás por m³ de óleo produzido no mês) por poço produtor, uma linha por poço (não empilha — RGO não é aditivo entre poços, diferente de óleo). ${periodo} — só poços com óleo e gás produzidos no mês; out/2014 a jun/2025 vem do dado aberto "Produção por Zona" da ANP, jan/2026 em diante do boletim de poços (janela rolante recente, não o histórico completo); sem cobertura no meio (jul-dez/2025 hoje) por nenhuma das duas fontes. Clique num poço na legenda pra destacá-lo aqui e dar zoom nele no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.`,
     );
     const controls = document.createElement('div');
     controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
