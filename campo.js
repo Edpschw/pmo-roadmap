@@ -642,6 +642,63 @@ function buildWellProductionChart(container, wells, pocosSerieData, wellFpso, fp
   };
 }
 
+/* -------------------------------- RGO por poço ------------------------------ */
+// Snapshot de um mês só (não série histórica como o gráfico acima) — vem
+// direto do boletim de poços da ANP (data/producao_pocos.json, ver
+// scripts/build_producao_pocos.py), a mesma fonte que já dá o FPSO de cada
+// poço. RGO calculado aqui com computeRGO (shared.js), mesma fórmula do
+// RGO por campo — só entra poço com óleo E gás produzido no mês (RGO sem
+// os dois lados não significa nada). Barra horizontal, uma só pra todos
+// os FPSOs (não uma série por instalação como o gráfico de produção
+// acima: sem histórico, empilhar por mês não faz sentido aqui) — cor por
+// FPSO, mesmo critério de agrupamento/ordenação das outras visões "por
+// poço" desta página.
+function buildWellRgoChart(container, wells, producaoPocosMap, mesRef) {
+  const rows = [];
+  for (const w of wells) {
+    const p = producaoPocosMap[w.n];
+    if (!p || !p.gasMm3d || !p.oleoBbld) continue;
+    rows.push({ name: w.n, rgo: computeRGO(p.oleoBbld, p.gasMm3d), fpso: p.fpso || 'Sem instalação registrada' });
+  }
+  if (!rows.length) return;
+  const max = Math.max(...rows.map((r) => r.rgo));
+
+  const totalByFpso = new Map();
+  for (const r of rows) totalByFpso.set(r.fpso, (totalByFpso.get(r.fpso) || 0) + r.rgo);
+  const fpsoOrder = [...totalByFpso.keys()].sort((a, b) => totalByFpso.get(b) - totalByFpso.get(a));
+  const colorByFpso = new Map(fpsoOrder.map((f, i) => [f, PALETTE[i % PALETTE.length]]));
+  const fpsoIndex = new Map(fpsoOrder.map((f, i) => [f, i]));
+  rows.sort((a, b) => fpsoIndex.get(a.fpso) - fpsoIndex.get(b.fpso) || b.rgo - a.rgo);
+
+  const [ano, mes] = mesRef.split('-').map(Number);
+  const card = chartCard(
+    'RGO por poço',
+    `Razão Gás-Óleo (m³ de gás por m³ de óleo produzido no mês), ${MESES_PT[mes]}/${ano} — boletim de poços da ANP, todos os poços da jazida compartilhada (mesmo critério do mini-mapa e do gráfico de produção acima) com óleo e gás produzidos no mês. Cor da barra = FPSO/instalação.`,
+  );
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:10px;font-size:12px;color:var(--text-muted)';
+  for (const fpso of fpsoOrder) {
+    const item = document.createElement('span');
+    item.style.cssText = 'display:inline-flex;align-items:center;gap:6px';
+    item.innerHTML = `<span style="width:9px;height:9px;border-radius:2px;background:${colorByFpso.get(fpso)};display:inline-block;flex:none"></span>${escapeHtml(fpso)}`;
+    legend.appendChild(item);
+  }
+  card.appendChild(legend);
+
+  const list = document.createElement('div');
+  list.className = 'hbar-list';
+  for (const r of rows) {
+    list.appendChild(barRow(
+      r.name, (r.rgo / max) * 100, UNITS.rgo.fmt(r.rgo), colorByFpso.get(r.fpso),
+      () => `<strong>${escapeHtml(r.name)}</strong>`
+        + tooltipRowHTML('FPSO/instalação', r.fpso)
+        + tooltipRowHTML('RGO', UNITS.rgo.fmt(r.rgo)),
+    ));
+  }
+  card.appendChild(list);
+  container.appendChild(card);
+}
+
 /* --------------------- Injeção no campo, ao longo do tempo ----------------- */
 // Diferente do gráfico de poço acima: aqui é por CAMPO (jazida), não por
 // poço — data/producao_injecao.json (ver scripts/parse_producao_injecao.py)
@@ -1199,7 +1256,10 @@ function buildProjectPanel(project, ctx) {
   // porque a fonte aqui é outra granularidade (por poço, não por campo) —
   // funciona mesmo pra projeto sem produção individualizada no boletim por
   // campo.
-  if (isSharedJazida) wellChartInfo = buildWellProductionChart(chartsCol, wells, ctx.producaoPocosSerie, ctx.wellFpso, ctx.fpsoCapacidade, selectWell);
+  if (isSharedJazida) {
+    wellChartInfo = buildWellProductionChart(chartsCol, wells, ctx.producaoPocosSerie, ctx.wellFpso, ctx.fpsoCapacidade, selectWell);
+    buildWellRgoChart(chartsCol, wells, ctx.producaoPocosMap, ctx.producaoPocosMesRef);
+  }
 
   const base = PROJECT_FIELD_BASE[project.name];
   if (!base) {
@@ -1509,8 +1569,13 @@ async function init() {
   // wellFpso: poço -> FPSO/instalação, só do mês mais recente do boletim
   // de poços (producaoPocosJson.pocos) — ver nota em buildWellProductionChart.
   const wellFpso = new Map(Object.entries(producaoPocosJson.pocos || {}).map(([nome, d]) => [nome, d.fpso]));
+  // producaoPocosMap/producaoPocosMesRef: mesmo snapshot de wellFpso acima,
+  // mas guardando o objeto {campo, oleoBbld, fpso, gasMm3d} inteiro — usado
+  // por buildWellRgoChart pra calcular RGO por poço (computeRGO).
+  const producaoPocosMap = producaoPocosJson.pocos || {};
+  const producaoPocosMesRef = producaoPocosJson.mesRef;
   const fpsoCapacidade = fpsoCapacidadeJson.capacidades || {};
-  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, wellFpso, fpsoCapacidade, pdData };
+  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, wellFpso, producaoPocosMap, producaoPocosMesRef, fpsoCapacidade, pdData };
 
   // Ordem: mesmo agrupamento por status de pocos.js/analises.js (Produção,
   // Exploração, Devolvidos), cada grupo alfabético.

@@ -1,15 +1,15 @@
-"""Gera data/producao_pocos.json — produção de óleo, injeção de água e
-injeção de gás por POÇO (não por campo), pro último mês disponível no
-arquivo.
+"""Gera data/producao_pocos.json — produção de óleo (+ gás associado, pro
+RGO), injeção de água e injeção de gás por POÇO (não por campo), pro
+último mês disponível no arquivo.
 
 Fonte: boletim de poços da ANP/BDEP — "Produção de poços" (dados abertos,
 fase de desenvolvimento e produção), um mês por poço/instalação, granularidade
 bem mais fina que o Boletim da Produção por campo já usado em data/producao.json
-(scripts/parse_producao.py). Usado pelos gráficos "Produção por poço",
-"Injeção de água por poço" e "Injeção de gás por poço" de campo.js (uma
-jazida compartilhada por vez, cor da barra por FPSO/instalação) — cada poço
-do boletim é OU produtor OU injetor num dado mês, nunca os dois ao mesmo
-tempo (nenhum caso misto observado na base).
+(scripts/parse_producao.py). Hoje usado só como consulta poço->FPSO/instalação
+e pro gráfico "RGO por poço" de campo.js (RGO calculado em JS a partir de
+oleoBbld+gasMm3d, ver computeRGO em shared.js) — cada poço do boletim é OU
+produtor OU injetor num dado mês, nunca os dois ao mesmo tempo (nenhum caso
+misto observado na base).
 
 Por que um arquivo à parte, e não plugado em data/producao.json: granularidade
 diferente (poço, não campo) e fonte diferente (boletim de poços, não o BMP
@@ -40,6 +40,8 @@ COL_POCO = 5
 COL_INSTALACAO = 7
 COL_OLEO = 8
 COL_COND = 9
+COL_GAS_ASSOC = 10
+COL_GAS_NAO_ASSOC = 11
 COL_INJ_GAS = 13
 COL_INJ_AGUA_SEC = 14
 COL_INJ_AGUA_DESCARTE = 15
@@ -138,10 +140,23 @@ def main(csv_path, out_path):
     dias_no_mes = monthrange(int(aaaa), int(mm))[1]
 
     somas_oleo = agrega(rows, ultimo_mes, lambda r: br_num(col(r, COL_OLEO)) + br_num(col(r, COL_COND)))
+    somas_gasprod = agrega(rows, ultimo_mes, lambda r: br_num(col(r, COL_GAS_ASSOC)) + br_num(col(r, COL_GAS_NAO_ASSOC)))
     somas_agua = agrega(rows, ultimo_mes, lambda r: br_num(col(r, COL_INJ_AGUA_SEC)) + br_num(col(r, COL_INJ_AGUA_DESCARTE)))
     somas_gas = agrega(rows, ultimo_mes, lambda r: br_num(col(r, COL_INJ_GAS)) + br_num(col(r, COL_INJ_CO2)) + br_num(col(r, COL_INJ_N2)))
 
     pocos = monta_saida(somas_oleo, dias_no_mes, M3_PARA_BBL, 'oleoBbld')
+    # Gás produzido (associado + não associado) — mesma unidade "mil m³/d"
+    # do gás por campo do boletim (ver nota de RGO em computeRGO, shared.js:
+    # "Mm³/d" aqui é "mil", não "mega"), confirmado batendo contra RGO
+    # conhecido de Búzios (~250-330 m³/m³) usando esse fator. Só entra no
+    # poço se ele também produziu óleo naquele mês — RGO de poço sem óleo
+    # não faz sentido, e produção sem gás nenhum simplesmente não ganha o
+    # campo (fica sem RGO, não com RGO=0 registrado à toa).
+    gas_por_poco = monta_saida(somas_gasprod, dias_no_mes, 1.0, 'gasMm3d')
+    for poco, d in pocos.items():
+        g = gas_por_poco.get(poco)
+        if g:
+            d['gasMm3d'] = g['gasMm3d']
     injetoresAgua = monta_saida(somas_agua, dias_no_mes, 1.0, 'aguaM3d')
     injetoresGas = monta_saida(somas_gas, dias_no_mes, 1.0, 'gasMm3d')
 
