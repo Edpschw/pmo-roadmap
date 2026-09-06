@@ -719,6 +719,12 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .analytics-histograms-grid .chart-card { margin-top: 0; }
 @media (min-width: 1000px) {
   .analytics-histograms-grid { grid-template-columns: 1fr 1fr; }
+  /* Cartão que precisa da largura das 2 colunas juntas (ver
+     buildFpsoProducaoInjecaoChart, analises.js — linha de FPSO já tem 2
+     barras lado a lado dentro dela, ficava espremida numa coluna só). Só
+     tem efeito a partir daqui: abaixo de 1000px já é 1 coluna só, span
+     de 2 não muda nada. */
+  .chart-card-span-2 { grid-column: 1 / -1; }
 }
 
 /* ---- KPI: linha de "stat tiles" ---- */

@@ -531,6 +531,11 @@ function buildGroupedFpsoChart(container, opts, keys, jazidaByKey, totalByKey, j
   });
 
   const card = chartCard(opts.title, opts.subtitle);
+  // Ocupa as 2 colunas do grid de histogramas (ver .chart-card-span-2 em
+  // style.css) — linha de FPSO já tem 2 barras lado a lado dentro dela
+  // (produtores/injetores, ver twoColumnFpsoRow), ficava espremida numa
+  // coluna só; abaixo de 1000px (grid já é 1 coluna) não muda nada.
+  card.classList.add('chart-card-span-2');
   const legend = document.createElement('div');
   legend.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:10px;font-size:12px;color:var(--text-muted)';
   for (const jazida of jazidaOrder) {
