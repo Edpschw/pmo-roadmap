@@ -33,6 +33,22 @@ const DATASETS = [
         gaps: findGaps(d.meses),
       };
     },
+    table: {
+      monthly: true,
+      monthsOf: (d) => d.meses,
+      columns: ['Campo', 'Óleo pré-sal (bbl/d)', 'Óleo pós-sal (bbl/d)', 'Gás pré-sal (Mm³/d)', 'Gás pós-sal (Mm³/d)', 'BOE pré-sal (boe/d)', 'BOE pós-sal (boe/d)', 'RGO pré-sal (m³/m³)'],
+      rowsFor(d, key) {
+        const mes = d.meses.find((m) => `${m.ano}-${m.mes}` === key);
+        if (!mes) return [];
+        return Object.entries(mes.campos).sort((a, b) => a[0].localeCompare(b[0], 'pt-BR')).map(([nome, v]) => [
+          nome,
+          fmtNum(v.oleoPreSalBbld), fmtNum(v.oleoPosSalBbld),
+          fmtNum(v.gasPreSalMm3d, { maximumFractionDigits: 1 }), fmtNum(v.gasPosSalMm3d, { maximumFractionDigits: 1 }),
+          fmtNum(v.boedPreSal), fmtNum(v.boedPosSal),
+          fmtNum(computeRGO(v.oleoPreSalBbld, v.gasPreSalMm3d)),
+        ]);
+      },
+    },
   },
   {
     path: 'data/producao_pocos_serie.json', label: 'Produção mensal por poço (óleo + gás)', noStore: true,
@@ -52,6 +68,21 @@ const DATASETS = [
         gaps: findGaps(d.meses),
       };
     },
+    table: {
+      monthly: true,
+      monthsOf: (d) => d.meses,
+      columns: ['Poço', 'Óleo (bbl/d)', 'Gás (Mm³/d)', 'RGO (m³/m³)'],
+      rowsFor(d, key) {
+        const mes = d.meses.find((m) => `${m.ano}-${m.mes}` === key);
+        if (!mes) return [];
+        return Object.entries(mes.pocos).sort((a, b) => a[0].localeCompare(b[0], 'pt-BR')).map(([nome, v]) => [
+          nome,
+          fmtNum(v.oleoBbld),
+          v.gasMm3d != null ? fmtNum(v.gasMm3d, { maximumFractionDigits: 1 }) : '—',
+          v.gasMm3d != null ? fmtNum(computeRGO(v.oleoBbld, v.gasMm3d)) : '—',
+        ]);
+      },
+    },
   },
   {
     path: 'data/producao_injecao.json', label: 'Injeção mensal de água/gás por campo', noStore: true,
@@ -64,6 +95,18 @@ const DATASETS = [
         periodo: periodoDe(d.meses),
         gaps: findGaps(d.meses),
       };
+    },
+    table: {
+      monthly: true,
+      monthsOf: (d) => d.meses,
+      columns: ['Campo', 'Água injetada (m³/d)', 'Gás injetado (Mil m³/d)'],
+      rowsFor(d, key) {
+        const mes = d.meses.find((m) => `${m.ano}-${m.mes}` === key);
+        if (!mes) return [];
+        return Object.entries(mes.campos).sort((a, b) => a[0].localeCompare(b[0], 'pt-BR')).map(([nome, v]) => [
+          nome, fmtNum(v.aguaInjM3d), fmtNum(v.gasInjMm3d, { maximumFractionDigits: 1 }),
+        ]);
+      },
     },
   },
   {
@@ -78,6 +121,27 @@ const DATASETS = [
         periodo: mensal.length ? periodoDe(mensal) : '—',
         gaps: mensal.length ? findGaps(mensal) : [],
       };
+    },
+    // Só o snapshot (produtores + injetores do mês mais recente, ver
+    // mesRef) — a série mensal (pocosMensal) tem o mesmo formato de poço-
+    // >{oleoBbld,gasMm3d} de data/producao_pocos_serie.json acima, já
+    // coberta por aquela tabela.
+    table: {
+      monthly: false,
+      columns: ['Poço', 'Tipo', 'Campo', 'FPSO', 'Óleo (bbl/d)', 'Gás (Mm³/d)', 'Água (m³/d)'],
+      rowsFor(d) {
+        const rows = [];
+        for (const [nome, v] of Object.entries(d.pocos || {})) {
+          rows.push([nome, 'Produtor', v.campo || '—', v.fpso || '—', fmtNum(v.oleoBbld), v.gasMm3d != null ? fmtNum(v.gasMm3d, { maximumFractionDigits: 1 }) : '—', '—']);
+        }
+        for (const [nome, v] of Object.entries(d.injetoresAgua || {})) {
+          rows.push([nome, 'Injetor água', v.campo || '—', v.fpso || '—', '—', '—', fmtNum(v.aguaM3d)]);
+        }
+        for (const [nome, v] of Object.entries(d.injetoresGas || {})) {
+          rows.push([nome, 'Injetor gás', v.campo || '—', v.fpso || '—', '—', fmtNum(v.gasMm3d, { maximumFractionDigits: 1 }), '—']);
+        }
+        return rows.sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
+      },
     },
   },
   {
@@ -96,6 +160,22 @@ const DATASETS = [
         extra: `${comCoord} de ${total} com coordenada, ${comData} de ${total} com data de conclusão registrada`,
       };
     },
+    table: {
+      monthly: false,
+      columns: ['Poço', 'Campo/Contrato', 'Operador', 'Situação', 'Categoria', 'Data conclusão', "Lâmina d'água (m)", 'Profundidade (m)'],
+      rowsFor(d) {
+        const rows = [];
+        for (const [campo, arr] of Object.entries(d.pocos || {})) {
+          for (const w of arr) {
+            rows.push([w.n, campo, w.op || '—', w.sit || '—', w.cat || '—', w.d || '—', w.lam != null ? fmtNum(w.lam) : '—', w.prof != null ? fmtNum(w.prof) : '—']);
+          }
+        }
+        for (const w of d.outros || []) {
+          rows.push([w.n, '(sem campo nomeado)', w.op || '—', w.sit || '—', w.cat || '—', w.d || '—', w.lam != null ? fmtNum(w.lam) : '—', w.prof != null ? fmtNum(w.prof) : '—']);
+        }
+        return rows.sort((a, b) => a[0].localeCompare(b[0], 'pt-BR'));
+      },
+    },
   },
   {
     path: 'data/planos_desenvolvimento.json', label: 'Sumários executivos de PD (STOIIP, tracts, profit oil)', noStore: false,
@@ -111,6 +191,21 @@ const DATASETS = [
         extra: `${comStoiip} de ${entries.length} com STOIIP, ${comTracts} com mais de 1 fatia (tracts)`,
       };
     },
+    table: {
+      monthly: false,
+      columns: ['Jazida/Campo', 'Situação', 'Descoberta', 'Comercialidade', 'Início produção', 'STOIIP óleo (MMbbl)', 'Empresas (participação)'],
+      rowsFor(d) {
+        return Object.entries(d).filter(([k]) => k !== '_fonte').sort((a, b) => a[0].localeCompare(b[0], 'pt-BR')).map(([nome, v]) => [
+          nome,
+          v.situacao || '—',
+          v.descoberta || '—',
+          v.comercialidade || '—',
+          v.inicioProducao || '—',
+          v.volumes && v.volumes.oleoInSituMMbbl != null ? fmtNum(v.volumes.oleoInSituMMbbl) : '—',
+          (v.participacao || []).map((p) => `${p.empresa} (${p.pct}%)`).join(', ') || '—',
+        ]);
+      },
+    },
   },
   {
     path: 'data/fpso_capacidade.json', label: 'Capacidade nominal por FPSO (curado à mão)', noStore: false,
@@ -122,11 +217,28 @@ const DATASETS = [
         gaps: [],
       };
     },
+    table: {
+      monthly: false,
+      columns: ['FPSO', 'Capacidade (bbl/d)', 'Obs.'],
+      rowsFor(d) {
+        return Object.entries(d.capacidades || {}).sort((a, b) => a[0].localeCompare(b[0], 'pt-BR')).map(([nome, v]) => [nome, fmtNum(v.bblD), v.obs || '—']);
+      },
+    },
   },
   {
     path: 'data/contratos.geojson', label: 'Polígonos dos 30 contratos rastreados', noStore: false,
     parse(d) {
       return { fonte: 'ANP — shapefiles públicos de blocos/contratos', registros: `${d.features.length} polígonos`, periodo: '—', gaps: [] };
+    },
+    table: {
+      monthly: false,
+      columns: ['Projeto', 'Fonte', 'Bacia', 'Operador', 'Rodada', 'Assinatura', 'Área (km²)'],
+      rowsFor(d) {
+        return d.features.map((f) => {
+          const p = f.properties;
+          return [p.projeto || '—', p.fonte || '—', p.bacia || '—', p.operador || '—', p.rodada || '—', p.assinatura || '—', p.area_km2 != null ? fmtNum(p.area_km2) : '—'];
+        });
+      },
     },
   },
   {
@@ -134,17 +246,37 @@ const DATASETS = [
     parse(d) {
       return { fonte: 'ANP — shapefiles públicos de campos de produção', registros: `${d.features.length} polígonos`, periodo: '—', gaps: [] };
     },
+    table: {
+      monthly: false,
+      columns: ['Nome', 'Bacia', 'Operador', 'Rodada', 'Etapa', 'Área (km²)'],
+      rowsFor(d) {
+        return d.features.map((f) => {
+          const p = f.properties;
+          return [p.nome || '—', p.bacia || '—', p.operador || '—', p.rodada || '—', p.etapa || '—', p.area_km2 != null ? fmtNum(p.area_km2) : '—'];
+        });
+      },
+    },
   },
   {
     path: 'data/bacias.geojson', label: 'Contorno das bacias sedimentares', noStore: false,
     parse(d) {
       return { fonte: 'ANP — shapefiles públicos de bacias', registros: `${d.features.length} polígonos`, periodo: '—', gaps: [] };
     },
+    table: {
+      monthly: false,
+      columns: ['Nome', 'Situação'],
+      rowsFor(d) { return d.features.map((f) => [f.properties.nome || '—', f.properties.situacao || '—']); },
+    },
   },
   {
     path: 'data/pre_sal_contorno.geojson', label: 'Contorno da área do pré-sal', noStore: false,
     parse(d) {
       return { fonte: 'ANP — shapefile público da área do pré-sal', registros: `${d.features.length} polígono(s)`, periodo: '—', gaps: [] };
+    },
+    table: {
+      monthly: false,
+      columns: ['Nome'],
+      rowsFor(d) { return d.features.map((f) => [f.properties.nome || '—']); },
     },
   },
 ];
@@ -253,6 +385,114 @@ function renderGapsSection(container, rows) {
   container.appendChild(card);
 }
 
+/* ------------------------------ Tabela de dados crus ------------------------- */
+// A tabela por trás de qualquer resumo acima — linha por linha, não só
+// contagem/período. Cada dataset com `table` (ver DATASETS) sabe montar suas
+// próprias colunas/linhas porque o "registro" varia por arquivo (mês, poço,
+// campo, feature de mapa...), igual ao parse() de cada um pro resumo.
+
+// Nenhum dataset hoje passa disso mesmo sem filtro (o maior é pocos.json,
+// ~950 linhas) — cap defensivo só pra não travar o navegador se um arquivo
+// crescer muito no futuro, não uma paginação de verdade.
+const RAW_TABLE_MAX_ROWS = 2000;
+
+function renderRawDataSection(container, files) {
+  const withTable = files.filter((f) => f.table);
+  if (!withTable.length) return;
+  const card = chartCard(
+    'Tabela de dados',
+    'A tabela crua por trás de qualquer resumo acima — escolha o arquivo (e o mês, quando o dado é mensal) pra ver linha por linha, sem precisar abrir o JSON.',
+  );
+  const controls = document.createElement('div');
+  controls.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px';
+
+  const dsSelect = document.createElement('select');
+  dsSelect.className = 'dados-select';
+  for (const f of withTable) {
+    const opt = document.createElement('option');
+    opt.value = f.path;
+    opt.textContent = f.label;
+    dsSelect.appendChild(opt);
+  }
+  const monthSelect = document.createElement('select');
+  monthSelect.className = 'dados-select';
+  monthSelect.hidden = true;
+  const searchInput = document.createElement('input');
+  searchInput.type = 'text';
+  searchInput.className = 'dados-search';
+  searchInput.placeholder = 'Filtrar linhas…';
+  const countNote = document.createElement('span');
+  countNote.className = 'muted';
+  countNote.style.cssText = 'font-size:11.5px;white-space:nowrap';
+  controls.append(dsSelect, monthSelect, searchInput, countNote);
+  card.appendChild(controls);
+  const tableWrap = document.createElement('div');
+  tableWrap.className = 'pocos-table-wrapper';
+  card.appendChild(tableWrap);
+  container.appendChild(card);
+
+  function currentFile() { return withTable.find((f) => f.path === dsSelect.value); }
+
+  // Refeito toda vez que o dataset muda — só datasets mensais mostram o
+  // seletor de mês; o mais recente vem selecionado por padrão (o caso de
+  // uso mais comum, "o que aconteceu no último mês").
+  function populateMonths() {
+    const t = currentFile().table;
+    if (!t.monthly) {
+      monthSelect.hidden = true;
+      monthSelect.innerHTML = '';
+      return;
+    }
+    const months = t.monthsOf(currentFile().data);
+    monthSelect.innerHTML = '';
+    for (const m of months) {
+      const opt = document.createElement('option');
+      opt.value = `${m.ano}-${m.mes}`;
+      opt.textContent = `${MES_ABREV[m.mes]}/${m.ano}`;
+      monthSelect.appendChild(opt);
+    }
+    monthSelect.value = `${months[months.length - 1].ano}-${months[months.length - 1].mes}`;
+    monthSelect.hidden = false;
+  }
+
+  function renderTable() {
+    const file = currentFile();
+    const t = file.table;
+    const rows = t.monthly ? t.rowsFor(file.data, monthSelect.value) : t.rowsFor(file.data);
+    const q = searchInput.value.trim().toLowerCase();
+    const filtered = q ? rows.filter((r) => r.some((c) => String(c).toLowerCase().includes(q))) : rows;
+    const shown = filtered.slice(0, RAW_TABLE_MAX_ROWS);
+    countNote.textContent = filtered.length > shown.length
+      ? `mostrando ${shown.length} de ${filtered.length}`
+      : `${filtered.length} linha${filtered.length === 1 ? '' : 's'}${q ? ` (de ${rows.length})` : ''}`;
+
+    const table = document.createElement('table');
+    table.className = 'data-table analytics-table';
+    table.innerHTML = `<thead><tr>${t.columns.map((c) => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>`;
+    const tbody = document.createElement('tbody');
+    if (!shown.length) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="${t.columns.length}" class="muted">Nenhuma linha ${q ? 'bate com o filtro' : 'neste mês'}.</td>`;
+      tbody.appendChild(tr);
+    }
+    for (const r of shown) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = r.map((c) => `<td>${escapeHtml(String(c))}</td>`).join('');
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    tableWrap.innerHTML = '';
+    tableWrap.appendChild(table);
+  }
+
+  dsSelect.addEventListener('change', () => { populateMonths(); renderTable(); });
+  monthSelect.addEventListener('change', renderTable);
+  searchInput.addEventListener('input', renderTable);
+
+  populateMonths();
+  renderTable();
+}
+
 /* ------------------------------ Campos — QC cruzado ------------------------- */
 
 // Uma linha por jazida conhecida em QUALQUER fonte (união, não interseção
@@ -359,7 +599,7 @@ async function init() {
       const size = blob.size;
       const data = JSON.parse(await blob.text());
       const parsed = ds.parse(data);
-      return { path: ds.path, label: ds.label, size, data, ...parsed };
+      return { path: ds.path, label: ds.label, size, data, table: ds.table, ...parsed };
     }));
   } catch (err) {
     console.error('Falha ao carregar dados', err);
@@ -384,6 +624,11 @@ async function init() {
   fontesSection.className = 'analytics-section';
   renderFontesTable(fontesSection, files);
   wrapper.appendChild(fontesSection);
+
+  const rawSection = document.createElement('section');
+  rawSection.className = 'analytics-section';
+  renderRawDataSection(rawSection, files);
+  wrapper.appendChild(rawSection);
 
   const gapsSection = document.createElement('section');
   gapsSection.className = 'analytics-section';

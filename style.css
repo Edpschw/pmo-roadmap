@@ -875,6 +875,17 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .analytics-table { min-width: 1300px; }
 .analytics-table-note { font-size: 11px; color: var(--text-faint); margin-top: 10px; line-height: 1.5; }
 
+/* ---------- Tabela de dados crus (dados.js) — só select/input do app, o ---------- */
+/* resto é tudo botão (.scale-btn/.btn-ghost) — precisa de estilo próprio. */
+.dados-select, .dados-search {
+  font-family: inherit; font-size: 12.5px; color: var(--text);
+  background: var(--panel); border: 1px solid var(--border-strong); border-radius: 7px;
+  padding: 6px 10px;
+}
+.dados-select { cursor: pointer; }
+.dados-search { flex: 1 1 160px; min-width: 140px; }
+.dados-search::placeholder { color: var(--text-faint); }
+
 /* ---------- Visão em poços (pocos.html) ---------- */
 .pocos-wrapper { flex: 1 1 auto; overflow: auto; padding: 0 20px 40px; }
 .pocos-content { max-width: 1180px; margin: 0 auto; }
