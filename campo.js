@@ -653,50 +653,84 @@ function buildWellProductionChart(container, wells, pocosSerieData, wellFpso, fp
 // acima: sem histórico, empilhar por mês não faz sentido aqui) — cor por
 // FPSO, mesmo critério de agrupamento/ordenação das outras visões "por
 // poço" desta página.
-function buildWellRgoChart(container, wells, producaoPocosMap, mesRef) {
-  const rows = [];
+// Uma linha (não empilhada — RGO não soma entre poços, diferente de óleo)
+// por poço, cor cíclica na ordem do RGO mais recente disponível (maior
+// primeiro), pra cada FPSO que produziu na jazida no período coberto por
+// data/producao_pocos.json.pocosMensal (ver scripts/build_producao_pocos.py
+// — janela rolante de poucos meses, não o histórico completo do poço).
+// Poço sem óleo E gás no mês simplesmente não entra naquele ponto (linha
+// corta ali, mesmo critério de buildSegments em shared.js), não vira RGO=0.
+function extractWellRgoSeries(pocosMensal, wellNames) {
+  const lastRgoByWell = new Map();
+  for (const m of pocosMensal) {
+    for (const [nome, d] of Object.entries(m.pocos)) {
+      if (!wellNames.has(nome) || !d.gasMm3d || !d.oleoBbld) continue;
+      lastRgoByWell.set(nome, computeRGO(d.oleoBbld, d.gasMm3d));
+    }
+  }
+  if (!lastRgoByWell.size) return null;
+  const order = [...lastRgoByWell.keys()].sort((a, b) => lastRgoByWell.get(b) - lastRgoByWell.get(a));
+  const colorByWell = new Map(order.map((nome, i) => [nome, PALETTE[i % PALETTE.length]]));
+
+  return pocosMensal.map((m) => {
+    const rows = [];
+    for (const nome of order) {
+      const d = m.pocos[nome];
+      if (!d || !d.gasMm3d || !d.oleoBbld) continue;
+      rows.push({ name: nome, color: colorByWell.get(nome), isContract: true, rgo: computeRGO(d.oleoBbld, d.gasMm3d) });
+    }
+    return { ano: m.ano, mes: m.mes, rows };
+  });
+}
+
+function buildWellRgoChart(container, wells, pocosMensal, wellFpso, selectWell) {
+  if (!pocosMensal.length) return null;
+  const byFpso = new Map();
   for (const w of wells) {
-    const p = producaoPocosMap[w.n];
-    if (!p || !p.gasMm3d || !p.oleoBbld) continue;
-    rows.push({ name: w.n, rgo: computeRGO(p.oleoBbld, p.gasMm3d), fpso: p.fpso || 'Sem instalação registrada' });
+    const fpso = wellFpso.get(w.n) || 'Outros poços';
+    if (!byFpso.has(fpso)) byFpso.set(fpso, new Set());
+    byFpso.get(fpso).add(w.n);
   }
-  if (!rows.length) return;
-  const max = Math.max(...rows.map((r) => r.rgo));
+  // Ordem por nº de poços com RGO no período (não há um "total" de RGO
+  // que faça sentido somar entre instalações) — "Outros poços" por
+  // último, mesmo critério do gráfico de produção acima.
+  const fpsoOrder = [...byFpso.keys()].filter((f) => f !== 'Outros poços').sort((a, b) => byFpso.get(b).size - byFpso.get(a).size);
+  if (byFpso.has('Outros poços')) fpsoOrder.push('Outros poços');
 
-  const totalByFpso = new Map();
-  for (const r of rows) totalByFpso.set(r.fpso, (totalByFpso.get(r.fpso) || 0) + r.rgo);
-  const fpsoOrder = [...totalByFpso.keys()].sort((a, b) => totalByFpso.get(b) - totalByFpso.get(a));
-  const colorByFpso = new Map(fpsoOrder.map((f, i) => [f, PALETTE[i % PALETTE.length]]));
-  const fpsoIndex = new Map(fpsoOrder.map((f, i) => [f, i]));
-  rows.sort((a, b) => fpsoIndex.get(a.fpso) - fpsoIndex.get(b.fpso) || b.rgo - a.rgo);
+  const first = pocosMensal[0];
+  const last = pocosMensal[pocosMensal.length - 1];
+  const periodo = `${MESES_PT[first.mes]}/${first.ano} a ${MESES_PT[last.mes]}/${last.ano}`;
 
-  const [ano, mes] = mesRef.split('-').map(Number);
-  const card = chartCard(
-    'RGO por poço',
-    `Razão Gás-Óleo (m³ de gás por m³ de óleo produzido no mês), ${MESES_PT[mes]}/${ano} — boletim de poços da ANP, todos os poços da jazida compartilhada (mesmo critério do mini-mapa e do gráfico de produção acima) com óleo e gás produzidos no mês. Cor da barra = FPSO/instalação.`,
-  );
-  const legend = document.createElement('div');
-  legend.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:10px;font-size:12px;color:var(--text-muted)';
+  const chartControllers = [];
+  let any = false;
   for (const fpso of fpsoOrder) {
-    const item = document.createElement('span');
-    item.style.cssText = 'display:inline-flex;align-items:center;gap:6px';
-    item.innerHTML = `<span style="width:9px;height:9px;border-radius:2px;background:${colorByFpso.get(fpso)};display:inline-block;flex:none"></span>${escapeHtml(fpso)}`;
-    legend.appendChild(item);
+    const names = byFpso.get(fpso);
+    const series = extractWellRgoSeries(pocosMensal, names);
+    if (!series) continue;
+    any = true;
+    const card = chartCard(
+      `RGO por poço — ${fpso}`,
+      `Razão Gás-Óleo (m³ de gás por m³ de óleo produzido no mês) por poço produtor, uma linha por poço (não empilha — RGO não é aditivo entre poços, diferente de óleo). ${periodo} — boletim de poços da ANP, só poços com óleo e gás produzidos no mês; a janela de meses disponível é a mesma do arquivo mais recente enviado, não o histórico completo do poço. Clique num poço na legenda pra destacá-lo aqui e no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.`,
+    );
+    const controls = document.createElement('div');
+    controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+    const reset = document.createElement('button');
+    reset.type = 'button';
+    reset.className = 'btn-ghost';
+    reset.textContent = 'Ver tudo';
+    controls.appendChild(reset);
+    card.insertBefore(controls, card.querySelector('h3').nextSibling);
+    const chart = createLineChart(card, series, null, 'rgo', null, false, selectWell);
+    reset.addEventListener('click', () => chart.resetZoom());
+    chartControllers.push(chart);
+    container.appendChild(card);
   }
-  card.appendChild(legend);
-
-  const list = document.createElement('div');
-  list.className = 'hbar-list';
-  for (const r of rows) {
-    list.appendChild(barRow(
-      r.name, (r.rgo / max) * 100, UNITS.rgo.fmt(r.rgo), colorByFpso.get(r.fpso),
-      () => `<strong>${escapeHtml(r.name)}</strong>`
-        + tooltipRowHTML('FPSO/instalação', r.fpso)
-        + tooltipRowHTML('RGO', UNITS.rgo.fmt(r.rgo)),
-    ));
-  }
-  card.appendChild(list);
-  container.appendChild(card);
+  if (!any) return null;
+  return {
+    setSelectedWell(name) {
+      for (const chart of chartControllers) chart.setHighlight(name);
+    },
+  };
 }
 
 /* --------------------- Injeção no campo, ao longo do tempo ----------------- */
@@ -1202,11 +1236,13 @@ function buildProjectPanel(project, ctx) {
   // sobre a variável (não o valor) resolve certo.
   let mapInfo = null;
   let wellChartInfo = null;
+  let rgoChartInfo = null;
   let selectedWell = null;
   function selectWell(name) {
     selectedWell = selectedWell === name ? null : name;
     if (mapInfo) mapInfo.setSelectedWell(selectedWell);
     if (wellChartInfo) wellChartInfo.setSelectedWell(selectedWell);
+    if (rgoChartInfo) rgoChartInfo.setSelectedWell(selectedWell);
   }
   mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells, ctx.wellFpso, selectWell);
   panel._miniMap = mapInfo.map;
@@ -1258,7 +1294,7 @@ function buildProjectPanel(project, ctx) {
   // campo.
   if (isSharedJazida) {
     wellChartInfo = buildWellProductionChart(chartsCol, wells, ctx.producaoPocosSerie, ctx.wellFpso, ctx.fpsoCapacidade, selectWell);
-    buildWellRgoChart(chartsCol, wells, ctx.producaoPocosMap, ctx.producaoPocosMesRef);
+    rgoChartInfo = buildWellRgoChart(chartsCol, wells, ctx.producaoPocosMensal, ctx.wellFpso, selectWell);
   }
 
   const base = PROJECT_FIELD_BASE[project.name];
@@ -1569,13 +1605,14 @@ async function init() {
   // wellFpso: poço -> FPSO/instalação, só do mês mais recente do boletim
   // de poços (producaoPocosJson.pocos) — ver nota em buildWellProductionChart.
   const wellFpso = new Map(Object.entries(producaoPocosJson.pocos || {}).map(([nome, d]) => [nome, d.fpso]));
-  // producaoPocosMap/producaoPocosMesRef: mesmo snapshot de wellFpso acima,
-  // mas guardando o objeto {campo, oleoBbld, fpso, gasMm3d} inteiro — usado
-  // por buildWellRgoChart pra calcular RGO por poço (computeRGO).
-  const producaoPocosMap = producaoPocosJson.pocos || {};
-  const producaoPocosMesRef = producaoPocosJson.mesRef;
+  // producaoPocosMensal: série de todos os meses do boletim de poços (não
+  // só o último) com óleo+gás por poço — ver scripts/build_producao_pocos.py
+  // — usada por buildWellRgoChart pra calcular RGO por poço mês a mês
+  // (computeRGO). FPSO continua vindo só de wellFpso (snapshot acima), não
+  // duplicado em cada mês desta série.
+  const producaoPocosMensal = producaoPocosJson.pocosMensal || [];
   const fpsoCapacidade = fpsoCapacidadeJson.capacidades || {};
-  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, wellFpso, producaoPocosMap, producaoPocosMesRef, fpsoCapacidade, pdData };
+  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, wellFpso, producaoPocosMensal, fpsoCapacidade, pdData };
 
   // Ordem: mesmo agrupamento por status de pocos.js/analises.js (Produção,
   // Exploração, Devolvidos), cada grupo alfabético.
