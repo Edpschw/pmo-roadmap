@@ -643,23 +643,31 @@ function buildWellProductionChart(container, wells, pocosSerieData, wellFpso, fp
 }
 
 /* -------------------------------- RGO por poço ------------------------------ */
-// Snapshot de um mês só (não série histórica como o gráfico acima) — vem
-// direto do boletim de poços da ANP (data/producao_pocos.json, ver
-// scripts/build_producao_pocos.py), a mesma fonte que já dá o FPSO de cada
-// poço. RGO calculado aqui com computeRGO (shared.js), mesma fórmula do
-// RGO por campo — só entra poço com óleo E gás produzido no mês (RGO sem
-// os dois lados não significa nada). Barra horizontal, uma só pra todos
-// os FPSOs (não uma série por instalação como o gráfico de produção
-// acima: sem histórico, empilhar por mês não faz sentido aqui) — cor por
-// FPSO, mesmo critério de agrupamento/ordenação das outras visões "por
-// poço" desta página.
-// Uma linha (não empilhada — RGO não soma entre poços, diferente de óleo)
-// por poço, cor cíclica na ordem do RGO mais recente disponível (maior
-// primeiro), pra cada FPSO que produziu na jazida no período coberto por
-// data/producao_pocos.json.pocosMensal (ver scripts/build_producao_pocos.py
-// — janela rolante de poucos meses, não o histórico completo do poço).
-// Poço sem óleo E gás no mês simplesmente não entra naquele ponto (linha
-// corta ali, mesmo critério de buildSegments em shared.js), não vira RGO=0.
+// Série mensal (pocosMensal, montada em init() — ver pocosMensalPorChave)
+// que UNE duas fontes com janelas diferentes e SEM sobreposição hoje:
+//   - out/2014-jun/2025: dado aberto "Produção por Zona" da ANP, óleo E
+//     gás por poço/mês (ver scripts/parse_producao_pocos_serie.py) — a
+//     partir de jul/2025 esse CSV para de trazer a coluna "Pré-sal",
+//     mesmo corte documentado em parse_producao_zona.py.
+//   - jan/2026 em diante: boletim de poços da ANP/BDEP (data/
+//     producao_pocos.json.pocosMensal, ver scripts/build_producao_pocos.py)
+//     — janela rolante de poucos meses (o CSV que a ANP disponibiliza não
+//     é o histórico completo, só os meses mais recentes).
+// Entre as duas (jul/2025-dez/2025 hoje) não há RGO por poço disponível
+// em nenhuma das duas fontes — o mês simplesmente não existe no array,
+// o que comprime visualmente esse intervalo no eixo x (mesmo tratamento
+// que o app já dá a um mês sem boletim no meio de uma série, ver
+// buildEvolutionSection em producao.js) em vez de abrir um vão largo —
+// os rótulos de mês continuam corretos, só o espaçamento entre eles não
+// é proporcional ao tempo real quando atravessa esse buraco.
+// RGO calculado aqui com computeRGO (shared.js), mesma fórmula do RGO por
+// campo — só entra poço com óleo E gás produzido no mês (RGO sem os dois
+// lados não significa nada). Uma linha (não empilhada — RGO não soma
+// entre poços, diferente de óleo) por poço, cor cíclica na ordem do RGO
+// mais recente disponível (maior primeiro), agrupado por FPSO (mesmo
+// critério das outras visões "por poço" desta página). Poço sem óleo E
+// gás no mês simplesmente não entra naquele ponto (linha corta ali,
+// mesmo critério de buildSegments em shared.js), não vira RGO=0.
 function extractWellRgoSeries(pocosMensal, wellNames) {
   const lastRgoByWell = new Map();
   for (const m of pocosMensal) {
@@ -710,7 +718,7 @@ function buildWellRgoChart(container, wells, pocosMensal, wellFpso, selectWell) 
     any = true;
     const card = chartCard(
       `RGO por poço — ${fpso}`,
-      `Razão Gás-Óleo (m³ de gás por m³ de óleo produzido no mês) por poço produtor, uma linha por poço (não empilha — RGO não é aditivo entre poços, diferente de óleo). ${periodo} — boletim de poços da ANP, só poços com óleo e gás produzidos no mês; a janela de meses disponível é a mesma do arquivo mais recente enviado, não o histórico completo do poço. Clique num poço na legenda pra destacá-lo aqui e no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.`,
+      `Razão Gás-Óleo (m³ de gás por m³ de óleo produzido no mês) por poço produtor, uma linha por poço (não empilha — RGO não é aditivo entre poços, diferente de óleo). ${periodo} — só poços com óleo e gás produzidos no mês; out/2014 a jun/2025 vem do dado aberto "Produção por Zona" da ANP, jan/2026 em diante do boletim de poços (janela rolante recente, não o histórico completo); sem cobertura no meio (jul-dez/2025 hoje) por nenhuma das duas fontes. Clique num poço na legenda pra destacá-lo aqui e no mini-mapa; role o mouse pra zoom, arraste pra mover a janela.`,
     );
     const controls = document.createElement('div');
     controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
@@ -1605,12 +1613,22 @@ async function init() {
   // wellFpso: poço -> FPSO/instalação, só do mês mais recente do boletim
   // de poços (producaoPocosJson.pocos) — ver nota em buildWellProductionChart.
   const wellFpso = new Map(Object.entries(producaoPocosJson.pocos || {}).map(([nome, d]) => [nome, d.fpso]));
-  // producaoPocosMensal: série de todos os meses do boletim de poços (não
-  // só o último) com óleo+gás por poço — ver scripts/build_producao_pocos.py
-  // — usada por buildWellRgoChart pra calcular RGO por poço mês a mês
-  // (computeRGO). FPSO continua vindo só de wellFpso (snapshot acima), não
+  // producaoPocosMensal: série de todos os meses com óleo+gás por poço,
+  // usada por buildWellRgoChart pra calcular RGO por poço mês a mês
+  // (computeRGO) — une DUAS fontes, sem sobreposição hoje: o dado aberto
+  // "Produção por Zona" (producaoPocosSerieJson.meses, out/2014-jun/2025 —
+  // mesma base de ctx.producaoPocosSerie acima, mas agora com gasMm3d
+  // também, ver scripts/parse_producao_pocos_serie.py) e o boletim de
+  // poços da ANP (producaoPocosJson.pocosMensal, janela rolante recente —
+  // hoje jan-jul/2026, ver scripts/build_producao_pocos.py). Um mês
+  // presente nos dois (não acontece na prática, as janelas não se tocam)
+  // fica com o do boletim de poços, por Map.set sobrescrever na 2ª
+  // passada. FPSO continua vindo só de wellFpso (snapshot acima), não
   // duplicado em cada mês desta série.
-  const producaoPocosMensal = producaoPocosJson.pocosMensal || [];
+  const pocosMensalPorChave = new Map();
+  for (const m of producaoPocosSerieJson.meses || []) pocosMensalPorChave.set(`${m.ano}-${m.mes}`, m);
+  for (const m of producaoPocosJson.pocosMensal || []) pocosMensalPorChave.set(`${m.ano}-${m.mes}`, m);
+  const producaoPocosMensal = [...pocosMensalPorChave.values()].sort((a, b) => a.ano - b.ano || a.mes - b.mes);
   const fpsoCapacidade = fpsoCapacidadeJson.capacidades || {};
   const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, wellFpso, producaoPocosMensal, fpsoCapacidade, pdData };
 
