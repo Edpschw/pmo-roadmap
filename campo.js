@@ -33,6 +33,7 @@ const PRODUCAO_INJECAO_URL = 'data/producao_injecao.json';
 const PRODUCAO_POCOS_URL = 'data/producao_pocos.json';
 const FPSO_CAPACIDADE_URL = 'data/fpso_capacidade.json';
 const FPSO_POSICOES_URL = 'data/fpso_posicoes.json';
+const RESERVAS_BAR_URL = 'data/reservas_bar.json';
 const PD_URL = 'data/planos_desenvolvimento.json';
 
 const GROUP_BADGES = {
@@ -862,6 +863,96 @@ function buildFieldInjectionChart(container, injecaoData, base, color) {
   container.appendChild(card);
 }
 
+/* --------------------------- Reservas (VOIP), por ano ---------------------- */
+// data/reservas_bar.json (ver scripts/parse_reservas_bar.py) — Boletim Anual
+// de Reservas da ANP, um snapshot por ano (não mensal, diferente de todo
+// resto desta página). Mesmo critério de soma por substring de
+// PROJECT_FIELD_BASE do gráfico de produção/injeção acima. IMPORTANTE: VOIP
+// é o volume ORIGINAL in place (antes de qualquer produção), não a reserva
+// 1P/2P/3P — essa a ANP só publica consolidada no Painel Dinâmico
+// interativo, não numa planilha (ver nota grande no topo do script).
+const RESERVAS_LINE_COLOR = '#c17817';
+const RESERVAS_COMBO_MARGIN = { top: 16, right: 66, bottom: 34, left: 68 };
+const BBL_PER_MMBBL = 1e6;
+
+function extractReservasSeries(reservasBarJson, base) {
+  return reservasBarJson.anos.map((a) => {
+    let voip = 0;
+    let acum = 0;
+    for (const [nome, d] of Object.entries(a.campos)) {
+      if (!nome.includes(base)) continue;
+      voip += d.voipBbl;
+      acum += d.acumOleoBbl;
+    }
+    return { ano: a.ano, voipMMbbl: voip / BBL_PER_MMBBL, acumMMbbl: acum / BBL_PER_MMBBL };
+  });
+}
+
+// Estático (só 1 ponto por ano, sem zoom/pan precisa) — mesma técnica de
+// eixo duplo de buildComboChart acima, mas eixo X aqui é o ano puro (sem
+// compressão de mês) e as duas curvas são VOIP (esquerda) e produção
+// acumulada (direita, sempre bem menor que VOIP — por isso eixo próprio).
+function buildReservasChart(container, series, projectColor) {
+  const n = series.length;
+  const plotW = LINE_W - RESERVAS_COMBO_MARGIN.left - RESERVAS_COMBO_MARGIN.right;
+  const plotH = LINE_H - RESERVAS_COMBO_MARGIN.top - RESERVAS_COMBO_MARGIN.bottom;
+  const xAt = (i) => RESERVAS_COMBO_MARGIN.left + (n <= 1 ? plotW / 2 : (i / (n - 1)) * plotW);
+
+  const voipMax = niceMaxFromLastValue(series.length ? series[series.length - 1].voipMMbbl : 0);
+  const acumMax = niceMaxFromLastValue(series.length ? series[series.length - 1].acumMMbbl : 0);
+  const yVoipAt = (v) => RESERVAS_COMBO_MARGIN.top + plotH - (v / voipMax) * plotH;
+  const yAcumAt = (v) => RESERVAS_COMBO_MARGIN.top + plotH - (v / acumMax) * plotH;
+
+  const yTicks = 5;
+  let gridSvg = '';
+  for (let i = 0; i <= yTicks; i++) {
+    const voipV = (voipMax / yTicks) * i;
+    const acumV = (acumMax / yTicks) * i;
+    const y = yVoipAt(voipV);
+    gridSvg += `<line x1="${RESERVAS_COMBO_MARGIN.left}" y1="${y}" x2="${LINE_W - RESERVAS_COMBO_MARGIN.right}" y2="${y}" stroke="var(--border)" stroke-width="1" />`;
+    gridSvg += `<text x="${RESERVAS_COMBO_MARGIN.left - 10}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:${projectColor}">${fmtNum(voipV)}</text>`;
+    gridSvg += `<text x="${LINE_W - RESERVAS_COMBO_MARGIN.right + 10}" y="${y + 4}" text-anchor="start" font-size="11" style="fill:${RESERVAS_LINE_COLOR}">${fmtNum(acumV)}</text>`;
+  }
+
+  let xLabelsSvg = '';
+  for (let i = 0; i < n; i++) {
+    const x = xAt(i);
+    xLabelsSvg += `<text x="${x}" y="${RESERVAS_COMBO_MARGIN.top + plotH + 18}" text-anchor="middle" font-size="11" style="fill:var(--text-muted)">${series[i].ano}</text>`;
+  }
+
+  function lineSvg(key, yAtFn, color) {
+    const pts = series.map((d, i) => `${xAt(i)},${yAtFn(d[key])}`);
+    return `<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />`
+      + pts.map((p) => { const [px, py] = p.split(','); return `<circle cx="${px}" cy="${py}" r="2.6" fill="${color}" />`; }).join('');
+  }
+
+  const axisSvg = `<line x1="${RESERVAS_COMBO_MARGIN.left}" y1="${RESERVAS_COMBO_MARGIN.top + plotH}" x2="${LINE_W - RESERVAS_COMBO_MARGIN.right}" y2="${RESERVAS_COMBO_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
+
+  const svgWrap = document.createElement('div');
+  svgWrap.className = 'line-chart-wrap';
+  svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${lineSvg('voipMMbbl', yVoipAt, projectColor)}${lineSvg('acumMMbbl', yAcumAt, RESERVAS_LINE_COLOR)}</svg>`;
+  container.appendChild(svgWrap);
+
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--text-muted)';
+  legend.innerHTML = `
+    <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;height:2px;background:${projectColor};display:inline-block"></span>VOIP (MMbbl, eixo esquerdo)</span>
+    <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;height:2px;background:${RESERVAS_LINE_COLOR};display:inline-block"></span>Produção acumulada (MMbbl, eixo direito)</span>
+  `;
+  container.appendChild(legend);
+}
+
+function buildReservasCard(container, reservasBarJson, base, projectColor) {
+  const series = extractReservasSeries(reservasBarJson, base);
+  if (!series.some((s) => s.voipMMbbl > 1e-9)) return;
+  const card = chartCard(
+    'Reservas — volume original in place (VOIP)',
+    `Volume original de óleo in place (VOIP, antes de qualquer produção) e produção acumulada declarados pela ANP no Boletim Anual de Reservas, ${series[0].ano}–${series[series.length - 1].ano} — não é a reserva 1P/2P/3P remanescente (essa só no Painel Dinâmico de Recursos e Reservas da ANP, fora deste app). Um ponto por ano, sem zoom (só ${series.length} pontos).`,
+  );
+  buildReservasChart(card, series, projectColor);
+  container.appendChild(card);
+}
+
 /* -------------------------------- Mini-roadmap ------------------------------ */
 // Recorte do Roadmap principal (index.html/app.js) pra um projeto só —
 // mesmos dados (project.workstreams), mesma linguagem visual (reaproveita
@@ -1447,6 +1538,7 @@ function buildProjectPanel(project, ctx) {
   chartsCol.appendChild(comboCard);
 
   buildFieldInjectionChart(chartsCol, ctx.producaoInjecao, base, project.color);
+  buildReservasCard(chartsCol, ctx.reservasBar, base, project.color);
 
   panel.dataset.ready = '1';
   return panel;
@@ -1597,8 +1689,9 @@ async function init() {
   let producaoPocosJson = null;
   let fpsoCapacidadeJson = null;
   let fpsoPosicoesJson = null;
+  let reservasBarJson = null;
   try {
-    [geojson, presalGeojson, pocosJson, producaoData, pdData, producaoPocosSerieJson, producaoInjecaoJson, producaoPocosJson, fpsoCapacidadeJson, fpsoPosicoesJson] = await Promise.all([
+    [geojson, presalGeojson, pocosJson, producaoData, pdData, producaoPocosSerieJson, producaoInjecaoJson, producaoPocosJson, fpsoCapacidadeJson, fpsoPosicoesJson, reservasBarJson] = await Promise.all([
       fetch(GEOJSON_URL).then((r) => r.json()),
       fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
       fetch(POCOS_URL).then((r) => r.json()),
@@ -1630,6 +1723,10 @@ async function init() {
       // desta lista); cobre só quem o painel já lista como "em operação",
       // não muda sem edição manual, sem no-store.
       fetch(FPSO_POSICOES_URL).then((r) => r.json()),
+      // VOIP/produção acumulada por ano (Boletim Anual de Reservas da ANP,
+      // ver scripts/parse_reservas_bar.py) — atualiza uma vez por ano
+      // (quando a ANP publica o BAR seguinte), sem no-store.
+      fetch(RESERVAS_BAR_URL).then((r) => r.json()),
     ]);
   } catch (err) {
     console.error('Falha ao carregar dados de campo', err);
@@ -1711,7 +1808,7 @@ async function init() {
   const producaoPocosMensal = [...pocosMensalPorChave.values()].sort((a, b) => a.ano - b.ano || a.mes - b.mes);
   const fpsoCapacidade = fpsoCapacidadeJson.capacidades || {};
   const fpsoPosicoes = fpsoPosicoesJson.posicoes || {};
-  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, wellFpso, producaoPocosMensal, fpsoCapacidade, fpsoPosicoes, pdData };
+  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, wellFpso, producaoPocosMensal, fpsoCapacidade, fpsoPosicoes, reservasBar: reservasBarJson, pdData };
 
   // Ordem: mesmo agrupamento por status de pocos.js/analises.js (Produção,
   // Exploração, Devolvidos), cada grupo alfabético.

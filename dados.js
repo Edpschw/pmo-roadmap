@@ -244,6 +244,36 @@ const DATASETS = [
     },
   },
   {
+    path: 'data/reservas_bar.json', label: 'VOIP e produção acumulada por campo (BAR/ANP)', noStore: false,
+    parse(d) {
+      const campos = new Set();
+      for (const a of d.anos) for (const nome of Object.keys(a.campos)) campos.add(nome);
+      return {
+        fonte: (d.fonte && d.fonte.nome) || '—',
+        registros: `${d.anos.length} anos, ${campos.size} campos/sub-áreas distintos`,
+        periodo: d.anos.length ? `${d.anos[0].ano} – ${d.anos[d.anos.length - 1].ano}` : '—',
+        gaps: [],
+      };
+    },
+    table: {
+      yearly: true,
+      anosOf(d) { return d.anos.map((a) => a.ano); },
+      columns: ['Campo/sub-área', 'VOIP (MMbbl)', 'VGIP (Bm³)', 'Óleo acumulado (MMbbl)', 'Gás acumulado (Bm³)', 'Situação'],
+      rowsFor(d, ano) {
+        const entry = d.anos.find((a) => String(a.ano) === String(ano));
+        if (!entry) return [];
+        return Object.entries(entry.campos).sort((a, b) => a[0].localeCompare(b[0], 'pt-BR')).map(([nome, v]) => [
+          nome,
+          fmtNum(v.voipBbl / 1e6),
+          fmtNum(v.vgipM3 / 1e9, { maximumFractionDigits: 2 }),
+          fmtNum(v.acumOleoBbl / 1e6, { maximumFractionDigits: 1 }),
+          fmtNum(v.acumGasM3 / 1e9, { maximumFractionDigits: 2 }),
+          v.situacao || '—',
+        ]);
+      },
+    },
+  },
+  {
     path: 'data/contratos.geojson', label: 'Polígonos dos 30 contratos rastreados', noStore: false,
     parse(d) {
       return { fonte: 'ANP — shapefiles públicos de blocos/contratos', registros: `${d.features.length} polígonos`, periodo: '—', gaps: [] };
@@ -451,32 +481,45 @@ function renderRawDataSection(container, files) {
 
   function currentFile() { return withTable.find((f) => f.path === dsSelect.value); }
 
-  // Refeito toda vez que o dataset muda — só datasets mensais mostram o
-  // seletor de mês; o mais recente vem selecionado por padrão (o caso de
-  // uso mais comum, "o que aconteceu no último mês").
+  // Refeito toda vez que o dataset muda — só datasets mensais/anuais
+  // mostram o seletor de período; o mais recente vem selecionado por
+  // padrão (o caso de uso mais comum, "o que aconteceu no último período").
+  // yearly (BAR da ANP, ver reservas_bar.json) é mais raro que monthly
+  // (todo o resto) — mesmo seletor, só troca o rótulo/valor da opção.
   function populateMonths() {
     const t = currentFile().table;
-    if (!t.monthly) {
+    if (!t.monthly && !t.yearly) {
       monthSelect.hidden = true;
       monthSelect.innerHTML = '';
       return;
     }
-    const months = t.monthsOf(currentFile().data);
     monthSelect.innerHTML = '';
-    for (const m of months) {
-      const opt = document.createElement('option');
-      opt.value = `${m.ano}-${m.mes}`;
-      opt.textContent = `${MES_ABREV[m.mes]}/${m.ano}`;
-      monthSelect.appendChild(opt);
+    if (t.yearly) {
+      const anos = t.anosOf(currentFile().data);
+      for (const ano of anos) {
+        const opt = document.createElement('option');
+        opt.value = String(ano);
+        opt.textContent = String(ano);
+        monthSelect.appendChild(opt);
+      }
+      monthSelect.value = String(anos[anos.length - 1]);
+    } else {
+      const months = t.monthsOf(currentFile().data);
+      for (const m of months) {
+        const opt = document.createElement('option');
+        opt.value = `${m.ano}-${m.mes}`;
+        opt.textContent = `${MES_ABREV[m.mes]}/${m.ano}`;
+        monthSelect.appendChild(opt);
+      }
+      monthSelect.value = `${months[months.length - 1].ano}-${months[months.length - 1].mes}`;
     }
-    monthSelect.value = `${months[months.length - 1].ano}-${months[months.length - 1].mes}`;
     monthSelect.hidden = false;
   }
 
   function renderTable() {
     const file = currentFile();
     const t = file.table;
-    const rows = t.monthly ? t.rowsFor(file.data, monthSelect.value) : t.rowsFor(file.data);
+    const rows = (t.monthly || t.yearly) ? t.rowsFor(file.data, monthSelect.value) : t.rowsFor(file.data);
     const q = searchInput.value.trim().toLowerCase();
     const filtered = q ? rows.filter((r) => r.some((c) => String(c).toLowerCase().includes(q))) : rows;
     const shown = filtered.slice(0, RAW_TABLE_MAX_ROWS);
