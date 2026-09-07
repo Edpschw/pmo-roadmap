@@ -248,9 +248,9 @@ function buildMiniMap(container, project, jazidaFeatures, wells, wellFpso, fpsoP
   }
 
   // Marcador de FPSO — data/fpso_posicoes.json (painel Power BI da ANP,
-  // ver fonte no arquivo) tem a posição REAL do casco pra quem ele já
-  // lista como "em operação"; quem não está lá ainda (Atapu P-70/P-71,
-  // Búzios P-74/75/76 — FPSOs mais novos, ver nota no arquivo) cai no
+  // ver fonte no arquivo) tem a posição REAL do casco de cada instalação
+  // já listada nesse painel; quem não está lá (nenhum dos 7 contratos de
+  // produção rastreados fica de fora hoje, ver o próprio arquivo) cai no
   // fallback de sempre: centroide dos poços DESTA jazida que pertencem a
   // cada instalação (wellFpso, mesma consulta poço->FPSO do gráfico
   // "Produção por poço" — ver init()), mais confiável que estimar/lembrar

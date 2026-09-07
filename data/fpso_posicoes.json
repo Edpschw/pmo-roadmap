@@ -1,5 +1,5 @@
 {
-  "fonte": "ANP — painel Power BI público \"Unidades de Produção Marítimas em Operação\" (geoposicionamento + capacidade nominal declarada por instalação). Cobre só as instalações que o painel lista como \"em operação\" no momento da consulta (06/09/2026) — Atapu (P-70/P-71) e Búzios P-74/P-75/P-76 não aparecem nele, provavelmente por ainda não estarem classificadas assim no cadastro da ANP.",
+  "fonte": "ANP — painel Power BI público \"Unidades de Produção Marítimas em Operação\" (geoposicionamento + capacidade nominal declarada por instalação), consultado em 06/09/2026. Extração inicial tinha rolado a lista alfabética (por NOME DA INSTALAÇÃO) e pulado P-70/P-71/P-74/P-75/P-76 num salto de virtualização da tabela — reordenando por SIGLA DA INSTALAÇÃO deu pra achar essas 5 linhas, que de fato existem no painel (Atapu e Itapu incluídos).",
   "posicoes": {
     "FPSO Alexandre de Gusmão": { "lat": -24.55964917, "lon": -42.18826083, "capOleoBbld": 225000, "capGasMilM3d": 15000 },
     "FPSO Guanabara": { "lat": -24.58365556, "lon": -42.25626667, "capOleoBbld": 190000, "capGasMilM3d": 12480 },
@@ -8,6 +8,11 @@
     "FPSO Sepetiba": { "lat": -24.63081444, "lon": -42.26445806, "capOleoBbld": 225100, "capGasMilM3d": 15000 },
     "FPSO Almirante Barroso": { "lat": -24.59253250, "lon": -42.56725167, "capOleoBbld": 173640, "capGasMilM3d": 6290.68 },
     "FPSO Almirante Tamandaré": { "lat": -24.74358333, "lon": -42.51331944, "capOleoBbld": 270000, "capGasMilM3d": 12000 },
+    "P-70": { "lat": -24.95207056, "lon": -42.46838000, "capOleoBbld": 161000, "capGasMilM3d": 6000 },
+    "P-71": { "lat": -24.77717500, "lon": -42.72058333, "capOleoBbld": 160000, "capGasMilM3d": 6000 },
+    "P-74": { "lat": -24.64806556, "lon": -42.51781444, "capOleoBbld": 169000, "capGasMilM3d": 7000 },
+    "P-75": { "lat": -24.78901472, "lon": -42.50973611, "capOleoBbld": 169000, "capGasMilM3d": 7000 },
+    "P-76": { "lat": -24.68898056, "lon": -42.50583056, "capOleoBbld": 169000, "capGasMilM3d": 7000 },
     "P-77": { "lat": -24.63649611, "lon": -42.41198972, "capOleoBbld": 169000, "capGasMilM3d": 7000 },
     "P-78": { "lat": -24.68023944, "lon": -42.38285028, "capOleoBbld": 180000, "capGasMilM3d": 7200 },
     "P-79": { "lat": -24.54361417, "lon": -42.46951444, "capOleoBbld": 180000, "capGasMilM3d": 7200 },
