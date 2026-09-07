@@ -226,6 +226,24 @@ const DATASETS = [
     },
   },
   {
+    path: 'data/fpso_posicoes.json', label: 'Posição real por FPSO (painel ANP)', noStore: false,
+    parse(d) {
+      return {
+        fonte: d.fonte || '—',
+        registros: `${Object.keys(d.posicoes || {}).length} FPSOs com posição real declarada pela ANP`,
+        periodo: '—',
+        gaps: [],
+      };
+    },
+    table: {
+      monthly: false,
+      columns: ['FPSO', 'Latitude', 'Longitude', 'Capacidade óleo (bbl/d)', 'Capacidade gás (Mil m³/d)'],
+      rowsFor(d) {
+        return Object.entries(d.posicoes || {}).sort((a, b) => a[0].localeCompare(b[0], 'pt-BR')).map(([nome, v]) => [nome, v.lat, v.lon, fmtNum(v.capOleoBbld), fmtNum(v.capGasMilM3d, { maximumFractionDigits: 2 })]);
+      },
+    },
+  },
+  {
     path: 'data/contratos.geojson', label: 'Polígonos dos 30 contratos rastreados', noStore: false,
     parse(d) {
       return { fonte: 'ANP — shapefiles públicos de blocos/contratos', registros: `${d.features.length} polígonos`, periodo: '—', gaps: [] };

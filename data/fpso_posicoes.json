@@ -1,0 +1,19 @@
+{
+  "fonte": "ANP — painel Power BI público \"Unidades de Produção Marítimas em Operação\" (geoposicionamento + capacidade nominal declarada por instalação). Cobre só as instalações que o painel lista como \"em operação\" no momento da consulta (06/09/2026) — Atapu (P-70/P-71) e Búzios P-74/P-75/P-76 não aparecem nele, provavelmente por ainda não estarem classificadas assim no cadastro da ANP.",
+  "posicoes": {
+    "FPSO Alexandre de Gusmão": { "lat": -24.55964917, "lon": -42.18826083, "capOleoBbld": 225000, "capGasMilM3d": 15000 },
+    "FPSO Guanabara": { "lat": -24.58365556, "lon": -42.25626667, "capOleoBbld": 190000, "capGasMilM3d": 12480 },
+    "FPSO Marechal Duque de Caxias": { "lat": -24.68622167, "lon": -42.29323194, "capOleoBbld": 200000, "capGasMilM3d": 13500 },
+    "FPSO Pioneiro de Libra": { "lat": -24.54004972, "lon": -42.13184361, "capOleoBbld": 50318, "capGasMilM3d": 4000 },
+    "FPSO Sepetiba": { "lat": -24.63081444, "lon": -42.26445806, "capOleoBbld": 225100, "capGasMilM3d": 15000 },
+    "FPSO Almirante Barroso": { "lat": -24.59253250, "lon": -42.56725167, "capOleoBbld": 173640, "capGasMilM3d": 6290.68 },
+    "FPSO Almirante Tamandaré": { "lat": -24.74358333, "lon": -42.51331944, "capOleoBbld": 270000, "capGasMilM3d": 12000 },
+    "P-77": { "lat": -24.63649611, "lon": -42.41198972, "capOleoBbld": 169000, "capGasMilM3d": 7000 },
+    "P-78": { "lat": -24.68023944, "lon": -42.38285028, "capOleoBbld": 180000, "capGasMilM3d": 7200 },
+    "P-79": { "lat": -24.54361417, "lon": -42.46951444, "capOleoBbld": 180000, "capGasMilM3d": 7200 },
+    "FPSO Carioca": { "lat": -25.22704306, "lon": -42.57025250, "capOleoBbld": 180000, "capGasMilM3d": 6091.43 },
+    "FPSO Cidade de Ilhabela": { "lat": -25.67280556, "lon": -43.20619167, "capOleoBbld": 150000, "capGasMilM3d": 6000 },
+    "FPSO Cidade de São Paulo": { "lat": -25.79933417, "lon": -43.26283917, "capOleoBbld": 120000, "capGasMilM3d": 5000 },
+    "FPSO Bacalhau": { "lat": -25.47606333, "lon": -43.93906806, "capOleoBbld": 220000, "capGasMilM3d": 15000 }
+  }
+}

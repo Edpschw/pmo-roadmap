@@ -32,6 +32,7 @@ const PRODUCAO_POCOS_SERIE_URL = 'data/producao_pocos_serie.json';
 const PRODUCAO_INJECAO_URL = 'data/producao_injecao.json';
 const PRODUCAO_POCOS_URL = 'data/producao_pocos.json';
 const FPSO_CAPACIDADE_URL = 'data/fpso_capacidade.json';
+const FPSO_POSICOES_URL = 'data/fpso_posicoes.json';
 const PD_URL = 'data/planos_desenvolvimento.json';
 
 const GROUP_BADGES = {
@@ -152,7 +153,7 @@ const CampoLegendControl = L.Control.extend({
   },
 });
 
-function buildMiniMap(container, project, jazidaFeatures, wells, wellFpso, onWellClick) {
+function buildMiniMap(container, project, jazidaFeatures, wells, wellFpso, fpsoPosicoes, onWellClick) {
   const mapDiv = document.createElement('div');
   mapDiv.className = 'campo-mapa';
   container.appendChild(mapDiv);
@@ -246,13 +247,16 @@ function buildMiniMap(container, project, jazidaFeatures, wells, wellFpso, onWel
     bounds.extend(w.c);
   }
 
-  // Marcador de FPSO — a ANP não publica a posição do casco, então usa o
-  // centroide dos poços DESTA jazida que pertencem a cada instalação
-  // (wellFpso, mesma consulta poço->FPSO do gráfico "Produção por poço" —
-  // ver init()) como aproximação: mais confiável que estimar/lembrar uma
-  // coordenada de fora do cadastro do app. Sempre visível (não entra no
-  // filtro de ano do slider abaixo — não há data de instalação por poço
-  // pra decidir "até que ano" mostrar o próprio FPSO).
+  // Marcador de FPSO — data/fpso_posicoes.json (painel Power BI da ANP,
+  // ver fonte no arquivo) tem a posição REAL do casco pra quem ele já
+  // lista como "em operação"; quem não está lá ainda (Atapu P-70/P-71,
+  // Búzios P-74/75/76 — FPSOs mais novos, ver nota no arquivo) cai no
+  // fallback de sempre: centroide dos poços DESTA jazida que pertencem a
+  // cada instalação (wellFpso, mesma consulta poço->FPSO do gráfico
+  // "Produção por poço" — ver init()), mais confiável que estimar/lembrar
+  // uma coordenada de fora do cadastro do app. Sempre visível (não entra
+  // no filtro de ano do slider abaixo — não há data de instalação por
+  // poço pra decidir "até que ano" mostrar o próprio FPSO).
   const fpsoCoordSum = new Map();
   for (const w of wells) {
     if (!w.c) continue;
@@ -266,13 +270,15 @@ function buildMiniMap(container, project, jazidaFeatures, wells, wellFpso, onWel
   }
   const fpsoLayer = L.layerGroup().addTo(map);
   for (const [fpso, acc] of fpsoCoordSum) {
-    const center = [acc.sumLat / acc.n, acc.sumLng / acc.n];
+    const real = fpsoPosicoes[fpso];
+    const center = real ? [real.lat, real.lon] : [acc.sumLat / acc.n, acc.sumLng / acc.n];
+    const tooltip = real
+      ? `${escapeHtml(fpso)}<br><span style="opacity:.7">Posição real — painel da ANP (ver aba Dados)</span>`
+      : `${escapeHtml(fpso)}<br><span style="opacity:.7">Posição aproximada — centro dos ${acc.n} poço${acc.n === 1 ? '' : 's'} dela aqui</span>`;
     L.marker(center, { icon: fpsoDivIcon(project.color), zIndexOffset: 500 })
-      .bindTooltip(
-        `${escapeHtml(fpso)}<br><span style="opacity:.7">Posição aproximada — centro dos ${acc.n} poço${acc.n === 1 ? '' : 's'} dela aqui</span>`,
-        { direction: 'top', offset: [0, -13] },
-      )
+      .bindTooltip(tooltip, { direction: 'top', offset: [0, -13] })
       .addTo(fpsoLayer);
+    bounds.extend(center);
   }
   if (fpsoCoordSum.size && wellLegendEl) {
     const row = document.createElement('div');
@@ -281,7 +287,7 @@ function buildMiniMap(container, project, jazidaFeatures, wells, wellFpso, onWel
     icon.className = 'map-legend-well-icon';
     icon.innerHTML = `<svg viewBox="0 0 16 16" width="15" height="15">${fpsoIconSVG(WELL_LEGEND_COLOR)}</svg>`;
     row.appendChild(icon);
-    row.appendChild(document.createTextNode('FPSO/instalação (posição aproximada — ver dica ao passar o mouse)'));
+    row.appendChild(document.createTextNode('FPSO/instalação (posição real ou aproximada, ver dica ao passar o mouse)'));
     wellLegendEl.appendChild(row);
   }
 
@@ -1320,7 +1326,7 @@ function buildProjectPanel(project, ctx) {
     if (wellChartInfo) wellChartInfo.setSelectedWell(selectedWell);
     if (rgoChartInfo) rgoChartInfo.setSelectedWell(selectedWell);
   }
-  mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells, ctx.wellFpso, selectWell);
+  mapInfo = buildMiniMap(mapCard, project, jazidaFeatures, wells, ctx.wellFpso, ctx.fpsoPosicoes, selectWell);
   panel._miniMap = mapInfo.map;
   // Filtro de ano — mostra só os poços perfurados até o ano escolhido
   // (ver setYearFilter em buildMiniMap) e marca a mesma data nos gráficos
@@ -1590,8 +1596,9 @@ async function init() {
   let producaoInjecaoJson = null;
   let producaoPocosJson = null;
   let fpsoCapacidadeJson = null;
+  let fpsoPosicoesJson = null;
   try {
-    [geojson, presalGeojson, pocosJson, producaoData, pdData, producaoPocosSerieJson, producaoInjecaoJson, producaoPocosJson, fpsoCapacidadeJson] = await Promise.all([
+    [geojson, presalGeojson, pocosJson, producaoData, pdData, producaoPocosSerieJson, producaoInjecaoJson, producaoPocosJson, fpsoCapacidadeJson, fpsoPosicoesJson] = await Promise.all([
       fetch(GEOJSON_URL).then((r) => r.json()),
       fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
       fetch(POCOS_URL).then((r) => r.json()),
@@ -1618,6 +1625,11 @@ async function init() {
       // partir do sumário executivo de PD (ver fonte no próprio arquivo),
       // não muda sem edição manual, sem no-store.
       fetch(FPSO_CAPACIDADE_URL).then((r) => r.json()),
+      // Posição real (lat/lon) por FPSO — ver fonte no próprio arquivo
+      // (painel Power BI da ANP, não o boletim/PD como os outros arquivos
+      // desta lista); cobre só quem o painel já lista como "em operação",
+      // não muda sem edição manual, sem no-store.
+      fetch(FPSO_POSICOES_URL).then((r) => r.json()),
     ]);
   } catch (err) {
     console.error('Falha ao carregar dados de campo', err);
@@ -1698,7 +1710,8 @@ async function init() {
   for (const m of producaoPocosJson.pocosMensal || []) pocosMensalPorChave.set(`${m.ano}-${m.mes}`, m);
   const producaoPocosMensal = [...pocosMensalPorChave.values()].sort((a, b) => a.ano - b.ano || a.mes - b.mes);
   const fpsoCapacidade = fpsoCapacidadeJson.capacidades || {};
-  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, wellFpso, producaoPocosMensal, fpsoCapacidade, pdData };
+  const fpsoPosicoes = fpsoPosicoesJson.posicoes || {};
+  const ctx = { jazidaFeaturesByProject, pocosData, monthlySeries, producaoPocosSerie, producaoInjecao, wellFpso, producaoPocosMensal, fpsoCapacidade, fpsoPosicoes, pdData };
 
   // Ordem: mesmo agrupamento por status de pocos.js/analises.js (Produção,
   // Exploração, Devolvidos), cada grupo alfabético.
