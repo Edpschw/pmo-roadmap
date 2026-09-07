@@ -260,6 +260,7 @@ function computeReservasRows(reservasBarJson, contractRows) {
       // proxy de maturidade do campo (quanto do óleo original já saiu),
       // NÃO um fator de recuperação final projetado (ver nota grande em
       // scripts/parse_reservas_bar.py).
+      fracaoLast: last.voipMMbbl > 0 ? (last.acumMMbbl / last.voipMMbbl) * 100 : 0,
       fracaoSeries: series.map((s) => ({ x: s.ano, y: s.voipMMbbl > 0 ? (s.acumMMbbl / s.voipMMbbl) * 100 : 0 })),
     });
   }
@@ -303,40 +304,74 @@ function renderReservasSection(container, reservasBarJson, contractRows) {
   container.appendChild(reservasChartCard);
 
   const barCard = chartCard(
-    `VOIP por contrato (${lastAno})`,
-    'Volume original de óleo in place declarado no Boletim Anual de Reservas mais recente, por contrato — maior primeiro.',
+    `STOIIP, VOIP e volume recuperado por contrato (${lastAno})`,
+    'STOIIP (Plano de Desenvolvimento) ao lado de VOIP e óleo já produzido (Boletim Anual de Reservas da ANP) — 2 fontes/metodologias diferentes lado a lado de propósito, pra comparar a mesma ordem de grandeza. A fração entre parênteses do volume recuperado é produção acumulada ÷ VOIP do mesmo ano; não é fator de recuperação final projetado. Contrato sem PD publicado fica sem barra de STOIIP.',
   );
   const list = document.createElement('div');
   list.className = 'hbar-list';
+  const headers = document.createElement('div');
+  headers.className = 'hbar-row hbar-row-3col hbar-col-headers';
+  headers.innerHTML = '<span></span><span class="hbar-col-label">STOIIP</span><span class="hbar-col-label">VOIP</span><span class="hbar-col-label">Volume recuperado</span>';
+  list.appendChild(headers);
   const sorted = [...rows].sort((a, b) => b.voipLast - a.voipLast);
-  const max = Math.max(...sorted.map((r) => r.voipLast));
+  const max = Math.max(...sorted.flatMap((r) => [r.voipLast, r.stoiip || 0, r.acumLast]));
   for (const r of sorted) {
-    list.appendChild(barRow(
-      r.name, (r.voipLast / max) * 100, fmtNum(r.voipLast) + ' MMbbl', r.color,
-      () => `<strong>${escapeHtml(r.name)}</strong>`
-        + tooltipRowHTML('VOIP', `${fmtNum(r.voipLast)} MMbbl`)
-        + tooltipRowHTML(`Revisão desde ${firstAno}`, `${r.voipChangePct >= 0 ? '+' : ''}${r.voipChangePct.toFixed(1)}%`)
-        + tooltipRowHTML('Produção acumulada', `${fmtNum(r.acumLast)} MMbbl`),
-    ));
+    const row = document.createElement('div');
+    row.className = 'hbar-row hbar-row-3col';
+    const name = document.createElement('div');
+    name.className = 'hbar-name';
+    name.textContent = r.name;
+    name.title = r.name;
+    const tooltip = () => `<strong>${escapeHtml(r.name)}</strong>`
+      + (r.stoiip != null ? tooltipRowHTML('STOIIP', `${fmtNum(r.stoiip)} MMbbl`) : '')
+      + tooltipRowHTML('VOIP', `${fmtNum(r.voipLast)} MMbbl`)
+      + tooltipRowHTML(`Revisão desde ${firstAno}`, `${r.voipChangePct >= 0 ? '+' : ''}${r.voipChangePct.toFixed(1)}%`)
+      + tooltipRowHTML('Volume recuperado', `${fmtNum(r.acumLast)} MMbbl`)
+      + tooltipRowHTML('Fração recuperada', `${r.fracaoLast.toFixed(1)}%`);
+    const makeTrack = (value, text, opacity) => {
+      const track = document.createElement('div');
+      track.className = 'hbar-track';
+      if (value == null) {
+        const valueLabel = document.createElement('div');
+        valueLabel.className = 'hbar-value';
+        valueLabel.textContent = '—';
+        valueLabel.style.color = 'var(--text-faint)';
+        track.appendChild(valueLabel);
+        return track;
+      }
+      const fill = document.createElement('div');
+      fill.className = 'hbar-fill';
+      fill.style.width = Math.max(3, (value / max) * 100) + '%';
+      fill.style.background = r.color;
+      fill.style.opacity = opacity;
+      fill.tabIndex = 0;
+      attachTooltip(fill, tooltip);
+      const valueLabel = document.createElement('div');
+      valueLabel.className = 'hbar-value';
+      valueLabel.textContent = text;
+      track.append(fill, valueLabel);
+      return track;
+    };
+    row.append(
+      name,
+      makeTrack(r.stoiip, r.stoiip != null ? `${fmtNum(r.stoiip)} MMbbl` : null, '0.85'),
+      makeTrack(r.voipLast, `${fmtNum(r.voipLast)} MMbbl`, '1'),
+      makeTrack(r.acumLast, `${fmtNum(r.acumLast)} MMbbl (${r.fracaoLast.toFixed(1)}%)`, '0.58'),
+    );
+    list.appendChild(row);
   }
   barCard.appendChild(list);
   container.appendChild(barCard);
 
   const fracaoCard = chartCard(
     'Fração recuperada por contrato',
-    `Produção acumulada ÷ VOIP daquele mesmo ano, ${firstAno}–${lastAno} — quanto do óleo original já saiu de cada campo (eixo esquerdo); linha tracejada é o volume recuperado em si, somado dos 7 contratos (eixo direito, MMbbl). Não é fator de recuperação final projetado (essa projeção a ANP não publica em planilha, só no Painel Dinâmico de Recursos e Reservas) — só a fração/volume já extraídos até hoje, então só sobem (ou ficam no lugar quando o campo ainda não produz).`,
+    `Produção acumulada ÷ VOIP daquele mesmo ano, ${firstAno}–${lastAno} — quanto do óleo original já saiu de cada campo. Não é fator de recuperação final projetado (essa projeção a ANP não publica em planilha, só no Painel Dinâmico de Recursos e Reservas). O volume recuperado absoluto aparece no gráfico de barras anterior.`,
   );
   buildMultiLineChart(
     fracaoCard,
     rows.map((r) => ({ name: r.name, color: r.color, points: r.fracaoSeries })),
     {
       formatY: (v) => v.toFixed(0) + '%',
-      secondary: {
-        name: 'Volume recuperado (total)',
-        color: RESERVAS_LINE_COLOR,
-        points: nationalSeries.map((s) => ({ x: s.ano, y: s.acumMMbbl })),
-        formatY: (v) => fmtNum(v),
-      },
     },
   );
   container.appendChild(fracaoCard);

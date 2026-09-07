@@ -834,6 +834,7 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
    das colunas (hbar-col-headers) usa a MESMA grade, só com rótulo em vez
    de barra, pra alinhar exatamente com as linhas de dado abaixo. */
 .hbar-row-2col { grid-template-columns: 152px 1fr 1fr; }
+.hbar-row-3col { grid-template-columns: 152px 1fr 1fr 1fr; }
 .hbar-col-label { font-size: 11px; color: var(--text-faint); font-weight: 600; }
 .hbar-col-headers { margin-bottom: 2px; }
 
@@ -1184,6 +1185,7 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
      valor); KPIs empilham em colunas mais estreitas. */
   .hbar-row { grid-template-columns: 74px 1fr; }
   .hbar-row-2col { grid-template-columns: 74px 1fr 1fr; }
+  .hbar-row-3col { grid-template-columns: 74px 1fr 1fr 1fr; }
   .hbar-name { font-size: 10.5px; }
   .kpi-row { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 
