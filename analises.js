@@ -324,12 +324,20 @@ function renderReservasSection(container, reservasBarJson, contractRows) {
 
   const fracaoCard = chartCard(
     'Fração recuperada por contrato',
-    `Produção acumulada ÷ VOIP daquele mesmo ano, ${firstAno}–${lastAno} — quanto do óleo original já saiu de cada campo. Não é fator de recuperação final projetado (essa projeção a ANP não publica em planilha, só no Painel Dinâmico de Recursos e Reservas) — só a fração já extraída até hoje, então só sobe (ou fica no lugar quando o campo ainda não produz).`,
+    `Produção acumulada ÷ VOIP daquele mesmo ano, ${firstAno}–${lastAno} — quanto do óleo original já saiu de cada campo (eixo esquerdo); linha tracejada é o volume recuperado em si, somado dos 7 contratos (eixo direito, MMbbl). Não é fator de recuperação final projetado (essa projeção a ANP não publica em planilha, só no Painel Dinâmico de Recursos e Reservas) — só a fração/volume já extraídos até hoje, então só sobem (ou ficam no lugar quando o campo ainda não produz).`,
   );
   buildMultiLineChart(
     fracaoCard,
     rows.map((r) => ({ name: r.name, color: r.color, points: r.fracaoSeries })),
-    { formatY: (v) => v.toFixed(0) + '%' },
+    {
+      formatY: (v) => v.toFixed(0) + '%',
+      secondary: {
+        name: 'Volume recuperado (total)',
+        color: RESERVAS_LINE_COLOR,
+        points: nationalSeries.map((s) => ({ x: s.ano, y: s.acumMMbbl })),
+        formatY: (v) => fmtNum(v),
+      },
+    },
   );
   container.appendChild(fracaoCard);
 

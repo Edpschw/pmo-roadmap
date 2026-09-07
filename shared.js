@@ -825,15 +825,23 @@ function buildPieChart(container, items, opts) {
 // eixos pra 2 métricas de escala bem diferente) — uso hoje: fração
 // recuperada (%) por contrato ao longo dos anos, uma linha por contrato,
 // mesma escala 0-100% pra todas. series: [{name, color, points: [{x, y}]}].
+// opts.secondary (opcional): {name, color, points: [{x, y}], formatY} — 1
+// linha só num eixo Y à DIREITA, escala independente (mesma ideia de
+// buildReservasChart, mas lá são sempre 2 métricas fixas; aqui N linhas
+// no eixo esquerdo + 1 linha solta no direito, ex.: fração recuperada de
+// cada contrato % à esquerda, volume recuperado total à direita).
 const MULTILINE_MARGIN = { top: 16, right: 16, bottom: 34, left: 46 };
+const MULTILINE_MARGIN_DUAL = { top: 16, right: 62, bottom: 34, left: 46 };
 function buildMultiLineChart(container, series, opts) {
   opts = opts || {};
   const formatY = opts.formatY || ((v) => fmtNum(v));
+  const secondary = opts.secondary || null;
+  const margin = secondary ? MULTILINE_MARGIN_DUAL : MULTILINE_MARGIN;
   const xLabels = series.length ? series[0].points.map((p) => p.x) : [];
   const n = xLabels.length;
-  const plotW = LINE_W - MULTILINE_MARGIN.left - MULTILINE_MARGIN.right;
-  const plotH = LINE_H - MULTILINE_MARGIN.top - MULTILINE_MARGIN.bottom;
-  const xAt = (i) => MULTILINE_MARGIN.left + (n <= 1 ? plotW / 2 : (i / (n - 1)) * plotW);
+  const plotW = LINE_W - margin.left - margin.right;
+  const plotH = LINE_H - margin.top - margin.bottom;
+  const xAt = (i) => margin.left + (n <= 1 ? plotW / 2 : (i / (n - 1)) * plotW);
 
   // niceRoundUp (não niceMaxFromLastValue) — esta usa o MAIOR valor de
   // TODA a série de TODAS as linhas (não só o último ponto: várias linhas
@@ -843,27 +851,38 @@ function buildMultiLineChart(container, series, opts) {
   // arredondava pra 100 mesmo quando o maior valor real era só ~25.
   const allValues = series.flatMap((s) => s.points.map((p) => p.y));
   const maxV = niceRoundUp(Math.max(0, ...allValues));
-  const yAt = (v) => MULTILINE_MARGIN.top + plotH - (v / maxV) * plotH;
+  const yAt = (v) => margin.top + plotH - (v / maxV) * plotH;
+  const secMaxV = secondary ? niceRoundUp(Math.max(0, ...secondary.points.map((p) => p.y))) : 0;
+  const ySecAt = (v) => margin.top + plotH - (v / secMaxV) * plotH;
 
   const yTicks = 5;
   let gridSvg = '';
   for (let i = 0; i <= yTicks; i++) {
     const v = (maxV / yTicks) * i;
     const y = yAt(v);
-    gridSvg += `<line x1="${MULTILINE_MARGIN.left}" y1="${y}" x2="${LINE_W - MULTILINE_MARGIN.right}" y2="${y}" stroke="var(--border)" stroke-width="1" />`;
-    gridSvg += `<text x="${MULTILINE_MARGIN.left - 10}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:var(--text-faint)">${formatY(v)}</text>`;
+    gridSvg += `<line x1="${margin.left}" y1="${y}" x2="${LINE_W - margin.right}" y2="${y}" stroke="var(--border)" stroke-width="1" />`;
+    gridSvg += `<text x="${margin.left - 10}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:var(--text-faint)">${formatY(v)}</text>`;
+    if (secondary) {
+      const secV = (secMaxV / yTicks) * i;
+      gridSvg += `<text x="${LINE_W - margin.right + 10}" y="${y + 4}" text-anchor="start" font-size="11" style="fill:${secondary.color}">${(secondary.formatY || formatY)(secV)}</text>`;
+    }
   }
   let xLabelsSvg = '';
   for (let i = 0; i < n; i++) {
-    xLabelsSvg += `<text x="${xAt(i)}" y="${MULTILINE_MARGIN.top + plotH + 18}" text-anchor="middle" font-size="11" style="fill:var(--text-muted)">${xLabels[i]}</text>`;
+    xLabelsSvg += `<text x="${xAt(i)}" y="${margin.top + plotH + 18}" text-anchor="middle" font-size="11" style="fill:var(--text-muted)">${xLabels[i]}</text>`;
   }
-  const axisSvg = `<line x1="${MULTILINE_MARGIN.left}" y1="${MULTILINE_MARGIN.top + plotH}" x2="${LINE_W - MULTILINE_MARGIN.right}" y2="${MULTILINE_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
+  const axisSvg = `<line x1="${margin.left}" y1="${margin.top + plotH}" x2="${LINE_W - margin.right}" y2="${margin.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
 
   let linesSvg = '';
   for (const s of series) {
     const pts = s.points.map((p, i) => `${xAt(i)},${yAt(p.y)}`);
     linesSvg += `<polyline points="${pts.join(' ')}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />`;
     linesSvg += pts.map((p) => { const [px, py] = p.split(','); return `<circle cx="${px}" cy="${py}" r="2.4" fill="${s.color}" />`; }).join('');
+  }
+  if (secondary) {
+    const pts = secondary.points.map((p, i) => `${xAt(i)},${ySecAt(p.y)}`);
+    linesSvg += `<polyline points="${pts.join(' ')}" fill="none" stroke="${secondary.color}" stroke-width="2.5" stroke-dasharray="5,3" stroke-linejoin="round" stroke-linecap="round" />`;
+    linesSvg += pts.map((p) => { const [px, py] = p.split(','); return `<circle cx="${px}" cy="${py}" r="2.8" fill="${secondary.color}" />`; }).join('');
   }
 
   const svgWrap = document.createElement('div');
@@ -873,7 +892,8 @@ function buildMultiLineChart(container, series, opts) {
 
   const legend = document.createElement('div');
   legend.style.cssText = 'display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--text-muted);flex-wrap:wrap';
-  legend.innerHTML = series.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;height:2px;background:${s.color};display:inline-block"></span>${escapeHtml(s.name)}</span>`).join('');
+  legend.innerHTML = series.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;height:2px;background:${s.color};display:inline-block"></span>${escapeHtml(s.name)}</span>`).join('')
+    + (secondary ? `<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;height:2px;background:${secondary.color};display:inline-block;border-top:2px dashed ${secondary.color}"></span>${escapeHtml(secondary.name)} (eixo direito)</span>` : '');
   container.appendChild(legend);
 }
 
