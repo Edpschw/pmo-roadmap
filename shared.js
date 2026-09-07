@@ -1184,6 +1184,88 @@ function niceMaxFromLastValue(lastValue) {
   return Math.ceil(lastValue / unit) * unit;
 }
 
+/* ------------------ Reservas (VOIP), data/reservas_bar.json --------------- */
+// Compartilhado entre campo.js (1 projeto, soma por substring de
+// PROJECT_FIELD_BASE) e analises.js (total nacional, soma os 7 contratos
+// com produção própria juntos) — só muda o predicado de match, o resto do
+// cálculo/desenho é idêntico. IMPORTANTE: VOIP é o volume ORIGINAL de óleo
+// in place (antes de qualquer produção), não a reserva 1P/2P/3P — essa a
+// ANP só publica consolidada no Painel Dinâmico de Recursos e Reservas
+// (dashboard interativo), não numa planilha (ver nota grande no topo de
+// scripts/parse_reservas_bar.py).
+const RESERVAS_LINE_COLOR = '#c17817';
+const RESERVAS_COMBO_MARGIN = { top: 16, right: 66, bottom: 34, left: 68 };
+const BBL_PER_MMBBL = 1e6;
+
+// matchFn(nomeDoCampo) -> bool decide quem entra na soma de cada ano; ver
+// os dois usos (campo.js: 1 substring; analises.js: união de várias).
+function extractReservasSeries(reservasBarJson, matchFn) {
+  return reservasBarJson.anos.map((a) => {
+    let voip = 0;
+    let acum = 0;
+    for (const [nome, d] of Object.entries(a.campos)) {
+      if (!matchFn(nome)) continue;
+      voip += d.voipBbl;
+      acum += d.acumOleoBbl;
+    }
+    return { ano: a.ano, voipMMbbl: voip / BBL_PER_MMBBL, acumMMbbl: acum / BBL_PER_MMBBL };
+  });
+}
+
+// Estático (só 1 ponto por ano, sem zoom/pan precisa) — mesma técnica de
+// eixo duplo de buildComboChart (campo.js), mas eixo X aqui é o ano puro
+// (sem compressão de mês) e as duas curvas são VOIP (esquerda) e produção
+// acumulada (direita, sempre bem menor que VOIP — por isso eixo próprio).
+function buildReservasChart(container, series, lineColor) {
+  const n = series.length;
+  const plotW = LINE_W - RESERVAS_COMBO_MARGIN.left - RESERVAS_COMBO_MARGIN.right;
+  const plotH = LINE_H - RESERVAS_COMBO_MARGIN.top - RESERVAS_COMBO_MARGIN.bottom;
+  const xAt = (i) => RESERVAS_COMBO_MARGIN.left + (n <= 1 ? plotW / 2 : (i / (n - 1)) * plotW);
+
+  const voipMax = niceMaxFromLastValue(series.length ? series[series.length - 1].voipMMbbl : 0);
+  const acumMax = niceMaxFromLastValue(series.length ? series[series.length - 1].acumMMbbl : 0);
+  const yVoipAt = (v) => RESERVAS_COMBO_MARGIN.top + plotH - (v / voipMax) * plotH;
+  const yAcumAt = (v) => RESERVAS_COMBO_MARGIN.top + plotH - (v / acumMax) * plotH;
+
+  const yTicks = 5;
+  let gridSvg = '';
+  for (let i = 0; i <= yTicks; i++) {
+    const voipV = (voipMax / yTicks) * i;
+    const acumV = (acumMax / yTicks) * i;
+    const y = yVoipAt(voipV);
+    gridSvg += `<line x1="${RESERVAS_COMBO_MARGIN.left}" y1="${y}" x2="${LINE_W - RESERVAS_COMBO_MARGIN.right}" y2="${y}" stroke="var(--border)" stroke-width="1" />`;
+    gridSvg += `<text x="${RESERVAS_COMBO_MARGIN.left - 10}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:${lineColor}">${fmtNum(voipV)}</text>`;
+    gridSvg += `<text x="${LINE_W - RESERVAS_COMBO_MARGIN.right + 10}" y="${y + 4}" text-anchor="start" font-size="11" style="fill:${RESERVAS_LINE_COLOR}">${fmtNum(acumV)}</text>`;
+  }
+
+  let xLabelsSvg = '';
+  for (let i = 0; i < n; i++) {
+    const x = xAt(i);
+    xLabelsSvg += `<text x="${x}" y="${RESERVAS_COMBO_MARGIN.top + plotH + 18}" text-anchor="middle" font-size="11" style="fill:var(--text-muted)">${series[i].ano}</text>`;
+  }
+
+  function lineSvg(key, yAtFn, color) {
+    const pts = series.map((d, i) => `${xAt(i)},${yAtFn(d[key])}`);
+    return `<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />`
+      + pts.map((p) => { const [px, py] = p.split(','); return `<circle cx="${px}" cy="${py}" r="2.6" fill="${color}" />`; }).join('');
+  }
+
+  const axisSvg = `<line x1="${RESERVAS_COMBO_MARGIN.left}" y1="${RESERVAS_COMBO_MARGIN.top + plotH}" x2="${LINE_W - RESERVAS_COMBO_MARGIN.right}" y2="${RESERVAS_COMBO_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
+
+  const svgWrap = document.createElement('div');
+  svgWrap.className = 'line-chart-wrap';
+  svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${lineSvg('voipMMbbl', yVoipAt, lineColor)}${lineSvg('acumMMbbl', yAcumAt, RESERVAS_LINE_COLOR)}</svg>`;
+  container.appendChild(svgWrap);
+
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--text-muted)';
+  legend.innerHTML = `
+    <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;height:2px;background:${lineColor};display:inline-block"></span>VOIP (MMbbl, eixo esquerdo)</span>
+    <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;height:2px;background:${RESERVAS_LINE_COLOR};display:inline-block"></span>Produção acumulada (MMbbl, eixo direito)</span>
+  `;
+  container.appendChild(legend);
+}
+
 // Ordem fixa das linhas (mesma cor sempre no mesmo campo entre trocas de
 // unidade) — projeto rastreado por ordem de aparição em state.projects
 // (mesma ordem do roadmap/análises), depois os campos de contexto por

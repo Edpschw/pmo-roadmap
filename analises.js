@@ -2,25 +2,29 @@
 
 /* =========================================================================
    PMO Roadmap — Análises. Três páginas (alternadas pelo seletor no topo,
-   sem recarregar): Executivo (contratos, FPSOs, contratos por ano),
-   Portfolio (STOIIP por jazida, por contrato já ponderado pela TP, e
-   ponderado também por profit oil) e Poços (histogramas de duração de
-   perfuração/produção/injeção por poço + contagem de poço por FPSO —
-   visão nacional, não por campo). Calculado no navegador a partir do mesmo
-   estado (shared.js) e de data/planos_desenvolvimento.json (STOIIP e
-   "tracts" — só disponível pros projetos/campos com sumário executivo de
-   PD publicado) + data/campos_presal.geojson (campos de contexto, fora dos
-   30 projetos rastreados) + data/pocos.json (cadastro de poços do pré-sal)
-   + data/producao_pocos.json (boletim de poços da ANP, produção/injeção,
-   todo o litoral). Sem servidor: tudo é derivado desses arquivos estáticos
-   a cada carga. Infra de gráfico (tooltip, fmtNum, chartCard, barRow,
-   statTile, buildHistogram, CONTEXT_FIELD_COLOR) vem de shared.js —
-   compartilhada com producao.js e dados.js.
+   sem recarregar): Executivo (contratos, FPSOs, contratos por ano, reservas
+   VOIP dos 7 contratos com produção própria), Portfolio (STOIIP por
+   jazida, por contrato já ponderado pela TP, e ponderado também por profit
+   oil) e Poços (histogramas de duração de perfuração/produção/injeção por
+   poço + contagem de poço por FPSO — visão nacional, não por campo).
+   Calculado no navegador a partir do mesmo estado (shared.js) e de
+   data/planos_desenvolvimento.json (STOIIP e "tracts" — só disponível pros
+   projetos/campos com sumário executivo de PD publicado) + data/campos_
+   presal.geojson (campos de contexto, fora dos 30 projetos rastreados) +
+   data/pocos.json (cadastro de poços do pré-sal) + data/producao_pocos.json
+   (boletim de poços da ANP, produção/injeção, todo o litoral) + data/
+   reservas_bar.json (Boletim Anual de Reservas da ANP — VOIP/produção
+   acumulada, ver scripts/parse_reservas_bar.py). Sem servidor: tudo é
+   derivado desses arquivos estáticos a cada carga. Infra de gráfico
+   (tooltip, fmtNum, chartCard, barRow, statTile, buildHistogram,
+   CONTEXT_FIELD_COLOR, extractReservasSeries, buildReservasChart) vem de
+   shared.js — compartilhada com producao.js, campo.js e dados.js.
    ========================================================================= */
 
 const PD_URL = 'data/planos_desenvolvimento.json';
 const POCOS_URL = 'data/pocos.json';
 const PRODUCAO_POCOS_URL = 'data/producao_pocos.json';
+const RESERVAS_BAR_URL = 'data/reservas_bar.json';
 // Campos de contexto do pré-sal (ver mapa.js) — regime de Concessão ou
 // Cessão Onerosa, bem anterior à Lei da Partilha (2010); nenhum dos 30
 // projetos rastreados (Mero, o único campo de contexto em Partilha, virou
@@ -262,9 +266,96 @@ function renderContractsByYearChart(container, contractRows) {
   container.appendChild(card);
 }
 
-function renderExecutivePage(container, contractRows, agg, wellAgg) {
+// Reservas (VOIP) — data/reservas_bar.json (Boletim Anual de Reservas da
+// ANP, ver scripts/parse_reservas_bar.py), só pros 7 contratos com
+// produção própria (PROJECT_FIELD_BASE, shared.js) — os outros 23
+// rastreados não têm campo próprio nesse boletim (produção/reserva sai
+// inteira sob a jazida compartilhada, ex. Libra sob "Mero"). extractReservasSeries/
+// buildReservasChart vêm de shared.js, compartilhadas com o gráfico
+// equivalente por projeto em campo.js.
+function computeReservasRows(reservasBarJson) {
+  const anos = reservasBarJson.anos.map((a) => a.ano);
+  const firstAno = anos[0];
+  const lastAno = anos[anos.length - 1];
+  const rows = [];
+  for (const [projectName, base] of Object.entries(PROJECT_FIELD_BASE)) {
+    const project = state.projects.find((p) => p.name === projectName);
+    const series = extractReservasSeries(reservasBarJson, (nome) => nome.includes(base));
+    if (!series.some((s) => s.voipMMbbl > 1e-9)) continue;
+    const first = series[0];
+    const last = series[series.length - 1];
+    rows.push({
+      name: projectDisplayName(projectName),
+      color: project ? project.color : CONTEXT_FIELD_COLOR,
+      voipLast: last.voipMMbbl,
+      acumLast: last.acumMMbbl,
+      voipChangePct: first.voipMMbbl > 0 ? (last.voipMMbbl - first.voipMMbbl) / first.voipMMbbl * 100 : 0,
+    });
+  }
+  return { rows, firstAno, lastAno };
+}
+
+function renderReservasSection(container, reservasBarJson) {
+  if (!reservasBarJson) return;
+  const { rows, firstAno, lastAno } = computeReservasRows(reservasBarJson);
+  if (!rows.length) return;
+
+  const totalVoip = rows.reduce((s, r) => s + r.voipLast, 0);
+  const totalAcum = rows.reduce((s, r) => s + r.acumLast, 0);
+  const biggest = rows.reduce((a, b) => (b.voipChangePct > a.voipChangePct ? b : a));
+
+  const kpiRow = document.createElement('div');
+  kpiRow.className = 'kpi-row';
+  kpiRow.appendChild(statTile(
+    `VOIP total, ${rows.length} contratos (${lastAno})`, fmtNum(totalVoip / 1000, 1) + ' Bbbl',
+    'Volume original in place — ANP/BAR, não é reserva 1P/2P/3P',
+  ));
+  kpiRow.appendChild(statTile(
+    'Produção acumulada', fmtNum(totalAcum) + ' MMbbl',
+    `Óleo já produzido, ${firstAno}–${lastAno}`,
+  ));
+  kpiRow.appendChild(statTile(
+    'Maior revisão de VOIP', biggest.name,
+    `${biggest.voipChangePct >= 0 ? '+' : ''}${biggest.voipChangePct.toFixed(1)}% desde ${firstAno}`,
+  ));
+  container.appendChild(kpiRow);
+
+  const nationalSeries = extractReservasSeries(
+    reservasBarJson,
+    (nome) => Object.values(PROJECT_FIELD_BASE).some((base) => nome.includes(base)),
+  );
+  const reservasChartCard = chartCard(
+    'Reservas — VOIP e produção acumulada (7 contratos com produção própria)',
+    `Soma dos 7 contratos rastreados com produção própria no boletim (Búzios, Mero, Itapu, Sépia, Atapu, Entorno de Sapinhoá, Norte de Carcará) — volume original de óleo in place (VOIP) e produção acumulada, ${firstAno}–${lastAno}. Não é a reserva 1P/2P/3P remanescente (essa só no Painel Dinâmico de Recursos e Reservas da ANP, fora deste app).`,
+  );
+  buildReservasChart(reservasChartCard, nationalSeries, 'var(--accent)');
+  container.appendChild(reservasChartCard);
+
+  const barCard = chartCard(
+    `VOIP por contrato (${lastAno})`,
+    'Volume original de óleo in place declarado no Boletim Anual de Reservas mais recente, por contrato — maior primeiro.',
+  );
+  const list = document.createElement('div');
+  list.className = 'hbar-list';
+  const sorted = [...rows].sort((a, b) => b.voipLast - a.voipLast);
+  const max = Math.max(...sorted.map((r) => r.voipLast));
+  for (const r of sorted) {
+    list.appendChild(barRow(
+      r.name, (r.voipLast / max) * 100, fmtNum(r.voipLast) + ' MMbbl', r.color,
+      () => `<strong>${escapeHtml(r.name)}</strong>`
+        + tooltipRowHTML('VOIP', `${fmtNum(r.voipLast)} MMbbl`)
+        + tooltipRowHTML(`Revisão desde ${firstAno}`, `${r.voipChangePct >= 0 ? '+' : ''}${r.voipChangePct.toFixed(1)}%`)
+        + tooltipRowHTML('Produção acumulada', `${fmtNum(r.acumLast)} MMbbl`),
+    ));
+  }
+  barCard.appendChild(list);
+  container.appendChild(barCard);
+}
+
+function renderExecutivePage(container, contractRows, agg, wellAgg, reservasBarJson) {
   renderExecutiveKpis(container, agg, wellAgg);
   renderContractsByYearChart(container, contractRows);
+  renderReservasSection(container, reservasBarJson);
 }
 
 /* ------------------------------ Página Portfolio ---------------------------- */
@@ -879,6 +970,14 @@ async function init() {
   } catch (err) {
     console.error('Falha ao carregar produção por poço', err);
   }
+  // Mesmo critério: falha aqui só deixa a seção de Reservas do Executivo em
+  // branco (ver renderReservasSection), não derruba o resto da página.
+  let reservasBarJson = null;
+  try {
+    reservasBarJson = await fetch(RESERVAS_BAR_URL).then((r) => r.json());
+  } catch (err) {
+    console.error('Falha ao carregar reservas BAR', err);
+  }
 
   // Campo de contexto cujo nome bate com um projeto rastreado (hoje só
   // MERO -> "Mero") não entra na lista de campos de contexto — já vira o
@@ -919,7 +1018,7 @@ async function init() {
   wrapper.appendChild(portSection);
   wrapper.appendChild(pocosSection);
 
-  renderExecutivePage(execSection, contractRows, agg, wellAgg);
+  renderExecutivePage(execSection, contractRows, agg, wellAgg, reservasBarJson);
   renderPortfolioPage(portSection, jazidaRows);
   renderPocosPage(pocosSection, pocosJson, producaoPocosJson);
 }
