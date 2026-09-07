@@ -756,6 +756,127 @@ function barRow(label, widthPct, valueText, color, tooltipHtmlFn) {
   return row;
 }
 
+/* ---------------------------------- Pizza ---------------------------------- */
+// Donut (não pizza cheia — o buraco no meio ajuda a comparar tamanho de
+// fatia sem o olho ser puxado pro centro) + legenda ao lado com valor e %.
+// items: [{name, value, color}] — fatia com value<=0 fica de fora (evita
+// fatia de espessura zero brigando com a vizinha). Sem item nenhum > 0,
+// não desenha nada (mesmo padrão de buildHistogram: deixa o chamador
+// decidir se isso é esperado).
+function buildPieChart(container, items, opts) {
+  opts = opts || {};
+  const valueLabel = opts.valueLabel || '';
+  const filtered = items.filter((it) => it.value > 0);
+  if (!filtered.length) return;
+  const total = filtered.reduce((s, it) => s + it.value, 0);
+  const size = 220;
+  const cx = size / 2;
+  const cy = size / 2;
+  const rOuter = size / 2 - 4;
+  const rInner = rOuter * 0.55;
+
+  function arcPoint(angleDeg, r) {
+    const rad = (angleDeg - 90) * Math.PI / 180;
+    return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+  }
+
+  let angle = 0;
+  let slicesSvg = '';
+  for (const it of filtered) {
+    const sweep = (it.value / total) * 360;
+    const large = sweep > 180 ? 1 : 0;
+    const [x1, y1] = arcPoint(angle, rOuter);
+    const [x2, y2] = arcPoint(angle + sweep, rOuter);
+    const [x3, y3] = arcPoint(angle + sweep, rInner);
+    const [x4, y4] = arcPoint(angle, rInner);
+    const path = `M ${x1} ${y1} A ${rOuter} ${rOuter} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${rInner} ${rInner} 0 ${large} 0 ${x4} ${y4} Z`;
+    slicesSvg += `<path class="pie-slice" d="${path}" fill="${it.color}" tabindex="0"></path>`;
+    angle += sweep;
+  }
+
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;gap:20px;align-items:center;flex-wrap:wrap';
+  wrap.innerHTML = `<svg viewBox="0 0 ${size} ${size}" width="220" height="220" style="flex:0 0 auto">${slicesSvg}</svg>`;
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;flex-direction:column;gap:6px;font-size:12.5px;flex:1 1 200px;min-width:170px';
+  for (const it of filtered) {
+    const pct = (it.value / total) * 100;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px';
+    row.innerHTML = `<span style="width:10px;height:10px;border-radius:2px;background:${it.color};flex:0 0 auto"></span>
+      <span style="flex:1;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(it.name)}</span>
+      <span style="font-variant-numeric:tabular-nums;white-space:nowrap"><span style="color:var(--text)">${fmtNum(it.value)}${valueLabel ? ' ' + valueLabel : ''}</span> <span style="color:var(--text-faint)">(${pct.toFixed(1)}%)</span></span>`;
+    legend.appendChild(row);
+  }
+  wrap.appendChild(legend);
+  container.appendChild(wrap);
+
+  const paths = wrap.querySelectorAll('.pie-slice');
+  paths.forEach((p, i) => {
+    const it = filtered[i];
+    const pct = (it.value / total) * 100;
+    attachTooltip(p, () => `<strong>${escapeHtml(it.name)}</strong>`
+      + tooltipRowHTML(valueLabel || 'Valor', `${fmtNum(it.value)} (${pct.toFixed(1)}%)`));
+  });
+}
+
+/* ------------------------------ Multi-linha, % ----------------------------- */
+// Várias séries no MESMO eixo Y (diferente de buildReservasChart, que usa 2
+// eixos pra 2 métricas de escala bem diferente) — uso hoje: fração
+// recuperada (%) por contrato ao longo dos anos, uma linha por contrato,
+// mesma escala 0-100% pra todas. series: [{name, color, points: [{x, y}]}].
+const MULTILINE_MARGIN = { top: 16, right: 16, bottom: 34, left: 46 };
+function buildMultiLineChart(container, series, opts) {
+  opts = opts || {};
+  const formatY = opts.formatY || ((v) => fmtNum(v));
+  const xLabels = series.length ? series[0].points.map((p) => p.x) : [];
+  const n = xLabels.length;
+  const plotW = LINE_W - MULTILINE_MARGIN.left - MULTILINE_MARGIN.right;
+  const plotH = LINE_H - MULTILINE_MARGIN.top - MULTILINE_MARGIN.bottom;
+  const xAt = (i) => MULTILINE_MARGIN.left + (n <= 1 ? plotW / 2 : (i / (n - 1)) * plotW);
+
+  // niceRoundUp (não niceMaxFromLastValue) — esta usa o MAIOR valor de
+  // TODA a série de TODAS as linhas (não só o último ponto: várias linhas
+  // juntas, uma pode estar em alta enquanto outra caiu) e não tem o piso
+  // de 100 que niceMaxFromLastValue usa pra métrica em bbl/d — aqui os
+  // valores são tipicamente pequenos (%, por exemplo), esse piso sempre
+  // arredondava pra 100 mesmo quando o maior valor real era só ~25.
+  const allValues = series.flatMap((s) => s.points.map((p) => p.y));
+  const maxV = niceRoundUp(Math.max(0, ...allValues));
+  const yAt = (v) => MULTILINE_MARGIN.top + plotH - (v / maxV) * plotH;
+
+  const yTicks = 5;
+  let gridSvg = '';
+  for (let i = 0; i <= yTicks; i++) {
+    const v = (maxV / yTicks) * i;
+    const y = yAt(v);
+    gridSvg += `<line x1="${MULTILINE_MARGIN.left}" y1="${y}" x2="${LINE_W - MULTILINE_MARGIN.right}" y2="${y}" stroke="var(--border)" stroke-width="1" />`;
+    gridSvg += `<text x="${MULTILINE_MARGIN.left - 10}" y="${y + 4}" text-anchor="end" font-size="11" style="fill:var(--text-faint)">${formatY(v)}</text>`;
+  }
+  let xLabelsSvg = '';
+  for (let i = 0; i < n; i++) {
+    xLabelsSvg += `<text x="${xAt(i)}" y="${MULTILINE_MARGIN.top + plotH + 18}" text-anchor="middle" font-size="11" style="fill:var(--text-muted)">${xLabels[i]}</text>`;
+  }
+  const axisSvg = `<line x1="${MULTILINE_MARGIN.left}" y1="${MULTILINE_MARGIN.top + plotH}" x2="${LINE_W - MULTILINE_MARGIN.right}" y2="${MULTILINE_MARGIN.top + plotH}" stroke="var(--border-strong)" stroke-width="1" />`;
+
+  let linesSvg = '';
+  for (const s of series) {
+    const pts = s.points.map((p, i) => `${xAt(i)},${yAt(p.y)}`);
+    linesSvg += `<polyline points="${pts.join(' ')}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />`;
+    linesSvg += pts.map((p) => { const [px, py] = p.split(','); return `<circle cx="${px}" cy="${py}" r="2.4" fill="${s.color}" />`; }).join('');
+  }
+
+  const svgWrap = document.createElement('div');
+  svgWrap.className = 'line-chart-wrap';
+  svgWrap.innerHTML = `<svg class="lc-svg" viewBox="0 0 ${LINE_W} ${LINE_H}">${gridSvg}${axisSvg}${xLabelsSvg}${linesSvg}</svg>`;
+  container.appendChild(svgWrap);
+
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;gap:16px;margin-top:10px;font-size:12px;color:var(--text-muted);flex-wrap:wrap';
+  legend.innerHTML = series.map((s) => `<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;height:2px;background:${s.color};display:inline-block"></span>${escapeHtml(s.name)}</span>`).join('');
+  container.appendChild(legend);
+}
+
 /* -------------------------------- Histograma ------------------------------ */
 // Distribuição de uma métrica contínua (dias de perfuração, produção por
 // poço, injeção por poço...) em faixas de largura igual — usada na aba

@@ -230,42 +230,6 @@ function renderExecutiveKpis(container, agg, wellAgg) {
   container.appendChild(row);
 }
 
-// Uma barra por ano de leilão/arremate — ordem cronológica (não por
-// contagem), pra ler como linha do tempo de licitações. leilaoYearOf só
-// acha o ano em contratos com marco de leilão/assinatura registrado no
-// roadmap; os sem essa data (poucos, ex. Cessão Onerosa original) ficam de
-// fora — ver nota no rodapé do gráfico.
-function renderContractsByYearChart(container, contractRows) {
-  const withYear = contractRows.filter((r) => r.leilaoYear != null);
-  if (!withYear.length) return;
-
-  const byYear = new Map();
-  for (const r of withYear) {
-    if (!byYear.has(r.leilaoYear)) byYear.set(r.leilaoYear, []);
-    byYear.get(r.leilaoYear).push(r.name);
-  }
-  const years = [...byYear.keys()].sort((a, b) => a - b);
-  const max = Math.max(...years.map((y) => byYear.get(y).length));
-
-  const card = chartCard(
-    'Contratos por ano',
-    `Os ${withYear.length} de ${contractRows.length} contratos rastreados com data de leilão/assinatura registrada, pelo ano de arremate — ordem cronológica.${withYear.length < contractRows.length ? ` ${contractRows.length - withYear.length} sem essa data no roadmap ficam de fora.` : ''}`,
-  );
-  const list = document.createElement('div');
-  list.className = 'hbar-list';
-  for (const year of years) {
-    const names = byYear.get(year);
-    list.appendChild(barRow(
-      String(year), (names.length / max) * 100, String(names.length), 'var(--accent)',
-      () => `<strong>${escapeHtml(String(year))}</strong>`
-        + tooltipRowHTML('Contratos', String(names.length))
-        + `<div class="viz-tooltip-row"><span>${escapeHtml(names.join(', '))}</span></div>`,
-    ));
-  }
-  card.appendChild(list);
-  container.appendChild(card);
-}
-
 // Reservas (VOIP) — data/reservas_bar.json (Boletim Anual de Reservas da
 // ANP, ver scripts/parse_reservas_bar.py), só pros 7 contratos com
 // produção própria (PROJECT_FIELD_BASE, shared.js) — os outros 23
@@ -273,13 +237,14 @@ function renderContractsByYearChart(container, contractRows) {
 // inteira sob a jazida compartilhada, ex. Libra sob "Mero"). extractReservasSeries/
 // buildReservasChart vêm de shared.js, compartilhadas com o gráfico
 // equivalente por projeto em campo.js.
-function computeReservasRows(reservasBarJson) {
+function computeReservasRows(reservasBarJson, contractRows) {
   const anos = reservasBarJson.anos.map((a) => a.ano);
   const firstAno = anos[0];
   const lastAno = anos[anos.length - 1];
   const rows = [];
   for (const [projectName, base] of Object.entries(PROJECT_FIELD_BASE)) {
     const project = state.projects.find((p) => p.name === projectName);
+    const contractRow = contractRows.find((r) => r.name === projectName);
     const series = extractReservasSeries(reservasBarJson, (nome) => nome.includes(base));
     if (!series.some((s) => s.voipMMbbl > 1e-9)) continue;
     const first = series[0];
@@ -289,15 +254,21 @@ function computeReservasRows(reservasBarJson) {
       color: project ? project.color : CONTEXT_FIELD_COLOR,
       voipLast: last.voipMMbbl,
       acumLast: last.acumMMbbl,
+      stoiip: contractRow ? contractRow.stoiip : null,
       voipChangePct: first.voipMMbbl > 0 ? (last.voipMMbbl - first.voipMMbbl) / first.voipMMbbl * 100 : 0,
+      // Fração recuperada = produção acumulada ÷ VOIP daquele mesmo ano —
+      // proxy de maturidade do campo (quanto do óleo original já saiu),
+      // NÃO um fator de recuperação final projetado (ver nota grande em
+      // scripts/parse_reservas_bar.py).
+      fracaoSeries: series.map((s) => ({ x: s.ano, y: s.voipMMbbl > 0 ? (s.acumMMbbl / s.voipMMbbl) * 100 : 0 })),
     });
   }
   return { rows, firstAno, lastAno };
 }
 
-function renderReservasSection(container, reservasBarJson) {
+function renderReservasSection(container, reservasBarJson, contractRows) {
   if (!reservasBarJson) return;
-  const { rows, firstAno, lastAno } = computeReservasRows(reservasBarJson);
+  const { rows, firstAno, lastAno } = computeReservasRows(reservasBarJson, contractRows);
   if (!rows.length) return;
 
   const totalVoip = rows.reduce((s, r) => s + r.voipLast, 0);
@@ -350,12 +321,39 @@ function renderReservasSection(container, reservasBarJson) {
   }
   barCard.appendChild(list);
   container.appendChild(barCard);
+
+  const fracaoCard = chartCard(
+    'Fração recuperada por contrato',
+    `Produção acumulada ÷ VOIP daquele mesmo ano, ${firstAno}–${lastAno} — quanto do óleo original já saiu de cada campo. Não é fator de recuperação final projetado (essa projeção a ANP não publica em planilha, só no Painel Dinâmico de Recursos e Reservas) — só a fração já extraída até hoje, então só sobe (ou fica no lugar quando o campo ainda não produz).`,
+  );
+  buildMultiLineChart(
+    fracaoCard,
+    rows.map((r) => ({ name: r.name, color: r.color, points: r.fracaoSeries })),
+    { formatY: (v) => v.toFixed(0) + '%' },
+  );
+  container.appendChild(fracaoCard);
+
+  const stoiipRows = rows.filter((r) => r.stoiip != null);
+  if (stoiipRows.length) {
+    const stoiipPieCard = chartCard(
+      'STOIIP por campo',
+      `Óleo in situ publicado no sumário executivo de PD de cada contrato (${stoiipRows.length} de ${rows.length} com produção própria têm PD publicado) — volume total do reservatório, não o volume recuperável nem o VOIP do BAR (fonte/metodologia diferente, ver Portfolio).`,
+    );
+    buildPieChart(stoiipPieCard, stoiipRows.map((r) => ({ name: r.name, value: r.stoiip, color: r.color })), { valueLabel: 'MMbbl' });
+    container.appendChild(stoiipPieCard);
+  }
+
+  const acumPieCard = chartCard(
+    `Volume produzido por campo (${lastAno})`,
+    `Produção acumulada de óleo declarada no Boletim Anual de Reservas mais recente, por contrato — ${fmtNum(totalAcum)} MMbbl no total.`,
+  );
+  buildPieChart(acumPieCard, rows.map((r) => ({ name: r.name, value: r.acumLast, color: r.color })), { valueLabel: 'MMbbl' });
+  container.appendChild(acumPieCard);
 }
 
 function renderExecutivePage(container, contractRows, agg, wellAgg, reservasBarJson) {
   renderExecutiveKpis(container, agg, wellAgg);
-  renderContractsByYearChart(container, contractRows);
-  renderReservasSection(container, reservasBarJson);
+  renderReservasSection(container, reservasBarJson, contractRows);
 }
 
 /* ------------------------------ Página Portfolio ---------------------------- */

@@ -812,6 +812,8 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 }
 .hbar-fill:first-child { border-radius: 4px; }
 .hbar-fill.is-hovered { filter: brightness(1.25); }
+.pie-slice { cursor: pointer; outline: none; }
+.pie-slice.is-hovered { filter: brightness(1.25); }
 /* Segmento de gás dentro de uma barra água+gás somada (ver
    buildFpsoProducaoInjecaoChart, analises.js) — mesma cor do segmento de
    água ao lado, só com listra diagonal clara por cima, pra distinguir os
