@@ -2290,6 +2290,7 @@ const COMPANY_LOGO_FILES = {
   'Ecopetrol': 'assets/logos/ecopetrol.png',
   'Chevron': 'assets/logos/chevron.png',
   'QatarEnergy': 'assets/logos/qatarenergy.png',
+  'Petronas': 'assets/logos/petronas.png',
 };
 
 function companyBadge(rawName) {
