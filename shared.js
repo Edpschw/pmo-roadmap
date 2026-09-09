@@ -2313,7 +2313,11 @@ function companyBadgesFor(operadorRaw, participacao) {
   const seen = new Set();
   const op = companyBadge(operadorRaw);
   if (op) {
-    list.push({ ...op, role: 'operador' });
+    const opPart = participacao && participacao.find((p) => {
+      const b = companyBadge(p.empresa);
+      return b && b.name === op.name;
+    });
+    list.push({ ...op, role: 'operador', pct: opPart ? opPart.pct : null });
     seen.add(op.name);
   }
   if (participacao) {

@@ -779,11 +779,11 @@ function renderProjectRow(project, rangeStart) {
     badgesRow.className = 'project-badges-row';
     for (const b of badges) {
       const isOp = b.role === 'operador';
-      const title = `${b.name}${isOp ? ' (operador)' : b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
-      // item: selo + (só pra parceiro, não operador) o percentual do PD ao
-      // lado, sempre juntos num flex item só — badgesRow já é flex-wrap,
-      // sem agrupar os dois um "%" solto podia quebrar linha separado do
-      // selo a que pertence. title fica no wrapper (cobre selo E texto).
+      const title = `${b.name}${isOp ? ' (operador)' : ''}${b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
+      // item: selo + o percentual do PD ao lado, sempre juntos num flex
+      // item só — badgesRow já é flex-wrap, sem agrupar os dois um "%"
+      // solto podia quebrar linha separado do selo a que pertence. title
+      // fica no wrapper (cobre selo E texto).
       const item = document.createElement('span');
       item.className = 'company-badge-item';
       item.title = title;
@@ -800,7 +800,7 @@ function renderProjectRow(project, rangeStart) {
         el.textContent = b.initials;
       }
       item.appendChild(el);
-      if (!isOp && b.pct != null) {
+      if (b.pct != null) {
         const pctEl = document.createElement('span');
         pctEl.className = 'company-badge-pct';
         pctEl.textContent = `${b.pct.toLocaleString('pt-BR')}%`;

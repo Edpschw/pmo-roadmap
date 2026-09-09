@@ -564,7 +564,7 @@ function companyBadgesForLabel(operadorRaw, key) {
 // linhas separadas, ver mapLabelOperatorBadgeHTML/mapLabelPartnerBadgesHTML).
 function companyBadgeHTML(b) {
   const isOp = b.role === 'operador';
-  const title = `${b.name}${isOp ? ' (operador)' : b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
+  const title = `${b.name}${isOp ? ' (operador)' : ''}${b.pct != null ? ` — ${b.pct.toLocaleString('pt-BR')}%` : ''}`;
   if (b.logo) {
     return `<span class="company-logo-chip ${isOp ? 'company-logo-chip-operador' : 'company-logo-chip-parceiro'}" title="${escapeHtml(title)}"><img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name)}"/></span>`;
   }
