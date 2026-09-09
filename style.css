@@ -186,6 +186,14 @@ body { display: flex; flex-direction: column; height: 100vh; }
 .company-logo-chip-operador img { height: 8px; max-width: 30px; }
 .company-logo-chip-parceiro { height: 9px; padding: 1px 2px; opacity: 0.9; }
 .company-logo-chip-parceiro img { height: 6px; max-width: 22px; }
+
+/* Selo + percentual do PD lado a lado, como UM item só (ver item em
+   app.js) — dentro de .project-badges-row (flex-wrap), agrupar os dois
+   evita que o "%" quebre linha separado do selo a que pertence. Só
+   parceiro tem texto aqui (operador não carrega pct nos dados, ver
+   companyBadgesFor em shared.js). */
+.company-badge-item { display: inline-flex; align-items: center; gap: 2px; }
+.company-badge-pct { font-size: 8px; line-height: 1; color: var(--text-faint); white-space: nowrap; }
 .corner-title { font-size: 11px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: .04em; }
 
 .chevron {
@@ -1145,6 +1153,7 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   .company-logo-chip-operador img { height: 6px; max-width: 22px; }
   .company-logo-chip-parceiro { height: 7px; padding: 1px 2px; }
   .company-logo-chip-parceiro img { height: 5px; max-width: 16px; }
+  .company-badge-pct { font-size: 7px; }
   /* Nome do projeto/workstream nunca é cortado no mobile: quebra em várias
      linhas em vez de truncar com reticências (altura da linha calculada em
      JS via measureLabelCellHeight, para não sobrepor a linha seguinte). */
