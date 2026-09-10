@@ -1129,6 +1129,13 @@ function computeRGO(oleoBbld, gasMm3d) {
 //     mudou junto quando Lula virou Tupi em 2019, ver normalize_field_name).
 const CONTEXT_JAZIDA_ALIAS = {
   'Sul de Berbigão': 'Berbigão',
+  // Mesma jazida (Reservatório Compartilhado de Tupi = Lula/BM-S-11 + Sul
+  // de Tupi/Cessão Onerosa + Área Não Contratada — ver revisão do AIP em
+  // data/planos_desenvolvimento.json, entradas TUPI/SUL DE TUPI), só
+  // contratos diferentes — sem isso viraria 2 linhas de contexto
+  // separadas por engano, uma delas sem quase nenhuma outra fonte
+  // reconhecendo o nome "Sul de Tupi" sozinho.
+  'Sul de Tupi': 'Tupi',
 };
 function contextJazidaBase(name, knownNames) {
   if (CONTEXT_JAZIDA_ALIAS[name]) return CONTEXT_JAZIDA_ALIAS[name];

@@ -166,6 +166,149 @@ function buildEvolutionSection(producaoData) {
   return section;
 }
 
+/* ------------------------- Tendência RGO x produção ------------------------ */
+// Sinal clássico de reservatório maduro perdendo pressão/"quebrando gás":
+// óleo em queda E RGO subindo ao mesmo tempo, de forma sustentada — não só
+// dois pontos, um mês de manutenção/parada isolado já derruba óleo e não
+// significa declínio. Por isso usa regressão linear sobre uma janela (até
+// 24 meses) em vez de comparar só o primeiro e o último ponto, e reaproveita
+// a MESMA série que a aba "Evolução mensal" já calcula (computeMonthlySeries,
+// shared.js) — mesmo agrupamento por jazida (contratos rastreados por
+// PROJECT_FIELD_BASE, contexto por contextJazidaBase), sem duplicar essa
+// lógica aqui.
+
+// Inclinação da reta de mínimos quadrados de `valores` (1 ponto por mês),
+// normalizada como %/ano em relação à média da série — normalizar deixa
+// campo grande e pequeno comparáveis na mesma tabela (um b em bbl/d bruto
+// não diz nada sozinho).
+function trendPctAoAno(valores) {
+  const n = valores.length;
+  if (n < 4) return null;
+  const mx = (n - 1) / 2;
+  const my = valores.reduce((s, v) => s + v, 0) / n;
+  let num = 0, den = 0;
+  valores.forEach((y, x) => { num += (x - mx) * (y - my); den += (x - mx) ** 2; });
+  if (den === 0 || my === 0) return null;
+  const b = num / den;
+  return (b * 12 / my) * 100;
+}
+
+// Limiares do "alerta": queda de óleo e alta de RGO precisam ser as duas
+// reais (não ruído perto de zero) pra contar como sinal de maturidade —
+// abaixo disso é só "estável" (nem crescendo nem sinalizando declínio).
+const TREND_OLEO_QUEDA = -1; // %/ano
+const TREND_RGO_ALTA = 1; // %/ano
+
+function computeRgoTrend(monthlySeries) {
+  const porNome = new Map();
+  for (const m of monthlySeries) {
+    for (const r of m.rows) {
+      if (!(r.oleoPreSalBbld > 0) || r.rgo == null) continue;
+      if (!porNome.has(r.name)) porNome.set(r.name, { isContract: r.isContract, color: r.color, pontos: [] });
+      porNome.get(r.name).pontos.push({ ano: m.ano, mes: m.mes, oleo: r.oleoPreSalBbld, rgo: r.rgo });
+    }
+  }
+  const linhas = [];
+  for (const [nome, { isContract, color, pontos }] of porNome) {
+    const janela = pontos.length >= 24 ? pontos.slice(-24) : pontos;
+    const oleoTrend = trendPctAoAno(janela.map((p) => p.oleo));
+    const rgoTrend = trendPctAoAno(janela.map((p) => p.rgo));
+    if (oleoTrend == null || rgoTrend == null) {
+      linhas.push({ nome, isContract, color, meses: pontos.length, janela: janela.length, oleoTrend: null, rgoTrend: null });
+      continue;
+    }
+    linhas.push({
+      nome, isContract, color,
+      meses: pontos.length, janela: janela.length,
+      oleoTrend, rgoTrend,
+      oleoIni: janela[0].oleo, oleoFim: janela[janela.length - 1].oleo,
+      rgoIni: janela[0].rgo, rgoFim: janela[janela.length - 1].rgo,
+      alerta: oleoTrend < TREND_OLEO_QUEDA && rgoTrend > TREND_RGO_ALTA,
+    });
+  }
+  // Alerta primeiro (pior tendência de óleo primeiro dentro do alerta),
+  // depois o resto ordenado pela tendência de óleo (quem mais cai por
+  // último a se preocupar vem primeiro) — sem histórico suficiente vai pro
+  // final, já que não dá pra dizer nada sobre esses.
+  return linhas.sort((a, b) => {
+    if (a.oleoTrend == null && b.oleoTrend == null) return 0;
+    if (a.oleoTrend == null) return 1;
+    if (b.oleoTrend == null) return -1;
+    if (a.alerta !== b.alerta) return a.alerta ? -1 : 1;
+    return a.oleoTrend - b.oleoTrend;
+  });
+}
+
+function renderRgoTrendTable(container, linhas) {
+  const wrap = document.createElement('div');
+  wrap.className = 'pocos-table-wrapper';
+  const table = document.createElement('table');
+  table.className = 'data-table analytics-table';
+  table.innerHTML = `<thead><tr>
+    <th>Campo</th><th class="num">Meses c/ produção</th>
+    <th class="num">Tendência óleo (%/ano)</th><th class="num">Tendência RGO (%/ano)</th>
+    <th class="num">Óleo (kbbl/d)</th><th class="num">RGO (m³/m³)</th><th>Sinal</th>
+  </tr></thead>`;
+  const tbody = document.createElement('tbody');
+  for (const l of linhas) {
+    const tr = document.createElement('tr');
+    if (l.oleoTrend == null) {
+      tr.innerHTML = `
+        <td>${escapeHtml(l.nome)}</td>
+        <td class="num">${l.meses}</td>
+        <td class="num" colspan="4">Histórico curto demais (menos de 4 meses de produção) pra calcular tendência.</td>
+        <td class="muted">—</td>
+      `;
+      tbody.appendChild(tr);
+      continue;
+    }
+    const sinalTexto = l.alerta ? 'Queda de óleo + RGO subindo' : (l.oleoTrend < 0 || l.rgoTrend > TREND_RGO_ALTA ? 'Observar' : 'Estável/crescendo');
+    const sinalCor = l.alerta ? 'var(--danger)' : (l.oleoTrend < 0 || l.rgoTrend > TREND_RGO_ALTA ? 'var(--warning, #c17817)' : 'var(--text-faint)');
+    tr.innerHTML = `
+      <td>${escapeHtml(l.nome)}</td>
+      <td class="num">${l.meses}</td>
+      <td class="num" style="${l.oleoTrend < 0 ? 'color:var(--danger)' : ''}">${l.oleoTrend >= 0 ? '+' : ''}${l.oleoTrend.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</td>
+      <td class="num" style="${l.rgoTrend > TREND_RGO_ALTA ? 'color:var(--danger)' : ''}">${l.rgoTrend >= 0 ? '+' : ''}${l.rgoTrend.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</td>
+      <td class="num">${fmtNum(l.oleoIni / 1000)} → ${fmtNum(l.oleoFim / 1000)}</td>
+      <td class="num">${fmtNum(l.rgoIni, { maximumFractionDigits: 1 })} → ${fmtNum(l.rgoFim, { maximumFractionDigits: 1 })}</td>
+      <td style="color:${sinalCor};font-size:12px">${escapeHtml(sinalTexto)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  container.appendChild(wrap);
+}
+
+function buildRgoTrendSection(producaoData) {
+  const monthlySeries = computeMonthlySeries(producaoData.meses, state.projects);
+  const linhas = computeRgoTrend(monthlySeries);
+  const comAlerta = linhas.filter((l) => l.alerta);
+
+  const section = document.createElement('section');
+  section.className = 'analytics-section';
+
+  const row = document.createElement('div');
+  row.className = 'kpi-row';
+  row.appendChild(statTile('Campos analisados', String(linhas.filter((l) => l.oleoTrend != null).length), 'com pelo menos 4 meses de produção, na janela de até 24 meses mais recente'));
+  row.appendChild(statTile('Queda de óleo + RGO subindo', String(comAlerta.length), comAlerta.length ? comAlerta.map((l) => l.nome).join(', ') : 'nenhum no momento'));
+  section.appendChild(row);
+
+  const card = chartCard(
+    'Tendência de óleo x RGO por campo',
+    `Regressão linear sobre a janela de até 24 meses mais recentes com produção de óleo > 0 (mesmo agrupamento por jazida da aba "Evolução mensal" — sub-áreas somadas numa linha só), normalizada em %/ano em relação à média da própria série pra comparar campo grande com pequeno. Sinal de maturidade (RGO subindo enquanto o óleo cai) é o clássico de reservatório perdendo pressão e "quebrando gás" — mas um trecho negativo isolado pode só ser uma parada de manutenção de FPSO no meio da janela, não declínio de verdade; vale conferir o gráfico da aba "Evolução mensal" antes de tirar conclusão de um número só aqui. Queda >${Math.abs(TREND_OLEO_QUEDA)}%/ano de óleo E alta >${TREND_RGO_ALTA}%/ano de RGO ao mesmo tempo = alerta.`,
+  );
+  renderRgoTrendTable(card, linhas);
+  section.appendChild(card);
+
+  const note = document.createElement('p');
+  note.className = 'analytics-table-note';
+  note.textContent = `Fonte: ${producaoData.fonte.nome}. RGO calculado aqui a partir de óleo e gás pré-sal do próprio boletim, não vem pronto da ANP.`;
+  section.appendChild(note);
+
+  return section;
+}
+
 /* ---------------------------------- Init ----------------------------------- */
 
 async function init() {
@@ -196,18 +339,22 @@ async function init() {
 
   const monthlySection = buildMonthlySection(producaoData);
   const evolutionSection = buildEvolutionSection(producaoData);
+  const rgoTrendSection = buildRgoTrendSection(producaoData);
   evolutionSection.hidden = true;
+  rgoTrendSection.hidden = true;
 
   const pageSwitch = buildPageSwitch(
-    [['mensal', 'Mês atual'], ['evolucao', 'Evolução mensal']],
+    [['mensal', 'Mês atual'], ['evolucao', 'Evolução mensal'], ['tendencia', 'Tendência RGO x produção']],
     (page) => {
       monthlySection.hidden = page !== 'mensal';
       evolutionSection.hidden = page !== 'evolucao';
+      rgoTrendSection.hidden = page !== 'tendencia';
     },
   );
   wrapper.appendChild(pageSwitch);
   wrapper.appendChild(monthlySection);
   wrapper.appendChild(evolutionSection);
+  wrapper.appendChild(rgoTrendSection);
 }
 
 function buildPageSwitch(tabs, onChange) {
