@@ -92,13 +92,14 @@
     "resolucao": "RD 0758/2021 de 09/12/2021",
     "contrato": "48610.011150/2013-10 (MRO-PP) + Área Não Contratada (ANC)",
     "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 40 },
-      { "empresa": "TotalEnergies EP Brasil Ltda.", "pct": 20 },
-      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 20 },
-      { "empresa": "CNODC Brasil Petróleo e Gás Ltda.", "pct": 10 },
-      { "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 10 }
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 38.6 },
+      { "empresa": "TotalEnergies EP Brasil Ltda.", "pct": 19.3 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 19.3 },
+      { "empresa": "CNODC Brasil Petróleo e Gás Ltda.", "pct": 9.65 },
+      { "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 9.65 },
+      { "empresa": "Pré-Sal Petróleo S.A.", "pct": 3.5 }
     ],
-    "participacaoObs": "% do contrato de partilha MRO-PP. A Área Não Contratada (3,5% da jazida) é 100% PPSA/União.",
+    "participacaoObs": "% blend da jazida (AIP 2021), ponderando os 2 tratos por volume (ver tracts) — não só o contrato MRO-PP isolado: Mero (96,5%, Partilha 40/20/20/10/10% Petrobras/TotalEnergies/Shell/CNODC/CNOOC) + Área Não Contratada (3,5%, 100% PPSA).",
     "situacao": "Em produção",
     "descoberta": "2010-10-28",
     "comercialidade": "2017-11-30",
