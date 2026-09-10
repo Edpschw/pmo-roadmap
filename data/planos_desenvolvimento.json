@@ -65,11 +65,11 @@
     "resolucao": "RD 832 de 18/02/2016 — Resolução nº 093/2016",
     "contrato": "Cessão Onerosa 48610.012913/2010-05 + Partilha do Excedente 48610.220924/2019-97",
     "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 85 },
-      { "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 10 },
-      { "empresa": "CNODC Brasil Petróleo e Gás Ltda.", "pct": 5 }
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 88.92 },
+      { "empresa": "CNOOC Petroleum Brasil Ltda.", "pct": 7.39 },
+      { "empresa": "CNODC Brasil Petróleo e Gás Ltda.", "pct": 3.69 }
     ],
-    "participacaoObs": "% do contrato de Partilha do Excedente (Búzios-PP) — consórcio vencedor do leilão de 06/11/2019 (Petrobras 90% / CNOOC 5% / CNODC 5%), depois de a Petrobras ceder mais 5% à CNOOC em 30/11/2022 (transação concluída 01/12/2022, US$ 1,9 bi). Na Cessão Onerosa original (Búzios-CO) a Petrobras tem 100%. TP dos dois tratos definido pelo Acordo de Coparticipação de Búzios, aprovado pela ANP em 12/08/2022 (ver tracts acima) — combinando os dois, a fatia na jazida inteira fica ~89% Petrobras / ~7,3% CNOOC / ~3,7% CNODC.",
+    "participacaoObs": "% blend da jazida inteira (Acordo de Coparticipação de Búzios, aprovado pela ANP em 12/08/2022, ponderando os tratos — ver tracts), não só o contrato de Partilha do Excedente isolado (Búzios-PP é Petrobras 85% / CNOOC 10% / CNODC 5%, depois de a Petrobras ceder mais 5% à CNOOC em 30/11/2022 — original do leilão de 06/11/2019 era 90/5/5; na Cessão Onerosa original, Búzios-CO, a Petrobras tem 100%).",
     "situacao": "Produzindo",
     "descoberta": "2010-03-01",
     "comercialidade": "2013-12-19",
@@ -174,11 +174,12 @@
     "resolucao": "RD 1.140 de 11/07/2024 — Resolução nº 476/2024",
     "contrato": "48610.003884/2000 (Concessão, Sapinhoá) + 48610.012961/2017-61 (Partilha, Entorno de Sapinhoá)",
     "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 45 },
-      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 30 },
-      { "empresa": "Repsol Sinopec Brasil S.A.", "pct": 25 }
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 43.335 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 28.89 },
+      { "empresa": "Repsol Sinopec Brasil S.A.", "pct": 24.075 },
+      { "empresa": "Pré-Sal Petróleo S.A.", "pct": 3.7 }
     ],
-    "participacaoObs": "Mesmo % nos dois contratos (Concessão e Partilha).",
+    "participacaoObs": "% blend do AIP da jazida compartilhada de Sapinhoá (assinado 31/01/2016, efetivo desde nov/2018) — 45/30/25% Petrobras/Shell/Repsol Sinopec são iguais na Concessão e na Partilha (mesmo % nos dois contratos), mas o poço original (BM-S-9) descobriu que o reservatório real passava da área contratada pra uma Área Não Contratada, que ficou definida em 3,7% da jazida (100% PPSA/União) — por isso o blend dilui os 3 sócios proporcionalmente (96,3% × cada %).",
     "situacao": "Em produção",
     "descoberta": "2008-06-13",
     "comercialidade": "2011-12-29",
@@ -198,11 +199,12 @@
     "resolucao": "RD 1.140 de 11/07/2024 — Resolução nº 476/2024",
     "contrato": "48610.003884/2000 (Concessão, Sapinhoá) + 48610.012961/2017-61 (Partilha, Entorno de Sapinhoá)",
     "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 45 },
-      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 30 },
-      { "empresa": "Repsol Sinopec Brasil S.A.", "pct": 25 }
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 43.335 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 28.89 },
+      { "empresa": "Repsol Sinopec Brasil S.A.", "pct": 24.075 },
+      { "empresa": "Pré-Sal Petróleo S.A.", "pct": 3.7 }
     ],
-    "participacaoObs": "Mesmo % nos dois contratos (Concessão e Partilha).",
+    "participacaoObs": "% blend do AIP da jazida compartilhada de Sapinhoá (assinado 31/01/2016, efetivo desde nov/2018) — 45/30/25% Petrobras/Shell/Repsol Sinopec são iguais na Concessão e na Partilha (mesmo % nos dois contratos), mas o poço original (BM-S-9) descobriu que o reservatório real passava da área contratada pra uma Área Não Contratada, que ficou definida em 3,7% da jazida (100% PPSA/União) — por isso o blend dilui os 3 sócios proporcionalmente (96,3% × cada %).",
     "situacao": "Em produção",
     "descoberta": "2008-06-13",
     "comercialidade": "2011-12-29",
@@ -336,14 +338,18 @@
   "BERBIGÃO": {
     "titulo": "Berbigão, Norte de Berbigão e Sul de Berbigão 2025",
     "resolucao": "Decisão de Diretoria nº 24/2025 de 23/01/2025",
-    "contrato": "Berbigão: Concessão 48610.003886/2000A — Norte e Sul de Berbigão: Cessão Onerosa 48610.012913/2010-05",
-    "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 42.5 },
-      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 25 },
-      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 22.5 },
-      { "empresa": "Petrogal Brasil S.A.", "pct": 10 }
+    "contrato": "Berbigão: Concessão 48610.003886/2000A — Norte e Sul de Berbigão: Cessão Onerosa 48610.012913/2010-05 — AIP da Jazida Compartilhada de Berbigão/Sururu, efetivo desde 01/05/2026",
+    "tracts": [
+      { "nome": "Berbigão (Concessão)", "pct": 64.5, "excedenteOleoPct": null },
+      { "nome": "Norte + Sul de Berbigão (CO)", "pct": 35.5, "excedenteOleoPct": null }
     ],
-    "participacaoObs": "% do contrato de Concessão de Berbigão (CSS). Norte/Sul de Berbigão (Cessão Onerosa) são 100% Petrobras.",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 62.913 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 16.125 },
+      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 14.512 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 6.45 }
+    ],
+    "participacaoObs": "% blend do AIP da Jazida Compartilhada de Berbigão (aprovado pela ANP junto com o de Sururu, jazida vizinha e não rastreada aqui — efetivo desde 01/05/2026), ponderando os tratos (ver tracts) — não só o contrato de Concessão de Berbigão isolado, que é 42,5/25/22,5/10% Petrobras/Shell/TotalEnergies/Petrogal (Norte/Sul de Berbigão, Cessão Onerosa, são 100% Petrobras).",
     "situacao": "Em produção",
     "descoberta": "2008-09-10",
     "comercialidade": "2014-12-29",
@@ -361,11 +367,18 @@
   "NORTE DE BERBIGÃO": {
     "titulo": "Berbigão, Norte de Berbigão e Sul de Berbigão 2025",
     "resolucao": "Decisão de Diretoria nº 24/2025 de 23/01/2025",
-    "contrato": "Berbigão: Concessão 48610.003886/2000A — Norte e Sul de Berbigão: Cessão Onerosa 48610.012913/2010-05",
-    "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }
+    "contrato": "Berbigão: Concessão 48610.003886/2000A — Norte e Sul de Berbigão: Cessão Onerosa 48610.012913/2010-05 — AIP da Jazida Compartilhada de Berbigão/Sururu, efetivo desde 01/05/2026",
+    "tracts": [
+      { "nome": "Berbigão (Concessão)", "pct": 64.5, "excedenteOleoPct": null },
+      { "nome": "Norte + Sul de Berbigão (CO)", "pct": 35.5, "excedenteOleoPct": null }
     ],
-    "participacaoObs": "% do contrato de Cessão Onerosa (CO). Berbigão (Concessão) tem sócios — ver entrada BERBIGÃO.",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 62.913 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 16.125 },
+      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 14.512 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 6.45 }
+    ],
+    "participacaoObs": "% blend do AIP da Jazida Compartilhada de Berbigão (aprovado pela ANP junto com o de Sururu, jazida vizinha e não rastreada aqui — efetivo desde 01/05/2026), ponderando os tratos (ver tracts) — não só o contrato de Cessão Onerosa isolado (100% Petrobras). Berbigão (Concessão) tem sócios — ver entrada BERBIGÃO.",
     "situacao": "Em produção",
     "descoberta": "2008-09-10",
     "comercialidade": "2014-12-29",
@@ -383,11 +396,18 @@
   "SUL DE BERBIGÃO": {
     "titulo": "Berbigão, Norte de Berbigão e Sul de Berbigão 2025",
     "resolucao": "Decisão de Diretoria nº 24/2025 de 23/01/2025",
-    "contrato": "Berbigão: Concessão 48610.003886/2000A — Norte e Sul de Berbigão: Cessão Onerosa 48610.012913/2010-05",
-    "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }
+    "contrato": "Berbigão: Concessão 48610.003886/2000A — Norte e Sul de Berbigão: Cessão Onerosa 48610.012913/2010-05 — AIP da Jazida Compartilhada de Berbigão/Sururu, efetivo desde 01/05/2026",
+    "tracts": [
+      { "nome": "Berbigão (Concessão)", "pct": 64.5, "excedenteOleoPct": null },
+      { "nome": "Norte + Sul de Berbigão (CO)", "pct": 35.5, "excedenteOleoPct": null }
     ],
-    "participacaoObs": "% do contrato de Cessão Onerosa (CO). Berbigão (Concessão) tem sócios — ver entrada BERBIGÃO.",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 62.913 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 16.125 },
+      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 14.512 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 6.45 }
+    ],
+    "participacaoObs": "% blend do AIP da Jazida Compartilhada de Berbigão (aprovado pela ANP junto com o de Sururu, jazida vizinha e não rastreada aqui — efetivo desde 01/05/2026), ponderando os tratos (ver tracts) — não só o contrato de Cessão Onerosa isolado (100% Petrobras). Berbigão (Concessão) tem sócios — ver entrada BERBIGÃO.",
     "situacao": "Em produção",
     "descoberta": "2008-09-10",
     "comercialidade": "2014-12-29",
