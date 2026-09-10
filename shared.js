@@ -2245,6 +2245,12 @@ const COMPANY_ALIASES = {
   'QatarEnergy Brasil Ltda.': { short: 'QatarEnergy', initials: 'QE' },
   'Petronas Petróleo Brasil Ltda.': { short: 'Petronas', initials: 'PT' },
   'Sinopec Petroleum do Brasil Ltda.': { short: 'Sinopec', initials: 'SP' },
+  // Estatal que administra os contratos de partilha em nome da União —
+  // só aparece quando a % de participação é o blend da jazida inteira
+  // (ver participacaoObs de Atapu/Oeste de Atapu em
+  // planos_desenvolvimento.json), já que a fatia da Área Não Contratada
+  // é 100% dela.
+  'Pré-Sal Petróleo S.A.': { short: 'PPSA', initials: 'PS' },
   // Variantes mais curtas do campo "op" de data/pocos.json (nome do
   // operador do POÇO, não do contrato — formato diferente do operador do
   // GeoJSON acima) — mesma empresa, mesmo selo. Usadas pelo fallback de

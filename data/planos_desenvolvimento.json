@@ -271,11 +271,13 @@
     "resolucao": "RD 355/2024 de 29/05/2024",
     "contrato": "Atapu: Cessão Onerosa 48610.012913/2010-05 + Partilha 48610.226558/2021-02 — Oeste de Atapu: Concessão 48610.003886/2000A — + Área Não Contratada",
     "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 52.5 },
-      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 25 },
-      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 22.5 }
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 65.7 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 16.7 },
+      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 15 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 1.7 },
+      { "empresa": "Pré-Sal Petróleo S.A.", "pct": 0.9 }
     ],
-    "participacaoObs": "% do contrato de Partilha de Atapu (Atapu-PP); na Cessão Onerosa (Atapu-CO) a Petrobras tem 100%.",
+    "participacaoObs": "% blend da jazida unificada (AIP 2024), ponderando os 4 tratos por volume (ver tracts) — não o % de nenhum contrato isolado: Atapu-CO (32,4%, 100% Petrobras) + Atapu-PP (49,6%, Partilha 52,5/25/22,5% Petrobras/Shell/TotalEnergies) + Oeste de Atapu (17,0%, Concessão 42,5/25/22,5/10% Petrobras/Shell/TotalEnergies/Petrogal) + Área Não Contratada (0,95%, 100% PPSA).",
     "situacao": "Em produção",
     "descoberta": "2013-05-01",
     "descobertaObs": "poço 1-BRSA-1146-RJS",
@@ -297,12 +299,13 @@
     "resolucao": "RD 355/2024 de 29/05/2024",
     "contrato": "Atapu: Cessão Onerosa 48610.012913/2010-05 + Partilha 48610.226558/2021-02 — Oeste de Atapu: Concessão 48610.003886/2000A — + Área Não Contratada",
     "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 42.5 },
-      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 25 },
-      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 22.5 },
-      { "empresa": "Petrogal Brasil S.A.", "pct": 10 }
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 65.7 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 16.7 },
+      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 15 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 1.7 },
+      { "empresa": "Pré-Sal Petróleo S.A.", "pct": 0.9 }
     ],
-    "participacaoObs": "% do contrato de Concessão de Oeste de Atapu (CSS).",
+    "participacaoObs": "% blend da jazida unificada (AIP 2024), ponderando os 4 tratos por volume (ver tracts) — não o % de nenhum contrato isolado: Atapu-CO (32,4%, 100% Petrobras) + Atapu-PP (49,6%, Partilha 52,5/25/22,5% Petrobras/Shell/TotalEnergies) + Oeste de Atapu (17,0%, Concessão 42,5/25/22,5/10% Petrobras/Shell/TotalEnergies/Petrogal) + Área Não Contratada (0,95%, 100% PPSA).",
     "situacao": "Em produção",
     "descoberta": "2013-05-01",
     "descobertaObs": "poço 1-BRSA-1146-RJS",
