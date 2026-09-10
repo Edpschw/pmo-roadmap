@@ -118,10 +118,20 @@
     "titulo": "Sul de Lula 2018",
     "notaNome": "Chamado de \"Sul de Lula\" no documento — a ANP mantém o nome antigo \"Sul de Tupi\" no shapefile de campos, mas é o mesmo campo (Tupi foi rebatizado Lula em 2010).",
     "resolucao": "RD 0914 de 10/01/2018 — Resolução nº 007/2018",
-    "contrato": "48610.012913/2010-05",
-    "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 100 }
+    "contrato": "Sul de Tupi: Cessão Onerosa 48610.012913/2010-05 — Lula: Concessão 48610.003886/2010 — + Área Não Contratada",
+    "tracts": [
+      { "nome": "Lula (BM-S-11)", "pct": 90.60, "excedenteOleoPct": null },
+      { "nome": "Sul de Tupi", "pct": 8.567, "excedenteOleoPct": null },
+      { "nome": "Área Não Contratada", "pct": 0.833, "excedenteOleoPct": null }
     ],
+    "areaObs": "Jazida compartilhada (Reservatório Compartilhado de Tupi) — 90,60% Lula (BM-S-11) / 8,57% Sul de Tupi / 0,83% Área Não Contratada.",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 67.457 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 22.65 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 9.06 },
+      { "empresa": "Pré-Sal Petróleo S.A.", "pct": 0.833 }
+    ],
+    "participacaoObs": "% blend do Reservatório Compartilhado de Tupi (AIP) ponderado pelos tratos (ver tracts), não só o contrato de Cessão Onerosa isolado (Sul de Tupi é 100% Petrobras) — soma Lula/BM-S-11 (90,60%, Concessão 65/25/10% Petrobras/Shell/Petrogal) + Sul de Tupi (8,57%, 100% Petrobras) + Área Não Contratada (0,83%, 100% PPSA). Atualizado pela redeterminação de dez/2025 (aditivo ao AIP aprovado pela ANP, efeitos retroativos a 01/12/2025): fatia da União subiu de 0,551% pra 0,833%, Petrobras de 67,216% pra 67,457%, Shell de 23,024% pra 22,650% e Petrogal de 9,209% pra 9,060%.",
     "situacao": "Produção a iniciar",
     "descoberta": "2013-01-04",
     "comercialidade": "2013-12-19",
@@ -238,17 +248,18 @@
     ],
     "excedenteOleoPct": 37.43,
     "excedenteOleoObs": "Só a fatia do excedente (leilão de 2019/2021, camada de Partilha sobre o contrato original) tem esse mecanismo; a fatia original da Cessão Onerosa (2010) paga royalties + participação especial em vez de excedente em óleo. Leilão do Excedente da Cessão Onerosa, 2ª Rodada (17/12/2021) — não arrematado na 1ª Rodada (2019), reofertado com mínimo mais baixo.",
-    "titulo": "Sépia 2017",
+    "titulo": "Sépia e Sépia Leste (AIP) 2019",
     "notaNome": "Documento de 2017, anterior ao contrato de partilha atual (leilão do excedente da Cessão Onerosa, 2021/2022) — números de poços e volumes provavelmente desatualizados.",
-    "contrato": "Cessão Onerosa 48610.012913/2010-05 + Partilha do Excedente (leilão 17/12/2021)",
+    "contrato": "Sépia: Cessão Onerosa 48610.012913/2010-05 + Partilha do Excedente (leilão 17/12/2021) — Sépia Leste: Concessão BM-S-24",
     "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 30 },
-      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 28 },
-      { "empresa": "Petronas Petróleo Brasil Ltda.", "pct": 21 },
-      { "empresa": "QatarEnergy Brasil Ltda.", "pct": 21 }
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 55.3 },
+      { "empresa": "TotalEnergies EP do Brasil Ltda.", "pct": 16.91 },
+      { "empresa": "Petronas Petróleo Brasil Ltda.", "pct": 12.69 },
+      { "empresa": "QatarEnergy Brasil Ltda.", "pct": 12.69 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 2.41 }
     ],
-    "participacaoObs": "% do contrato de Partilha do Excedente (Sépia-PP) — consórcio vencedor do leilão de 17/12/2021 (2ª Rodada). Na Cessão Onerosa original (Sépia-CO) a Petrobras tem 100%. TP dos dois tratos (ver tracts acima) derivado da proporção real de produção SÉPIA vs SÉPIA_ECO no boletim de poços da ANP (jan–jul/2026) — bate com o percentual de 68,7% já citado pela imprensa especializada pro acordo de coparticipação de Sépia/Atapu; mesmo método validado contra o TP oficial já publicado de Búzios, Bacalhau e Mero.",
-    "areaObs": "Jazida compartilhada — 31,30% Sépia (CO) / 68,70% Sépia (PP)",
+    "participacaoObs": "% blend da Jazida Compartilhada de Sépia (AIP aprovado set/2019 pra Cessão Onerosa + Concessão de Sépia Leste — BM-S-24 —, aditado 27/04/2022 e efetivo desde 02/05/2022 pra incluir a Partilha do Excedente do leilão de 17/12/2021). Petrogal entra pela Concessão de Sépia Leste, um terceiro trato que o TP de 2 tratos abaixo (Sépia CO/PP, derivado do boletim de poços da ANP) não captura — os tracts continuam sendo uma aproximação a 2 tratos, não o TP real dos 3 do AIP.",
+    "areaObs": "Jazida compartilhada — Cessão Onerosa + Concessão de Sépia Leste (BM-S-24) + Partilha do Excedente. Tracts abaixo (31,30% CO / 68,70% PP) são aproximação a 2 tratos — ver participacaoObs.",
     "situacao": "Em desenvolvimento",
     "descoberta": "2012-03-08",
     "descobertaObs": "poço 1-BRSA-976-RJS",
@@ -418,12 +429,20 @@
     "titulo": "Lula 2018",
     "notaNome": "Chamado de \"Lula\" no documento (nome dado em 2010) — a ANP mantém o nome antigo \"Tupi\" no shapefile de campos.",
     "resolucao": "RD 0914 de 10/01/2018 — Resolução nº 007/2018",
-    "contrato": "48610.003886/2010",
-    "participacao": [
-      { "empresa": "Petróleo Brasileiro S.A.", "pct": 65 },
-      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 25 },
-      { "empresa": "Petrogal Brasil S.A.", "pct": 10 }
+    "contrato": "Lula: Concessão 48610.003886/2010 — Sul de Tupi: Cessão Onerosa 48610.012913/2010-05 — + Área Não Contratada",
+    "tracts": [
+      { "nome": "Lula (BM-S-11)", "pct": 90.60, "excedenteOleoPct": null },
+      { "nome": "Sul de Tupi", "pct": 8.567, "excedenteOleoPct": null },
+      { "nome": "Área Não Contratada", "pct": 0.833, "excedenteOleoPct": null }
     ],
+    "areaObs": "Jazida compartilhada (Reservatório Compartilhado de Tupi) — 90,60% Lula (BM-S-11) / 8,57% Sul de Tupi / 0,83% Área Não Contratada.",
+    "participacao": [
+      { "empresa": "Petróleo Brasileiro S.A.", "pct": 67.457 },
+      { "empresa": "Shell Brasil Petróleo Ltda.", "pct": 22.65 },
+      { "empresa": "Petrogal Brasil S.A.", "pct": 9.06 },
+      { "empresa": "Pré-Sal Petróleo S.A.", "pct": 0.833 }
+    ],
+    "participacaoObs": "% blend do Reservatório Compartilhado de Tupi (AIP) ponderado pelos tratos (ver tracts), não só a concessão de Lula/BM-S-11 isolada (essa sim é 65/25/10% Petrobras/Shell/Petrogal) — soma Lula/BM-S-11 (90,60%) + Sul de Tupi (8,57%, Cessão Onerosa 100% Petrobras) + Área Não Contratada (0,83%, 100% PPSA). Atualizado pela redeterminação de dez/2025 (aditivo ao AIP aprovado pela ANP, efeitos retroativos a 01/12/2025): fatia da União subiu de 0,551% pra 0,833%, Petrobras de 67,216% pra 67,457%, Shell de 23,024% pra 22,650% e Petrogal de 9,209% pra 9,060%.",
     "situacao": "Em Produção",
     "descoberta": "2006-08-01",
     "comercialidade": "2010-12-29",
