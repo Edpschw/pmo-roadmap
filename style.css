@@ -14,6 +14,10 @@
   --accent-soft: rgba(52, 87, 213, 0.18);
   --danger: #d64545;
   --today: #e0522f;
+  /* Aba Tendência RGO x produção (producao.js) — óleo em verde, RGO em
+     vermelho (pedido explícito, não o par cromático de PALETTE). */
+  --trend-oleo: #1c9e6b;
+  --trend-rgo: #d64545;
   --row-h: 44px;
   --sidebar-w: 300px;
   --radius: 8px;
@@ -902,16 +906,19 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .trend-pill-warning { background: rgba(201, 162, 39, 0.16); color: #c9a227; }
 .trend-pill-neutral { background: rgba(139, 147, 161, 0.14); color: var(--text-faint); }
 
+/* Óleo em verde (produção, "no azul"), RGO em vermelho (o que se quer ver
+   subir o mínimo possível) — pedido explícito, não é o mesmo par cromático
+   usado no resto do app pra série (PALETTE). */
 .trend-svg { width: 100%; height: auto; display: block; overflow: visible; }
-.trend-line-oleo { stroke: #e0762f; stroke-width: 2; fill: none; }
-.trend-line-rgo { stroke: #2f9ed6; stroke-width: 2; fill: none; }
-.trend-dot-oleo { fill: #e0762f; }
-.trend-dot-rgo { fill: #2f9ed6; }
+.trend-line-oleo { stroke: var(--trend-oleo); stroke-width: 2; fill: none; }
+.trend-line-rgo { stroke: var(--trend-rgo); stroke-width: 2; fill: none; }
+.trend-dot-oleo { fill: var(--trend-oleo); }
+.trend-dot-rgo { fill: var(--trend-rgo); }
 .trend-baseline { stroke: var(--text-faint); stroke-width: 1; opacity: .4; }
 .trend-axis-label { font-size: 9.5px; fill: var(--text-faint); }
 .trend-end-label { font-size: 11px; font-weight: 600; }
-.trend-end-label-oleo { fill: #e0762f; }
-.trend-end-label-rgo { fill: #2f9ed6; }
+.trend-end-label-oleo { fill: var(--trend-oleo); }
+.trend-end-label-rgo { fill: var(--trend-rgo); }
 .trend-legend { display: flex; gap: 16px; align-items: center; font-size: 11.5px; color: var(--text-muted); margin: 2px 0 10px; }
 .trend-legend-item { display: flex; align-items: center; gap: 6px; }
 .trend-legend-swatch { width: 14px; height: 2px; border-radius: 2px; display: inline-block; }
@@ -924,8 +931,8 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .trend-stat-row { display: flex; gap: 18px; }
 .trend-stat { display: flex; flex-direction: column; gap: 2px; }
 .trend-stat .n { font-size: 18px; font-weight: 700; }
-.trend-stat .n.oleo { color: #e0762f; }
-.trend-stat .n.rgo { color: #2f9ed6; }
+.trend-stat .n.oleo { color: var(--trend-oleo); }
+.trend-stat .n.rgo { color: var(--trend-rgo); }
 .trend-stat .l { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
 
 .trend-watch-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-top: 14px; }
@@ -941,8 +948,8 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .trend-mini-figures { display: flex; gap: 12px; }
 .trend-mini-figure { display: flex; flex-direction: column; gap: 1px; }
 .trend-mini-figure .n { font-size: 12.5px; font-weight: 600; }
-.trend-mini-figure .n.oleo { color: #e0762f; }
-.trend-mini-figure .n.rgo { color: #2f9ed6; }
+.trend-mini-figure .n.oleo { color: var(--trend-oleo); }
+.trend-mini-figure .n.rgo { color: var(--trend-rgo); }
 .trend-mini-figure .l { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
 
 @media (max-width: 900px) {

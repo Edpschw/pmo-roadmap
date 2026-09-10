@@ -358,7 +358,7 @@ function buildRgoTrendSection(producaoData) {
 
   const row = document.createElement('div');
   row.className = 'kpi-row';
-  row.appendChild(statTile('Campos analisados', String(linhas.filter((l) => l.oleoTrend != null).length), 'com pelo menos 4 meses de produção, na janela de até 24 meses mais recente'));
+  row.appendChild(statTile('Campos analisados', String(linhas.filter((l) => l.oleoTrend != null).length), 'com pelo menos 4 meses de produção, nos últimos 2 anos (24 meses) mais recentes'));
   row.appendChild(statTile('Queda + RGO subindo', String(comAlerta.length), comAlerta.length ? comAlerta.map((l) => l.nome).join(', ') : 'nenhum no momento'));
   row.appendChild(statTile('Observar', String(comObservar.length), comObservar.length ? comObservar.map((l) => l.nome).join(', ') : 'nenhum no momento'));
   row.appendChild(statTile('Estável/crescendo', String(estaveis.length), 'ramp-up de FPSO/poços novos'));
@@ -376,8 +376,8 @@ function buildRgoTrendSection(producaoData) {
     const legend = document.createElement('div');
     legend.className = 'trend-legend';
     legend.innerHTML = `
-      <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:#e0762f"></span>Óleo (bbl/d)</span>
-      <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:#2f9ed6"></span>RGO (m³/m³)</span>
+      <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:var(--trend-oleo)"></span>Óleo (bbl/d)</span>
+      <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:var(--trend-rgo)"></span>RGO (m³/m³)</span>
       <span style="margin-left:auto;color:var(--text-faint)">ambos indexados a 100 no início da janela</span>
     `;
     destaqueCard.appendChild(legend);
@@ -458,7 +458,7 @@ function buildRgoTrendSection(producaoData) {
 
   const note = document.createElement('p');
   note.className = 'analytics-table-note';
-  note.textContent = `Fonte: ${producaoData.fonte.nome}. RGO calculado aqui a partir de óleo e gás pré-sal do próprio boletim, não vem pronto da ANP. Tendência = inclinação da reta de mínimos quadrados sobre a janela de até 24 meses mais recentes com óleo pré-sal > 0, normalizada em %/ano em relação à média da própria série (compara campo grande e pequeno). Alerta = queda de óleo > ${Math.abs(TREND_OLEO_QUEDA)}%/ano E alta de RGO > ${TREND_RGO_ALTA}%/ano ao mesmo tempo — uma tendência negativa isolada pode vir de manutenção de FPSO no meio da janela, não de declínio real; ver o ponto a ponto na aba "Evolução mensal" antes de agir sobre um número só daqui.`;
+  note.textContent = `Fonte: ${producaoData.fonte.nome}. RGO calculado aqui a partir de óleo e gás pré-sal do próprio boletim, não vem pronto da ANP. Tendência = inclinação da reta de mínimos quadrados sobre os últimos 2 anos (24 meses) com óleo pré-sal > 0 — campo com menos de 2 anos de produção usa o histórico inteiro que tiver —, normalizada em %/ano em relação à média da própria série (compara campo grande e pequeno). Alerta = queda de óleo > ${Math.abs(TREND_OLEO_QUEDA)}%/ano E alta de RGO > ${TREND_RGO_ALTA}%/ano ao mesmo tempo — uma tendência negativa isolada pode vir de manutenção de FPSO no meio da janela, não de declínio real; ver o ponto a ponto na aba "Evolução mensal" antes de agir sobre um número só daqui.`;
   section.appendChild(note);
 
   return section;
