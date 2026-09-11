@@ -803,6 +803,8 @@ function pdSectionHTML(key) {
     const fmt = (n) => n.toLocaleString('pt-BR');
     if (v.oleoInSituMMbbl != null) rows.push([`STOIIP (${v.dataRef || '—'})`, `${fmt(v.oleoInSituMMbbl)} MMbbl`]);
     if (v.gasInSituMMm3 != null) rows.push([`GIIP (${v.dataRef || '—'})`, `${fmt(v.gasInSituMMm3)} MMm³`]);
+    if (v.voipAtualMMbbl != null) rows.push([`VOIP atual (${v.voipAtualDataRef || '—'})`, `${fmt(v.voipAtualMMbbl)} MMbbl${v.voipAtualObs ? ` — ${v.voipAtualObs}` : ''}`]);
+    if (v.vgipAtualMMm3 != null) rows.push([`VGIP atual (${v.voipAtualDataRef || '—'})`, `${fmt(v.vgipAtualMMm3)} MMm³`]);
     if (v.reservaProvada) {
       const r = v.reservaProvada;
       if (r.oleoMMbbl != null) rows.push([`Volume recuperável óleo (${r.dataRef || '—'})`, `${fmt(r.oleoMMbbl)} MMbbl`]);
