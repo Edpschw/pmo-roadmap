@@ -835,7 +835,10 @@ function extractInjecaoSeries(injecaoData, base, color) {
       gas += d.gasInjMm3d;
     }
     const rows = (agua > 1e-9 || gas > 1e-9)
-      ? [{ name: 'Injeção', color, isContract: true, aguaInjM3d: agua, gasInjMm3d: gas }]
+      // aguaInjBbld: convertido de m³/d pra bbl/d aqui (não em UNITS.agua)
+      // pra já sair na mesma escala do "Produção mensal" (UNITS.oleo,
+      // bbl/d) — ver nota em UNITS.agua no shared.js.
+      ? [{ name: 'Injeção', color, isContract: true, aguaInjBbld: agua / BBL_TO_M3, gasInjMm3d: gas }]
       : [];
     return { ano: m.ano, mes: m.mes, rows };
   });
@@ -857,7 +860,7 @@ function buildFieldInjectionChart(container, injecaoData, base, color) {
   const ateMes = lastM ? `${MES_ABREV[lastM.mes]}/${lastM.ano}` : '?';
   const card = chartCard(
     'Injeção no campo',
-    `Água e gás injetados no campo, somando todos os poços injetores — dado aberto "Produção por Zona" da ANP, jan/2023 até ${ateMes} (a injeção de água/gás no pré-sal ainda era pouco significativa antes disso). Só essa fonte tem injeção por campo — pode ficar 1-2 meses atrás dos outros gráficos desta página porque a ANP publica essas colunas do mês mais recente zeradas por um tempo, antes de consolidar.`,
+    `Água e gás injetados no campo, somando todos os poços injetores — dado aberto "Produção por Zona" da ANP, jan/2023 até ${ateMes} (a injeção de água/gás no pré-sal ainda era pouco significativa antes disso). Só essa fonte tem injeção por campo — pode ficar 1-2 meses atrás dos outros gráficos desta página porque a ANP publica essas colunas do mês mais recente zeradas por um tempo, antes de consolidar. Água em bbl/d, mesma escala do gráfico "Produção mensal" acima, pra comparar direto (o boletim traz o valor cru em m³/d).`,
   );
   const controls = document.createElement('div');
   controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
