@@ -182,18 +182,19 @@ const DATASETS = [
     parse(d) {
       const entries = Object.entries(d).filter(([k]) => k !== '_fonte');
       const comStoiip = entries.filter(([, v]) => v.volumes && v.volumes.oleoInSituMMbbl != null).length;
+      const comVoipAtual = entries.filter(([, v]) => v.volumes && v.volumes.voipAtualMMbbl != null).length;
       const comTracts = entries.filter(([, v]) => v.tracts && v.tracts.length > 1).length;
       return {
         fonte: d._fonte || '—',
         registros: `${entries.length} jazidas/campos publicados`,
         periodo: '—',
         gaps: [],
-        extra: `${comStoiip} de ${entries.length} com STOIIP, ${comTracts} com mais de 1 fatia (tracts)`,
+        extra: `${comStoiip} de ${entries.length} com STOIIP (retrato do PD), ${comVoipAtual} com VOIP atual cruzado do BAR 2025, ${comTracts} com mais de 1 fatia (tracts)`,
       };
     },
     table: {
       monthly: false,
-      columns: ['Jazida/Campo', 'Situação', 'Descoberta', 'Comercialidade', 'Início produção', 'STOIIP óleo (MMbbl)', 'Empresas (participação)'],
+      columns: ['Jazida/Campo', 'Situação', 'Descoberta', 'Comercialidade', 'Início produção', 'STOIIP óleo (MMbbl, PD)', 'VOIP atual óleo (MMbbl, BAR 2025)', 'Empresas (participação)'],
       rowsFor(d) {
         return Object.entries(d).filter(([k]) => k !== '_fonte').sort((a, b) => a[0].localeCompare(b[0], 'pt-BR')).map(([nome, v]) => [
           nome,
@@ -202,6 +203,7 @@ const DATASETS = [
           v.comercialidade || '—',
           v.inicioProducao || '—',
           v.volumes && v.volumes.oleoInSituMMbbl != null ? fmtNum(v.volumes.oleoInSituMMbbl) : '—',
+          v.volumes && v.volumes.voipAtualMMbbl != null ? fmtNum(v.volumes.voipAtualMMbbl) : '—',
           (v.participacao || []).map((p) => `${p.empresa} (${p.pct}%)`).join(', ') || '—',
         ]);
       },
