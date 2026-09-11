@@ -61,7 +61,16 @@ def parse_injecao_csv(path):
         sums = {}  # (ano, mes, nome_campo) -> {agua, gas}
         for row in reader:
             data = (row.get('Data') or '').strip()
-            m = re.match(r'(\d{1,2})/(\d{4})', data)
+            # ANP trocou o formato da coluna "Data" de "M/AAAA" (out/2014 a
+            # ~fev/2026) pra "DD/MM/AAAA" (mar/2026 em diante) sem aviso —
+            # achado porque a injeção parava de avançar mês a mês mesmo com
+            # arquivo novo baixado: o regex antigo só casava "M/AAAA", então
+            # toda linha de mar/2026+ caía no "if not m: continue" e o
+            # arquivo inteiro virava "nenhuma linha reconhecida", sem erro
+            # claro apontando pra causa. Prefixo "DD/" opcional cobre os
+            # dois formatos com o mesmo regex, sem precisar detectar qual é
+            # qual antes.
+            m = re.match(r'(?:\d{1,2}/)?(\d{1,2})/(\d{4})', data)
             if not m:
                 continue
             mes, ano = int(m.group(1)), int(m.group(2))

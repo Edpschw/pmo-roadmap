@@ -161,7 +161,14 @@ def parse_zona_csv(path):
         sums = {}  # (ano, mes, nome_campo) -> {oleoPreSal, oleoPosSal, gasPreSal, gasPosSal}
         for row in reader:
             data = (row.get('Data') or '').strip()
-            m = re.match(r'(\d{1,2})/(\d{4})', data)
+            # ANP trocou "Data" de "M/AAAA" pra "DD/MM/AAAA" a partir de
+            # mar/2026 (achado em scripts/parse_producao_injecao.py, que
+            # não tem o gate de "Pré-sal" acima pra mascarar isso) — sem
+            # efeito aqui hoje (arquivo já é rejeitado pela falta da coluna
+            # "Pré-sal" antes de chegar nesta linha, ver nota 2 no topo do
+            # arquivo), só defensivo pro dia em que a ANP trouxer "Pré-sal"
+            # de volta num formato de data novo.
+            m = re.match(r'(?:\d{1,2}/)?(\d{1,2})/(\d{4})', data)
             if not m:
                 continue
             mes, ano = int(m.group(1)), int(m.group(2))

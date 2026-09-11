@@ -17008,6 +17008,1416 @@
           "gasInjMm3d": 0.0
         }
       }
+    },
+    {
+      "ano": 2026,
+      "mes": 3,
+      "campos": {
+        "Gomo": {
+          "aguaInjM3d": 394.58000000000004,
+          "gasInjMm3d": 0.0
+        },
+        "Albacora Leste": {
+          "aguaInjM3d": 14282.65,
+          "gasInjMm3d": 0.0
+        },
+        "Albacora": {
+          "aguaInjM3d": 1106.8099999999997,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Urucu": {
+          "aguaInjM3d": 1533.9499999999998,
+          "gasInjMm3d": 3196.2799999999997
+        },
+        "Leste do Urucu": {
+          "aguaInjM3d": 1423.1399999999999,
+          "gasInjMm3d": 3782.32
+        },
+        "Fazenda Santo Estevão": {
+          "aguaInjM3d": 152.71,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Boa Esperança": {
+          "aguaInjM3d": 1238.5800000000002,
+          "gasInjMm3d": 0.0
+        },
+        "Cassarongongo": {
+          "aguaInjM3d": 6567.400000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Bálsamo": {
+          "aguaInjM3d": 1890.36,
+          "gasInjMm3d": 0.0
+        },
+        "Água Grande": {
+          "aguaInjM3d": 6890.349999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Tiê": {
+          "aguaInjM3d": 1099.5,
+          "gasInjMm3d": 27.59
+        },
+        "Fazenda Alvorada": {
+          "aguaInjM3d": 1019.0100000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Canário": {
+          "aguaInjM3d": 28.01,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Subaúma": {
+          "aguaInjM3d": 241.87,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Rio Branco": {
+          "aguaInjM3d": 23.21,
+          "gasInjMm3d": 0.0
+        },
+        "Mata de São João": {
+          "aguaInjM3d": 3000.38,
+          "gasInjMm3d": 0.0
+        },
+        "Candeias": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 1.82
+        },
+        "Santana": {
+          "aguaInjM3d": 26.07,
+          "gasInjMm3d": 0.0
+        },
+        "Tangará": {
+          "aguaInjM3d": 913.1899999999999,
+          "gasInjMm3d": 75.18
+        },
+        "Araçás": {
+          "aguaInjM3d": 7312.89,
+          "gasInjMm3d": 0.0
+        },
+        "Taquipe": {
+          "aguaInjM3d": 4856.150000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Remanso": {
+          "aguaInjM3d": 1359.79,
+          "gasInjMm3d": 0.0
+        },
+        "Tapiranga Norte": {
+          "aguaInjM3d": 415.72999999999996,
+          "gasInjMm3d": 0.0
+        },
+        "Buracica": {
+          "aguaInjM3d": 27511.319999999992,
+          "gasInjMm3d": 0.0
+        },
+        "Malombê": {
+          "aguaInjM3d": 533.7800000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Riacho Ouricuri": {
+          "aguaInjM3d": 1051.0099999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Socorro": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 265.57
+        },
+        "Fazenda Imbé": {
+          "aguaInjM3d": 941.0,
+          "gasInjMm3d": 0.0
+        },
+        "Miranga": {
+          "aguaInjM3d": 5583.5,
+          "gasInjMm3d": 0.0
+        },
+        "Argonauta": {
+          "aguaInjM3d": 11496.25,
+          "gasInjMm3d": 0.0
+        },
+        "Lagoa do Paulo Norte": {
+          "aguaInjM3d": 97.78,
+          "gasInjMm3d": 0.0
+        },
+        "Pilar": {
+          "aguaInjM3d": 1525.4299999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Furado": {
+          "aguaInjM3d": 1157.6100000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Siririzinho": {
+          "aguaInjM3d": 5240.369999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Riachuelo": {
+          "aguaInjM3d": 2846.8,
+          "gasInjMm3d": 0.0
+        },
+        "Jubarte": {
+          "aguaInjM3d": 82315.3,
+          "gasInjMm3d": 0.0
+        },
+        "Norte de Fazenda Caruaçu": {
+          "aguaInjM3d": 131.71,
+          "gasInjMm3d": 0.0
+        },
+        "Lapa": {
+          "aguaInjM3d": 7185.040000000001,
+          "gasInjMm3d": 2152.2400000000002
+        },
+        "Bacalhau": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 1482.18
+        },
+        "Bacalhau Norte": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 1605.7
+        },
+        "Nordeste de Sapinhoá": {
+          "aguaInjM3d": 411.70000000000005,
+          "gasInjMm3d": 34.96
+        },
+        "Noroeste de Sapinhoá": {
+          "aguaInjM3d": 633.65,
+          "gasInjMm3d": 51.31
+        },
+        "Sapinhoá": {
+          "aguaInjM3d": 35500.77,
+          "gasInjMm3d": 2619.02
+        },
+        "Sudoeste de Sapinhoá": {
+          "aguaInjM3d": 509.89,
+          "gasInjMm3d": 42.2
+        },
+        "Tupi": {
+          "aguaInjM3d": 196406.58999999997,
+          "gasInjMm3d": 16502.670000000002
+        },
+        "Sépia": {
+          "aguaInjM3d": 2351.24,
+          "gasInjMm3d": 792.5399999999998
+        },
+        "Sépia Leste": {
+          "aguaInjM3d": 1031.28,
+          "gasInjMm3d": 349.10999999999996
+        },
+        "Sépia_Eco": {
+          "aguaInjM3d": 5160.93,
+          "gasInjMm3d": 1736.43
+        },
+        "Itapu": {
+          "aguaInjM3d": 11197.89,
+          "gasInjMm3d": 1302.82
+        },
+        "Itapu_Eco": {
+          "aguaInjM3d": 10458.119999999999,
+          "gasInjMm3d": 1216.75
+        },
+        "Búzios": {
+          "aguaInjM3d": 21890.36,
+          "gasInjMm3d": 6628.03
+        },
+        "Búzios_Eco": {
+          "aguaInjM3d": 61914.90999999999,
+          "gasInjMm3d": 18718.19
+        },
+        "Tambuatá": {
+          "aguaInjM3d": 540.9200000000001,
+          "gasInjMm3d": 179.01000000000002
+        },
+        "Anc_Mero": {
+          "aguaInjM3d": 2791.6499999999996,
+          "gasInjMm3d": 1437.6200000000001
+        },
+        "Mero": {
+          "aguaInjM3d": 76969.52,
+          "gasInjMm3d": 39107.700000000004
+        },
+        "Anc_Tupi": {
+          "aguaInjM3d": 1173.7699999999998,
+          "gasInjMm3d": 124.26999999999998
+        },
+        "Sul de Tupi": {
+          "aguaInjM3d": 12071.710000000001,
+          "gasInjMm3d": 1232.27
+        },
+        "Berbigão": {
+          "aguaInjM3d": 14913.59,
+          "gasInjMm3d": 1220.7199999999998
+        },
+        "Sul de Berbigão": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 1012.74
+        },
+        "Anc_Norte_Atapu": {
+          "aguaInjM3d": 108.67,
+          "gasInjMm3d": 50.300000000000004
+        },
+        "Atapu": {
+          "aguaInjM3d": 3705.92,
+          "gasInjMm3d": 1625.27
+        },
+        "Atapu_Eco": {
+          "aguaInjM3d": 5676.19,
+          "gasInjMm3d": 2487.9
+        },
+        "Oeste de Atapu": {
+          "aguaInjM3d": 1948.31,
+          "gasInjMm3d": 855.74
+        },
+        "Brejo Grande": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 13.73
+        },
+        "Rio Itariri": {
+          "aguaInjM3d": 211.23000000000002,
+          "gasInjMm3d": 0.0
+        },
+        "Peregrino": {
+          "aguaInjM3d": 21276.899999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Pitangola": {
+          "aguaInjM3d": 26.12,
+          "gasInjMm3d": 0.0
+        },
+        "Rio do Bu": {
+          "aguaInjM3d": 784.51,
+          "gasInjMm3d": 0.0
+        },
+        "Carmópolis": {
+          "aguaInjM3d": 43159.870000000024,
+          "gasInjMm3d": 0.0
+        },
+        "Marlim Leste": {
+          "aguaInjM3d": 12451.109999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Caratinga": {
+          "aguaInjM3d": 539.34,
+          "gasInjMm3d": 0.0
+        },
+        "Marlim Sul": {
+          "aguaInjM3d": 38030.49,
+          "gasInjMm3d": 0.0
+        },
+        "Barracuda": {
+          "aguaInjM3d": 5612.540000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Lagoa Parda": {
+          "aguaInjM3d": 3038.67,
+          "gasInjMm3d": 0.0
+        },
+        "Tabuleiro dos Martins": {
+          "aguaInjM3d": 97.31,
+          "gasInjMm3d": 0.0
+        },
+        "Anc_Jubarte_Nordeste": {
+          "aguaInjM3d": 144.69,
+          "gasInjMm3d": 0.0
+        },
+        "Anc_Jubarte_Sudoeste": {
+          "aguaInjM3d": 636.6199999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Marlim": {
+          "aguaInjM3d": 35528.09999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Voador": {
+          "aguaInjM3d": 765.65,
+          "gasInjMm3d": 0.0
+        },
+        "Baúna": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 233.54
+        },
+        "Fazenda Alegre": {
+          "aguaInjM3d": 5150.4800000000005,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Itaúnas": {
+          "aguaInjM3d": 42.26,
+          "gasInjMm3d": 0.0
+        },
+        "São Mateus Leste": {
+          "aguaInjM3d": 1052.9,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Mariricu": {
+          "aguaInjM3d": 35.95,
+          "gasInjMm3d": 0.0
+        },
+        "Frade": {
+          "aguaInjM3d": 3128.6299999999997,
+          "gasInjMm3d": 0.0
+        },
+        "Tartaruga": {
+          "aguaInjM3d": 1.71,
+          "gasInjMm3d": 0.0
+        },
+        "Mato Grosso": {
+          "aguaInjM3d": 1416.1799999999994,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Ipiranga": {
+          "aguaInjM3d": 53.97,
+          "gasInjMm3d": 0.0
+        },
+        "Suindara": {
+          "aguaInjM3d": 201.14,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda São Rafael": {
+          "aguaInjM3d": 537.96,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Santa Luzia": {
+          "aguaInjM3d": 333.64,
+          "gasInjMm3d": 0.0
+        },
+        "Roncador": {
+          "aguaInjM3d": 27077.659999999996,
+          "gasInjMm3d": 0.0
+        },
+        "Dom João": {
+          "aguaInjM3d": 1860.6,
+          "gasInjMm3d": 0.0
+        },
+        "Carapitanga": {
+          "aguaInjM3d": 0.2,
+          "gasInjMm3d": 0.0
+        },
+        "Tucano": {
+          "aguaInjM3d": 7.38,
+          "gasInjMm3d": 0.0
+        },
+        "Espadim": {
+          "aguaInjM3d": 37.67,
+          "gasInjMm3d": 0.0
+        },
+        "Cardeal": {
+          "aguaInjM3d": 537.61,
+          "gasInjMm3d": 0.0
+        },
+        "Baixa do Algodão": {
+          "aguaInjM3d": 77.89,
+          "gasInjMm3d": 0.0
+        },
+        "Macau": {
+          "aguaInjM3d": 1629.8199999999997,
+          "gasInjMm3d": 0.0
+        },
+        "Pajeú": {
+          "aguaInjM3d": 899.3999999999997,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Malaquias": {
+          "aguaInjM3d": 244.64000000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Sabiá da Mata": {
+          "aguaInjM3d": 34.33,
+          "gasInjMm3d": 0.0
+        },
+        "Livramento": {
+          "aguaInjM3d": 974.39,
+          "gasInjMm3d": 0.0
+        },
+        "Upanema": {
+          "aguaInjM3d": 225.02,
+          "gasInjMm3d": 0.0
+        },
+        "Leste de Poço Xavier": {
+          "aguaInjM3d": 310.72,
+          "gasInjMm3d": 0.0
+        },
+        "Brejinho Rn": {
+          "aguaInjM3d": 1114.58,
+          "gasInjMm3d": 0.0
+        },
+        "Lorena": {
+          "aguaInjM3d": 177.79,
+          "gasInjMm3d": 0.0
+        },
+        "Riacho da Forquilha": {
+          "aguaInjM3d": 2576.88,
+          "gasInjMm3d": 0.0
+        },
+        "Cachoeirinha": {
+          "aguaInjM3d": 142.78,
+          "gasInjMm3d": 0.0
+        },
+        "Boa Esperança": {
+          "aguaInjM3d": 403.44,
+          "gasInjMm3d": 0.0
+        },
+        "Sabiá Bico-de-osso": {
+          "aguaInjM3d": 29.91,
+          "gasInjMm3d": 0.0
+        },
+        "Benfica": {
+          "aguaInjM3d": 39.209999999999994,
+          "gasInjMm3d": 0.0
+        },
+        "Canto do Amaro": {
+          "aguaInjM3d": 27798.360000000073,
+          "gasInjMm3d": 0.0
+        }
+      }
+    },
+    {
+      "ano": 2026,
+      "mes": 4,
+      "campos": {
+        "Gomo": {
+          "aguaInjM3d": 338.78999999999996,
+          "gasInjMm3d": 0.0
+        },
+        "Albacora Leste": {
+          "aguaInjM3d": 13407.16,
+          "gasInjMm3d": 0.0
+        },
+        "Albacora": {
+          "aguaInjM3d": 1042.45,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Urucu": {
+          "aguaInjM3d": 1793.4,
+          "gasInjMm3d": 3079.62
+        },
+        "Leste do Urucu": {
+          "aguaInjM3d": 1453.4399999999998,
+          "gasInjMm3d": 4180.03
+        },
+        "Fazenda Santo Estevão": {
+          "aguaInjM3d": 148.82,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Boa Esperança": {
+          "aguaInjM3d": 1522.1399999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Cassarongongo": {
+          "aguaInjM3d": 6287.8899999999985,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Bálsamo": {
+          "aguaInjM3d": 1825.7400000000002,
+          "gasInjMm3d": 0.0
+        },
+        "Tiê": {
+          "aguaInjM3d": 1243.21,
+          "gasInjMm3d": 26.26
+        },
+        "Fazenda Alvorada": {
+          "aguaInjM3d": 1264.5,
+          "gasInjMm3d": 0.0
+        },
+        "Canário": {
+          "aguaInjM3d": 25.83,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Subaúma": {
+          "aguaInjM3d": 248.1,
+          "gasInjMm3d": 0.0
+        },
+        "Água Grande": {
+          "aguaInjM3d": 7583.900000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Rio Branco": {
+          "aguaInjM3d": 20.18,
+          "gasInjMm3d": 0.0
+        },
+        "Mata de São João": {
+          "aguaInjM3d": 2942.46,
+          "gasInjMm3d": 0.0
+        },
+        "Candeias": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 5.3
+        },
+        "Santana": {
+          "aguaInjM3d": 25.91,
+          "gasInjMm3d": 0.0
+        },
+        "Tangará": {
+          "aguaInjM3d": 913.86,
+          "gasInjMm3d": 71.99000000000001
+        },
+        "Araçás": {
+          "aguaInjM3d": 7379.179999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Taquipe": {
+          "aguaInjM3d": 4886.250000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Remanso": {
+          "aguaInjM3d": 1625.3199999999997,
+          "gasInjMm3d": 0.0
+        },
+        "Tapiranga Norte": {
+          "aguaInjM3d": 356.90999999999997,
+          "gasInjMm3d": 0.0
+        },
+        "Buracica": {
+          "aguaInjM3d": 27537.209999999992,
+          "gasInjMm3d": 0.0
+        },
+        "Malombê": {
+          "aguaInjM3d": 574.72,
+          "gasInjMm3d": 0.0
+        },
+        "Riacho Ouricuri": {
+          "aguaInjM3d": 1137.0199999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Socorro": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 266.67
+        },
+        "Fazenda Imbé": {
+          "aguaInjM3d": 953.78,
+          "gasInjMm3d": 0.0
+        },
+        "Miranga": {
+          "aguaInjM3d": 5535.08,
+          "gasInjMm3d": 0.0
+        },
+        "Argonauta": {
+          "aguaInjM3d": 11574.609999999993,
+          "gasInjMm3d": 0.0
+        },
+        "Lagoa do Paulo Norte": {
+          "aguaInjM3d": 92.98,
+          "gasInjMm3d": 0.0
+        },
+        "Pilar": {
+          "aguaInjM3d": 1532.6399999999996,
+          "gasInjMm3d": 0.0
+        },
+        "Furado": {
+          "aguaInjM3d": 1241.5099999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Siririzinho": {
+          "aguaInjM3d": 5420.580000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Riachuelo": {
+          "aguaInjM3d": 2809.6300000000015,
+          "gasInjMm3d": 0.0
+        },
+        "Jubarte": {
+          "aguaInjM3d": 79767.88,
+          "gasInjMm3d": 0.0
+        },
+        "Norte de Fazenda Caruaçu": {
+          "aguaInjM3d": 138.84,
+          "gasInjMm3d": 0.0
+        },
+        "Lapa": {
+          "aguaInjM3d": 9979.86,
+          "gasInjMm3d": 2820.8199999999997
+        },
+        "Bacalhau": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 322.10999999999996
+        },
+        "Bacalhau Norte": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 348.95
+        },
+        "Nordeste de Sapinhoá": {
+          "aguaInjM3d": 463.08000000000004,
+          "gasInjMm3d": 37.34
+        },
+        "Noroeste de Sapinhoá": {
+          "aguaInjM3d": 712.77,
+          "gasInjMm3d": 54.89
+        },
+        "Sapinhoá": {
+          "aguaInjM3d": 39932.27,
+          "gasInjMm3d": 2812.71
+        },
+        "Sudoeste de Sapinhoá": {
+          "aguaInjM3d": 573.53,
+          "gasInjMm3d": 45.1
+        },
+        "Tupi": {
+          "aguaInjM3d": 187764.84999999995,
+          "gasInjMm3d": 16669.550000000003
+        },
+        "Sépia": {
+          "aguaInjM3d": 2269.74,
+          "gasInjMm3d": 993.82
+        },
+        "Sépia Leste": {
+          "aguaInjM3d": 995.53,
+          "gasInjMm3d": 437.89
+        },
+        "Sépia_Eco": {
+          "aguaInjM3d": 4982.03,
+          "gasInjMm3d": 2177.19
+        },
+        "Itapu": {
+          "aguaInjM3d": 9449.5,
+          "gasInjMm3d": 1263.35
+        },
+        "Itapu_Eco": {
+          "aguaInjM3d": 8825.23,
+          "gasInjMm3d": 1179.8899999999999
+        },
+        "Búzios": {
+          "aguaInjM3d": 19470.81,
+          "gasInjMm3d": 7250.18
+        },
+        "Búzios_Eco": {
+          "aguaInjM3d": 55071.45,
+          "gasInjMm3d": 20482.2
+        },
+        "Tambuatá": {
+          "aguaInjM3d": 481.12999999999994,
+          "gasInjMm3d": 192.09000000000003
+        },
+        "Anc_Mero": {
+          "aguaInjM3d": 2998.3,
+          "gasInjMm3d": 1590.9299999999998
+        },
+        "Mero": {
+          "aguaInjM3d": 82667.48999999999,
+          "gasInjMm3d": 43312.76
+        },
+        "Anc_Tupi": {
+          "aguaInjM3d": 1096.75,
+          "gasInjMm3d": 118.73000000000002
+        },
+        "Sul de Tupi": {
+          "aguaInjM3d": 11279.42,
+          "gasInjMm3d": 1171.3500000000001
+        },
+        "Berbigão": {
+          "aguaInjM3d": 18052.800000000003,
+          "gasInjMm3d": 1548.69
+        },
+        "Sul de Berbigão": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 1996.99
+        },
+        "Anc_Norte_Atapu": {
+          "aguaInjM3d": 97.92999999999999,
+          "gasInjMm3d": 48.769999999999996
+        },
+        "Atapu": {
+          "aguaInjM3d": 3339.53,
+          "gasInjMm3d": 1568.81
+        },
+        "Atapu_Eco": {
+          "aguaInjM3d": 5115.01,
+          "gasInjMm3d": 2401.3599999999997
+        },
+        "Oeste de Atapu": {
+          "aguaInjM3d": 1755.6899999999998,
+          "gasInjMm3d": 826.1199999999999
+        },
+        "Brejo Grande": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 15.84
+        },
+        "Rio Itariri": {
+          "aguaInjM3d": 263.62,
+          "gasInjMm3d": 0.0
+        },
+        "Peregrino": {
+          "aguaInjM3d": 22182.239999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Pitangola": {
+          "aguaInjM3d": 33.59,
+          "gasInjMm3d": 0.0
+        },
+        "Rio do Bu": {
+          "aguaInjM3d": 744.86,
+          "gasInjMm3d": 0.0
+        },
+        "Carmópolis": {
+          "aguaInjM3d": 42752.75999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Marlim Leste": {
+          "aguaInjM3d": 14224.789999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Caratinga": {
+          "aguaInjM3d": 551.76,
+          "gasInjMm3d": 0.0
+        },
+        "Marlim Sul": {
+          "aguaInjM3d": 42239.219999999994,
+          "gasInjMm3d": 0.0
+        },
+        "Vermelho": {
+          "aguaInjM3d": 550.7,
+          "gasInjMm3d": 0.0
+        },
+        "Barracuda": {
+          "aguaInjM3d": 5552.500000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Lagoa Parda": {
+          "aguaInjM3d": 2741.33,
+          "gasInjMm3d": 0.0
+        },
+        "Tabuleiro dos Martins": {
+          "aguaInjM3d": 103.35,
+          "gasInjMm3d": 0.0
+        },
+        "Anc_Jubarte_Nordeste": {
+          "aguaInjM3d": 143.9,
+          "gasInjMm3d": 0.0
+        },
+        "Anc_Jubarte_Sudoeste": {
+          "aguaInjM3d": 633.15,
+          "gasInjMm3d": 0.0
+        },
+        "Marlim": {
+          "aguaInjM3d": 33884.579999999994,
+          "gasInjMm3d": 0.0
+        },
+        "Voador": {
+          "aguaInjM3d": 558.27,
+          "gasInjMm3d": 0.0
+        },
+        "Baúna": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 112.95
+        },
+        "Fazenda Alegre": {
+          "aguaInjM3d": 4854.31,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Itaúnas": {
+          "aguaInjM3d": 41.23,
+          "gasInjMm3d": 0.0
+        },
+        "São Mateus Leste": {
+          "aguaInjM3d": 990.6299999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Mariricu": {
+          "aguaInjM3d": 16.12,
+          "gasInjMm3d": 0.0
+        },
+        "Frade": {
+          "aguaInjM3d": 2105.6,
+          "gasInjMm3d": 0.0
+        },
+        "Tartaruga": {
+          "aguaInjM3d": 1.22,
+          "gasInjMm3d": 0.0
+        },
+        "Mato Grosso": {
+          "aguaInjM3d": 1454.4099999999996,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Ipiranga": {
+          "aguaInjM3d": 30.9,
+          "gasInjMm3d": 0.0
+        },
+        "Suindara": {
+          "aguaInjM3d": 190.09,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda São Rafael": {
+          "aguaInjM3d": 613.54,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Santa Luzia": {
+          "aguaInjM3d": 352.20000000000005,
+          "gasInjMm3d": 0.0
+        },
+        "Roncador": {
+          "aguaInjM3d": 26097.719999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Dom João": {
+          "aguaInjM3d": 1669.74,
+          "gasInjMm3d": 0.0
+        },
+        "Carapitanga": {
+          "aguaInjM3d": 0.32,
+          "gasInjMm3d": 0.0
+        },
+        "Tucano": {
+          "aguaInjM3d": 4.77,
+          "gasInjMm3d": 0.0
+        },
+        "Espadim": {
+          "aguaInjM3d": 32.84,
+          "gasInjMm3d": 0.0
+        },
+        "Cardeal": {
+          "aguaInjM3d": 537.6,
+          "gasInjMm3d": 0.0
+        },
+        "Baixa do Algodão": {
+          "aguaInjM3d": 36.41,
+          "gasInjMm3d": 0.0
+        },
+        "Macau": {
+          "aguaInjM3d": 1518.1600000000003,
+          "gasInjMm3d": 0.0
+        },
+        "Pajeú": {
+          "aguaInjM3d": 737.8400000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Malaquias": {
+          "aguaInjM3d": 199.64999999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Sabiá da Mata": {
+          "aguaInjM3d": 60.169999999999995,
+          "gasInjMm3d": 0.0
+        },
+        "Livramento": {
+          "aguaInjM3d": 999.6700000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Upanema": {
+          "aguaInjM3d": 433.55,
+          "gasInjMm3d": 0.0
+        },
+        "Leste de Poço Xavier": {
+          "aguaInjM3d": 300.12,
+          "gasInjMm3d": 0.0
+        },
+        "Brejinho Rn": {
+          "aguaInjM3d": 888.6899999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Lorena": {
+          "aguaInjM3d": 171.14000000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Riacho da Forquilha": {
+          "aguaInjM3d": 2317.0,
+          "gasInjMm3d": 0.0
+        },
+        "Cachoeirinha": {
+          "aguaInjM3d": 128.61,
+          "gasInjMm3d": 0.0
+        },
+        "Boa Esperança": {
+          "aguaInjM3d": 550.22,
+          "gasInjMm3d": 0.0
+        },
+        "Sabiá Bico-de-osso": {
+          "aguaInjM3d": 43.78,
+          "gasInjMm3d": 0.0
+        },
+        "Benfica": {
+          "aguaInjM3d": 142.25000000000003,
+          "gasInjMm3d": 0.0
+        },
+        "Salina Cristal": {
+          "aguaInjM3d": 3.79,
+          "gasInjMm3d": 0.0
+        },
+        "Canto do Amaro": {
+          "aguaInjM3d": 31210.13999999999,
+          "gasInjMm3d": 0.0
+        }
+      }
+    },
+    {
+      "ano": 2026,
+      "mes": 5,
+      "campos": {
+        "Gomo": {
+          "aguaInjM3d": 290.78,
+          "gasInjMm3d": 0.0
+        },
+        "Albacora Leste": {
+          "aguaInjM3d": 12858.57,
+          "gasInjMm3d": 0.0
+        },
+        "Albacora": {
+          "aguaInjM3d": 995.3199999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Urucu": {
+          "aguaInjM3d": 1706.0,
+          "gasInjMm3d": 2797.1800000000003
+        },
+        "Leste do Urucu": {
+          "aguaInjM3d": 1399.23,
+          "gasInjMm3d": 3639.4699999999993
+        },
+        "Fazenda Santo Estevão": {
+          "aguaInjM3d": 142.1,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Boa Esperança": {
+          "aguaInjM3d": 1462.3200000000002,
+          "gasInjMm3d": 0.0
+        },
+        "Cassarongongo": {
+          "aguaInjM3d": 5975.560000000003,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Bálsamo": {
+          "aguaInjM3d": 1735.0499999999997,
+          "gasInjMm3d": 0.0
+        },
+        "Tiê": {
+          "aguaInjM3d": 1251.0600000000002,
+          "gasInjMm3d": 7.91
+        },
+        "Fazenda Alvorada": {
+          "aguaInjM3d": 1247.8100000000002,
+          "gasInjMm3d": 0.0
+        },
+        "Canário": {
+          "aguaInjM3d": 50.88,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Subaúma": {
+          "aguaInjM3d": 247.86,
+          "gasInjMm3d": 0.0
+        },
+        "Água Grande": {
+          "aguaInjM3d": 7239.45,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Rio Branco": {
+          "aguaInjM3d": 25.58,
+          "gasInjMm3d": 0.0
+        },
+        "Mata de São João": {
+          "aguaInjM3d": 2859.4100000000003,
+          "gasInjMm3d": 0.0
+        },
+        "Candeias": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 4.18
+        },
+        "Santana": {
+          "aguaInjM3d": 22.11,
+          "gasInjMm3d": 0.0
+        },
+        "Tangará": {
+          "aguaInjM3d": 874.6899999999999,
+          "gasInjMm3d": 75.96000000000001
+        },
+        "Araçás": {
+          "aguaInjM3d": 7261.079999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Taquipe": {
+          "aguaInjM3d": 4862.839999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Remanso": {
+          "aguaInjM3d": 1530.69,
+          "gasInjMm3d": 0.0
+        },
+        "Tapiranga Norte": {
+          "aguaInjM3d": 357.33000000000004,
+          "gasInjMm3d": 0.0
+        },
+        "Buracica": {
+          "aguaInjM3d": 27565.249999999993,
+          "gasInjMm3d": 0.0
+        },
+        "Malombê": {
+          "aguaInjM3d": 577.9200000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Riacho Ouricuri": {
+          "aguaInjM3d": 1285.5800000000002,
+          "gasInjMm3d": 0.0
+        },
+        "Socorro": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 258.86
+        },
+        "Fazenda Imbé": {
+          "aguaInjM3d": 978.9900000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Miranga": {
+          "aguaInjM3d": 5539.800000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Argonauta": {
+          "aguaInjM3d": 9280.91,
+          "gasInjMm3d": 0.0
+        },
+        "Anc_Argonauta_Me1": {
+          "aguaInjM3d": 7.82,
+          "gasInjMm3d": 0.0
+        },
+        "Lagoa do Paulo Norte": {
+          "aguaInjM3d": 90.83,
+          "gasInjMm3d": 0.0
+        },
+        "Pilar": {
+          "aguaInjM3d": 1499.15,
+          "gasInjMm3d": 0.0
+        },
+        "Furado": {
+          "aguaInjM3d": 1149.27,
+          "gasInjMm3d": 0.0
+        },
+        "Siririzinho": {
+          "aguaInjM3d": 4970.890000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Riachuelo": {
+          "aguaInjM3d": 2862.43,
+          "gasInjMm3d": 0.0
+        },
+        "Jubarte": {
+          "aguaInjM3d": 78139.02,
+          "gasInjMm3d": 0.0
+        },
+        "Norte de Fazenda Caruaçu": {
+          "aguaInjM3d": 117.82,
+          "gasInjMm3d": 0.0
+        },
+        "Lapa": {
+          "aguaInjM3d": 9838.54,
+          "gasInjMm3d": 2616.8
+        },
+        "Bacalhau": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 2160.49
+        },
+        "Bacalhau Norte": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 2340.5299999999997
+        },
+        "Nordeste de Sapinhoá": {
+          "aguaInjM3d": 373.45000000000005,
+          "gasInjMm3d": 38.05
+        },
+        "Noroeste de Sapinhoá": {
+          "aguaInjM3d": 574.79,
+          "gasInjMm3d": 56.06
+        },
+        "Sapinhoá": {
+          "aguaInjM3d": 32202.79,
+          "gasInjMm3d": 2885.7
+        },
+        "Sudoeste de Sapinhoá": {
+          "aguaInjM3d": 462.53999999999996,
+          "gasInjMm3d": 46.010000000000005
+        },
+        "Tupi": {
+          "aguaInjM3d": 163330.52999999997,
+          "gasInjMm3d": 16276.269999999999
+        },
+        "Sépia": {
+          "aguaInjM3d": 2389.7,
+          "gasInjMm3d": 835.28
+        },
+        "Sépia Leste": {
+          "aguaInjM3d": 1048.15,
+          "gasInjMm3d": 368.39
+        },
+        "Sépia_Eco": {
+          "aguaInjM3d": 5245.34,
+          "gasInjMm3d": 1829.1399999999999
+        },
+        "Itapu": {
+          "aguaInjM3d": 11353.26,
+          "gasInjMm3d": 1193.6299999999999
+        },
+        "Itapu_Eco": {
+          "aguaInjM3d": 10603.23,
+          "gasInjMm3d": 1114.78
+        },
+        "Búzios": {
+          "aguaInjM3d": 18035.820000000003,
+          "gasInjMm3d": 6789.320000000001
+        },
+        "Búzios_Eco": {
+          "aguaInjM3d": 51012.68,
+          "gasInjMm3d": 19180.85
+        },
+        "Tambuatá": {
+          "aguaInjM3d": 445.65000000000003,
+          "gasInjMm3d": 179.57000000000002
+        },
+        "Anc_Mero": {
+          "aguaInjM3d": 3092.82,
+          "gasInjMm3d": 1624.87
+        },
+        "Mero": {
+          "aguaInjM3d": 85273.51,
+          "gasInjMm3d": 44259.200000000004
+        },
+        "Anc_Tupi": {
+          "aguaInjM3d": 1039.4900000000002,
+          "gasInjMm3d": 127.29999999999998
+        },
+        "Sul de Tupi": {
+          "aguaInjM3d": 10690.49,
+          "gasInjMm3d": 1214.65
+        },
+        "Berbigão": {
+          "aguaInjM3d": 15762.59,
+          "gasInjMm3d": 2089.4300000000003
+        },
+        "Norte de Berbigão": {
+          "aguaInjM3d": 853.49,
+          "gasInjMm3d": 183.66000000000003
+        },
+        "Sul de Berbigão": {
+          "aguaInjM3d": 1752.27,
+          "gasInjMm3d": 969.9199999999998
+        },
+        "Anc_Norte_Atapu": {
+          "aguaInjM3d": 138.87,
+          "gasInjMm3d": 50.129999999999995
+        },
+        "Atapu": {
+          "aguaInjM3d": 4735.69,
+          "gasInjMm3d": 1648.7399999999998
+        },
+        "Atapu_Eco": {
+          "aguaInjM3d": 7253.429999999999,
+          "gasInjMm3d": 2524.32
+        },
+        "Oeste de Atapu": {
+          "aguaInjM3d": 2489.6800000000003,
+          "gasInjMm3d": 867.6599999999999
+        },
+        "Brejo Grande": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 14.8
+        },
+        "Tigre": {
+          "aguaInjM3d": 0.18,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Itariri": {
+          "aguaInjM3d": 286.07,
+          "gasInjMm3d": 0.0
+        },
+        "Peregrino": {
+          "aguaInjM3d": 22825.239999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Pitangola": {
+          "aguaInjM3d": 0.27,
+          "gasInjMm3d": 0.0
+        },
+        "Rio do Bu": {
+          "aguaInjM3d": 802.2099999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Carmópolis": {
+          "aguaInjM3d": 42475.44000000002,
+          "gasInjMm3d": 0.0
+        },
+        "Marlim Leste": {
+          "aguaInjM3d": 8677.55,
+          "gasInjMm3d": 0.0
+        },
+        "Pargo": {
+          "aguaInjM3d": 2101.71,
+          "gasInjMm3d": 0.0
+        },
+        "Caratinga": {
+          "aguaInjM3d": 677.31,
+          "gasInjMm3d": 0.0
+        },
+        "Marlim Sul": {
+          "aguaInjM3d": 40127.05999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Vermelho": {
+          "aguaInjM3d": 719.26,
+          "gasInjMm3d": 0.0
+        },
+        "Barracuda": {
+          "aguaInjM3d": 4909.900000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Lagoa Parda": {
+          "aguaInjM3d": 3231.94,
+          "gasInjMm3d": 0.0
+        },
+        "Tabuleiro dos Martins": {
+          "aguaInjM3d": 111.08000000000001,
+          "gasInjMm3d": 0.0
+        },
+        "Anc_Jubarte_Nordeste": {
+          "aguaInjM3d": 116.63,
+          "gasInjMm3d": 0.0
+        },
+        "Anc_Jubarte_Sudoeste": {
+          "aguaInjM3d": 513.2099999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Marlim": {
+          "aguaInjM3d": 39530.35,
+          "gasInjMm3d": 0.0
+        },
+        "Voador": {
+          "aguaInjM3d": 1080.08,
+          "gasInjMm3d": 0.0
+        },
+        "Baúna": {
+          "aguaInjM3d": 0.0,
+          "gasInjMm3d": 14.239999999999998
+        },
+        "Fazenda Alegre": {
+          "aguaInjM3d": 4878.789999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Itaúnas": {
+          "aguaInjM3d": 32.16,
+          "gasInjMm3d": 0.0
+        },
+        "São Mateus Leste": {
+          "aguaInjM3d": 1047.72,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Mariricu": {
+          "aguaInjM3d": 17.41,
+          "gasInjMm3d": 0.0
+        },
+        "Frade": {
+          "aguaInjM3d": 2942.0,
+          "gasInjMm3d": 0.0
+        },
+        "Tartaruga": {
+          "aguaInjM3d": 2.09,
+          "gasInjMm3d": 0.0
+        },
+        "Mato Grosso": {
+          "aguaInjM3d": 1285.2299999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Rio Ipiranga": {
+          "aguaInjM3d": 21.83,
+          "gasInjMm3d": 0.0
+        },
+        "Suindara": {
+          "aguaInjM3d": 190.59,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda São Rafael": {
+          "aguaInjM3d": 585.98,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Santa Luzia": {
+          "aguaInjM3d": 357.69,
+          "gasInjMm3d": 0.0
+        },
+        "Roncador": {
+          "aguaInjM3d": 24491.87,
+          "gasInjMm3d": 0.0
+        },
+        "Dom João": {
+          "aguaInjM3d": 1335.79,
+          "gasInjMm3d": 0.0
+        },
+        "Carapitanga": {
+          "aguaInjM3d": 0.32,
+          "gasInjMm3d": 0.0
+        },
+        "Tucano": {
+          "aguaInjM3d": 5.72,
+          "gasInjMm3d": 0.0
+        },
+        "Espadim": {
+          "aguaInjM3d": 57.23,
+          "gasInjMm3d": 0.0
+        },
+        "Cardeal": {
+          "aguaInjM3d": 537.6,
+          "gasInjMm3d": 0.0
+        },
+        "Baixa do Algodão": {
+          "aguaInjM3d": 30.35,
+          "gasInjMm3d": 0.0
+        },
+        "Macau": {
+          "aguaInjM3d": 1500.0400000000004,
+          "gasInjMm3d": 0.0
+        },
+        "Pajeú": {
+          "aguaInjM3d": 824.5,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Malaquias": {
+          "aguaInjM3d": 207.20999999999998,
+          "gasInjMm3d": 0.0
+        },
+        "Sabiá da Mata": {
+          "aguaInjM3d": 56.849999999999994,
+          "gasInjMm3d": 0.0
+        },
+        "Livramento": {
+          "aguaInjM3d": 901.3399999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Upanema": {
+          "aguaInjM3d": 455.57,
+          "gasInjMm3d": 0.0
+        },
+        "Leste de Poço Xavier": {
+          "aguaInjM3d": 306.80000000000007,
+          "gasInjMm3d": 0.0
+        },
+        "Brejinho Rn": {
+          "aguaInjM3d": 816.0699999999999,
+          "gasInjMm3d": 0.0
+        },
+        "Lorena": {
+          "aguaInjM3d": 114.49,
+          "gasInjMm3d": 0.0
+        },
+        "Riacho da Forquilha": {
+          "aguaInjM3d": 2254.7999999999997,
+          "gasInjMm3d": 0.0
+        },
+        "Cachoeirinha": {
+          "aguaInjM3d": 201.63,
+          "gasInjMm3d": 0.0
+        },
+        "Boa Esperança": {
+          "aguaInjM3d": 589.49,
+          "gasInjMm3d": 0.0
+        },
+        "Sabiá Bico-de-osso": {
+          "aguaInjM3d": 70.11,
+          "gasInjMm3d": 0.0
+        },
+        "Benfica": {
+          "aguaInjM3d": 216.22000000000003,
+          "gasInjMm3d": 0.0
+        },
+        "Fazenda Belém Ce": {
+          "aguaInjM3d": 1411.1299999999997,
+          "gasInjMm3d": 0.0
+        },
+        "Salina Cristal": {
+          "aguaInjM3d": 1520.51,
+          "gasInjMm3d": 0.0
+        },
+        "Canto do Amaro": {
+          "aguaInjM3d": 34755.899999999965,
+          "gasInjMm3d": 0.0
+        }
+      }
     }
   ]
 }

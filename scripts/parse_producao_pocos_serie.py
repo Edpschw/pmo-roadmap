@@ -57,7 +57,12 @@ def parse_pocos_csv(path):
             if (row.get('Pré-sal') or '').strip().upper() != 'S':
                 continue
             data = (row.get('Data') or '').strip()
-            m = re.match(r'(\d{1,2})/(\d{4})', data)
+            # ANP trocou "Data" de "M/AAAA" pra "DD/MM/AAAA" a partir de
+            # mar/2026 (achado em scripts/parse_producao_injecao.py) — sem
+            # efeito aqui hoje (linha já cai no filtro de Pré-sal != 'S'
+            # acima antes de chegar nesta, arquivo sem essa coluna vira
+            # "0 poços" de qualquer forma), só defensivo.
+            m = re.match(r'(?:\d{1,2}/)?(\d{1,2})/(\d{4})', data)
             if not m:
                 continue
             mes, ano = int(m.group(1)), int(m.group(2))

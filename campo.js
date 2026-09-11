@@ -844,9 +844,20 @@ function extractInjecaoSeries(injecaoData, base, color) {
 function buildFieldInjectionChart(container, injecaoData, base, color) {
   const series = extractInjecaoSeries(injecaoData, base, color);
   if (!series.some((m) => m.rows.length)) return;
+  // O último mês aqui costuma ficar 1-2 meses atrás do resto da página
+  // (que já usa o boletim pra jul/2025+, sempre em dia) — "Produção por
+  // Zona" é a ÚNICA fonte de injeção (o boletim não publica isso por
+  // campo, ver scripts/parse_producao_injecao.py), e a própria ANP
+  // publica as colunas de injeção do mês corrente zeradas por um tempo
+  // antes de consolidar (visto direto no CSV cru: jun/2026 chegou com
+  // 13.227 linhas, TODAS com água/gás injetado = 0,00, enquanto maio/2026
+  // já tinha valor real — não é bug do parser, os últimos 1-2 meses
+  // deste gráfico só ainda não foram publicados pela ANP).
+  const lastM = injecaoData.meses[injecaoData.meses.length - 1];
+  const ateMes = lastM ? `${MES_ABREV[lastM.mes]}/${lastM.ano}` : '?';
   const card = chartCard(
     'Injeção no campo',
-    'Água e gás injetados no campo, somando todos os poços injetores — dado aberto "Produção por Zona" da ANP, a partir de jan/2023 (a injeção de água/gás no pré-sal ainda era pouco significativa antes disso).',
+    `Água e gás injetados no campo, somando todos os poços injetores — dado aberto "Produção por Zona" da ANP, jan/2023 até ${ateMes} (a injeção de água/gás no pré-sal ainda era pouco significativa antes disso). Só essa fonte tem injeção por campo — pode ficar 1-2 meses atrás dos outros gráficos desta página porque a ANP publica essas colunas do mês mais recente zeradas por um tempo, antes de consolidar.`,
   );
   const controls = document.createElement('div');
   controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
