@@ -18,6 +18,7 @@
      vermelho (pedido explícito, não o par cromático de PALETTE). */
   --trend-oleo: #1c9e6b;
   --trend-rgo: #d64545;
+  --trend-agua: #3aa8ff;
   --row-h: 44px;
   --sidebar-w: 300px;
   --radius: 8px;
@@ -907,23 +908,28 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .trend-pill-neutral { background: rgba(139, 147, 161, 0.14); color: var(--text-faint); }
 
 /* Óleo em verde (produção, "no azul"), RGO em vermelho (o que se quer ver
-   subir o mínimo possível) — pedido explícito, não é o mesmo par cromático
-   usado no resto do app pra série (PALETTE). */
+   subir o mínimo possível), água injetada em azul (mesmo tom do ícone
+   "agua" em ICONS, shared.js) — pedido explícito, não é o mesmo par
+   cromático usado no resto do app pra série (PALETTE). */
 .trend-svg { width: 100%; height: auto; display: block; overflow: visible; }
 .trend-line-oleo { stroke: var(--trend-oleo); stroke-width: 2; fill: none; }
 .trend-line-rgo { stroke: var(--trend-rgo); stroke-width: 2; fill: none; }
+.trend-line-agua { stroke: var(--trend-agua); stroke-width: 2; fill: none; }
 .trend-dot-oleo { fill: var(--trend-oleo); }
 .trend-dot-rgo { fill: var(--trend-rgo); }
+.trend-dot-agua { fill: var(--trend-agua); }
 .trend-baseline { stroke: var(--text-faint); stroke-width: 1; opacity: .4; }
 /* Reta ajustada (mínimos quadrados, mesmo cálculo de trendPctAoAno) — vem
    ANTES das linhas de dado no SVG (ver renderTrendChartSVG) mas pontilhada
    e mais clara que elas, pra ficar claro que é o ajuste, não mais um dado. */
 .trend-fit-oleo { stroke: var(--trend-oleo); stroke-width: 1.5; stroke-dasharray: 5,4; opacity: .45; fill: none; }
 .trend-fit-rgo { stroke: var(--trend-rgo); stroke-width: 1.5; stroke-dasharray: 5,4; opacity: .45; fill: none; }
+.trend-fit-agua { stroke: var(--trend-agua); stroke-width: 1.5; stroke-dasharray: 5,4; opacity: .45; fill: none; }
 .trend-axis-label { font-size: 9.5px; fill: var(--text-faint); }
 .trend-end-label { font-size: 11px; font-weight: 600; }
 .trend-end-label-oleo { fill: var(--trend-oleo); }
 .trend-end-label-rgo { fill: var(--trend-rgo); }
+.trend-end-label-agua { fill: var(--trend-agua); }
 .trend-legend { display: flex; gap: 16px; align-items: center; font-size: 11.5px; color: var(--text-muted); margin: 2px 0 10px; }
 .trend-legend-item { display: flex; align-items: center; gap: 6px; }
 .trend-legend-swatch { width: 14px; height: 2px; border-radius: 2px; display: inline-block; }
@@ -938,6 +944,7 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .trend-stat .n { font-size: 18px; font-weight: 700; }
 .trend-stat .n.oleo { color: var(--trend-oleo); }
 .trend-stat .n.rgo { color: var(--trend-rgo); }
+.trend-stat .n.agua { color: var(--trend-agua); }
 .trend-stat .l { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
 
 .trend-watch-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-top: 14px; }
@@ -955,6 +962,7 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .trend-mini-figure .n { font-size: 12.5px; font-weight: 600; }
 .trend-mini-figure .n.oleo { color: var(--trend-oleo); }
 .trend-mini-figure .n.rgo { color: var(--trend-rgo); }
+.trend-mini-figure .n.agua { color: var(--trend-agua); }
 .trend-mini-figure .l { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
 
 @media (max-width: 900px) {

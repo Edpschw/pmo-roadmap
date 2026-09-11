@@ -21,6 +21,7 @@
    ========================================================================= */
 
 const PRODUCAO_URL = 'data/producao.json';
+const INJECAO_URL = 'data/producao_injecao.json';
 
 /* -------------------------------- KPIs ------------------------------------ */
 
@@ -211,13 +212,52 @@ function trendPctAoAno(valores) {
 const TREND_OLEO_QUEDA = -1; // %/ano
 const TREND_RGO_ALTA = 1; // %/ano
 
-function computeRgoTrend(monthlySeries) {
+// Água injetada por campo, mesmo agrupamento por jazida do resto desta aba
+// (contratos rastreados por PROJECT_FIELD_BASE, contexto por
+// contextJazidaBase) — não dá pra reaproveitar computeFieldRows/
+// computeMonthlySeries direto (shared.js) porque aqueles somam METRIC_KEYS
+// de produção (óleo/gás/BOE) e calculam RGO em cima; aqui a métrica é só
+// aguaInjM3d, de um arquivo/mês diferente (data/producao_injecao.json).
+// Devolve um Map "ano-mes" -> Map(nome do campo -> água injetada, m³/d).
+function computeAguaLookup(injecaoMeses, projects) {
+  const knownNames = new Set();
+  for (const m of injecaoMeses) for (const nome of Object.keys(m.campos)) knownNames.add(nome);
+  const lookup = new Map();
+  for (const m of injecaoMeses) {
+    const porCampo = new Map();
+    const usedFieldNames = new Set();
+    for (const p of projects) {
+      const base = PROJECT_FIELD_BASE[p.name];
+      if (!base) continue;
+      let agua = 0;
+      let any = false;
+      for (const [nome, d] of Object.entries(m.campos)) {
+        if (!nome.includes(base)) continue;
+        usedFieldNames.add(nome);
+        agua += d.aguaInjM3d || 0;
+        any = true;
+      }
+      if (any) porCampo.set(projectDisplayName(p.name), agua);
+    }
+    for (const [nome, d] of Object.entries(m.campos)) {
+      if (usedFieldNames.has(nome)) continue;
+      const jazida = contextJazidaBase(nome, knownNames);
+      porCampo.set(jazida, (porCampo.get(jazida) || 0) + (d.aguaInjM3d || 0));
+    }
+    lookup.set(`${m.ano}-${m.mes}`, porCampo);
+  }
+  return lookup;
+}
+
+function computeRgoTrend(monthlySeries, aguaLookup) {
   const porNome = new Map();
   for (const m of monthlySeries) {
     for (const r of m.rows) {
       if (!(r.oleoPreSalBbld > 0) || r.rgo == null) continue;
       if (!porNome.has(r.name)) porNome.set(r.name, { isContract: r.isContract, color: r.color, pontos: [] });
-      porNome.get(r.name).pontos.push({ ano: m.ano, mes: m.mes, oleo: r.oleoPreSalBbld, rgo: r.rgo });
+      const aguaMes = aguaLookup.get(`${m.ano}-${m.mes}`);
+      const agua = aguaMes ? aguaMes.get(r.name) : undefined;
+      porNome.get(r.name).pontos.push({ ano: m.ano, mes: m.mes, oleo: r.oleoPreSalBbld, rgo: r.rgo, agua: agua != null ? agua : null });
     }
   }
   const linhas = [];
@@ -226,16 +266,26 @@ function computeRgoTrend(monthlySeries) {
     const oleoTrend = trendPctAoAno(janelaPontos.map((p) => p.oleo));
     const rgoTrend = trendPctAoAno(janelaPontos.map((p) => p.rgo));
     if (oleoTrend == null || rgoTrend == null) {
-      linhas.push({ nome, isContract, color, meses: pontos.length, janela: janelaPontos.length, pontosJanela: janelaPontos, oleoTrend: null, rgoTrend: null });
+      linhas.push({ nome, isContract, color, meses: pontos.length, janela: janelaPontos.length, pontosJanela: janelaPontos, oleoTrend: null, rgoTrend: null, aguaTrend: null });
       continue;
     }
+    // Água injetada (data/producao_injecao.json) cobre um período mais
+    // curto que óleo/gás — só o trecho contínuo com dado real a partir do
+    // início da janela entra no fit/gráfico (ver renderTrendChartSVG); não
+    // falta no meio, só no fim (arquivo mais recente que o boletim).
+    let aguaCorte = janelaPontos.findIndex((p) => p.agua == null);
+    if (aguaCorte === -1) aguaCorte = janelaPontos.length;
+    const aguaPontos = janelaPontos.slice(0, aguaCorte);
+    const aguaTrend = trendPctAoAno(aguaPontos.map((p) => p.agua));
     const alerta = oleoTrend < TREND_OLEO_QUEDA && rgoTrend > TREND_RGO_ALTA;
     linhas.push({
       nome, isContract, color,
       meses: pontos.length, janela: janelaPontos.length, pontosJanela: janelaPontos,
-      oleoTrend, rgoTrend,
+      oleoTrend, rgoTrend, aguaTrend,
       oleoIni: janelaPontos[0].oleo, oleoFim: janelaPontos[janelaPontos.length - 1].oleo,
       rgoIni: janelaPontos[0].rgo, rgoFim: janelaPontos[janelaPontos.length - 1].rgo,
+      aguaIni: aguaPontos.length ? aguaPontos[0].agua : null,
+      aguaFim: aguaPontos.length ? aguaPontos[aguaPontos.length - 1].agua : null,
       alerta,
       observar: !alerta && (oleoTrend < 0 || rgoTrend > TREND_RGO_ALTA),
     });
@@ -283,7 +333,18 @@ function renderTrendChartSVG(pontosJanela, { width, height, margin, endLabels })
   const base = { oleo: pontosJanela[0].oleo, rgo: pontosJanela[0].rgo };
   const oleoIdx = pontosJanela.map((p) => (p.oleo / base.oleo) * 100);
   const rgoIdx = pontosJanela.map((p) => (p.rgo / base.rgo) * 100);
-  const all = oleoIdx.concat(rgoIdx);
+
+  // Água cobre um período mais curto (ver computeAguaLookup/computeRgoTrend
+  // — o arquivo de injeção vai só até fev/2026, o boletim de produção vai
+  // mais longe) — desenha só até onde tem dado real, a partir do início da
+  // janela; sem base > 0 pra indexar (água ainda não começou, ou 0 no 1º
+  // mês), não desenha a linha (oleo/RGO continuam normais).
+  let aguaCorte = pontosJanela.findIndex((p) => p.agua == null);
+  if (aguaCorte === -1) aguaCorte = pontosJanela.length;
+  const temAgua = aguaCorte >= 2 && pontosJanela[0].agua > 0;
+  const aguaIdx = temAgua ? pontosJanela.slice(0, aguaCorte).map((p) => (p.agua / pontosJanela[0].agua) * 100) : [];
+
+  const all = oleoIdx.concat(rgoIdx).concat(aguaIdx);
   let yMin = Math.min(100, ...all);
   let yMax = Math.max(100, ...all);
   const pad = (yMax - yMin) * 0.15 || 10;
@@ -301,12 +362,15 @@ function renderTrendChartSVG(pontosJanela, { width, height, margin, endLabels })
   const oleoLastY = yAt(oleoIdx[n - 1]);
   const rgoLastY = yAt(rgoIdx[n - 1]);
   const first = pontosJanela[0], last = pontosJanela[n - 1];
+  const aguaLastX = temAgua ? xAt(aguaCorte - 1) : 0;
+  const aguaLastY = temAgua ? yAt(aguaIdx[aguaCorte - 1]) : 0;
 
   // Reta ajustada (a mesma regressão de trendPctAoAno, mas com o intercepto
   // também, pra poder desenhar) — pontilhada e mais clara que a linha real,
   // pra ficar claro que é o AJUSTE (o número que vira %/ano na tabela), não
   // mais um dado. Não desenha se n < 4 (mesmo piso de trendPctAoAno —
-  // reta de 3 pontos não diz nada).
+  // reta de 3 pontos não diz nada); água usa o próprio recorte (aguaCorte),
+  // que pode ser mais curto que n.
   let fitSvg = '';
   if (n >= 4) {
     const oleoFit = linearFit(oleoIdx);
@@ -319,18 +383,55 @@ function renderTrendChartSVG(pontosJanela, { width, height, margin, endLabels })
     <line x1="${margin.left}" y1="${oleoFitY1.toFixed(1)}" x2="${lastX.toFixed(1)}" y2="${oleoFitY2.toFixed(1)}" class="trend-fit-oleo"/>
     <line x1="${margin.left}" y1="${rgoFitY1.toFixed(1)}" x2="${lastX.toFixed(1)}" y2="${rgoFitY2.toFixed(1)}" class="trend-fit-rgo"/>
     `;
+    if (temAgua && aguaCorte >= 4) {
+      const aguaFit = linearFit(aguaIdx);
+      const aguaFitY1 = yAt(aguaFit.intercept);
+      const aguaFitY2 = yAt(aguaFit.intercept + aguaFit.slope * (aguaCorte - 1));
+      fitSvg += `<line x1="${margin.left}" y1="${aguaFitY1.toFixed(1)}" x2="${aguaLastX.toFixed(1)}" y2="${aguaFitY2.toFixed(1)}" class="trend-fit-agua"/>`;
+    }
   }
 
-  const endLabelsSvg = endLabels ? `
-    <text x="${(lastX + 8).toFixed(1)}" y="${(oleoLastY + 4).toFixed(1)}" class="trend-end-label trend-end-label-oleo">${fmtNum(last.oleo / 1000)} kbbl/d</text>
-    <text x="${(lastX + 8).toFixed(1)}" y="${(rgoLastY + 4).toFixed(1)}" class="trend-end-label trend-end-label-rgo">${fmtNum(last.rgo)} m³/m³</text>
+  const aguaSvg = temAgua ? `
+    <path d="${pathFor(aguaIdx)}" class="trend-line-agua"/>
+    <circle cx="${aguaLastX.toFixed(1)}" cy="${aguaLastY.toFixed(1)}" r="${endLabels ? 4 : 3}" class="trend-dot-agua"/>
   ` : '';
 
-  return `<svg viewBox="0 0 ${width} ${height}" class="trend-svg" role="img" aria-label="Óleo e RGO indexados a 100, ${MESES_PT[first.mes]}/${first.ano} a ${MESES_PT[last.mes]}/${last.ano}">
+  // Rótulo ao lado do ponto (valor real, não indexado) — quando duas linhas
+  // terminam perto uma da outra (ex.: óleo e RGO convergindo no fim da
+  // janela), os textos ficam ilegíveis empilhados. Declutter simples: só
+  // entre rótulos na MESMA coluna (x parecido — água pode terminar bem
+  // antes de óleo/RGO se o arquivo de injeção for mais curto, aí não some
+  // no meio do nada), espalha verticalmente mantendo uma distância mínima,
+  // sem mexer na posição do ponto/linha em si.
+  let endLabelsSvg = '';
+  if (endLabels) {
+    const dots = [
+      { key: 'oleo', x: lastX, y: oleoLastY, text: `${fmtNum(last.oleo / 1000)} kbbl/d` },
+      { key: 'rgo', x: lastX, y: rgoLastY, text: `${fmtNum(last.rgo)} m³/m³` },
+    ];
+    if (temAgua) dots.push({ key: 'agua', x: aguaLastX, y: aguaLastY, text: `${fmtNum(pontosJanela[aguaCorte - 1].agua)} m³/d` });
+    const MIN_GAP = 13;
+    const X_TOLERANCE = 20;
+    const groups = [];
+    for (const d of dots) {
+      const g = groups.find((g) => Math.abs(g[0].x - d.x) <= X_TOLERANCE);
+      if (g) g.push(d); else groups.push([d]);
+    }
+    for (const g of groups) {
+      g.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < g.length; i++) {
+        if (g[i].y - g[i - 1].y < MIN_GAP) g[i].y = g[i - 1].y + MIN_GAP;
+      }
+    }
+    endLabelsSvg = dots.map((d) => `<text x="${(d.x + 8).toFixed(1)}" y="${(d.y + 4).toFixed(1)}" class="trend-end-label trend-end-label-${d.key}">${d.text}</text>`).join('');
+  }
+
+  return `<svg viewBox="0 0 ${width} ${height}" class="trend-svg" role="img" aria-label="Óleo, RGO e água injetada indexados a 100, ${MESES_PT[first.mes]}/${first.ano} a ${MESES_PT[last.mes]}/${last.ano}">
     <line x1="${margin.left}" y1="${baseY.toFixed(1)}" x2="${lastX.toFixed(1)}" y2="${baseY.toFixed(1)}" class="trend-baseline" stroke-dasharray="2,3"/>
     ${fitSvg}
     <path d="${pathFor(oleoIdx)}" class="trend-line-oleo"/>
     <path d="${pathFor(rgoIdx)}" class="trend-line-rgo"/>
+    ${aguaSvg}
     <circle cx="${lastX.toFixed(1)}" cy="${oleoLastY.toFixed(1)}" r="${endLabels ? 4 : 3}" class="trend-dot-oleo"/>
     <circle cx="${lastX.toFixed(1)}" cy="${rgoLastY.toFixed(1)}" r="${endLabels ? 4 : 3}" class="trend-dot-rgo"/>
     <text x="${margin.left}" y="${height - 4}" class="trend-axis-label">${MES_ABREV[first.mes]}/${String(first.ano).slice(2)}</text>
@@ -347,7 +448,8 @@ function renderRgoTrendTable(container, linhas) {
   table.innerHTML = `<thead><tr>
     <th>Campo</th><th class="num">Meses c/ produção</th>
     <th class="num">Tendência óleo (%/ano)</th><th class="num">Tendência RGO (%/ano)</th>
-    <th class="num">Óleo (kbbl/d)</th><th class="num">RGO (m³/m³)</th><th>Sinal</th>
+    <th class="num">Tendência água inj. (%/ano)</th>
+    <th class="num">Óleo (kbbl/d)</th><th class="num">RGO (m³/m³)</th><th class="num">Água inj. (m³/d)</th><th>Sinal</th>
   </tr></thead>`;
   const tbody = document.createElement('tbody');
   for (const l of linhas) {
@@ -356,19 +458,25 @@ function renderRgoTrendTable(container, linhas) {
       tr.innerHTML = `
         <td>${escapeHtml(l.nome)}</td>
         <td class="num">${l.meses}</td>
-        <td class="num" colspan="4">Histórico curto demais (menos de 4 meses de produção) pra calcular tendência.</td>
+        <td class="num" colspan="6">Histórico curto demais (menos de 4 meses de produção) pra calcular tendência.</td>
         <td>${trendStatusPillHTML(l)}</td>
       `;
       tbody.appendChild(tr);
       continue;
     }
+    const aguaTrendCell = l.aguaTrend != null
+      ? `${l.aguaTrend >= 0 ? '+' : ''}${l.aguaTrend.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`
+      : '—';
+    const aguaValCell = l.aguaIni != null ? `${fmtNum(l.aguaIni)} → ${fmtNum(l.aguaFim)}` : '—';
     tr.innerHTML = `
       <td>${escapeHtml(l.nome)}</td>
       <td class="num">${l.meses}</td>
       <td class="num" style="${l.oleoTrend < 0 ? 'color:var(--danger)' : ''}">${l.oleoTrend >= 0 ? '+' : ''}${l.oleoTrend.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</td>
       <td class="num" style="${l.rgoTrend > TREND_RGO_ALTA ? 'color:var(--danger)' : ''}">${l.rgoTrend >= 0 ? '+' : ''}${l.rgoTrend.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</td>
+      <td class="num">${aguaTrendCell}</td>
       <td class="num">${fmtNum(l.oleoIni / 1000)} → ${fmtNum(l.oleoFim / 1000)}</td>
       <td class="num">${fmtNum(l.rgoIni, { maximumFractionDigits: 1 })} → ${fmtNum(l.rgoFim, { maximumFractionDigits: 1 })}</td>
+      <td class="num">${aguaValCell}</td>
       <td>${trendStatusPillHTML(l)}</td>
     `;
     tbody.appendChild(tr);
@@ -378,9 +486,10 @@ function renderRgoTrendTable(container, linhas) {
   container.appendChild(wrap);
 }
 
-function buildRgoTrendSection(producaoData) {
+function buildRgoTrendSection(producaoData, injecaoData) {
   const monthlySeries = computeMonthlySeries(producaoData.meses, state.projects);
-  const linhas = computeRgoTrend(monthlySeries);
+  const aguaLookup = injecaoData ? computeAguaLookup(injecaoData.meses, state.projects) : new Map();
+  const linhas = computeRgoTrend(monthlySeries, aguaLookup);
   const comAlerta = linhas.filter((l) => l.alerta);
   const comObservar = linhas.filter((l) => l.observar);
   const estaveis = linhas.filter((l) => l.oleoTrend != null && !l.alerta && !l.observar);
@@ -410,8 +519,9 @@ function buildRgoTrendSection(producaoData) {
     legend.innerHTML = `
       <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:var(--trend-oleo)"></span>Óleo (bbl/d)</span>
       <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:var(--trend-rgo)"></span>RGO (m³/m³)</span>
+      <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:var(--trend-agua)"></span>Água injetada (m³/d)</span>
       <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:repeating-linear-gradient(90deg,var(--text-faint) 0 3px,transparent 3px 6px);opacity:.6"></span>pontilhado = reta ajustada</span>
-      <span style="margin-left:auto;color:var(--text-faint)">ambos indexados a 100 no início da janela</span>
+      <span style="margin-left:auto;color:var(--text-faint)">todas indexadas a 100 no início da janela</span>
     `;
     destaqueCard.appendChild(legend);
     const body = document.createElement('div');
@@ -426,6 +536,7 @@ function buildRgoTrendSection(producaoData) {
     statRow.innerHTML = `
       <div class="trend-stat"><span class="n oleo">${destaque.oleoTrend >= 0 ? '+' : ''}${destaque.oleoTrend.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</span><span class="l">óleo, %/ano</span></div>
       <div class="trend-stat"><span class="n rgo">${destaque.rgoTrend >= 0 ? '+' : ''}${destaque.rgoTrend.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</span><span class="l">RGO, %/ano</span></div>
+      ${destaque.aguaTrend != null ? `<div class="trend-stat"><span class="n agua">${destaque.aguaTrend >= 0 ? '+' : ''}${destaque.aguaTrend.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</span><span class="l">água inj., %/ano</span></div>` : ''}
     `;
     notePane.appendChild(statRow);
     const noteP = document.createElement('p');
@@ -481,6 +592,7 @@ function buildRgoTrendSection(producaoData) {
       <div class="trend-mini-figures">
         <div class="trend-mini-figure"><span class="n oleo">${l.oleoTrend >= 0 ? '+' : ''}${l.oleoTrend.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</span><span class="l">Óleo/ano</span></div>
         <div class="trend-mini-figure"><span class="n rgo">${l.rgoTrend >= 0 ? '+' : ''}${l.rgoTrend.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</span><span class="l">RGO/ano</span></div>
+        ${l.aguaTrend != null ? `<div class="trend-mini-figure"><span class="n agua">${l.aguaTrend >= 0 ? '+' : ''}${l.aguaTrend.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</span><span class="l">Água/ano</span></div>` : ''}
       </div>
     `;
     grid.appendChild(card);
@@ -491,7 +603,7 @@ function buildRgoTrendSection(producaoData) {
 
   const note = document.createElement('p');
   note.className = 'analytics-table-note';
-  note.textContent = `Fonte: ${producaoData.fonte.nome}. RGO calculado aqui a partir de óleo e gás pré-sal do próprio boletim, não vem pronto da ANP. Tendência = inclinação da reta de mínimos quadrados sobre os últimos 2 anos (24 meses) com óleo pré-sal > 0 — campo com menos de 2 anos de produção usa o histórico inteiro que tiver —, normalizada em %/ano em relação à média da própria série (compara campo grande e pequeno); a mesma reta ajustada aparece pontilhada e mais clara em cada gráfico, atrás da linha de dado de verdade. Alerta = queda de óleo > ${Math.abs(TREND_OLEO_QUEDA)}%/ano E alta de RGO > ${TREND_RGO_ALTA}%/ano ao mesmo tempo — uma tendência negativa isolada pode vir de manutenção de FPSO no meio da janela, não de declínio real; ver o ponto a ponto na aba "Evolução mensal" antes de agir sobre um número só daqui.`;
+  note.textContent = `Fonte: ${producaoData.fonte.nome}. RGO calculado aqui a partir de óleo e gás pré-sal do próprio boletim, não vem pronto da ANP. Água injetada vem de um arquivo à parte (Produção por Zona — água/gás injetados), que cobre um período mais curto (até fev/2026); a linha e a tendência de água só usam os meses em que os dois arquivos se sobrepõem, por isso às vezes param antes do fim do gráfico. Tendência = inclinação da reta de mínimos quadrados sobre os últimos 2 anos (24 meses) com óleo pré-sal > 0 — campo com menos de 2 anos de produção usa o histórico inteiro que tiver —, normalizada em %/ano em relação à média da própria série (compara campo grande e pequeno); a mesma reta ajustada aparece pontilhada e mais clara em cada gráfico, atrás da linha de dado de verdade. Alerta = queda de óleo > ${Math.abs(TREND_OLEO_QUEDA)}%/ano E alta de RGO > ${TREND_RGO_ALTA}%/ano ao mesmo tempo (água injetada é só contexto, não entra no alerta) — uma tendência negativa isolada pode vir de manutenção de FPSO no meio da janela, não de declínio real; ver o ponto a ponto na aba "Evolução mensal" antes de agir sobre um número só daqui.`;
   section.appendChild(note);
 
   return section;
@@ -515,6 +627,16 @@ async function init() {
     console.error('Falha ao carregar dados de produção', err);
   }
 
+  // Água injetada é só contexto da aba Tendência (ver buildRgoTrendSection)
+  // — se falhar ou não carregar, a aba segue funcionando sem a 3ª linha,
+  // por isso não entra no bloco de erro "Nenhum dado" acima.
+  let injecaoData = null;
+  try {
+    injecaoData = await fetch(INJECAO_URL, { cache: 'no-store' }).then((r) => r.json());
+  } catch (err) {
+    console.error('Falha ao carregar dados de injeção', err);
+  }
+
   wrapper.innerHTML = '';
 
   if (!producaoData || !producaoData.meses || !producaoData.meses.length) {
@@ -527,7 +649,7 @@ async function init() {
 
   const monthlySection = buildMonthlySection(producaoData);
   const evolutionSection = buildEvolutionSection(producaoData);
-  const rgoTrendSection = buildRgoTrendSection(producaoData);
+  const rgoTrendSection = buildRgoTrendSection(producaoData, injecaoData);
   evolutionSection.hidden = true;
   rgoTrendSection.hidden = true;
 
