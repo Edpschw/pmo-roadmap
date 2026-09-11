@@ -915,6 +915,11 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .trend-dot-oleo { fill: var(--trend-oleo); }
 .trend-dot-rgo { fill: var(--trend-rgo); }
 .trend-baseline { stroke: var(--text-faint); stroke-width: 1; opacity: .4; }
+/* Reta ajustada (mínimos quadrados, mesmo cálculo de trendPctAoAno) — vem
+   ANTES das linhas de dado no SVG (ver renderTrendChartSVG) mas pontilhada
+   e mais clara que elas, pra ficar claro que é o ajuste, não mais um dado. */
+.trend-fit-oleo { stroke: var(--trend-oleo); stroke-width: 1.5; stroke-dasharray: 5,4; opacity: .45; fill: none; }
+.trend-fit-rgo { stroke: var(--trend-rgo); stroke-width: 1.5; stroke-dasharray: 5,4; opacity: .45; fill: none; }
 .trend-axis-label { font-size: 9.5px; fill: var(--text-faint); }
 .trend-end-label { font-size: 11px; font-weight: 600; }
 .trend-end-label-oleo { fill: var(--trend-oleo); }

@@ -181,16 +181,28 @@ function buildEvolutionSection(producaoData) {
 // normalizada como %/ano em relação à média da série — normalizar deixa
 // campo grande e pequeno comparáveis na mesma tabela (um b em bbl/d bruto
 // não diz nada sozinho).
-function trendPctAoAno(valores) {
+// Mínimos quadrados "cru" (inclinação + intercepto) — trendPctAoAno usa só
+// a inclinação (normalizada em %/ano); renderTrendChartSVG usa os dois pra
+// desenhar a reta ajustada de verdade em cima da série indexada (mesmo x
+// (0..n-1), mesmo y da série que entrou no fit — é por isso que os dois
+// pontos da reta vêm de linearFit, não de um desenho aproximado).
+function linearFit(valores) {
   const n = valores.length;
-  if (n < 4) return null;
   const mx = (n - 1) / 2;
   const my = valores.reduce((s, v) => s + v, 0) / n;
   let num = 0, den = 0;
   valores.forEach((y, x) => { num += (x - mx) * (y - my); den += (x - mx) ** 2; });
-  if (den === 0 || my === 0) return null;
-  const b = num / den;
-  return (b * 12 / my) * 100;
+  const slope = den === 0 ? 0 : num / den;
+  return { slope, intercept: my - slope * mx };
+}
+
+function trendPctAoAno(valores) {
+  const n = valores.length;
+  if (n < 4) return null;
+  const { slope, intercept } = linearFit(valores);
+  const my = valores.reduce((s, v) => s + v, 0) / n;
+  if (my === 0) return null;
+  return (slope * 12 / my) * 100;
 }
 
 // Limiares do "alerta": queda de óleo e alta de RGO precisam ser as duas
@@ -290,6 +302,25 @@ function renderTrendChartSVG(pontosJanela, { width, height, margin, endLabels })
   const rgoLastY = yAt(rgoIdx[n - 1]);
   const first = pontosJanela[0], last = pontosJanela[n - 1];
 
+  // Reta ajustada (a mesma regressão de trendPctAoAno, mas com o intercepto
+  // também, pra poder desenhar) — pontilhada e mais clara que a linha real,
+  // pra ficar claro que é o AJUSTE (o número que vira %/ano na tabela), não
+  // mais um dado. Não desenha se n < 4 (mesmo piso de trendPctAoAno —
+  // reta de 3 pontos não diz nada).
+  let fitSvg = '';
+  if (n >= 4) {
+    const oleoFit = linearFit(oleoIdx);
+    const rgoFit = linearFit(rgoIdx);
+    const oleoFitY1 = yAt(oleoFit.intercept);
+    const oleoFitY2 = yAt(oleoFit.intercept + oleoFit.slope * (n - 1));
+    const rgoFitY1 = yAt(rgoFit.intercept);
+    const rgoFitY2 = yAt(rgoFit.intercept + rgoFit.slope * (n - 1));
+    fitSvg = `
+    <line x1="${margin.left}" y1="${oleoFitY1.toFixed(1)}" x2="${lastX.toFixed(1)}" y2="${oleoFitY2.toFixed(1)}" class="trend-fit-oleo"/>
+    <line x1="${margin.left}" y1="${rgoFitY1.toFixed(1)}" x2="${lastX.toFixed(1)}" y2="${rgoFitY2.toFixed(1)}" class="trend-fit-rgo"/>
+    `;
+  }
+
   const endLabelsSvg = endLabels ? `
     <text x="${(lastX + 8).toFixed(1)}" y="${(oleoLastY + 4).toFixed(1)}" class="trend-end-label trend-end-label-oleo">${fmtNum(last.oleo / 1000)} kbbl/d</text>
     <text x="${(lastX + 8).toFixed(1)}" y="${(rgoLastY + 4).toFixed(1)}" class="trend-end-label trend-end-label-rgo">${fmtNum(last.rgo)} m³/m³</text>
@@ -297,6 +328,7 @@ function renderTrendChartSVG(pontosJanela, { width, height, margin, endLabels })
 
   return `<svg viewBox="0 0 ${width} ${height}" class="trend-svg" role="img" aria-label="Óleo e RGO indexados a 100, ${MESES_PT[first.mes]}/${first.ano} a ${MESES_PT[last.mes]}/${last.ano}">
     <line x1="${margin.left}" y1="${baseY.toFixed(1)}" x2="${lastX.toFixed(1)}" y2="${baseY.toFixed(1)}" class="trend-baseline" stroke-dasharray="2,3"/>
+    ${fitSvg}
     <path d="${pathFor(oleoIdx)}" class="trend-line-oleo"/>
     <path d="${pathFor(rgoIdx)}" class="trend-line-rgo"/>
     <circle cx="${lastX.toFixed(1)}" cy="${oleoLastY.toFixed(1)}" r="${endLabels ? 4 : 3}" class="trend-dot-oleo"/>
@@ -378,6 +410,7 @@ function buildRgoTrendSection(producaoData) {
     legend.innerHTML = `
       <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:var(--trend-oleo)"></span>Óleo (bbl/d)</span>
       <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:var(--trend-rgo)"></span>RGO (m³/m³)</span>
+      <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:repeating-linear-gradient(90deg,var(--text-faint) 0 3px,transparent 3px 6px);opacity:.6"></span>pontilhado = reta ajustada</span>
       <span style="margin-left:auto;color:var(--text-faint)">ambos indexados a 100 no início da janela</span>
     `;
     destaqueCard.appendChild(legend);
@@ -458,7 +491,7 @@ function buildRgoTrendSection(producaoData) {
 
   const note = document.createElement('p');
   note.className = 'analytics-table-note';
-  note.textContent = `Fonte: ${producaoData.fonte.nome}. RGO calculado aqui a partir de óleo e gás pré-sal do próprio boletim, não vem pronto da ANP. Tendência = inclinação da reta de mínimos quadrados sobre os últimos 2 anos (24 meses) com óleo pré-sal > 0 — campo com menos de 2 anos de produção usa o histórico inteiro que tiver —, normalizada em %/ano em relação à média da própria série (compara campo grande e pequeno). Alerta = queda de óleo > ${Math.abs(TREND_OLEO_QUEDA)}%/ano E alta de RGO > ${TREND_RGO_ALTA}%/ano ao mesmo tempo — uma tendência negativa isolada pode vir de manutenção de FPSO no meio da janela, não de declínio real; ver o ponto a ponto na aba "Evolução mensal" antes de agir sobre um número só daqui.`;
+  note.textContent = `Fonte: ${producaoData.fonte.nome}. RGO calculado aqui a partir de óleo e gás pré-sal do próprio boletim, não vem pronto da ANP. Tendência = inclinação da reta de mínimos quadrados sobre os últimos 2 anos (24 meses) com óleo pré-sal > 0 — campo com menos de 2 anos de produção usa o histórico inteiro que tiver —, normalizada em %/ano em relação à média da própria série (compara campo grande e pequeno); a mesma reta ajustada aparece pontilhada e mais clara em cada gráfico, atrás da linha de dado de verdade. Alerta = queda de óleo > ${Math.abs(TREND_OLEO_QUEDA)}%/ano E alta de RGO > ${TREND_RGO_ALTA}%/ano ao mesmo tempo — uma tendência negativa isolada pode vir de manutenção de FPSO no meio da janela, não de declínio real; ver o ponto a ponto na aba "Evolução mensal" antes de agir sobre um número só daqui.`;
   section.appendChild(note);
 
   return section;
