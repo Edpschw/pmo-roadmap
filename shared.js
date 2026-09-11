@@ -1075,7 +1075,12 @@ const UNITS = {
   // gráficos de produção/RGO, só troca a chave/rótulo; usado só em
   // campo.js (buildUnitSwitch(..., ['agua','gasInj'])), não aparece nos
   // outros gráficos porque eles passam sua própria lista de chaves.
-  agua: { label: 'Água injetada (m³/d)', key: 'aguaInjM3d', fmt: (n) => fmtNum(n) + ' m³/d' },
+  // Água em bbl/d (não m³/d cru) — mesma escala/unidade do gráfico de
+  // "Produção mensal" (UNITS.oleo, também bbl/d), pra dar pra comparar
+  // injeção de água com produção de óleo direto, sem fator de conversão
+  // de cabeça; aguaInjBbld já vem convertido em extractInjecaoSeries
+  // (campo.js), a partir do aguaInjM3d cru do boletim (BBL_TO_M3).
+  agua: { label: 'Água injetada (bbl/d)', key: 'aguaInjBbld', fmt: (n) => fmtNum(n) + ' bbl/d' },
   gasInj: { label: 'Gás injetado (Mil m³/d)', key: 'gasInjMm3d', fmt: (n) => fmtNum(n, { maximumFractionDigits: 1 }) + ' Mil m³/d' },
 };
 

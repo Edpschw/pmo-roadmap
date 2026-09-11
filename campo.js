@@ -835,7 +835,10 @@ function extractInjecaoSeries(injecaoData, base, color) {
       gas += d.gasInjMm3d;
     }
     const rows = (agua > 1e-9 || gas > 1e-9)
-      ? [{ name: 'Injeção', color, isContract: true, aguaInjM3d: agua, gasInjMm3d: gas }]
+      // aguaInjBbld: convertido de m³/d pra bbl/d aqui (não em UNITS.agua)
+      // pra já sair na mesma escala do "Produção mensal" (UNITS.oleo,
+      // bbl/d) — ver nota em UNITS.agua no shared.js.
+      ? [{ name: 'Injeção', color, isContract: true, aguaInjBbld: agua / BBL_TO_M3, gasInjMm3d: gas }]
       : [];
     return { ano: m.ano, mes: m.mes, rows };
   });
@@ -846,7 +849,7 @@ function buildFieldInjectionChart(container, injecaoData, base, color) {
   if (!series.some((m) => m.rows.length)) return;
   const card = chartCard(
     'Injeção no campo',
-    'Água e gás injetados no campo, somando todos os poços injetores — dado aberto "Produção por Zona" da ANP, a partir de jan/2023 (a injeção de água/gás no pré-sal ainda era pouco significativa antes disso).',
+    'Água e gás injetados no campo, somando todos os poços injetores — dado aberto "Produção por Zona" da ANP, a partir de jan/2023 (a injeção de água/gás no pré-sal ainda era pouco significativa antes disso). Água em bbl/d, mesma escala do gráfico "Produção mensal" acima, pra comparar direto (o boletim traz o valor cru em m³/d).',
   );
   const controls = document.createElement('div');
   controls.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
