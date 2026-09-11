@@ -1129,6 +1129,13 @@ function computeRGO(oleoBbld, gasMm3d) {
 //     mudou junto quando Lula virou Tupi em 2019, ver normalize_field_name).
 const CONTEXT_JAZIDA_ALIAS = {
   'Sul de Berbigão': 'Berbigão',
+  // Mesma jazida (Reservatório Compartilhado de Tupi = Lula/BM-S-11 + Sul
+  // de Tupi/Cessão Onerosa + Área Não Contratada — ver revisão do AIP em
+  // data/planos_desenvolvimento.json, entradas TUPI/SUL DE TUPI), só
+  // contratos diferentes — sem isso viraria 2 linhas de contexto
+  // separadas por engano, uma delas sem quase nenhuma outra fonte
+  // reconhecendo o nome "Sul de Tupi" sozinho.
+  'Sul de Tupi': 'Tupi',
 };
 function contextJazidaBase(name, knownNames) {
   if (CONTEXT_JAZIDA_ALIAS[name]) return CONTEXT_JAZIDA_ALIAS[name];
@@ -2245,6 +2252,12 @@ const COMPANY_ALIASES = {
   'QatarEnergy Brasil Ltda.': { short: 'QatarEnergy', initials: 'QE' },
   'Petronas Petróleo Brasil Ltda.': { short: 'Petronas', initials: 'PT' },
   'Sinopec Petroleum do Brasil Ltda.': { short: 'Sinopec', initials: 'SP' },
+  // Estatal que administra os contratos de partilha em nome da União —
+  // só aparece quando a % de participação é o blend da jazida inteira
+  // (ver participacaoObs de Atapu/Oeste de Atapu em
+  // planos_desenvolvimento.json), já que a fatia da Área Não Contratada
+  // é 100% dela.
+  'Pré-Sal Petróleo S.A.': { short: 'PPSA', initials: 'PS' },
   // Variantes mais curtas do campo "op" de data/pocos.json (nome do
   // operador do POÇO, não do contrato — formato diferente do operador do
   // GeoJSON acima) — mesma empresa, mesmo selo. Usadas pelo fallback de
@@ -2290,6 +2303,7 @@ const COMPANY_LOGO_FILES = {
   'Ecopetrol': 'assets/logos/ecopetrol.png',
   'Chevron': 'assets/logos/chevron.png',
   'QatarEnergy': 'assets/logos/qatarenergy.png',
+  'Petronas': 'assets/logos/petronas.png',
 };
 
 function companyBadge(rawName) {
@@ -2312,7 +2326,11 @@ function companyBadgesFor(operadorRaw, participacao) {
   const seen = new Set();
   const op = companyBadge(operadorRaw);
   if (op) {
-    list.push({ ...op, role: 'operador' });
+    const opPart = participacao && participacao.find((p) => {
+      const b = companyBadge(p.empresa);
+      return b && b.name === op.name;
+    });
+    list.push({ ...op, role: 'operador', pct: opPart ? opPart.pct : null });
     seen.add(op.name);
   }
   if (participacao) {

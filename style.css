@@ -14,6 +14,11 @@
   --accent-soft: rgba(52, 87, 213, 0.18);
   --danger: #d64545;
   --today: #e0522f;
+  /* Aba Tendência RGO x produção (producao.js) — óleo em verde, RGO em
+     vermelho (pedido explícito, não o par cromático de PALETTE). */
+  --trend-oleo: #1c9e6b;
+  --trend-rgo: #d64545;
+  --trend-agua: #3aa8ff;
   --row-h: 44px;
   --sidebar-w: 300px;
   --radius: 8px;
@@ -186,6 +191,14 @@ body { display: flex; flex-direction: column; height: 100vh; }
 .company-logo-chip-operador img { height: 8px; max-width: 30px; }
 .company-logo-chip-parceiro { height: 9px; padding: 1px 2px; opacity: 0.9; }
 .company-logo-chip-parceiro img { height: 6px; max-width: 22px; }
+
+/* Selo + percentual do PD lado a lado, como UM item só (ver item em
+   app.js) — dentro de .project-badges-row (flex-wrap), agrupar os dois
+   evita que o "%" quebre linha separado do selo a que pertence. Só
+   parceiro tem texto aqui (operador não carrega pct nos dados, ver
+   companyBadgesFor em shared.js). */
+.company-badge-item { display: inline-flex; align-items: center; gap: 2px; }
+.company-badge-pct { font-size: 8px; line-height: 1; color: var(--text-faint); white-space: nowrap; }
 .corner-title { font-size: 11px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: .04em; }
 
 .chevron {
@@ -878,6 +891,84 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .analytics-table { min-width: 1300px; }
 .analytics-table-note { font-size: 11px; color: var(--text-faint); margin-top: 10px; line-height: 1.5; }
 
+/* ---------- Tendência RGO x produção (producao.js) — selo de status, ----------- */
+/* card em destaque, cards de "observar" e grade de mini-gráficos por campo.
+   Óleo e RGO sempre no MESMO eixo (indexados a 100 no início da janela, ver
+   renderTrendChartSVG) — as duas grandezas têm escala bem diferente
+   (centenas de kbbl/d vs. centenas de m³/m³), então eixo duplo daria uma
+   leitura enganosa de "cruzamento" que não existe de verdade; indexado deixa
+   comparar a DIREÇÃO das duas tendências de forma honesta. */
+.trend-pill {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600;
+  padding: 3px 9px 3px 7px; border-radius: 100px; white-space: nowrap; flex: none;
+}
+.trend-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.trend-pill-critical { background: rgba(214, 69, 69, 0.16); color: var(--danger); }
+.trend-pill-warning { background: rgba(201, 162, 39, 0.16); color: #c9a227; }
+.trend-pill-neutral { background: rgba(139, 147, 161, 0.14); color: var(--text-faint); }
+
+/* Óleo em verde (produção, "no azul"), RGO em vermelho (o que se quer ver
+   subir o mínimo possível), água injetada em azul (mesmo tom do ícone
+   "agua" em ICONS, shared.js) — pedido explícito, não é o mesmo par
+   cromático usado no resto do app pra série (PALETTE). */
+.trend-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.trend-line-oleo { stroke: var(--trend-oleo); stroke-width: 2; fill: none; }
+.trend-line-rgo { stroke: var(--trend-rgo); stroke-width: 2; fill: none; }
+.trend-line-agua { stroke: var(--trend-agua); stroke-width: 2; fill: none; }
+.trend-dot-oleo { fill: var(--trend-oleo); }
+.trend-dot-rgo { fill: var(--trend-rgo); }
+.trend-dot-agua { fill: var(--trend-agua); }
+.trend-baseline { stroke: var(--text-faint); stroke-width: 1; opacity: .4; }
+/* Reta ajustada (mínimos quadrados, mesmo cálculo de trendPctAoAno) — vem
+   ANTES das linhas de dado no SVG (ver renderTrendChartSVG) mas pontilhada
+   e mais clara que elas, pra ficar claro que é o ajuste, não mais um dado. */
+.trend-fit-oleo { stroke: var(--trend-oleo); stroke-width: 1.5; stroke-dasharray: 5,4; opacity: .45; fill: none; }
+.trend-fit-rgo { stroke: var(--trend-rgo); stroke-width: 1.5; stroke-dasharray: 5,4; opacity: .45; fill: none; }
+.trend-fit-agua { stroke: var(--trend-agua); stroke-width: 1.5; stroke-dasharray: 5,4; opacity: .45; fill: none; }
+.trend-axis-label { font-size: 9.5px; fill: var(--text-faint); }
+.trend-end-label { font-size: 11px; font-weight: 600; }
+.trend-end-label-oleo { fill: var(--trend-oleo); }
+.trend-end-label-rgo { fill: var(--trend-rgo); }
+.trend-end-label-agua { fill: var(--trend-agua); }
+.trend-legend { display: flex; gap: 16px; align-items: center; font-size: 11.5px; color: var(--text-muted); margin: 2px 0 10px; }
+.trend-legend-item { display: flex; align-items: center; gap: 6px; }
+.trend-legend-swatch { width: 14px; height: 2px; border-radius: 2px; display: inline-block; }
+
+.trend-featured-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: -4px 0 2px; }
+.trend-featured-head h4 { font-size: 16px; font-weight: 700; margin: 0; }
+.trend-featured-body { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-top: 8px; }
+.trend-featured-note { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; justify-content: center; }
+.trend-featured-note p { font-size: 12.5px; line-height: 1.6; color: var(--text); margin: 0; }
+.trend-stat-row { display: flex; gap: 18px; }
+.trend-stat { display: flex; flex-direction: column; gap: 2px; }
+.trend-stat .n { font-size: 18px; font-weight: 700; }
+.trend-stat .n.oleo { color: var(--trend-oleo); }
+.trend-stat .n.rgo { color: var(--trend-rgo); }
+.trend-stat .n.agua { color: var(--trend-agua); }
+.trend-stat .l { font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
+
+.trend-watch-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-top: 14px; }
+.trend-watch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.trend-watch-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.trend-watch-card-head h5 { font-size: 14px; font-weight: 700; margin: 0; }
+.trend-watch-card p { font-size: 12px; line-height: 1.55; color: var(--text-muted); margin: 0; }
+
+.trend-mini-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 14px; }
+.trend-mini-card { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px 12px; background: var(--surface); display: flex; flex-direction: column; gap: 7px; }
+.trend-mini-card-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.trend-mini-card-head h6 { font-size: 12.5px; font-weight: 700; margin: 0; }
+.trend-mini-figures { display: flex; gap: 12px; }
+.trend-mini-figure { display: flex; flex-direction: column; gap: 1px; }
+.trend-mini-figure .n { font-size: 12.5px; font-weight: 600; }
+.trend-mini-figure .n.oleo { color: var(--trend-oleo); }
+.trend-mini-figure .n.rgo { color: var(--trend-rgo); }
+.trend-mini-figure .n.agua { color: var(--trend-agua); }
+.trend-mini-figure .l { font-size: 9px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em; }
+
+@media (max-width: 900px) {
+  .trend-featured-body { grid-template-columns: 1fr; }
+}
+
 /* ---------- Tabela de dados crus (dados.js) — só select/input do app, o ---------- */
 /* resto é tudo botão (.scale-btn/.btn-ghost) — precisa de estilo próprio. */
 .dados-select, .dados-search {
@@ -1145,6 +1236,7 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
   .company-logo-chip-operador img { height: 6px; max-width: 22px; }
   .company-logo-chip-parceiro { height: 7px; padding: 1px 2px; }
   .company-logo-chip-parceiro img { height: 5px; max-width: 16px; }
+  .company-badge-pct { font-size: 7px; }
   /* Nome do projeto/workstream nunca é cortado no mobile: quebra em várias
      linhas em vez de truncar com reticências (altura da linha calculada em
      JS via measureLabelCellHeight, para não sobrepor a linha seguinte). */
