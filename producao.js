@@ -178,6 +178,15 @@ function buildEvolutionSection(producaoData) {
 // PROJECT_FIELD_BASE, contexto por contextJazidaBase), sem duplicar essa
 // lógica aqui.
 
+// Água injetada vem do boletim em m³/d (aguaInjM3d) — exibida em kbbl/d
+// (mesma unidade do óleo nesta aba, BBL_TO_M3 de shared.js) só pra
+// comparar visualmente as duas grandezas físicas na mesma régua; não
+// afeta o índice (÷ pelo 1º ponto da janela) nem a tendência %/ano, que
+// são invariantes a essa troca de unidade (é só um fator constante).
+function aguaM3dParaKbbld(m3d) {
+  return (m3d / BBL_TO_M3) / 1000;
+}
+
 // Inclinação da reta de mínimos quadrados de `valores` (1 ponto por mês),
 // normalizada como %/ano em relação à média da série — normalizar deixa
 // campo grande e pequeno comparáveis na mesma tabela (um b em bbl/d bruto
@@ -409,7 +418,7 @@ function renderTrendChartSVG(pontosJanela, { width, height, margin, endLabels })
       { key: 'oleo', x: lastX, y: oleoLastY, text: `${fmtNum(last.oleo / 1000)} kbbl/d` },
       { key: 'rgo', x: lastX, y: rgoLastY, text: `${fmtNum(last.rgo)} m³/m³` },
     ];
-    if (temAgua) dots.push({ key: 'agua', x: aguaLastX, y: aguaLastY, text: `${fmtNum(pontosJanela[aguaCorte - 1].agua)} m³/d` });
+    if (temAgua) dots.push({ key: 'agua', x: aguaLastX, y: aguaLastY, text: `${fmtNum(aguaM3dParaKbbld(pontosJanela[aguaCorte - 1].agua))} kbbl/d` });
     const MIN_GAP = 13;
     const X_TOLERANCE = 20;
     const groups = [];
@@ -449,7 +458,7 @@ function renderRgoTrendTable(container, linhas) {
     <th>Campo</th><th class="num">Meses c/ produção</th>
     <th class="num">Tendência óleo (%/ano)</th><th class="num">Tendência RGO (%/ano)</th>
     <th class="num">Tendência água inj. (%/ano)</th>
-    <th class="num">Óleo (kbbl/d)</th><th class="num">RGO (m³/m³)</th><th class="num">Água inj. (m³/d)</th><th>Sinal</th>
+    <th class="num">Óleo (kbbl/d)</th><th class="num">RGO (m³/m³)</th><th class="num">Água inj. (kbbl/d)</th><th>Sinal</th>
   </tr></thead>`;
   const tbody = document.createElement('tbody');
   for (const l of linhas) {
@@ -467,7 +476,7 @@ function renderRgoTrendTable(container, linhas) {
     const aguaTrendCell = l.aguaTrend != null
       ? `${l.aguaTrend >= 0 ? '+' : ''}${l.aguaTrend.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`
       : '—';
-    const aguaValCell = l.aguaIni != null ? `${fmtNum(l.aguaIni)} → ${fmtNum(l.aguaFim)}` : '—';
+    const aguaValCell = l.aguaIni != null ? `${fmtNum(aguaM3dParaKbbld(l.aguaIni))} → ${fmtNum(aguaM3dParaKbbld(l.aguaFim))}` : '—';
     tr.innerHTML = `
       <td>${escapeHtml(l.nome)}</td>
       <td class="num">${l.meses}</td>
@@ -519,7 +528,7 @@ function buildRgoTrendSection(producaoData, injecaoData) {
     legend.innerHTML = `
       <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:var(--trend-oleo)"></span>Óleo (bbl/d)</span>
       <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:var(--trend-rgo)"></span>RGO (m³/m³)</span>
-      <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:var(--trend-agua)"></span>Água injetada (m³/d)</span>
+      <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:var(--trend-agua)"></span>Água injetada (kbbl/d)</span>
       <span class="trend-legend-item"><span class="trend-legend-swatch" style="background:repeating-linear-gradient(90deg,var(--text-faint) 0 3px,transparent 3px 6px);opacity:.6"></span>pontilhado = reta ajustada</span>
       <span style="margin-left:auto;color:var(--text-faint)">todas indexadas a 100 no início da janela</span>
     `;
