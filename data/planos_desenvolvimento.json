@@ -24,6 +24,7 @@
     "sistemaResumo": "FPSO (em projeto), 220.000 bbl/d líquido, 15.000 Mm³/d gás; Fase 1: transferência tandem para navios-tanque com posicionamento dinâmico",
     "pocos": { "dataRef": "2021", "abandonados": 5, "produtores": 11, "injetores": 8, "obs": "5 abandonados (2 permanentes + 3 temporários) são os poços atuais na data; 11 produtores + 4 injetores de gás + 4 injetores de água são previstos no projeto completo" },
     "geologiaResumo": "Dois reservatórios da Fm. Barra Velha (Aptiano) — zona superior carbonática e zona inferior rica em sílica com vugs/fraturas; óleo 32° API, porosidade 13%, permeabilidade 100 mD",
+    "oleoAPI": "32° API",
     "volumes": { "dataRef": "BAR 2020 (31/12/2020)", "oleoInSituMMbbl": 4044, "gasInSituMMm3": 213458, "oleoAcumMMbbl": 0.05, "gasAcumMMm3": 2.72, "voipAtualMMbbl": 4043.9, "vgipAtualMMm3": 213457.6, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sumario-executivo-bacalhau.pdf"
   },
@@ -51,6 +52,7 @@
     "sistemaResumo": "FPSO (em projeto), 220.000 bbl/d líquido, 15.000 Mm³/d gás; Fase 1: transferência tandem para navios-tanque com posicionamento dinâmico",
     "pocos": { "dataRef": "2021", "abandonados": 5, "produtores": 11, "injetores": 8, "obs": "5 abandonados (2 permanentes + 3 temporários) são os poços atuais na data; 11 produtores + 4 injetores de gás + 4 injetores de água são previstos no projeto completo" },
     "geologiaResumo": "Dois reservatórios da Fm. Barra Velha (Aptiano) — zona superior carbonática e zona inferior rica em sílica com vugs/fraturas; óleo 32° API, porosidade 13%, permeabilidade 100 mD",
+    "oleoAPI": "32° API",
     "volumes": { "dataRef": "BAR 2020 (31/12/2020)", "oleoInSituMMbbl": 4044, "gasInSituMMm3": 213458, "oleoAcumMMbbl": 0.05, "gasAcumMMm3": 2.72, "voipAtualMMbbl": 4043.9, "vgipAtualMMm3": 213457.6, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sumario-executivo-bacalhau.pdf"
   },
@@ -111,6 +113,7 @@
     "sistemaResumo": "FPSO Pioneiro Libra (SPA, até 2029, 50.000 bbl/d) + 4 FPSOs definitivos (Guanabara, Sepetiba, Marechal Duque de Caxias, Mero 4), 180.000 bbl/d cada",
     "pocos": { "dataRef": "2021 (projeto)", "produtores": 32, "injetores": 33, "obs": "65 poços no projeto da jazida compartilhada, recuperação secundária por injeção alternada de água e gás (WAG)" },
     "geologiaResumo": "Carbonáticos da Fm. Barra Velha e coquinas da Fm. Itapema (Aptiano), 5.700–6.000 m, óleo 29° API",
+    "oleoAPI": "29° API",
     "volumes": { "dataRef": "BAR 2021 (31/12/2021)", "oleoInSituMMbbl": 10274.03, "gasInSituMMm3": 375037.92, "oleoAcumMMbbl": 40.05, "gasAcumMMm3": 2682.08, "reservaProvada": { "dataRef": "31/12/2017 — PD completo", "oleoMMbbl": 505, "gasMMm3": 5555 }, "voipAtualMMbbl": 9970.0, "vgipAtualMMm3": 365024.2, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/rd-0758-mero-e-anc-sumario-executivo-aip.pdf"
   },
@@ -304,6 +307,7 @@
     "areaObs": "Jazida compartilhada — 32,4% Atapu (CO) / 49,6% Atapu (PP) / 17,0% Oeste de Atapu / 0,95% Área Não Contratada",
     "sistemaResumo": "SPA 2015 (FPSO Cidade de São Vicente) + projeto definitivo: 16 poços no FPSO P-70 (8 produtores + 8 injetores água/gás) e FPSO Atapu 2 (275.000 bbl/d); gás rico em CO2 parcialmente reinjetado",
     "geologiaResumo": "Carbonáticos da Fm. Barra Velha (Aptiano, Grupo Guaratiba), 2.000-2.300 m, óleo 27-28° API, alto CO2/baixo H2S, grande complexidade permo-porosa",
+    "oleoAPI": "27-28° API",
     "volumes": { "dataRef": "31/12/2023", "oleoInSituMMbbl": 9891.80, "gasInSituMMm3": 245651.57, "voipAtualMMbbl": 9694.0, "vgipAtualMMm3": 257692.5, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/atapu-atapu-eco-oeste-atapu.pdf"
   },
@@ -332,6 +336,7 @@
     "areaObs": "Jazida compartilhada — 32,4% Atapu (CO) / 49,6% Atapu (PP) / 17,0% Oeste de Atapu / 0,95% Área Não Contratada",
     "sistemaResumo": "SPA 2015 (FPSO Cidade de São Vicente) + projeto definitivo: 16 poços no FPSO P-70 (8 produtores + 8 injetores água/gás) e FPSO Atapu 2 (275.000 bbl/d); gás rico em CO2 parcialmente reinjetado",
     "geologiaResumo": "Carbonáticos da Fm. Barra Velha (Aptiano, Grupo Guaratiba), 2.000-2.300 m, óleo 27-28° API, alto CO2/baixo H2S, grande complexidade permo-porosa",
+    "oleoAPI": "27-28° API",
     "volumes": { "dataRef": "31/12/2023", "oleoInSituMMbbl": 9891.80, "gasInSituMMm3": 245651.57, "voipAtualMMbbl": 9694.0, "vgipAtualMMm3": 257692.5, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/atapu-atapu-eco-oeste-atapu.pdf"
   },
@@ -442,6 +447,7 @@
     "sistemaResumo": "FPSO Frade — 150.000 bbl/d líquido, 2.797.440 m³/d gás; escoamento por navios e duto até o manifold de gás da malha Roncador/Albacora Leste",
     "pocos": { "dataRef": "2020/2023 (previsto)", "perfurados": 6, "produtores": 8, "injetores": 2, "obs": "produtores e injetores são poços previstos no projeto, ainda não todos perfurados" },
     "geologiaResumo": "Carbonatos microbiais de ambiente lacustre hipersalino, Andar Alagoas (Aptiano), Fm. Macabu; óleo 29,3-30° API",
+    "oleoAPI": "29,3-30° API",
     "volumes": { "dataRef": "BAR 2022 (31/12/2022)", "oleoInSituMMbbl": 393.39563, "gasInSituMMm3": 11999.19, "oleoAcumMMbbl": 0, "gasAcumMMm3": 0, "voipAtualMMbbl": 393.4, "vgipAtualMMm3": 11999.2, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/wahoo.pdf"
   },

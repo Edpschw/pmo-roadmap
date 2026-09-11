@@ -788,6 +788,7 @@ function pdSectionHTML(key) {
     ['Início produção', formatMaybeISO(pd.inicioProducao)],
     ['Térm. previsto', formatMaybeISO(pd.previsaoTermino)],
     ['Lâmina d\'água', pd.laminaDagua],
+    ['Óleo (grau API)', pd.oleoAPI],
   ];
   if (pd.pocos) {
     const p = pd.pocos;
