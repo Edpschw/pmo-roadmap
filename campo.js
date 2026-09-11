@@ -1724,8 +1724,15 @@ async function init() {
   const producaoPocosSerie = { meses: producaoPocosSerieJson.meses || [] };
   const producaoInjecao = { meses: producaoInjecaoJson.meses || [] };
   // wellFpso: poço -> FPSO/instalação, só do mês mais recente do boletim
-  // de poços (producaoPocosJson.pocos) — ver nota em buildWellProductionChart.
-  const wellFpso = new Map(Object.entries(producaoPocosJson.pocos || {}).map(([nome, d]) => [nome, d.fpso]));
+  // de poços — ver nota em buildWellProductionChart. As 3 categorias do
+  // boletim (pocos = produtores, injetoresAgua, injetoresGas) trazem fpso
+  // cada uma; sem juntar as 3, todo poço INJETANDO (água ou gás) ficava
+  // sem FPSO conhecido (caía em "Outros poços" nos gráficos e sumia do
+  // ícone de FPSO no miniMap) mesmo quando o boletim já tinha essa info.
+  const wellFpso = new Map();
+  for (const src of [producaoPocosJson.pocos, producaoPocosJson.injetoresAgua, producaoPocosJson.injetoresGas]) {
+    for (const [nome, d] of Object.entries(src || {})) wellFpso.set(nome, d.fpso);
+  }
   // producaoPocosMensal: série de todos os meses com óleo+gás por poço,
   // usada por buildWellRgoChart pra calcular RGO por poço mês a mês
   // (computeRGO) — une DUAS fontes, sem sobreposição hoje: o dado aberto
