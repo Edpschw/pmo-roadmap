@@ -538,6 +538,13 @@ body.map-page .btn-ghost:hover { background: #1e222a; }
 .map-legend-row { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--map-text-muted); }
 .map-legend-well-icon { flex: 0 0 auto; width: 15px; height: 15px; display: flex; align-items: center; justify-content: center; }
 
+/* Escala contínua (STOIIP/Volume recuperado/Grau API, ver
+   buildContinuousLegend em mapa.js) — barra em degradê + mín/máx nas
+   pontas, "sem dado" à parte (nunca dentro da própria barra). */
+.map-legend-gradient { height: 10px; border-radius: 3px; margin-top: 2px; }
+.map-legend-scale-labels { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--map-text-muted); margin-top: 3px; }
+.map-legend-nodata-row { margin-top: 6px; }
+
 /* Filtro de poço por SITUACAO/CATEGORIA (chips) */
 .map-filter-group + .map-filter-group { margin-top: 14px; }
 .map-filter-group-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }

@@ -183,6 +183,7 @@ const DATASETS = [
       const entries = Object.entries(d).filter(([k]) => k !== '_fonte');
       const comStoiip = entries.filter(([, v]) => v.volumes && v.volumes.oleoInSituMMbbl != null).length;
       const comVoipAtual = entries.filter(([, v]) => v.volumes && v.volumes.voipAtualMMbbl != null).length;
+      const comVolumeRec = entries.filter(([, v]) => v.volumes && v.volumes.oleoRecAtualMMbbl != null).length;
       const comAPI = entries.filter(([, v]) => v.oleoAPI != null).length;
       const comTracts = entries.filter(([, v]) => v.tracts && v.tracts.length > 1).length;
       return {
@@ -190,12 +191,12 @@ const DATASETS = [
         registros: `${entries.length} jazidas/campos publicados`,
         periodo: '—',
         gaps: [],
-        extra: `${comStoiip} de ${entries.length} com STOIIP (retrato do PD), ${comVoipAtual} com VOIP atual cruzado do BAR 2025, ${comAPI} com grau API do óleo (só quando o sumário de PD publica), ${comTracts} com mais de 1 fatia (tracts)`,
+        extra: `${comStoiip} de ${entries.length} com STOIIP (retrato do PD), ${comVoipAtual} com VOIP atual cruzado do BAR 2025, ${comVolumeRec} com volume recuperado (BAR 2025), ${comAPI} com grau API do óleo (só quando o sumário de PD publica), ${comTracts} com mais de 1 fatia (tracts)`,
       };
     },
     table: {
       monthly: false,
-      columns: ['Jazida/Campo', 'Situação', 'Descoberta', 'Comercialidade', 'Início produção', 'STOIIP óleo (MMbbl, PD)', 'VOIP atual óleo (MMbbl, BAR 2025)', 'Óleo (grau API)', 'Empresas (participação)'],
+      columns: ['Jazida/Campo', 'Situação', 'Descoberta', 'Comercialidade', 'Início produção', 'STOIIP óleo (MMbbl, PD)', 'VOIP atual óleo (MMbbl, BAR 2025)', 'Volume recuperado (MMbbl, BAR 2025)', 'Óleo (grau API)', 'Empresas (participação)'],
       rowsFor(d) {
         return Object.entries(d).filter(([k]) => k !== '_fonte').sort((a, b) => a[0].localeCompare(b[0], 'pt-BR')).map(([nome, v]) => [
           nome,
@@ -205,6 +206,7 @@ const DATASETS = [
           v.inicioProducao || '—',
           v.volumes && v.volumes.oleoInSituMMbbl != null ? fmtNum(v.volumes.oleoInSituMMbbl) : '—',
           v.volumes && v.volumes.voipAtualMMbbl != null ? fmtNum(v.volumes.voipAtualMMbbl) : '—',
+          v.volumes && v.volumes.oleoRecAtualMMbbl != null ? fmtNum(v.volumes.oleoRecAtualMMbbl) : '—',
           v.oleoAPI || '—',
           (v.participacao || []).map((p) => `${p.empresa} (${p.pct}%)`).join(', ') || '—',
         ]);

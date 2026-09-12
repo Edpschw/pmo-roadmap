@@ -60,12 +60,21 @@ const PROJECTS_WITHOUT_SHAPE = {
 // 'rodada' usa a rodada/regime de origem do contrato, como vem da ANP no
 // GeoJSON (props.rodada) — inclui valores fora do padrão "Partilha N"/
 // "OPPN" para os campos que nasceram na Cessão Onerosa de 2010 (Búzios,
-// Itapu, Sépia, Atapu) e só viraram partilha no leilão do excedente.
+// Itapu, Sépia, Atapu) e só viraram partilha no leilão do excedente. Os 3
+// últimos ('stoiip'/'volumeRecuperado'/'api') são modos POR PROPRIEDADE —
+// escala de cor contínua (ver PROPERTY_DEFS/SEQUENTIAL_STOPS abaixo), não
+// categórica — e valem tanto pros 30 projetos rastreados quanto pra
+// qualquer campo de contexto com essa propriedade no PD (ver
+// presaltFieldStyle), não só os "emprestados"/ligados de linkedProjectByFonte.
 const COLOR_MODES = [
   { id: 'projeto', label: 'Projeto' },
   { id: 'status', label: 'Status' },
   { id: 'rodada', label: 'Rodada' },
+  { id: 'stoiip', label: 'STOIIP' },
+  { id: 'volumeRecuperado', label: 'Volume recuperado' },
+  { id: 'api', label: 'Grau API' },
 ];
+const PROPERTY_COLOR_MODES = new Set(['stoiip', 'volumeRecuperado', 'api']);
 let colorMode = 'projeto';
 
 const GROUP_COLORS = { exploracao: '#2f9ed6', producao: '#1c9e6b', devolvidos: '#d64545' };
@@ -74,6 +83,109 @@ const GROUP_COLORS = { exploracao: '#2f9ed6', producao: '#1c9e6b', devolvidos: '
 const CATEGORY_PALETTE = PALETTE.concat(['#7a5cff', '#00b3a4', '#8a6d3b']);
 let rodadaColorMap = {};
 let rodadaOrder = [];
+
+// Propriedade lida do PD (data/planos_desenvolvimento.json, ver pdData) por
+// modo de cor contínuo. extract(pd) devolve um número (MMbbl ou grau API) ou
+// null quando o sumário de PD não publica aquele dado pra essa jazida —
+// null nunca entra no domínio (min/máx) nem ganha cor, fica no cinza neutro
+// de "sem dado" (ver presaltNoDataStyle/colorForPropertyValue). "Volume
+// recuperado" é oleoRecAtualMMbbl (óleo já produzido, Boletim Anual de
+// Reservas 2025, somado por jazida — mesma fonte/metodologia de voipAtual,
+// ver nota de 2 commits atrás), não a reserva 1P/2P/3P remanescente. "Grau
+// API" aceita faixa ("27-28° API", "29,3-30° API") e usa a média da faixa —
+// só 6 das 41 jazidas do PD publicam isso (ver dados.js).
+const PROPERTY_DEFS = {
+  stoiip: {
+    label: 'STOIIP', unit: 'MMbbl', decimals: 0,
+    extract: (pd) => (pd.volumes && pd.volumes.oleoInSituMMbbl != null ? pd.volumes.oleoInSituMMbbl : null),
+  },
+  volumeRecuperado: {
+    label: 'Volume recuperado', unit: 'MMbbl', decimals: 0,
+    extract: (pd) => (pd.volumes && pd.volumes.oleoRecAtualMMbbl != null ? pd.volumes.oleoRecAtualMMbbl : null),
+  },
+  api: {
+    label: 'Grau API', unit: '° API', decimals: 1,
+    extract: (pd) => apiStringToNumber(pd.oleoAPI),
+  },
+};
+
+function apiStringToNumber(s) {
+  if (!s) return null;
+  const nums = (s.match(/[\d.,]+/g) || []).map((n) => Number(n.replace(',', '.'))).filter((n) => !Number.isNaN(n));
+  if (!nums.length) return null;
+  return nums.reduce((a, b) => a + b, 0) / nums.length;
+}
+
+// Valor da propriedade ativa (colorMode) pra uma jazida/campo, pela mesma
+// chave usada em pdSectionHTML (project.name pro projeto rastreado,
+// props.nome pro campo de contexto — os dois resolvidos via byNameOrUpper).
+function propertyValueFor(key) {
+  const def = PROPERTY_DEFS[colorMode];
+  if (!def) return null;
+  const pd = byNameOrUpper(pdData, key);
+  return pd ? def.extract(pd) : null;
+}
+
+// Domínio (min/máx) de cada propriedade, calculado uma vez a partir de TODO
+// pdData (não só dos 30 projetos rastreados — Tupi/Berbigão/Lapa/Wahoo são
+// campo de contexto, não projeto, mas têm STOIIP/volume recuperado e
+// precisam entrar no domínio pra escala fazer sentido) e cacheado por modo,
+// já que pdData não muda depois do fetch inicial.
+const propertyDomainCache = {};
+function domainForMode(mode) {
+  if (propertyDomainCache[mode]) return propertyDomainCache[mode];
+  const def = PROPERTY_DEFS[mode];
+  if (!def) return null;
+  let min = Infinity;
+  let max = -Infinity;
+  for (const [key, pd] of Object.entries(pdData)) {
+    if (key === '_fonte') continue;
+    const v = def.extract(pd);
+    if (v != null) { min = Math.min(min, v); max = Math.max(max, v); }
+  }
+  const domain = min <= max ? { min, max } : null;
+  propertyDomainCache[mode] = domain;
+  return domain;
+}
+
+// Escala sequencial contínua (1 hue só, claro->escuro) pra magnitude — ver
+// skill de dataviz (references/palette.md): nunca arco-íris, sempre 1 hue.
+// Os 13 tons abaixo são os steps 100->700 do azul de referência da skill,
+// interpolados linearmente em RGB entre os vizinhos (não precisa ser
+// perceptualmente perfeito pra um choropleth com ~15-20 polígonos coloridos
+// por vez — dá pra ver a ordem/gradiente com clareza, que é o que importa
+// aqui).
+const SEQUENTIAL_STOPS = ['#cde2fb', '#b7d3f6', '#9ec5f4', '#86b6ef', '#6da7ec', '#5598e7', '#3987e5', '#2a78d6', '#256abf', '#1c5cab', '#184f95', '#104281', '#0d366b'];
+// Cinza neutro pra "sem dado nessa propriedade" — recessivo de propósito
+// (mesmo tom do contorno de contexto padrão, PRESALT_FIELD_STYLE.color),
+// pra nunca competir visualmente com os polígonos que TÊM valor/cor.
+const PROPERTY_NO_DATA_COLOR = '#5c6470';
+
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function rgbToHex([r, g, b]) {
+  return '#' + [r, g, b].map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+}
+function sequentialColorAt(t) {
+  const stops = SEQUENTIAL_STOPS;
+  const pos = Math.max(0, Math.min(1, t)) * (stops.length - 1);
+  const i0 = Math.floor(pos);
+  const i1 = Math.min(stops.length - 1, i0 + 1);
+  const frac = pos - i0;
+  const c0 = hexToRgb(stops[i0]);
+  const c1 = hexToRgb(stops[i1]);
+  return rgbToHex(c0.map((v, i) => v + (c1[i] - v) * frac));
+}
+// null quando não há valor ou domínio (sem dado nessa propriedade pra essa
+// jazida, ou nenhuma jazida tem essa propriedade) — quem chama cai pro
+// cinza neutro (PROPERTY_NO_DATA_COLOR) nesse caso.
+function colorForPropertyValue(value, domain) {
+  if (value == null || !domain) return null;
+  if (domain.max === domain.min) return SEQUENTIAL_STOPS[SEQUENTIAL_STOPS.length - 1];
+  return sequentialColorAt((value - domain.min) / (domain.max - domain.min));
+}
 
 const groupVisible = {};
 for (const g of GROUP_DEFS) groupVisible[g.id] = true;
@@ -162,11 +274,16 @@ const contornoPresalLayer = L.layerGroup().addTo(map);
 // baixo delas (Leaflet empilha na ordem de addTo).
 const presaltFieldsLayer = L.layerGroup().addTo(map);
 let presaltFieldsVisible = true;
-// Campo de contexto colorido como um projeto rastreado por citar o mesmo
-// PD (ver linkedProjectByFonte em init()) — guardado à parte (não em
-// layerByProjectId, que é só pros 30 projetos) pra setColorMode saber
-// repintar também quando o modo de cor muda.
-const linkedPresaltLayers = [];
+// TODO campo de contexto desenhado (não só os "emprestados"/ligados a um
+// projeto rastreado por citar o mesmo PD, ver linkedProjectByFonte em
+// init()) — guardado à parte (não em layerByProjectId, que é só pros 30
+// projetos) pra setColorMode saber repintar também quando o modo de cor
+// muda. Nos modos categóricos (projeto/status/rodada) só o subconjunto
+// "ligado" (linkedProject != null) muda de cor; nos modos por propriedade
+// (stoiip/volumeRecuperado/api) QUALQUER campo de contexto com essa
+// propriedade no PD entra na escala contínua, ligado ou não — por isso
+// guarda todo mundo, não só os ligados.
+const presaltFieldEntries = [];
 const outrosPocosLayer = L.layerGroup();
 let outrosPocosVisible = true;
 // Zoom mínimo pra QUALQUER poço aparecer no mapa — mesma regra pros
@@ -452,6 +569,10 @@ function colorForProject(project) {
     const rodada = feat && feat.properties.rodada;
     return (rodada && rodadaColorMap[rodada]) || '#5c6470';
   }
+  if (PROPERTY_COLOR_MODES.has(colorMode)) {
+    const value = propertyValueFor(project.name);
+    return colorForPropertyValue(value, domainForMode(colorMode)) || PROPERTY_NO_DATA_COLOR;
+  }
   return project.color;
 }
 
@@ -505,6 +626,29 @@ function hatchFillFor(color) {
 function fillStyleFor(project) {
   const c = colorForProject(project);
   return { color: c, fillColor: project.group === 'devolvidos' ? hatchFillFor(c) : c };
+}
+
+// Estilo de um campo de CONTEXTO (não um dos 30 projetos rastreados) — nos
+// modos por propriedade (stoiip/volumeRecuperado/api), colorido pela própria
+// propriedade quando o PD desse campo publica (ligado a um projeto ou não:
+// Tupi/Berbigão/Lapa/Wahoo não são projeto rastreado, mas têm STOIIP e
+// entram na escala igual); sem essa propriedade, cinza neutro
+// (PROPERTY_NO_DATA_COLOR) — nunca cai pro estilo "ligado ao projeto" nesse
+// caso, senão Atapu (projeto) e OESTE DE ATAPU (contexto) apareceriam com
+// cores diferentes quando a intenção do modo é "cor = valor", não "cor =
+// projeto". Fora dos modos por propriedade, mantém a regra de sempre:
+// campo ligado ao PD de um projeto rastreado (linkedProject) pinta como
+// ele; senão, neutro (PRESALT_FIELD_STYLE).
+function presaltFieldStyle(props, linkedProject) {
+  if (PROPERTY_COLOR_MODES.has(colorMode)) {
+    const value = propertyValueFor(props.nome);
+    const c = colorForPropertyValue(value, domainForMode(colorMode));
+    if (c) return { color: c, fillColor: c, weight: 1.5, fillOpacity: 0.45, dashArray: null };
+    return PRESALT_FIELD_STYLE;
+  }
+  return linkedProject
+    ? { ...fillStyleFor(linkedProject), weight: 1.5, fillOpacity: 0.22, dashArray: '4 3' }
+    : PRESALT_FIELD_STYLE;
 }
 
 // Nome de exibição no RÓTULO sempre visível sobre o polígono (não o
@@ -806,6 +950,7 @@ function pdSectionHTML(key) {
     if (v.gasInSituMMm3 != null) rows.push([`GIIP (${v.dataRef || '—'})`, `${fmt(v.gasInSituMMm3)} MMm³`]);
     if (v.voipAtualMMbbl != null) rows.push([`VOIP atual (${v.voipAtualDataRef || '—'})`, `${fmt(v.voipAtualMMbbl)} MMbbl${v.voipAtualObs ? ` — ${v.voipAtualObs}` : ''}`]);
     if (v.vgipAtualMMm3 != null) rows.push([`VGIP atual (${v.voipAtualDataRef || '—'})`, `${fmt(v.vgipAtualMMm3)} MMm³`]);
+    if (v.oleoRecAtualMMbbl != null) rows.push([`Volume recuperado (${v.voipAtualDataRef || '—'})`, `${fmt(v.oleoRecAtualMMbbl)} MMbbl`]);
     if (v.reservaProvada) {
       const r = v.reservaProvada;
       if (r.oleoMMbbl != null) rows.push([`Volume recuperável óleo (${r.dataRef || '—'})`, `${fmt(r.oleoMMbbl)} MMbbl`]);
@@ -1241,10 +1386,8 @@ async function init() {
       }
       const fieldPd = byNameOrUpper(pdData, props.nome);
       const linkedProject = fieldPd && fieldPd.fonte ? linkedProjectByFonte.get(fieldPd.fonte) : null;
-      const color = linkedProject ? colorForProject(linkedProject) : PRESALT_FIELD_STYLE.color;
-      const style = linkedProject
-        ? { ...fillStyleFor(linkedProject), weight: 1.5, fillOpacity: 0.22, dashArray: '4 3' }
-        : PRESALT_FIELD_STYLE;
+      const style = presaltFieldStyle(props, linkedProject);
+      const color = style.color || style.fillColor || PRESALT_FIELD_STYLE.color;
       const layer = L.geoJSON(feat, { style });
       layer.eachLayer((l) => l.bindPopup(presaltFieldPopupHTML(props), { maxWidth: 320 }));
       layer.addTo(presaltFieldsLayer);
@@ -1256,7 +1399,7 @@ async function init() {
         props.nome,
         () => map.hasLayer(presaltFieldsLayer),
       );
-      if (linkedProject) linkedPresaltLayers.push({ layer, project: linkedProject });
+      presaltFieldEntries.push({ layer, props, linkedProject });
       registerWellSet(props.nome, null, layer.getBounds(), color, wellPresaltLayer);
       addRigMarkersFor(props.nome, rigPresaltLayer);
     }
@@ -1454,12 +1597,13 @@ function setColorMode(mode) {
     const feat = featureByProject[project.name];
     if (feat) layer.eachLayer((l) => l.bindPopup(popupHTML(project, feat.properties), { autoPan: false, maxWidth: 320 }));
   }
-  // Campo de contexto colorido como um projeto rastreado (ver
-  // linkedPresaltLayers) segue a cor do projeto em qualquer modo — sem
-  // isso, "Colorir por Status" repintava Atapu mas deixava OESTE DE ATAPU
-  // parado na cor de Partilha original.
-  for (const { layer, project } of linkedPresaltLayers) {
-    layer.setStyle(fillStyleFor(project));
+  // Repinta TODO campo de contexto (não só o ligado a um projeto) — nos
+  // modos por propriedade qualquer um com a propriedade no PD ganha cor
+  // própria; nos modos categóricos só o ligado (linkedProject) muda,
+  // presaltFieldStyle cuida da distinção (sem isso, "Colorir por Status"
+  // repintava Atapu mas deixava OESTE DE ATAPU parado na cor original).
+  for (const { layer, props, linkedProject } of presaltFieldEntries) {
+    layer.setStyle(presaltFieldStyle(props, linkedProject));
   }
   renderPanel();
 }
@@ -1641,6 +1785,8 @@ function renderColorModeControl(container) {
     container.appendChild(buildLegend(GROUP_DEFS.map((g) => [g.label, GROUP_COLORS[g.id]])));
   } else if (colorMode === 'rodada') {
     container.appendChild(buildLegend(rodadaOrder.map((r) => [r, rodadaColorMap[r]])));
+  } else if (PROPERTY_COLOR_MODES.has(colorMode)) {
+    container.appendChild(buildContinuousLegend(colorMode));
   }
 }
 
@@ -1814,6 +1960,44 @@ function buildLegend(entries) {
     legend.appendChild(row);
   }
   return legend;
+}
+
+// Legenda de escala CONTÍNUA (gradiente, não pontos categóricos) pros 3
+// modos por propriedade — barra em degradê (mesmos stops de
+// sequentialColorAt, via CSS linear-gradient) com mín/máx numéricos nas
+// pontas, mais uma linha à parte pra "sem dado" (jazida sem essa
+// propriedade no PD, ver PROPERTY_NO_DATA_COLOR) — nunca dentro da própria
+// escala, senão o cinza pareceria "valor zero" em vez de "não sabemos".
+function buildContinuousLegend(mode) {
+  const def = PROPERTY_DEFS[mode];
+  const domain = domainForMode(mode);
+  const wrap = document.createElement('div');
+  wrap.className = 'map-legend map-legend-continuous';
+  if (!domain) {
+    const empty = document.createElement('div');
+    empty.className = 'map-legend-row';
+    empty.textContent = `Nenhuma jazida com ${def.label.toLowerCase()} publicado no PD.`;
+    wrap.appendChild(empty);
+    return wrap;
+  }
+  const fmt = (n) => n.toLocaleString('pt-BR', { maximumFractionDigits: def.decimals, minimumFractionDigits: 0 });
+  const bar = document.createElement('div');
+  bar.className = 'map-legend-gradient';
+  bar.style.background = `linear-gradient(90deg, ${SEQUENTIAL_STOPS.join(', ')})`;
+  wrap.appendChild(bar);
+  const scaleLabels = document.createElement('div');
+  scaleLabels.className = 'map-legend-scale-labels';
+  scaleLabels.innerHTML = `<span>${fmt(domain.min)} ${def.unit}</span><span>${fmt(domain.max)} ${def.unit}</span>`;
+  wrap.appendChild(scaleLabels);
+  const noDataRow = document.createElement('div');
+  noDataRow.className = 'map-legend-row map-legend-nodata-row';
+  const dot = document.createElement('span');
+  dot.className = 'map-panel-dot';
+  dot.style.background = PROPERTY_NO_DATA_COLOR;
+  noDataRow.appendChild(dot);
+  noDataRow.appendChild(document.createTextNode('Sem esse dado no PD'));
+  wrap.appendChild(noDataRow);
+  return wrap;
 }
 
 // Preservado entre re-renders (troca de modo de cor, toggle de grupo etc.)

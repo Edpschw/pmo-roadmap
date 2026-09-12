@@ -25,7 +25,7 @@
     "pocos": { "dataRef": "2021", "abandonados": 5, "produtores": 11, "injetores": 8, "obs": "5 abandonados (2 permanentes + 3 temporários) são os poços atuais na data; 11 produtores + 4 injetores de gás + 4 injetores de água são previstos no projeto completo" },
     "geologiaResumo": "Dois reservatórios da Fm. Barra Velha (Aptiano) — zona superior carbonática e zona inferior rica em sílica com vugs/fraturas; óleo 32° API, porosidade 13%, permeabilidade 100 mD",
     "oleoAPI": "32° API",
-    "volumes": { "dataRef": "BAR 2020 (31/12/2020)", "oleoInSituMMbbl": 4044, "gasInSituMMm3": 213458, "oleoAcumMMbbl": 0.05, "gasAcumMMm3": 2.72, "voipAtualMMbbl": 4043.9, "vgipAtualMMm3": 213457.6, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "BAR 2020 (31/12/2020)", "oleoInSituMMbbl": 4044, "gasInSituMMm3": 213458, "oleoAcumMMbbl": 0.05, "gasAcumMMm3": 2.72, "voipAtualMMbbl": 4043.9, "oleoRecAtualMMbbl": 1.36, "vgipAtualMMm3": 213457.6, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sumario-executivo-bacalhau.pdf"
   },
   "BACALHAU": {
@@ -53,7 +53,7 @@
     "pocos": { "dataRef": "2021", "abandonados": 5, "produtores": 11, "injetores": 8, "obs": "5 abandonados (2 permanentes + 3 temporários) são os poços atuais na data; 11 produtores + 4 injetores de gás + 4 injetores de água são previstos no projeto completo" },
     "geologiaResumo": "Dois reservatórios da Fm. Barra Velha (Aptiano) — zona superior carbonática e zona inferior rica em sílica com vugs/fraturas; óleo 32° API, porosidade 13%, permeabilidade 100 mD",
     "oleoAPI": "32° API",
-    "volumes": { "dataRef": "BAR 2020 (31/12/2020)", "oleoInSituMMbbl": 4044, "gasInSituMMm3": 213458, "oleoAcumMMbbl": 0.05, "gasAcumMMm3": 2.72, "voipAtualMMbbl": 4043.9, "vgipAtualMMm3": 213457.6, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "BAR 2020 (31/12/2020)", "oleoInSituMMbbl": 4044, "gasInSituMMm3": 213458, "oleoAcumMMbbl": 0.05, "gasAcumMMm3": 2.72, "voipAtualMMbbl": 4043.9, "oleoRecAtualMMbbl": 1.36, "vgipAtualMMm3": 213457.6, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sumario-executivo-bacalhau.pdf"
   },
   "Búzios": {
@@ -84,7 +84,7 @@
     "sistemaResumo": "6 FPSOs (P-74, P-75, P-76, P-77 + 2 unidades futuras), 150.000 bbl/d de óleo cada — nenhuma instalada na data do documento (2016)",
     "pocos": { "dataRef": "2016-06", "perfurados": 20, "produtores": 54, "injetores": 54 },
     "geologiaResumo": "Carbonáticos biogênicos da Fm. Barra Velha (Aptiano) e coquinas da Fm. Itapema (Barremiano), 5.000-6.000 m",
-    "volumes": { "dataRef": "BAR 2015", "oleoInSituMMbbl": 29889, "gasInSituMMm3": 1101988, "oleoAcumMMbbl": 2.47, "gasAcumMMm3": 86.47, "voipAtualMMbbl": 29471.0, "vgipAtualMMm3": 828896.4, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "BAR 2015", "oleoInSituMMbbl": 29889, "gasInSituMMm3": 1101988, "oleoAcumMMbbl": 2.47, "gasAcumMMm3": 86.47, "voipAtualMMbbl": 29471.0, "oleoRecAtualMMbbl": 1441.05, "vgipAtualMMm3": 828896.4, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/buzios.pdf"
   },
   "MERO": {
@@ -114,7 +114,7 @@
     "pocos": { "dataRef": "2021 (projeto)", "produtores": 32, "injetores": 33, "obs": "65 poços no projeto da jazida compartilhada, recuperação secundária por injeção alternada de água e gás (WAG)" },
     "geologiaResumo": "Carbonáticos da Fm. Barra Velha e coquinas da Fm. Itapema (Aptiano), 5.700–6.000 m, óleo 29° API",
     "oleoAPI": "29° API",
-    "volumes": { "dataRef": "BAR 2021 (31/12/2021)", "oleoInSituMMbbl": 10274.03, "gasInSituMMm3": 375037.92, "oleoAcumMMbbl": 40.05, "gasAcumMMm3": 2682.08, "reservaProvada": { "dataRef": "31/12/2017 — PD completo", "oleoMMbbl": 505, "gasMMm3": 5555 }, "voipAtualMMbbl": 9970.0, "vgipAtualMMm3": 365024.2, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "BAR 2021 (31/12/2021)", "oleoInSituMMbbl": 10274.03, "gasInSituMMm3": 375037.92, "oleoAcumMMbbl": 40.05, "gasAcumMMm3": 2682.08, "reservaProvada": { "dataRef": "31/12/2017 — PD completo", "oleoMMbbl": 505, "gasMMm3": 5555 }, "voipAtualMMbbl": 9970.0, "oleoRecAtualMMbbl": 464.50, "vgipAtualMMm3": 365024.2, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/rd-0758-mero-e-anc-sumario-executivo-aip.pdf"
   },
   "SUL DE TUPI": {
@@ -146,7 +146,7 @@
     "sistemaResumo": "1 FPSO (P-69), compartilhado com o campo de Lula — 150.000 bbl/d de óleo, 6.000.000 m³/d de gás",
     "pocos": { "dataRef": "2018-02", "perfurados": 4, "obs": "produção ainda não iniciada na data do documento" },
     "geologiaResumo": "Carbonáticos da Fm. Barra Velha (Aptiano), 4.700–6.000 m, sob até 2.000 m de sal",
-    "volumes": { "dataRef": "BAR 2017 (31/12/2017)", "oleoAcumMMbbl": 0, "gasAcumMMm3": 0, "voipAtualMMbbl": 22444.2, "vgipAtualMMm3": 788511.5, "voipAtualDataRef": "BAR 2025", "voipAtualObs": "STOIIP do sumário de PD não publicado para esta sub-área (jazida Tupi); voipAtual é o VOIP atual do BAR (jazida inteira, soma Tupi + Sul de Tupi + Anc_Tupi)." },
+    "volumes": { "dataRef": "BAR 2017 (31/12/2017)", "oleoAcumMMbbl": 0, "gasAcumMMm3": 0, "voipAtualMMbbl": 22444.2, "oleoRecAtualMMbbl": 3391.27, "vgipAtualMMm3": 788511.5, "voipAtualDataRef": "BAR 2025", "voipAtualObs": "STOIIP do sumário de PD não publicado para esta sub-área (jazida Tupi); voipAtual é o VOIP atual do BAR (jazida inteira, soma Tupi + Sul de Tupi + Anc_Tupi)." },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sul-de-lula.pdf"
   },
   "LAPA": {
@@ -169,7 +169,7 @@
     "sistemaResumo": "FPSO Cidade de Caraguatatuba (área NE, 120.000 bbl/d líquido, 5.000.000 m³/d gás) + área Lapa Sudoeste (3 poços, ~12 km do FPSO)",
     "pocos": { "dataRef": "2023-03", "perfurados": 12, "produtores": 3, "injetores": 4, "abandonados": 5 },
     "geologiaResumo": "Microbialitos carbonáticos da Fm. Barra Velha, dois altos estruturais isolados em lâmina d'água rasa",
-    "volumes": { "dataRef": "31/12/2023", "oleoInSituMMbbl": 175.95, "gasInSituMMm3": 22642.26, "voipAtualMMbbl": 1106.7, "vgipAtualMMm3": 22642.3, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "31/12/2023", "oleoInSituMMbbl": 175.95, "gasInSituMMm3": 22642.26, "voipAtualMMbbl": 1106.7, "oleoRecAtualMMbbl": 136.76, "vgipAtualMMm3": 22642.3, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/lapa.pdf"
   },
   "Entorno de Sapinhoá": {
@@ -194,7 +194,7 @@
     "sistemaResumo": "2 FPSOs — Cidade de São Paulo (área Sul) e Cidade de Ilha Bela (área Norte); gás escoado pelo Sistema Integrado (Rotas 1/2/3)",
     "pocos": { "dataRef": "2023-07", "perfurados": 38, "produtores": 17, "injetores": 12, "abandonados": 9 },
     "geologiaResumo": "Fms. Ariri, Barra Velha (zonas BVE100/200/300) e Itapema (zonas ITP100/200) — Aptiano/Barremiano; AIP assinado com 4 áreas vizinhas",
-    "volumes": { "dataRef": "31/12/2023", "oleoInSituMMbbl": 3750.217, "gasInSituMMm3": 97431.219, "voipAtualMMbbl": 3324.5, "vgipAtualMMm3": 86372.8, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "31/12/2023", "oleoInSituMMbbl": 3750.217, "gasInSituMMm3": 97431.219, "voipAtualMMbbl": 3324.5, "oleoRecAtualMMbbl": 844.17, "vgipAtualMMm3": 86372.8, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sapinhoa.pdf"
   },
   "SAPINHOÁ": {
@@ -219,7 +219,7 @@
     "sistemaResumo": "2 FPSOs — Cidade de São Paulo (área Sul) e Cidade de Ilha Bela (área Norte); gás escoado pelo Sistema Integrado (Rotas 1/2/3)",
     "pocos": { "dataRef": "2023-07", "perfurados": 38, "produtores": 17, "injetores": 12, "abandonados": 9 },
     "geologiaResumo": "Fms. Ariri, Barra Velha (zonas BVE100/200/300) e Itapema (zonas ITP100/200) — Aptiano/Barremiano; AIP assinado com 4 áreas vizinhas",
-    "volumes": { "dataRef": "31/12/2023", "oleoInSituMMbbl": 3750.217, "gasInSituMMm3": 97431.219, "voipAtualMMbbl": 3324.5, "vgipAtualMMm3": 86372.8, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "31/12/2023", "oleoInSituMMbbl": 3750.217, "gasInSituMMm3": 97431.219, "voipAtualMMbbl": 3324.5, "oleoRecAtualMMbbl": 844.17, "vgipAtualMMm3": 86372.8, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sapinhoa.pdf"
   },
   "Itapu": {
@@ -243,7 +243,7 @@
     "sistemaResumo": "SPA com FPSO BW Cidade de São Vicente (poço 1-BRSA-1116-RJS); projeto definitivo: 5 produtores + 4 injetores (água/água-gás), completação inteligente em 2 zonas",
     "pocos": { "dataRef": "2017-04", "perfurados": 3, "produtores": 2, "injetores": 0 },
     "geologiaResumo": "Microbiolitos da Fm. Barra Velha (Aptiano), 5.000-6.000 m, grande variabilidade permo-porosa por fraturas e diagênese",
-    "volumes": { "dataRef": "BAR 2016", "oleoInSituMMbbl": 1316.14, "gasInSituMMm3": 17995.50, "oleoAcumMMbbl": 0.01, "gasAcumMMm3": 0.12, "reservaProvada": { "dataRef": "2020 — PD completo 2021", "oleoMMbbl": 175.7, "gasMMm3": 1630 }, "voipAtualMMbbl": 2299.0, "vgipAtualMMm3": 31799.5, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "BAR 2016", "oleoInSituMMbbl": 1316.14, "gasInSituMMm3": 17995.50, "oleoAcumMMbbl": 0.01, "gasAcumMMm3": 0.12, "reservaProvada": { "dataRef": "2020 — PD completo 2021", "oleoMMbbl": 175.7, "gasMMm3": 1630 }, "voipAtualMMbbl": 2299.0, "oleoRecAtualMMbbl": 153.56, "vgipAtualMMm3": 31799.5, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/itapu.pdf"
   },
   "Sépia": {
@@ -277,7 +277,7 @@
     "sistemaResumo": "SPA 2016 com FPSO BW Cidade São Vicente; projeto definitivo: 9 produtores óleo + 6 injetores água/gás + 1 injetor de CO2",
     "pocos": { "dataRef": "2017-04", "perfurados": 6, "produtores": 4, "injetores": 1, "abandonados": 1 },
     "geologiaResumo": "Basaltos, arenitos, folhelhos, coquinas e microbiolitos das Fms. Barra Velha e Itapema (Barremiano/Aptiano), reservatório intensamente falhado/fraturado, 4.000-6.000 m",
-    "volumes": { "dataRef": "BAR 2016", "oleoInSituMMbbl": 4959.80, "gasInSituMMm3": 114875.38, "oleoAcumMMbbl": 3.52, "gasAcumMMm3": 97.06, "voipAtualMMbbl": 7900.7, "vgipAtualMMm3": 203319.4, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "BAR 2016", "oleoInSituMMbbl": 4959.80, "gasInSituMMm3": 114875.38, "oleoAcumMMbbl": 3.52, "gasAcumMMm3": 97.06, "voipAtualMMbbl": 7900.7, "oleoRecAtualMMbbl": 235.70, "vgipAtualMMm3": 203319.4, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/sepia.pdf"
   },
   "Atapu": {
@@ -308,7 +308,7 @@
     "sistemaResumo": "SPA 2015 (FPSO Cidade de São Vicente) + projeto definitivo: 16 poços no FPSO P-70 (8 produtores + 8 injetores água/gás) e FPSO Atapu 2 (275.000 bbl/d); gás rico em CO2 parcialmente reinjetado",
     "geologiaResumo": "Carbonáticos da Fm. Barra Velha (Aptiano, Grupo Guaratiba), 2.000-2.300 m, óleo 27-28° API, alto CO2/baixo H2S, grande complexidade permo-porosa",
     "oleoAPI": "27-28° API",
-    "volumes": { "dataRef": "31/12/2023", "oleoInSituMMbbl": 9891.80, "gasInSituMMm3": 245651.57, "voipAtualMMbbl": 9694.0, "vgipAtualMMm3": 257692.5, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "31/12/2023", "oleoInSituMMbbl": 9891.80, "gasInSituMMm3": 245651.57, "voipAtualMMbbl": 9694.0, "oleoRecAtualMMbbl": 265.16, "vgipAtualMMm3": 257692.5, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/atapu-atapu-eco-oeste-atapu.pdf"
   },
   "OESTE DE ATAPU": {
@@ -337,7 +337,7 @@
     "sistemaResumo": "SPA 2015 (FPSO Cidade de São Vicente) + projeto definitivo: 16 poços no FPSO P-70 (8 produtores + 8 injetores água/gás) e FPSO Atapu 2 (275.000 bbl/d); gás rico em CO2 parcialmente reinjetado",
     "geologiaResumo": "Carbonáticos da Fm. Barra Velha (Aptiano, Grupo Guaratiba), 2.000-2.300 m, óleo 27-28° API, alto CO2/baixo H2S, grande complexidade permo-porosa",
     "oleoAPI": "27-28° API",
-    "volumes": { "dataRef": "31/12/2023", "oleoInSituMMbbl": 9891.80, "gasInSituMMm3": 245651.57, "voipAtualMMbbl": 9694.0, "vgipAtualMMm3": 257692.5, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "31/12/2023", "oleoInSituMMbbl": 9891.80, "gasInSituMMm3": 245651.57, "voipAtualMMbbl": 9694.0, "oleoRecAtualMMbbl": 265.16, "vgipAtualMMm3": 257692.5, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/atapu-atapu-eco-oeste-atapu.pdf"
   },
   "BERBIGÃO": {
@@ -366,7 +366,7 @@
     "sistemaResumo": "17 poços no FPSO P-68 (10 produtores + 7 injetores água/gás, WAG); gás escoado pelo SIE (Rotas 1/2/3)",
     "pocos": { "dataRef": "2025-04", "perfurados": 23, "produtores": 13, "injetores": 5, "abandonados": 5 },
     "geologiaResumo": "Carbonatos microbiais da Fm. Barra Velha (Aptiano, Grupo Guaratiba), mounds bioconstruídos, 3 intervalos BVE100/200/300",
-    "volumes": { "dataRef": "BAR 2024", "oleoInSituMMbbl": 1438.93, "gasInSituMMm3": 160466.79, "oleoAcumMMbbl": 35.16, "gasAcumMMm3": 5733.36, "voipAtualMMbbl": 9054.0, "vgipAtualMMm3": 160530.7, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "BAR 2024", "oleoInSituMMbbl": 1438.93, "gasInSituMMm3": 160466.79, "oleoAcumMMbbl": 35.16, "gasAcumMMm3": 5733.36, "voipAtualMMbbl": 9054.0, "oleoRecAtualMMbbl": 264.55, "vgipAtualMMm3": 160530.7, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/berbigao.pdf"
   },
   "NORTE DE BERBIGÃO": {
@@ -395,7 +395,7 @@
     "sistemaResumo": "17 poços no FPSO P-68 (10 produtores + 7 injetores água/gás, WAG); gás escoado pelo SIE (Rotas 1/2/3)",
     "pocos": { "dataRef": "2025-04", "perfurados": 23, "produtores": 13, "injetores": 5, "abandonados": 5 },
     "geologiaResumo": "Carbonatos microbiais da Fm. Barra Velha (Aptiano, Grupo Guaratiba), mounds bioconstruídos, 3 intervalos BVE100/200/300",
-    "volumes": { "dataRef": "BAR 2024", "oleoInSituMMbbl": 1438.93, "gasInSituMMm3": 160466.79, "oleoAcumMMbbl": 35.16, "gasAcumMMm3": 5733.36, "voipAtualMMbbl": 9054.0, "vgipAtualMMm3": 160530.7, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "BAR 2024", "oleoInSituMMbbl": 1438.93, "gasInSituMMm3": 160466.79, "oleoAcumMMbbl": 35.16, "gasAcumMMm3": 5733.36, "voipAtualMMbbl": 9054.0, "oleoRecAtualMMbbl": 264.55, "vgipAtualMMm3": 160530.7, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/berbigao.pdf"
   },
   "SUL DE BERBIGÃO": {
@@ -424,7 +424,7 @@
     "sistemaResumo": "17 poços no FPSO P-68 (10 produtores + 7 injetores água/gás, WAG); gás escoado pelo SIE (Rotas 1/2/3)",
     "pocos": { "dataRef": "2025-04", "perfurados": 23, "produtores": 13, "injetores": 5, "abandonados": 5 },
     "geologiaResumo": "Carbonatos microbiais da Fm. Barra Velha (Aptiano, Grupo Guaratiba), mounds bioconstruídos, 3 intervalos BVE100/200/300",
-    "volumes": { "dataRef": "BAR 2024", "oleoInSituMMbbl": 1438.93, "gasInSituMMm3": 160466.79, "oleoAcumMMbbl": 35.16, "gasAcumMMm3": 5733.36, "voipAtualMMbbl": 9054.0, "vgipAtualMMm3": 160530.7, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "BAR 2024", "oleoInSituMMbbl": 1438.93, "gasInSituMMm3": 160466.79, "oleoAcumMMbbl": 35.16, "gasAcumMMm3": 5733.36, "voipAtualMMbbl": 9054.0, "oleoRecAtualMMbbl": 264.55, "vgipAtualMMm3": 160530.7, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/berbigao.pdf"
   },
   "WAHOO": {
@@ -448,7 +448,7 @@
     "pocos": { "dataRef": "2020/2023 (previsto)", "perfurados": 6, "produtores": 8, "injetores": 2, "obs": "produtores e injetores são poços previstos no projeto, ainda não todos perfurados" },
     "geologiaResumo": "Carbonatos microbiais de ambiente lacustre hipersalino, Andar Alagoas (Aptiano), Fm. Macabu; óleo 29,3-30° API",
     "oleoAPI": "29,3-30° API",
-    "volumes": { "dataRef": "BAR 2022 (31/12/2022)", "oleoInSituMMbbl": 393.39563, "gasInSituMMm3": 11999.19, "oleoAcumMMbbl": 0, "gasAcumMMm3": 0, "voipAtualMMbbl": 393.4, "vgipAtualMMm3": 11999.2, "voipAtualDataRef": "BAR 2025" },
+    "volumes": { "dataRef": "BAR 2022 (31/12/2022)", "oleoInSituMMbbl": 393.39563, "gasInSituMMm3": 11999.19, "oleoAcumMMbbl": 0, "gasAcumMMm3": 0, "voipAtualMMbbl": 393.4, "oleoRecAtualMMbbl": 0, "vgipAtualMMm3": 11999.2, "voipAtualDataRef": "BAR 2025" },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/wahoo.pdf"
   },
   "TUPI": {
@@ -480,7 +480,7 @@
     "sistemaResumo": "9 FPSOs (Cidade Angra dos Reis, Cidade de Itaguaí, Cidade de Mangaratiba, Cidade de Maricá, Cidade de Paraty, Cidade de Saquarema, P-66, P-67, P-69 — os dois últimos não instalados na data do documento); P-69 compartilhado com Sul de Lula; injeção WAG para destinar o CO2 produzido",
     "pocos": { "dataRef": "2018-02", "produtores": 42, "injetores": 38 },
     "geologiaResumo": "Microbiolitos e coquinas da Fm. Barra Velha (Aptiano), 4.700–6.000 m, sob até 2.000 m de sal",
-    "volumes": { "dataRef": "BAR 2017 (31/12/2017)", "oleoAcumMMbbl": 736, "gasAcumMMm3": 32121, "voipAtualMMbbl": 22444.2, "vgipAtualMMm3": 788511.5, "voipAtualDataRef": "BAR 2025", "voipAtualObs": "STOIIP do sumário de PD não publicado para este campo; voipAtual é o VOIP atual do BAR (jazida inteira, soma Tupi + Sul de Tupi + Anc_Tupi)." },
+    "volumes": { "dataRef": "BAR 2017 (31/12/2017)", "oleoAcumMMbbl": 736, "gasAcumMMm3": 32121, "voipAtualMMbbl": 22444.2, "oleoRecAtualMMbbl": 3391.27, "vgipAtualMMm3": 788511.5, "voipAtualDataRef": "BAR 2025", "voipAtualObs": "STOIIP do sumário de PD não publicado para este campo; voipAtual é o VOIP atual do BAR (jazida inteira, soma Tupi + Sul de Tupi + Anc_Tupi)." },
     "fonte": "https://www.gov.br/anp/pt-br/assuntos/exploracao-e-producao-de-oleo-e-gas/desenvolvimento-e-producao/pd/lula.pdf"
   },
   "RAIA": {
