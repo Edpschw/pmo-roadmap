@@ -524,13 +524,14 @@ body.map-page .btn-ghost:hover { background: #1e222a; }
   color: var(--map-text-muted); margin-bottom: 6px;
 }
 .map-mode-buttons {
-  display: flex; background: var(--map-bg); border: 1px solid var(--map-border);
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+  background: var(--map-bg); border: 1px solid var(--map-border);
   border-radius: 7px; padding: 2px;
 }
 .map-mode-btn {
-  flex: 1 1 0; border: none; background: transparent; color: var(--map-text-muted);
-  font-family: inherit; font-size: 11.5px; font-weight: 600; padding: 5px 6px;
-  border-radius: 5px; cursor: pointer;
+  border: none; background: transparent; color: var(--map-text-muted);
+  font-family: inherit; font-size: 11.5px; font-weight: 600; line-height: 1.25;
+  padding: 5px 4px; border-radius: 5px; cursor: pointer; text-align: center;
 }
 .map-mode-btn.active { background: var(--map-panel); color: var(--map-text); }
 .map-mode-btn:hover:not(.active) { color: var(--map-text); }
