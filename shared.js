@@ -2309,6 +2309,7 @@ const COMPANY_LOGO_FILES = {
   'Chevron': 'assets/logos/chevron.png',
   'QatarEnergy': 'assets/logos/qatarenergy.png',
   'Petronas': 'assets/logos/petronas.png',
+  'PPSA': 'assets/logos/ppsa.png',
 };
 
 function companyBadge(rawName) {
