@@ -22,6 +22,13 @@
 
 const PRODUCAO_URL = 'data/producao.json';
 const INJECAO_URL = 'data/producao_injecao.json';
+// Operador (data/contratos.geojson) e participação societária (data/
+// planos_desenvolvimento.json) de cada contrato, só pra aba "Por operador/
+// companhia" — mesmas fontes usadas nos selos de empresa do mapa/roadmap
+// (ver companyBadge/companyBadgesFor em shared.js).
+const GEOJSON_URL = 'data/contratos.geojson';
+const PRESALT_FIELDS_URL = 'data/campos_presal.geojson';
+const PD_URL = 'data/planos_desenvolvimento.json';
 
 /* -------------------------------- KPIs ------------------------------------ */
 
@@ -162,6 +169,185 @@ function buildEvolutionSection(producaoData) {
   const note = document.createElement('p');
   note.className = 'analytics-table-note';
   note.textContent = `Fonte: ${producaoData.fonte.nome}. De out/2014 a jun/2025, vem do dado aberto "Produção por Zona" da ANP (registro bruto por poço/zona geológica, com pré-sal já marcado linha a linha — soma por campo feita aqui, não pela ANP); cada mês só entra se bater com o boletim oficial dentro de 5% nos 7 contratos rastreados, senão fica com o boletim mesmo (aconteceu em 2 dos ~130 meses conferidos). De jul/2025 em diante, direto do boletim (PDF/Excel) — a ANP tirou a marcação de pré-sal desse dado aberto a partir desse mês, então não dá mais pra confiar nele sozinho.`;
+  section.appendChild(note);
+
+  return section;
+}
+
+/* ------------------------- Por operador / companhia ------------------------ */
+// Operador de cada contrato rastreado — casa pelo nome do projeto (state.
+// projects) contra props.projeto de data/contratos.geojson, mesmo padrão de
+// featureByProjectApp em app.js/featureByProject em mapa.js. Mero não tem
+// feature própria em contratos.geojson (só o bloco inteiro de Libra) — usa
+// data/campos_presal.geojson como fallback, casado por nome em maiúsculas
+// (mesmo motivo/lógica de app.js).
+function buildFeatureByProject(geojson, presal, projects) {
+  const byProject = {};
+  for (const feat of geojson.features) byProject[feat.properties.projeto] = feat;
+  const trackedByUpperName = new Map(projects.map((p) => [p.name.toUpperCase(), p]));
+  for (const feat of (presal.features || [])) {
+    const tracked = trackedByUpperName.get(feat.properties.nome.toUpperCase());
+    if (tracked && !byProject[tracked.name]) byProject[tracked.name] = feat;
+  }
+  return byProject;
+}
+
+// "Por operador": 100% da produção do contrato pro operador cadastrado na
+// ANP. "Por companhia": mesma produção rateada pela % de participação do
+// Plano de Desenvolvimento (pd.participacao, ver companyBadgesFor em
+// shared.js — mesma fonte dos selos de empresa do mapa/roadmap); contrato
+// sem essa tabela publicada (participacao null) fica 100% com o operador
+// nos dois modos. Só entram aqui os contratos com campo-base em
+// PROJECT_FIELD_BASE (os mesmos 7 da aba "Mês atual") — os demais campos
+// do pré-sal (contexto) não têm operador nem PD nesta base.
+function computeCompanyRows(campos, projects, featureByProject, pdData, mode) {
+  const porEmpresa = new Map();
+  for (const p of projects) {
+    const base = PROJECT_FIELD_BASE[p.name];
+    if (!base) continue;
+    const fieldNames = Object.keys(campos).filter((n) => n.includes(base));
+    if (!fieldNames.length) continue;
+    const sum = emptyMetrics();
+    for (const nome of fieldNames) for (const k of METRIC_KEYS) sum[k] += campos[nome][k];
+
+    const feature = featureByProject[p.name];
+    const operadorRaw = feature ? feature.properties.operador : null;
+    const pd = byNameOrUpper(pdData, p.name);
+    const badges = companyBadgesFor(operadorRaw, pd ? pd.participacao : null);
+    if (!badges.length) continue; // sem operador identificado — não deveria acontecer nos 7 rastreados
+
+    const displayName = projectDisplayName(p.name);
+    if (mode === 'operador') {
+      const op = badges.find((b) => b.role === 'operador') || badges[0];
+      addCompanyShare(porEmpresa, op, sum, 1, displayName, 100);
+    } else {
+      for (const b of badges) {
+        const frac = b.pct != null ? b.pct / 100 : (badges.length === 1 ? 1 : 0);
+        if (frac <= 0) continue;
+        addCompanyShare(porEmpresa, b, sum, frac, displayName, b.pct != null ? b.pct : 100);
+      }
+    }
+  }
+  const rows = [...porEmpresa.values()];
+  for (const r of rows) r.rgo = computeRGO(r.oleoPreSalBbld, r.gasPreSalMm3d);
+  return rows.sort((a, b) => b.boedPreSal - a.boedPreSal);
+}
+
+function addCompanyShare(map, badge, sum, frac, contratoNome, pct) {
+  if (!map.has(badge.name)) {
+    map.set(badge.name, {
+      name: badge.name, color: colorForCompany(badge.name),
+      oleoPreSalBbld: 0, gasPreSalMm3d: 0, boedPreSal: 0, contratos: [],
+    });
+  }
+  const entry = map.get(badge.name);
+  entry.oleoPreSalBbld += sum.oleoPreSalBbld * frac;
+  entry.gasPreSalMm3d += sum.gasPreSalMm3d * frac;
+  entry.boedPreSal += sum.boedPreSal * frac;
+  entry.contratos.push({ nome: contratoNome, pct, role: badge.role });
+}
+
+function renderCompanyChart(container, rows, unitKey) {
+  const unit = UNITS[unitKey];
+  const sorted = [...rows].filter((r) => r[unit.key] > 0).sort((a, b) => b[unit.key] - a[unit.key]);
+  if (!sorted.length) return;
+  const max = Math.max(...sorted.map((r) => r[unit.key]));
+
+  const list = document.createElement('div');
+  list.className = 'hbar-list';
+  for (const r of sorted) {
+    list.appendChild(barRow(
+      r.name, (r[unit.key] / max) * 100, unit.fmt(r[unit.key]), r.color,
+      () => `<strong>${escapeHtml(r.name)}</strong>`
+        + tooltipRowHTML('Petróleo', fmtNum(r.oleoPreSalBbld) + ' bbl/d')
+        + tooltipRowHTML('Gás natural', fmtNum(r.gasPreSalMm3d, { maximumFractionDigits: 1 }) + ' Mm³/d')
+        + tooltipRowHTML('Produção', fmtNum(r.boedPreSal) + ' boe/d')
+        + tooltipRowHTML('RGO', fmtNum(r.rgo) + ' m³/m³')
+        + r.contratos.map((c) => `<div class="viz-tooltip-row"><span>${escapeHtml(c.nome)}${c.role === 'operador' ? ' (operador)' : ''}</span><strong>${c.pct.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</strong></div>`).join(''),
+    ));
+  }
+  container.appendChild(list);
+}
+
+// Mesmo padrão visual de buildStackToggle (shared.js), com 2 opções fixas
+// próprias (operador/companhia) em vez de um switch por chave de UNITS.
+function buildAttribModeSwitch(onChange, initialMode) {
+  const wrap = document.createElement('div');
+  wrap.className = 'scale-switch analytics-tab-switch';
+  const options = [
+    { value: 'operador', label: 'Por operador' },
+    { value: 'companhia', label: 'Por companhia (rateado)' },
+  ];
+  for (const opt of options) {
+    const btn = document.createElement('button');
+    btn.className = 'scale-btn' + (opt.value === initialMode ? ' active' : '');
+    btn.textContent = opt.label;
+    btn.dataset.mode = opt.value;
+    wrap.appendChild(btn);
+  }
+  wrap.addEventListener('click', (e) => {
+    const btn = e.target.closest('.scale-btn');
+    if (!btn) return;
+    wrap.querySelectorAll('.scale-btn').forEach((b) => b.classList.toggle('active', b === btn));
+    onChange(btn.dataset.mode);
+  });
+  return wrap;
+}
+
+function buildCompanySection(producaoData, featureByProject, pdData) {
+  const mesRef = producaoData.meses[producaoData.meses.length - 1];
+  const section = document.createElement('section');
+  section.className = 'analytics-section';
+
+  if (!Object.keys(featureByProject).length) {
+    const empty = document.createElement('p');
+    empty.className = 'chart-card-subtitle';
+    empty.textContent = 'Não foi possível carregar os dados de operador/participação (data/contratos.geojson, data/planos_desenvolvimento.json).';
+    section.appendChild(empty);
+    return section;
+  }
+
+  const operadorRows = computeCompanyRows(mesRef.campos, state.projects, featureByProject, pdData, 'operador');
+  const companhiaRows = computeCompanyRows(mesRef.campos, state.projects, featureByProject, pdData, 'companhia');
+  const totalBoed = operadorRows.reduce((s, r) => s + r.boedPreSal, 0);
+  const topOperador = operadorRows[0];
+
+  const row = document.createElement('div');
+  row.className = 'kpi-row';
+  row.appendChild(statTile('Mês de referência', `${MESES_PT[mesRef.mes]}/${mesRef.ano}`, 'Mesma edição do boletim da aba "Mês atual"'));
+  row.appendChild(statTile('Operadoras distintas', String(operadorRows.length), operadorRows.map((r) => r.name).join(', ')));
+  row.appendChild(statTile('Maior operador', topOperador ? topOperador.name : '—', topOperador ? `${fmtNum(topOperador.boedPreSal)} boe/d · ${((topOperador.boedPreSal / totalBoed) * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% dos 7 contratos rastreados` : '—'));
+  row.appendChild(statTile('Companhias com participação', String(companhiaRows.length), 'Toda parceira do Plano de Desenvolvimento, mesmo com fatia pequena'));
+  section.appendChild(row);
+
+  const card = chartCard(
+    'Produção por operador / companhia',
+    'Produção pré-sal dos 7 contratos rastreados nesta página (mesmo total de "Nos contratos rastreados" na aba "Mês atual"), atribuída à empresa. "Por operador": 100% do contrato pro operador cadastrado na ANP (data/contratos.geojson). "Por companhia": rateado pela % de participação do Plano de Desenvolvimento de cada contrato (data/planos_desenvolvimento.json) — mesma fonte dos selos de empresa no mapa e no roadmap; contrato sem essa tabela publicada fica 100% com o operador nos dois modos. Não inclui os demais campos do pré-sal fora dos 7 contratos (sem operador/PD cadastrados nesta base).',
+  );
+  const controlsRow = document.createElement('div');
+  controlsRow.style.display = 'flex';
+  controlsRow.style.alignItems = 'center';
+  controlsRow.style.gap = '8px';
+  controlsRow.style.flexWrap = 'wrap';
+  card.insertBefore(controlsRow, card.querySelector('h3').nextSibling);
+
+  let mode = 'operador';
+  let unitKey = 'oleo';
+  const renderChart = () => {
+    const list = card.querySelector('.hbar-list');
+    if (list) list.remove();
+    renderCompanyChart(card, mode === 'operador' ? operadorRows : companhiaRows, unitKey);
+  };
+  const modeSwitch = buildAttribModeSwitch((m) => { mode = m; renderChart(); }, mode);
+  const unitSwitch = buildUnitSwitch((u) => { unitKey = u; renderChart(); }, ['oleo', 'gas', 'boe', 'rgo']);
+  controlsRow.appendChild(modeSwitch);
+  controlsRow.appendChild(unitSwitch);
+  renderChart();
+  section.appendChild(card);
+
+  const note = document.createElement('p');
+  note.className = 'analytics-table-note';
+  note.textContent = `Fonte: ${producaoData.fonte.nome} (produção), ANP (operador dos contratos) e Planos de Desenvolvimento (participação societária) — mesmas fontes usadas no mapa e no roadmap para os selos de empresa.`;
   section.appendChild(note);
 
   return section;
@@ -646,6 +832,24 @@ async function init() {
     console.error('Falha ao carregar dados de injeção', err);
   }
 
+  // Operador/participação são só contexto da aba "Por operador/companhia"
+  // (ver buildCompanySection) — mesmo padrão de tolerância a falha da água
+  // injetada acima: sem esses 3 arquivos, a aba mostra um aviso só, o resto
+  // da página segue normal.
+  let featureByProject = {};
+  let pdData = {};
+  try {
+    const [geojson, presal, pd] = await Promise.all([
+      fetch(GEOJSON_URL).then((r) => r.json()),
+      fetch(PRESALT_FIELDS_URL).then((r) => r.json()),
+      fetch(PD_URL).then((r) => r.json()),
+    ]);
+    featureByProject = buildFeatureByProject(geojson, presal, state.projects);
+    pdData = pd;
+  } catch (err) {
+    console.error('Falha ao carregar dados de operador/participação', err);
+  }
+
   wrapper.innerHTML = '';
 
   if (!producaoData || !producaoData.meses || !producaoData.meses.length) {
@@ -659,21 +863,25 @@ async function init() {
   const monthlySection = buildMonthlySection(producaoData);
   const evolutionSection = buildEvolutionSection(producaoData);
   const rgoTrendSection = buildRgoTrendSection(producaoData, injecaoData);
+  const companySection = buildCompanySection(producaoData, featureByProject, pdData);
   evolutionSection.hidden = true;
   rgoTrendSection.hidden = true;
+  companySection.hidden = true;
 
   const pageSwitch = buildPageSwitch(
-    [['mensal', 'Mês atual'], ['evolucao', 'Evolução mensal'], ['tendencia', 'Tendência RGO x produção']],
+    [['mensal', 'Mês atual'], ['evolucao', 'Evolução mensal'], ['tendencia', 'Tendência RGO x produção'], ['empresa', 'Por operador/companhia']],
     (page) => {
       monthlySection.hidden = page !== 'mensal';
       evolutionSection.hidden = page !== 'evolucao';
       rgoTrendSection.hidden = page !== 'tendencia';
+      companySection.hidden = page !== 'empresa';
     },
   );
   wrapper.appendChild(pageSwitch);
   wrapper.appendChild(monthlySection);
   wrapper.appendChild(evolutionSection);
   wrapper.appendChild(rgoTrendSection);
+  wrapper.appendChild(companySection);
 }
 
 function buildPageSwitch(tabs, onChange) {
