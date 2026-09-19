@@ -175,22 +175,7 @@ function buildEvolutionSection(producaoData) {
 }
 
 /* ------------------------- Por operador / companhia ------------------------ */
-// Operador de cada contrato rastreado — casa pelo nome do projeto (state.
-// projects) contra props.projeto de data/contratos.geojson, mesmo padrão de
-// featureByProjectApp em app.js/featureByProject em mapa.js. Mero não tem
-// feature própria em contratos.geojson (só o bloco inteiro de Libra) — usa
-// data/campos_presal.geojson como fallback, casado por nome em maiúsculas
-// (mesmo motivo/lógica de app.js).
-function buildFeatureByProject(geojson, presal, projects) {
-  const byProject = {};
-  for (const feat of geojson.features) byProject[feat.properties.projeto] = feat;
-  const trackedByUpperName = new Map(projects.map((p) => [p.name.toUpperCase(), p]));
-  for (const feat of (presal.features || [])) {
-    const tracked = trackedByUpperName.get(feat.properties.nome.toUpperCase());
-    if (tracked && !byProject[tracked.name]) byProject[tracked.name] = feat;
-  }
-  return byProject;
-}
+// buildFeatureByProject vem de shared.js (compartilhada com noticias.js).
 
 // "Por operador": 100% da produção do contrato pro operador cadastrado na
 // ANP. "Por companhia": mesma produção rateada pela % de participação do

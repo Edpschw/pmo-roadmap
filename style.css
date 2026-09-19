@@ -1207,6 +1207,43 @@ body.map-page .leaflet-tooltip-top.map-well-tooltip::before { border-top-color: 
 .campo-roadmap .milestone-label { transform: translateX(-50%) translateY(-100%); }
 .campo-roadmap .milestone-label.below { transform: translateX(-50%) translateY(0); }
 
+/* ---------- Notícias (noticias.js): um .chart-card por empresa, com o
+   selo/logo maior que o das outras páginas (ver .news-company-logo) porque
+   aqui a empresa é o assunto principal do cartão, não uma anotação ao lado
+   do nome do projeto. Grid de 1 coluna até 1000px, 2 dali pra cima — mesmo
+   padrão de .analytics-histograms-grid (margin-top do .chart-card zerado
+   dentro do grid pelo mesmo motivo: o gap já espaça as linhas, e o seletor
+   de irmão adjacente do .chart-card empurraria só o 2º cartão de cada
+   linha, desalinhando o grid). ---------- */
+.news-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.news-grid .chart-card { margin-top: 0; }
+@media (min-width: 1000px) {
+  .news-grid { grid-template-columns: 1fr 1fr; }
+}
+.news-company-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.news-company-head-text { min-width: 0; }
+.news-company-head-text .chart-card-title { padding-right: 0; }
+.news-company-logo {
+  flex: none; display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 8px;
+}
+.news-company-logo-badge { color: #fff; font-weight: 700; font-size: 13px; }
+.news-company-logo-img { background: #fff; padding: 4px; }
+.news-company-logo-img img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.news-list { display: flex; flex-direction: column; gap: 12px; }
+.news-item + .news-item { padding-top: 12px; border-top: 1px solid var(--border); }
+.news-item-title {
+  display: block; font-size: 13px; font-weight: 600; color: var(--text);
+  text-decoration: none; line-height: 1.35;
+}
+.news-item-title:hover { text-decoration: underline; }
+.news-item-meta {
+  display: flex; align-items: center; gap: 6px; margin-top: 3px;
+  font-size: 10.5px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .03em;
+}
+.news-item-source::before { content: '·'; margin-right: 6px; }
+.news-item-summary { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 6px 0 0; }
+
 /* ---------- Telas estreitas (celular), incluindo paisagem: usa a
    condição de altura curta + orientação para pegar o celular deitado, que
    tem largura grande mas continua sendo uma tela pequena. ---------- */

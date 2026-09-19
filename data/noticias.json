@@ -1,0 +1,252 @@
+{
+  "fonte": {
+    "nota": "Pesquisa manual (busca na web, não é feed automático) nos sites de imprensa/institucionais de cada operadora e parceira dos contratos do pré-sal rastreados neste app (mesma lista de empresas dos selos de operador/parceiro do mapa, do roadmap e da aba \"Por operador/companhia\" de Produção — ver COMPANY_ALIASES em shared.js). Pra atualizar, repetir a pesquisa por empresa e reescrever este arquivo à mão.",
+    "atualizado": "2026-09-19"
+  },
+  "empresas": [
+    {
+      "nome": "Petrobras",
+      "noticias": [
+        {
+          "titulo": "Lula vê Margem Equatorial como \"novo pré-sal\" após descoberta da Petrobras no Amapá",
+          "data": "2026-09-18",
+          "fonteNome": "PIRANOT",
+          "url": "https://www.piranot.com.br/2026/09/18/noticias/economia/lula-margem-equatorial-novo-presal/",
+          "resumo": "A Petrobras achou petróleo no poço Morpho, na Bacia da Foz do Amazonas (Margem Equatorial, litoral do Amapá). Lula disse que o óleo \"parece ser de mais qualidade\" que o do pré-sal, mas a descoberta ainda depende de novas etapas de avaliação exploratória e ambiental antes de virar produção."
+        }
+      ]
+    },
+    {
+      "nome": "Shell",
+      "noticias": [
+        {
+          "titulo": "Shell troca comando no Brasil após expansão no pré-sal",
+          "data": "2026-05-15",
+          "fonteNome": "Transporte Moderno",
+          "url": "https://transportemoderno.com.br/2026/05/15/shell-troca-comando-no-brasil-apos-expansao-no-pre-sal/",
+          "resumo": "João Santos Rosa, até então presidente da Shell na Itália, assume o comando da Shell Brasil no lugar de Cristiano Pinto da Costa, que saiu após quase 30 anos de casa. A troca acontece com a produção no país já acima de 500 mil boe/d, puxada pela expansão no pré-sal."
+        }
+      ]
+    },
+    {
+      "nome": "Equinor",
+      "noticias": [
+        {
+          "titulo": "Equinor Brasil anuncia transição na liderança",
+          "data": "2026-08-17",
+          "fonteNome": "equinor.com.br",
+          "url": "https://www.equinor.com.br/noticias/equinor-brasil-anuncia-transicao-na-lideranca",
+          "resumo": "Nina Koch, até então vice-presidente sênior para a África na Equinor, assume a presidência da Equinor Brasil a partir de 17 de agosto de 2026, no lugar de Veronica Coelho, que passa a presidir a Equinor Angola."
+        }
+      ]
+    },
+    {
+      "nome": "TotalEnergies",
+      "noticias": [
+        {
+          "titulo": "Repsol, TotalEnergies e Shell iniciam produção de petróleo em Lapa Sudoeste",
+          "data": "2026-03",
+          "dataAprox": true,
+          "fonteNome": "Repsol (press room)",
+          "url": "https://www.repsol.com/en/press-room/press-releases/2026/repsol-totalenergies-shell-start-oil-production-lapa-southwest-brazil/index.cshtml",
+          "resumo": "O consórcio Repsol Sinopec Brasil, TotalEnergies e Shell iniciou a produção em Lapa Sudoeste, na Bacia de Santos. O novo poço deve acrescentar 25 mil bbl/d ao campo de Lapa, levando a produção total do campo a cerca de 60 mil bbl/d."
+        }
+      ]
+    },
+    {
+      "nome": "CNOOC",
+      "noticias": [
+        {
+          "titulo": "CNOOC investe em inteligência artificial para operações no pré-sal brasileiro",
+          "data": "2026",
+          "dataAprox": true,
+          "fonteNome": "BNamericas",
+          "url": "https://www.bnamericas.com/en/features/chinas-cnooc-invests-on-ai-digital-twin-for-brazils-pre-salt-operations",
+          "resumo": "Projeto de P&D liderado pelo CESAR, em parceria com a UFAL, cria modelos de IA e um \"gêmeo digital\" para otimizar operações de perfuração e completação no pré-sal — investimento da CNOOC, parceira da Petrobras em Búzios."
+        }
+      ]
+    },
+    {
+      "nome": "CNODC",
+      "noticias": [
+        {
+          "titulo": "Petrobras antecipa início de produção da P-79 (Búzios 8), oitava plataforma do campo",
+          "data": "2026-05-01",
+          "dataAprox": true,
+          "fonteNome": "Offshore Technology",
+          "url": "https://www.offshore-technology.com/news/petrobras-starts-oil-output-buzios-8/",
+          "resumo": "A CNODC detém 3,67% do campo de Búzios, ao lado da Petrobras (operadora), CNOOC e PPSA. A P-79 começou a produzir em 1º de maio de 2026, oitava plataforma do campo, com capacidade de 180 mil bbl/d. Sem imprensa própria no Brasil, a CNODC aparece principalmente nas notícias do consórcio de Búzios."
+        }
+      ]
+    },
+    {
+      "nome": "BP",
+      "noticias": [
+        {
+          "titulo": "BP inicia perfuração de poço exploratório no bloco Tupinambá, no pré-sal da Bacia de Santos",
+          "data": "2026-09-10",
+          "fonteNome": "Cenário Energia",
+          "url": "https://cenarioenergia.com.br/2026/09/10/bp-inicia-perfuracao-de-poco-exploratorio-no-bloco-tupinamba-no-pre-sal-da-bacia-de-santos/",
+          "resumo": "A BP começou a perfurar o poço 1-BP-14-SPS no bloco Tupinambá (100% BP), a cerca de 2.300 m de lâmina d'água, dias depois de o Ibama liberar a licença ambiental. Sonda Deepwater Mykonos (Transocean) contratada até junho de 2027."
+        }
+      ]
+    },
+    {
+      "nome": "Karoon",
+      "noticias": [
+        {
+          "titulo": "Karoon retoma produção no campo de Baúna após parada para manutenção do FPSO",
+          "data": "2026-05-26",
+          "fonteNome": "Brazil Energy Insight",
+          "url": "https://brazilenergyinsight.com/2026/05/26/karoon-restarts-production-at-brazilan-field-after-fpso-overhaul/",
+          "resumo": "A Karoon concluiu em 27 de maio de 2026 a transição da operação do FPSO de Baúna (de Altera & Ocyan para a própria Karoon) e retomou a produção após parada programada de 28 dias, voltando a cerca de 11.500 bbl/d com todos os poços em operação."
+        }
+      ]
+    },
+    {
+      "nome": "PRIO",
+      "noticias": [
+        {
+          "titulo": "PRIO amplia produção em março com avanço de Wahoo",
+          "data": "2026-04",
+          "dataAprox": true,
+          "fonteNome": "ADVFN",
+          "url": "https://br.advfn.com/jornal/2026/04/prio-amplia-producao-em-marco-com-avanco-de-wahoo-e-reforca-trajetoria-de-crescimento-operacional",
+          "resumo": "Produção média da PRIO chegou a 173,4 mil boe/d em abril de 2026 (+7,5% sobre março), puxada principalmente pela ramp-up do campo de Wahoo, no cluster de Valente."
+        }
+      ]
+    },
+    {
+      "nome": "ExxonMobil",
+      "noticias": [
+        {
+          "titulo": "Vast faz 1ª operação de transbordo de petróleo da ExxonMobil no Brasil",
+          "data": "2026-04-28",
+          "fonteNome": "Acessa.com",
+          "url": "https://www.acessa.com/economia/2026/04/318266-vast-faz-1-operacao-de-transbordo-de-petroleo-da-exxonmobil-no-brasil.html",
+          "resumo": "A Vast Infraestrutura realizou a primeira operação de transbordo de petróleo para a ExxonMobil no Brasil, transferindo 1 milhão de barris do campo de Bacalhau no terminal da Vast."
+        }
+      ]
+    },
+    {
+      "nome": "IBV Brasil",
+      "noticias": [
+        {
+          "titulo": "PRIO amplia produção em março com avanço de Wahoo",
+          "data": "2026-04",
+          "dataAprox": true,
+          "fonteNome": "ADVFN",
+          "url": "https://br.advfn.com/jornal/2026/04/prio-amplia-producao-em-marco-com-avanco-de-wahoo-e-reforca-trajetoria-de-crescimento-operacional",
+          "resumo": "A IBV Brasil detém 35,7% do campo de Wahoo (Plano de Desenvolvimento), operado pela PRIO. Sem imprensa própria no país, a empresa aparece nas notícias de produção do campo, que voltou a crescer com a ramp-up de Wahoo em 2026."
+        }
+      ]
+    },
+    {
+      "nome": "Galp",
+      "noticias": [
+        {
+          "titulo": "Galp celebra 4 bilhões de barris produzidos em Tupi e projeta produção recorde em 2026",
+          "data": "2026",
+          "dataAprox": true,
+          "fonteNome": "Jornal Económico (PT)",
+          "url": "https://jornaleconomico.sapo.pt/noticias/galp-campo-de-tupi-atinge-4-mil-milhoes-de-barris-no-pre-sal-brasileiro-e-consorcio-lanca-nova-fase-de-investimento/",
+          "resumo": "Tupi e Iracema voltaram a somar mais de 1 milhão de bbl/d em 2026. A Galp prevê produção recorde de petróleo e gás no ano, puxada pelo desempenho no Brasil — mercado no centro da estratégia global da empresa há duas décadas de pré-sal."
+        }
+      ]
+    },
+    {
+      "nome": "Repsol Sinopec",
+      "noticias": [
+        {
+          "titulo": "Repsol Sinopec completa 10 anos de transbordo no pré-sal e projeta dobrar operações com o projeto Raia",
+          "data": "2026-08-14",
+          "fonteNome": "Cenário Energia",
+          "url": "https://cenarioenergia.com.br/2026/08/14/repsol-sinopec-completa-10-anos-de-transbordo-no-pre-sal-e-projeta-dobrar-operacoes-com-projeto-raia/",
+          "resumo": "Desde 2016 a Repsol Sinopec Brasil já fez mais de 200 operações de transbordo (ship-to-ship) em águas brasileiras. Com o início de produção do projeto Raia previsto para 2028, a empresa planeja dobrar o volume dessas operações."
+        }
+      ]
+    },
+    {
+      "nome": "Chevron",
+      "noticias": [
+        {
+          "titulo": "Chevron licencia perfuração de até 25 poços na Bacia de Pelotas",
+          "data": "2026",
+          "dataAprox": true,
+          "fonteNome": "BNamericas",
+          "url": "https://www.bnamericas.com/en/news/chevron-seeks-environmental-approval-to-drill-up-to-25-wells-in-brazils-pelotas-basin",
+          "resumo": "A Chevron busca licença para perfurar até 25 poços na Bacia de Pelotas (RS), nova fronteira exploratória que especialistas estimam poder conter até 15 bilhões de barris — bacia distinta do pré-sal, mas mostra a aposta da empresa no país."
+        }
+      ]
+    },
+    {
+      "nome": "Ecopetrol",
+      "noticias": [
+        {
+          "titulo": "Ecopetrol conclui aquisição de participação majoritária na Brava Energia",
+          "data": "2026-08-17",
+          "fonteNome": "SEC (Form 6-K)",
+          "url": "https://www.sec.gov/Archives/edgar/data/0001444406/000129281426004064/ex99-1.htm",
+          "resumo": "A Ecopetrol Investimentos do Brasil concluiu a aquisição de cerca de 51% do capital votante da Brava Energia S.A., após oferta pública de aquisição iniciada em maio de 2026 e temporariamente suspensa por exigências da CVM."
+        }
+      ]
+    },
+    {
+      "nome": "QatarEnergy",
+      "noticias": [
+        {
+          "titulo": "QatarEnergy adquire participação em dois blocos na Bacia de Santos",
+          "data": "2023",
+          "dataAprox": true,
+          "fonteNome": "LexLatin",
+          "url": "https://br.lexlatin.com/noticias/qatarenergy-adquire-participacao-em-dois-blocos-na-bacia-de-santos",
+          "resumo": "A QatarEnergy é parceira da TotalEnergies (operadora) e da Petronas no bloco Água Marinha, na Bacia de Campos — contrato assinado em 2023. Não foi encontrada notícia mais recente e específica sobre a operação da empresa no pré-sal brasileiro em 2026."
+        }
+      ]
+    },
+    {
+      "nome": "Petronas",
+      "noticias": [
+        {
+          "titulo": "Petrobras assina contratos para retomar 100% de participação em Tartaruga Verde e no Módulo III de Espadarte",
+          "data": "2026-04-09",
+          "fonteNome": "Agência Petrobras",
+          "url": "https://agencia.petrobras.com.br/w/negocio/petrobras-assina-contratos-para-retomar-100-de-participa%C3%A7%C3%A3o-no-campo-de-tartaruga-verde-e-no-m%C3%B3dulo-iii-do-campo-de-espadarte",
+          "resumo": "A Petrobras comprou por US$ 450 milhões os 50% que a Petronas detinha nos campos de Tartaruga Verde e Espadarte (Módulo III), na Bacia de Campos, passando a deter 100% e manter a operação dos ativos, que produzem cerca de 55 mil bbl/d."
+        }
+      ]
+    },
+    {
+      "nome": "Sinopec",
+      "noticias": [
+        {
+          "titulo": "Repsol, TotalEnergies e Shell iniciam produção de petróleo em Lapa Sudoeste",
+          "data": "2026-03",
+          "dataAprox": true,
+          "fonteNome": "Repsol (press room)",
+          "url": "https://www.repsol.com/en/press-room/press-releases/2026/repsol-totalenergies-shell-start-oil-production-lapa-southwest-brazil/index.cshtml",
+          "resumo": "A Sinopec participa do pré-sal brasileiro pela joint venture Repsol Sinopec Brasil (40% Sinopec, 60% Repsol), presente em Lapa, Sapinhoá e Albacora Leste. O consórcio, com TotalEnergies e Shell, iniciou produção em Lapa Sudoeste em 2026 — a empresa não tem imprensa própria no Brasil fora da joint venture."
+        }
+      ]
+    },
+    {
+      "nome": "PPSA",
+      "noticias": [
+        {
+          "titulo": "PPSA apresenta ao mercado o primeiro leilão de gás natural da União",
+          "data": "2026-09-18",
+          "fonteNome": "eixos",
+          "url": "https://eixos.com.br/gas-natural/mercado-de-gas/ppsa-apresenta-ao-mercado-o-primeiro-leilao-de-gas-natural-da-uniao/",
+          "resumo": "Primeiro leilão de gás natural da União, com oferta prevista de 1 milhão de m³/dia em outubro de 2026 — o primeiro de uma série de leilões de curto prazo até 2030. A Petrobras vai atuar como comercializadora do gás."
+        },
+        {
+          "titulo": "PPSA anuncia leilão de 106,5 milhões de barris de petróleo para 2026",
+          "data": "2025-12-09",
+          "fonteNome": "Poder360",
+          "url": "https://www.poder360.com.br/poder-energia/ppsa-anuncia-leilao-de-1065-mi-de-barris-de-petroleo-para-2026/",
+          "resumo": "Sexto leilão de petróleo da União, marcado para 29 de julho de 2026: 106,5 milhões de barris de seis campos do pré-sal, com maior volume (64 milhões) vindo de Mero."
+        }
+      ]
+    }
+  ]
+}

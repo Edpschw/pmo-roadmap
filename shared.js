@@ -2098,6 +2098,25 @@ function buildStackToggle(onChange, initialStacked) {
 function byNameOrUpper(obj, name) {
   return obj[name] !== undefined ? obj[name] : obj[name.toUpperCase()];
 }
+
+// Operador de cada contrato rastreado (data/contratos.geojson, prop.
+// operador) — casa pelo nome do projeto (state.projects) contra
+// props.projeto, mesmo padrão de featureByProjectApp em app.js/
+// featureByProject em mapa.js. Mero não tem feature própria em
+// contratos.geojson (só o bloco inteiro de Libra) — usa data/
+// campos_presal.geojson como fallback, casado por nome em maiúsculas.
+// Usada por producao.js (aba "Por operador/companhia") e noticias.js
+// (contexto de operador/parceiro por empresa).
+function buildFeatureByProject(geojson, presal, projects) {
+  const byProject = {};
+  for (const feat of geojson.features) byProject[feat.properties.projeto] = feat;
+  const trackedByUpperName = new Map(projects.map((p) => [p.name.toUpperCase(), p]));
+  for (const feat of (presal.features || [])) {
+    const tracked = trackedByUpperName.get(feat.properties.nome.toUpperCase());
+    if (tracked && !byProject[tracked.name]) byProject[tracked.name] = feat;
+  }
+  return byProject;
+}
 function wellsForKey(pocosData, name) {
   return byNameOrUpper(pocosData, name) || [];
 }
